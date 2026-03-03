@@ -1,0 +1,51 @@
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI
+
+from app.api.routes.health import router as health_router
+from app.api.routes.respond import router as respond_router
+from app.config import Settings, get_settings
+from app.core.usecases.process_agent_request import ProcessAgentRequestUseCase
+from app.infra.logger import configure_logging, get_logger
+from app.infra.tools_mock import MockTools
+
+
+def create_app(settings_override: Settings | None = None) -> FastAPI:
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        settings = settings_override or get_settings()
+        configure_logging(settings.log_level)
+        logger = get_logger()
+
+        tools = MockTools()
+        use_case = ProcessAgentRequestUseCase(
+            tools=tools,
+            settings=settings,
+            logger=logger,
+        )
+
+        app.state.settings = settings
+        app.state.logger = logger
+        app.state.tools = tools
+        app.state.process_use_case = use_case
+
+        logger.info(
+            "service_started",
+            extra={
+                "service": settings.app_name,
+                "app_env": settings.app_env,
+                "agent_port": settings.agent_port,
+            },
+        )
+        try:
+            yield
+        finally:
+            logger.info("service_stopped", extra={"service": settings.app_name})
+
+    app = FastAPI(title="docker-agent", version="0.1.0", lifespan=lifespan)
+    app.include_router(health_router)
+    app.include_router(respond_router)
+    return app
+
+
+app = create_app()

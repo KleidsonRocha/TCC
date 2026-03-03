@@ -1,0 +1,35 @@
+services:
+  docker-comm:
+    build: .
+    container_name: docker-comm
+    env_file:
+      - .env
+    environment:
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      AGENT_URL: ${AGENT_URL}
+      DEFAULT_BRANCH_ID: ${DEFAULT_BRANCH_ID:-1}
+      HISTORY_LIMIT: ${HISTORY_LIMIT:-6}
+      AGENT_TIMEOUT_SECONDS: ${AGENT_TIMEOUT_SECONDS:-20}
+      AGENT_RETRY_COUNT: ${AGENT_RETRY_COUNT:-1}
+      ENABLE_TEST_ENDPOINT: ${ENABLE_TEST_ENDPOINT:-true}
+      API_KEY: ${API_KEY:-}
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+    restart: unless-stopped
+    networks:
+      - default
+      - tcc-integration
+
+  redis:
+    image: redis:7-alpine
+    container_name: docker-comm-redis
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    restart: unless-stopped
+
+networks:
+  tcc-integration:
+    name: tcc-integration

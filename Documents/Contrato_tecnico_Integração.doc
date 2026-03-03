@@ -1,0 +1,232 @@
+Contrato Técnico v1.0
+Integração docker-comm ↔ docker-agent
+
+1. Objetivo
+Definir um contrato técnico versionado para comunicação entre:
+    • docker-comm (Gateway Multicanal / Orquestrador de Sessão)
+    • docker-agent (Agente de IA Especialista)
+O contrato deve permitir:
+    • Execução inicial via Postman/HTTP, sem dependência de canal específico
+    • Integração futura com qualquer canal (WhatsApp, Convert, Webchat, etc.)
+    • Suporte a ações estruturadas (botões/opções) desde a versão 1.0
+    • Evolução controlada via versionamento
+
+2. Princípios Arquiteturais
+2.1 Separação de Responsabilidades
+docker-comm
+    • Mantém sessão e contexto
+    • Gerencia histórico
+    • Controla idempotência
+    • Encaminha requisição ao agente
+    • Entrega resposta ao canal
+docker-agent
+    • Stateless
+    • Interpreta mensagem
+    • Decide uso de ferramentas (tool calling)
+    • Gera resposta estruturada
+    • Aplica guardrails
+
+2.2 Fonte da Verdade
+O agente:
+    • NÃO deve memorizar catálogo
+    • NÃO deve inventar preço ou estoque
+    • Deve consultar dados transacionais exclusivamente via ferramentas (tools)
+
+2.3 Portabilidade
+O contrato não depende de canal específico.
+O campo channel é apenas metadado.
+
+3. Versionamento e Endpoint
+    • Base Path: /v1
+    • Endpoint: POST /v1/agent/respond
+    • Content-Type: application/json
+    • Schema Version: "1.0"
+
+4. Request Schema (v1.0)
+4.1 Campos Obrigatórios
+    • schema_version
+    • trace_id
+    • conversation_id
+    • message.text
+    • business.branch_id
+
+4.2 Modelo JSON
+{
+  "schema_version": "1.0",
+  "trace_id": "uuid",
+  "conversation_id": "uuid",
+  "channel": {
+    "name": "generic",
+    "message_id": "optional-id",
+    "timestamp": "2026-03-03T13:10:00-03:00"
+  },
+  "user": {
+    "id": "optional-user-id",
+    "name": null,
+    "phone": null
+  },
+  "message": {
+    "text": "Preciso de bandeja da EcoSport 2008",
+    "attachments": []
+  },
+  "context": {
+    "last_messages": [
+      { "role": "user", "text": "..." },
+      { "role": "assistant", "text": "..." }
+    ],
+    "summary": null
+  },
+  "runtime": {
+    "locale": "pt-BR",
+    "timezone": "America/Sao_Paulo"
+  },
+  "business": {
+    "branch_id": 1,
+    "seller_id": null,
+    "customer_id": null
+  }
+}
+
+4.3 Regra para Filiais (branch_id)
+    • business.branch_id é obrigatório.
+    • Caso o canal não informe, o docker-comm deve aplicar:
+      branch_id = 1 (default)
+    • O agente pode solicitar confirmação ou troca de filial via request_info.
+
+5. Response Schema (v1.0)
+5.1 Campos Obrigatórios
+    • schema_version
+    • trace_id
+    • reply.text
+    • actions (pode ser lista vazia)
+    • handoff.required
+    • confidence
+
+5.2 Modelo JSON
+{
+  "schema_version": "1.0",
+  "trace_id": "uuid",
+  "reply": {
+    "text": "Encontrei 2 opções. Você sabe se é 1.6 ou 2.0?",
+    "format": "plain"
+  },
+  "actions": [
+    {
+      "type": "request_info",
+      "key": "engine",
+      "prompt": "Qual motorização?",
+      "options": ["1.6", "2.0", "Não sei"]
+    }
+  ],
+  "handoff": {
+    "required": false,
+    "reason": null
+  },
+  "confidence": 0.82,
+  "tool_trace": {
+    "used_tools": ["search_parts"],
+    "latency_ms": 840
+  }
+}
+
+6. Actions Suportadas (v1.0)
+6.1 request_info
+Solicitação de dado adicional necessário para decisão.
+{
+  "type": "request_info",
+  "key": "engine",
+  "prompt": "Qual motorização?",
+  "options": ["1.6", "2.0", "Não sei"]
+}
+
+6.2 show_items
+Lista de candidatos encontrados.
+{
+  "type": "show_items",
+  "items": [
+    {
+      "item_id": "123",
+      "title": "Bandeja dianteira esquerda EcoSport 2008",
+      "score": 0.91
+    }
+  ]
+}
+
+6.3 handoff
+Transferência para atendimento humano.
+{
+  "type": "handoff",
+  "reason": "ambiguous_match"
+}
+
+7. Regras de Handoff
+O agente deve solicitar atendimento humano quando:
+    • Houver ambiguidade sem solução segura
+    • Cliente solicitar negociação fora do padrão
+    • Dados insuficientes após tentativas de clarificação
+    • Falha persistente em ferramentas
+    • Risco de venda incorreta
+
+8. Guardrails Obrigatórios
+8.1 Preço e Estoque
+    • O agente só pode responder preço/estoque se:
+      tool_trace.used_tools incluir "get_price_stock"
+    • Caso contrário:
+        ◦ Deve chamar a tool
+        ◦ Ou solicitar informação adicional
+
+8.2 Compatibilidade
+    • Só afirmar compatibilidade se:
+        ◦ Houver retorno explícito de ferramenta
+        ◦ Dados completos e regra definida
+
+8.3 Ambiguidade
+    • Quando múltiplos itens forem encontrados:
+        ◦ Utilizar show_items
+        ◦ Ou solicitar refinamento via request_info
+
+9. Idempotência e Retries
+9.1 message_id
+Quando disponível:
+    • channel.message_id deve ser usado pelo docker-comm para:
+        ◦ Deduplicação
+        ◦ Evitar respostas repetidas
+9.2 Regra
+Se a mesma mensagem for recebida novamente:
+    • O docker-comm deve retornar a resposta previamente registrada.
+
+10. Observabilidade
+10.1 trace_id
+    • Gerado no docker-comm
+    • Propagado em:
+        ◦ Logs do comm
+        ◦ Request ao agent
+        ◦ Logs do agent
+        ◦ Chamadas de ferramentas
+
+10.2 tool_trace
+Deve conter:
+    • Lista de tools utilizadas
+    • Latência total do agente
+Exemplo:
+"tool_trace": {
+  "used_tools": ["search_parts", "get_price_stock"],
+  "latency_ms": 1043
+}
+
+11. Checklist de Conclusão da Etapa 1
+    • Endpoint /v1/agent/respond definido
+    • Request e Response padronizados
+    • branch_id obrigatório com default 1
+    • Actions estruturadas suportadas
+    • Guardrails definidos
+    • trace_id implementado
+    • Estratégia de idempotência definida
+
+12. Próxima Etapa
+Implementar docker-comm mínimo com:
+    • Endpoint /test para simulação via Postman
+    • Redis para sessão
+    • Chamada HTTP para docker-agent (inicialmente mock)
+    • Registro estruturado de logs
+

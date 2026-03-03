@@ -1,0 +1,19 @@
+services:
+  docker-agent:
+    build: .
+    container_name: docker-agent
+    environment:
+      APP_ENV: ${APP_ENV:-dev}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      AGENT_PORT: ${AGENT_PORT:-8001}
+      DEFAULT_LOCALE: ${DEFAULT_LOCALE:-pt-BR}
+      DEFAULT_TIMEZONE: ${DEFAULT_TIMEZONE:-America/Sao_Paulo}
+    ports:
+      - "8001:8001"
+    restart: unless-stopped
+    networks:
+      - tcc-integration
+
+networks:
+  tcc-integration:
+    name: tcc-integration
