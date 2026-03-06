@@ -2,6 +2,7 @@ import pytest
 
 from app.core.domain.errors import InvalidMessageError, UnsupportedSchemaVersionError
 from app.core.domain.rules import validate_message_text, validate_schema_version
+from app.infra.pre_search_dictionary_extractor import DictionaryPreSearchExtractor
 from app.infra.tools_mock import MockTools
 
 
@@ -29,6 +30,41 @@ def test_mock_tool_returns_single_item_for_filtro_de_oleo() -> None:
     assert len(items) == 1
 
 
+def test_mock_tool_returns_single_item_for_coxim() -> None:
+    items = MockTools().search_parts("coxim ecosport 2008", branch_id=1)
+    assert len(items) == 1
+
+
 def test_mock_tool_returns_empty_for_unknown_query() -> None:
     items = MockTools().search_parts("item inexistente", branch_id=1)
     assert items == []
+
+
+def test_dictionary_extractor_extracts_part_model_and_year() -> None:
+    result = DictionaryPreSearchExtractor().extract("Quero 2 unidade do filtro de oleo para ecosport 2008")
+    assert result.part_query == "filtro de oleo"
+    assert result.vehicle_model == "EcoSport"
+    assert result.vehicle_year == 2008
+
+
+def test_dictionary_extractor_uses_last_messages_for_year() -> None:
+    result = DictionaryPreSearchExtractor().extract(
+        "Quero filtro de oleo para ecosport",
+        last_messages=[{"role": "user", "text": "2008"}],
+    )
+    assert result.part_query == "filtro de oleo"
+    assert result.vehicle_model == "EcoSport"
+    assert result.vehicle_year == 2008
+
+
+def test_dictionary_extractor_uses_previous_full_question_when_message_is_only_year() -> None:
+    result = DictionaryPreSearchExtractor().extract(
+        "2008",
+        last_messages=[
+            {"role": "user", "text": "coxim ecosport"},
+            {"role": "assistant", "text": "Qual o ano do veiculo?"},
+        ],
+    )
+    assert result.part_query == "coxim"
+    assert result.vehicle_model == "EcoSport"
+    assert result.vehicle_year == 2008

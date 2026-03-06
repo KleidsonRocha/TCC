@@ -1,0 +1,354 @@
+[
+  {
+    "message.text": "bandenja ecosport 2008",
+    "context.last_messages": [],
+    "expected": {
+      "decision": "search",
+      "criteria": {
+        "part_query": "bandeja",
+        "vehicle_model": "EcoSport",
+        "vehicle_year": 2008
+      },
+      "missing_fields": ["engine", "side"],
+      "next_question": {
+        "type": "request_info",
+        "key": "engine",
+        "prompt": "Qual motorizacao?",
+        "options": ["1.6", "2.0", "Nao sei"]
+      }
+    }
+  },
+  {
+    "message.text": "bandeja ecosport",
+    "context.last_messages": [],
+    "expected": {
+      "decision": "search",
+      "criteria": {
+        "part_query": "bandeja",
+        "vehicle_model": "EcoSport"
+      },
+      "missing_fields": ["vehicle_year", "engine", "side"],
+      "next_question": {
+        "type": "request_info",
+        "key": "vehicle_year",
+        "prompt": "Qual o ano da EcoSport?",
+        "options": null
+      }
+    }
+  },
+  {
+    "message.text": "bandeja esq ecosport 2008",
+    "context.last_messages": [],
+    "expected": {
+      "decision": "search",
+      "criteria": {
+        "part_query": "bandeja",
+        "vehicle_model": "EcoSport",
+        "vehicle_year": 2008,
+        "side": "left"
+      },
+      "missing_fields": ["engine"],
+      "next_question": {
+        "type": "request_info",
+        "key": "engine",
+        "prompt": "Qual motorizacao?",
+        "options": ["1.6", "2.0", "Nao sei"]
+      }
+    }
+  },
+  {
+    "message.text": "filtro oleo gol 2015",
+    "context.last_messages": [],
+    "expected": {
+      "decision": "search",
+      "criteria": {
+        "part_query": "filtro de oleo",
+        "vehicle_model": "Gol",
+        "vehicle_year": 2015
+      },
+      "missing_fields": [],
+      "next_question": null
+    }
+  },
+  {
+    "message.text": "filtro ar gol",
+    "context.last_messages": [],
+    "expected": {
+      "decision": "search",
+      "criteria": {
+        "part_query": "filtro de ar",
+        "vehicle_model": "Gol"
+      },
+      "missing_fields": ["vehicle_year"],
+      "next_question": {
+        "type": "request_info",
+        "key": "vehicle_year",
+        "prompt": "Qual o ano do Gol?",
+        "options": null
+      }
+    }
+  },
+  {
+    "message.text": "pastilha freio onix 2018",
+    "context.last_messages": [],
+    "expected": {
+      "decision": "search",
+      "criteria": {
+        "part_query": "pastilha de freio",
+        "vehicle_model": "Onix",
+        "vehicle_year": 2018
+      },
+      "missing_fields": ["position"],
+      "next_question": {
+        "type": "request_info",
+        "key": "position",
+        "prompt": "E dianteira ou traseira?",
+        "options": ["dianteira", "traseira", "Nao sei"]
+      }
+    }
+  },
+  {
+    "message.text": "amortecedor corolla 2014 dianteiro",
+    "context.last_messages": [],
+    "expected": {
+      "decision": "search",
+      "criteria": {
+        "part_query": "amortecedor",
+        "vehicle_model": "Corolla",
+        "vehicle_year": 2014,
+        "position": "front"
+      },
+      "missing_fields": ["side"],
+      "next_question": {
+        "type": "request_info",
+        "key": "side",
+        "prompt": "Lado esquerdo ou direito?",
+        "options": ["esquerdo", "direito", "Nao sei"]
+      }
+    }
+  },
+  {
+    "message.text": "coxim motor civic",
+    "context.last_messages": [],
+    "expected": {
+      "decision": "search",
+      "criteria": {
+        "part_query": "coxim motor",
+        "vehicle_model": "Civic"
+      },
+      "missing_fields": ["vehicle_year"],
+      "next_question": {
+        "type": "request_info",
+        "key": "vehicle_year",
+        "prompt": "Qual o ano do Civic?",
+        "options": null
+      }
+    }
+  },
+  {
+    "message.text": "bomba combustivel s10 2012",
+    "context.last_messages": [],
+    "expected": {
+      "decision": "search",
+      "criteria": {
+        "part_query": "bomba combustivel",
+        "vehicle_model": "S10",
+        "vehicle_year": 2012
+      },
+      "missing_fields": [],
+      "next_question": null
+    }
+  },
+  {
+    "message.text": "rolamento roda palio 2009",
+    "context.last_messages": [],
+    "expected": {
+      "decision": "search",
+      "criteria": {
+        "part_query": "rolamento roda",
+        "vehicle_model": "Palio",
+        "vehicle_year": 2009
+      },
+      "missing_fields": ["position"],
+      "next_question": {
+        "type": "request_info",
+        "key": "position",
+        "prompt": "E dianteiro ou traseiro?",
+        "options": ["dianteiro", "traseiro", "Nao sei"]
+      }
+    }
+  },
+  {
+    "message.text": "preciso de uma peca",
+    "context.last_messages": [],
+    "expected": {
+      "decision": "ask",
+      "criteria": {},
+      "missing_fields": ["part_query"],
+      "next_question": {
+        "type": "request_info",
+        "key": "part_query",
+        "prompt": "Qual peca voce precisa?",
+        "options": null
+      }
+    }
+  },
+  {
+    "message.text": "bandeja",
+    "context.last_messages": [],
+    "expected": {
+      "decision": "ask",
+      "criteria": {
+        "part_query": "bandeja"
+      },
+      "missing_fields": ["vehicle_model"],
+      "next_question": {
+        "type": "request_info",
+        "key": "vehicle_model",
+        "prompt": "Para qual veiculo e o bandeja?",
+        "options": null
+      }
+    }
+  },
+  {
+    "message.text": "filtro",
+    "context.last_messages": [],
+    "expected": {
+      "decision": "ask",
+      "criteria": {
+        "part_query": "filtro"
+      },
+      "missing_fields": ["vehicle_model"],
+      "next_question": {
+        "type": "request_info",
+        "key": "vehicle_model",
+        "prompt": "Para qual veiculo e o filtro?",
+        "options": null
+      }
+    }
+  },
+  {
+    "message.text": "pastilha civic 2015",
+    "context.last_messages": [],
+    "expected": {
+      "decision": "search",
+      "criteria": {
+        "part_query": "pastilha de freio",
+        "vehicle_model": "Civic",
+        "vehicle_year": 2015
+      },
+      "missing_fields": ["position"],
+      "next_question": {
+        "type": "request_info",
+        "key": "position",
+        "prompt": "E dianteira ou traseira?",
+        "options": ["dianteira", "traseira", "Nao sei"]
+      }
+    }
+  },
+  {
+    "message.text": "disco freio civic 2015 dianteiro",
+    "context.last_messages": [],
+    "expected": {
+      "decision": "search",
+      "criteria": {
+        "part_query": "disco de freio",
+        "vehicle_model": "Civic",
+        "vehicle_year": 2015,
+        "position": "front"
+      },
+      "missing_fields": [],
+      "next_question": null
+    }
+  },
+  {
+    "message.text": "farol ecosport 2011",
+    "context.last_messages": [],
+    "expected": {
+      "decision": "search",
+      "criteria": {
+        "part_query": "farol",
+        "vehicle_model": "EcoSport",
+        "vehicle_year": 2011
+      },
+      "missing_fields": ["side"],
+      "next_question": {
+        "type": "request_info",
+        "key": "side",
+        "prompt": "Lado esquerdo ou direito?",
+        "options": ["esquerdo", "direito", "Nao sei"]
+      }
+    }
+  },
+  {
+    "message.text": "farol dir ecosport 2011",
+    "context.last_messages": [],
+    "expected": {
+      "decision": "search",
+      "criteria": {
+        "part_query": "farol",
+        "vehicle_model": "EcoSport",
+        "vehicle_year": 2011,
+        "side": "right"
+      },
+      "missing_fields": [],
+      "next_question": null
+    }
+  },
+  {
+    "message.text": "correia dentada gol 2010",
+    "context.last_messages": [],
+    "expected": {
+      "decision": "search",
+      "criteria": {
+        "part_query": "correia dentada",
+        "vehicle_model": "Gol",
+        "vehicle_year": 2010
+      },
+      "missing_fields": ["engine"],
+      "next_question": {
+        "type": "request_info",
+        "key": "engine",
+        "prompt": "Qual motorizacao?",
+        "options": ["1.0", "1.6", "Nao sei"]
+      }
+    }
+  },
+  {
+    "message.text": "retrovisor onix",
+    "context.last_messages": [],
+    "expected": {
+      "decision": "search",
+      "criteria": {
+        "part_query": "retrovisor",
+        "vehicle_model": "Onix"
+      },
+      "missing_fields": ["vehicle_year", "side"],
+      "next_question": {
+        "type": "request_info",
+        "key": "side",
+        "prompt": "Lado esquerdo ou direito?",
+        "options": ["esquerdo", "direito", "Nao sei"]
+      }
+    }
+  },
+  {
+    "message.text": "preciso de bandeija fiesta 2010",
+    "context.last_messages": [],
+    "expected": {
+      "decision": "search",
+      "criteria": {
+        "part_query": "bandeja",
+        "vehicle_model": "Fiesta",
+        "vehicle_year": 2010
+      },
+      "missing_fields": ["engine", "side"],
+      "next_question": {
+        "type": "request_info",
+        "key": "engine",
+        "prompt": "Qual motorizacao?",
+        "options": ["1.0", "1.6", "Nao sei"]
+      }
+    }
+  }
+]

@@ -8,3 +8,7 @@ class UnsupportedSchemaVersionError(DomainError):
 
 class InvalidMessageError(DomainError):
     """Raised when message.text is empty or invalid."""
+
+
+class PreSearchServiceUnavailableError(DomainError):
+    """Raised when the pre-search validation service is unavailable."""

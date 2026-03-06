@@ -5,12 +5,17 @@ from fastapi import FastAPI
 from app.api.routes.health import router as health_router
 from app.api.routes.respond import router as respond_router
 from app.config import Settings, get_settings
+from app.core.ports.pre_search_validator import PreSearchValidatorPort
 from app.core.usecases.process_agent_request import ProcessAgentRequestUseCase
 from app.infra.logger import configure_logging, get_logger
+from app.infra.pre_search_validator_llm import LLMPreSearchValidator
 from app.infra.tools_mock import MockTools
 
 
-def create_app(settings_override: Settings | None = None) -> FastAPI:
+def create_app(
+    settings_override: Settings | None = None,
+    pre_search_validator_override: PreSearchValidatorPort | None = None,
+) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         settings = settings_override or get_settings()
@@ -18,8 +23,13 @@ def create_app(settings_override: Settings | None = None) -> FastAPI:
         logger = get_logger()
 
         tools = MockTools()
+        pre_search_validator = pre_search_validator_override or LLMPreSearchValidator(
+            settings=settings,
+            logger=logger,
+        )
         use_case = ProcessAgentRequestUseCase(
             tools=tools,
+            pre_search_validator=pre_search_validator,
             settings=settings,
             logger=logger,
         )
@@ -27,6 +37,7 @@ def create_app(settings_override: Settings | None = None) -> FastAPI:
         app.state.settings = settings
         app.state.logger = logger
         app.state.tools = tools
+        app.state.pre_search_validator = pre_search_validator
         app.state.process_use_case = use_case
 
         logger.info(
@@ -35,6 +46,7 @@ def create_app(settings_override: Settings | None = None) -> FastAPI:
                 "service": settings.app_name,
                 "app_env": settings.app_env,
                 "agent_port": settings.agent_port,
+                "pre_search_validator": pre_search_validator.__class__.__name__,
             },
         )
         try:

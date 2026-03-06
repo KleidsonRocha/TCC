@@ -12,6 +12,7 @@ def _normalize_text(text: str) -> str:
 
 class MockTools(ToolsPort):
     def search_parts(self, query: str, branch_id: int) -> list[PartItem]:
+        print(f"[mock_search_parts] branch_id={branch_id} query='{query}'")
         normalized_query = _normalize_text(query)
 
         if "bandeja" in normalized_query:
@@ -23,6 +24,11 @@ class MockTools(ToolsPort):
         if "filtro de oleo" in normalized_query:
             return [
                 PartItem(item_id="FLT-010", title="Filtro de oleo motor 1.6", score=0.96),
+            ]
+
+        if "coxim" in normalized_query:
+            return [
+                PartItem(item_id="CXM-101", title="Coxim do motor dianteiro", score=0.92),
             ]
 
         return []
