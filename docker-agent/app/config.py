@@ -28,6 +28,14 @@ class Settings(BaseSettings):
     llm_log_raw_response: bool = Field(False, alias="LLM_LOG_RAW_RESPONSE")
     llm_categories_file: str | None = Field(None, alias="LLM_CATEGORIES_FILE")
 
+    catalog_db_enabled: bool = Field(True, alias="CATALOG_DB_ENABLED")
+    catalog_db_host: str = Field("presearch-db", alias="CATALOG_DB_HOST")
+    catalog_db_port: int = Field(5432, alias="CATALOG_DB_PORT")
+    catalog_db_name: str = Field("presearch", alias="CATALOG_DB_NAME")
+    catalog_db_user: str = Field("presearch", alias="CATALOG_DB_USER")
+    catalog_db_password: str = Field("presearch", alias="CATALOG_DB_PASSWORD")
+    catalog_db_connect_timeout_s: int = Field(2, alias="CATALOG_DB_CONNECT_TIMEOUT_S")
+
 
 @lru_cache
 def get_settings() -> Settings:

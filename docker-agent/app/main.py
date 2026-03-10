@@ -8,6 +8,7 @@ from app.config import Settings, get_settings
 from app.core.ports.pre_search_validator import PreSearchValidatorPort
 from app.core.usecases.process_agent_request import ProcessAgentRequestUseCase
 from app.infra.logger import configure_logging, get_logger
+from app.infra.pre_search_catalog_pg import resolve_pre_search_catalog
 from app.infra.pre_search_validator_llm import LLMPreSearchValidator
 from app.infra.tools_mock import MockTools
 
@@ -23,10 +24,14 @@ def create_app(
         logger = get_logger()
 
         tools = MockTools()
-        pre_search_validator = pre_search_validator_override or LLMPreSearchValidator(
-            settings=settings,
-            logger=logger,
-        )
+        pre_search_validator = pre_search_validator_override
+        if pre_search_validator is None:
+            catalog = resolve_pre_search_catalog(settings=settings, logger=logger)
+            pre_search_validator = LLMPreSearchValidator(
+                settings=settings,
+                logger=logger,
+                catalog=catalog,
+            )
         use_case = ProcessAgentRequestUseCase(
             tools=tools,
             pre_search_validator=pre_search_validator,

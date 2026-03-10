@@ -9,6 +9,7 @@ PreSearchDecision = Literal["search", "ask", "handoff"]
 class SearchCriteria(BaseModel):
     part_query: str | None = None
     part_code: str | None = None
+    vehicle_brand: str | None = None
     vehicle_model: str | None = None
     vehicle_year: int | None = Field(default=None, ge=1900, le=2100)
     engine: str | None = None

@@ -45,7 +45,7 @@ class ProcessAgentRequestUseCase:
         handoff = HandoffInfo(required=False, reason=None)
         confidence = 0.0
 
-        if pre_search.next_question:
+        if pre_search.decision == "ask" and pre_search.next_question:
             actions.append(pre_search.next_question.model_dump(exclude_none=True))
 
         if pre_search.decision == "ask":
@@ -191,6 +191,7 @@ class ProcessAgentRequestUseCase:
         tokens = [
             criteria.part_code,
             criteria.part_query,
+            criteria.vehicle_brand,
             criteria.vehicle_model,
             str(criteria.vehicle_year) if criteria.vehicle_year else None,
             criteria.engine,

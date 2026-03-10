@@ -51,6 +51,13 @@ docker-agent/
    - `AGENT_PORT`
    - `DEFAULT_LOCALE`
    - `DEFAULT_TIMEZONE`
+   - `CATALOG_DB_ENABLED`
+   - `CATALOG_DB_HOST`
+   - `CATALOG_DB_PORT`
+   - `CATALOG_DB_NAME`
+   - `CATALOG_DB_USER`
+   - `CATALOG_DB_PASSWORD`
+   - `CATALOG_DB_CONNECT_TIMEOUT_S`
    - `LLM_BASE_URL` (ex.: `http://host.docker.internal:11434`)
    - `LLM_MODEL` (ex.: `qwen2.5:7b`)
    - `LLM_TIMEOUT_MS`
@@ -67,6 +74,18 @@ docker compose up --build
 ```
 
 API exposta em `http://localhost:8001`.
+
+Banco de conhecimento (catalogo pre-search):
+- Postgres em `localhost:5433`
+- Seed inicial em `db/init/001_pre_search_catalog.sql`
+- Modelo de dominio + aliases:
+  - `pre_search_brand` + `pre_search_brand_alias`
+  - `pre_search_model` + `pre_search_model_alias`
+  - `pre_search_part_type` + `pre_search_part_alias`
+  - `pre_search_part_rule`
+  - `pre_search_engine_option`
+  - `pre_search_invalid_slot_token`
+  - `pre_search_part_code_pattern`
 
 ## Endpoints
 
@@ -125,6 +144,9 @@ Response (exemplo):
 
 - `schema_version` diferente de `1.0` retorna HTTP 400
 - `message.text` vazio/whitespace retorna HTTP 400
+- catalogo de pre-search:
+  - modo strict: exige Postgres (`presearch-db`) com dados carregados
+  - sem fallback hardcoded em memoria
 - `pre_search_validator` llm:
   - aplica extracao deterministica por dicionario (`dictionary_seed_criteria`) antes da chamada da LLM
   - usa modelo local via Ollama (`/api/chat`, com fallback para `/api/generate` quando necessario)
@@ -141,6 +163,12 @@ Response (exemplo):
 - 1 item -> resposta direta com sugestao de proxima validacao
 - `tool_trace` inclui `pre_search_validator` e `search_parts` quando a busca e executada
 - logs estruturados com `trace_id`, `conversation_id`, status e latencia
+
+### Como `confidence` e `next_question` sao definidos
+- `confidence` vem primariamente da resposta da LLM.
+- Se houver fallback de parsing de JSON da LLM, `confidence` passa para `0.6`.
+- Se a LLM nao informar `next_question` valida e houver `missing_fields`, o sistema gera pergunta padrao por chave faltante.
+- Exemplo: faltando `part_query`, a pergunta padrao e `Qual peca voce precisa?`.
 
 ## Usar LLM local (Ollama)
 
@@ -181,5 +209,9 @@ python scripts/evaluate_pre_search.py
 
 Metricas calculadas:
 - `decision_accuracy_pct`
-- `slot_extraction_accuracy_pct` (part_query, vehicle_model, vehicle_year, engine, side)
+- `slot_extraction_accuracy_pct` (part_query, vehicle_brand, vehicle_model, vehicle_year, engine, side)
 - `next_question_utility_pct` (match da chave da pergunta esperada)
+
+## TODO de Implementacao
+
+- Ver roadmap operacional em `docs/TODO.md`.

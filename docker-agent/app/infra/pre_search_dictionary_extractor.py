@@ -2,6 +2,7 @@ import re
 import unicodedata
 from typing import Any
 
+from app.core.domain.pre_search_catalog import PreSearchCatalog
 from app.core.domain.pre_search import SearchCriteria
 
 
@@ -13,47 +14,10 @@ def _normalize_text(text: str) -> str:
 
 
 class DictionaryPreSearchExtractor:
-    _part_patterns: list[tuple[str, tuple[str, ...]]] = [
-        ("filtro de oleo", ("filtro de oleo", "filtro oleo")),
-        ("filtro de ar", ("filtro de ar", "filtro ar")),
-        ("filtro combustivel", ("filtro de combustivel", "filtro combustivel")),
-        ("filtro", ("filtro",)),
-        ("bandeja", ("bandeja", "bandenja", "bandeija")),
-        ("pastilha de freio", ("pastilha de freio", "pastilha freio", "pastilha")),
-        ("disco de freio", ("disco de freio", "disco freio")),
-        ("amortecedor", ("amortecedor",)),
-        ("coxim motor", ("coxim motor",)),
-        ("coxim", ("coxim",)),
-        ("bomba combustivel", ("bomba combustivel", "bomba de combustivel")),
-        ("bomba d'agua", ("bomba dagua", "bomba d'agua", "bomba de agua")),
-        ("rolamento roda", ("rolamento de roda", "rolamento roda")),
-        ("farol", ("farol",)),
-        ("correia dentada", ("correia dentada",)),
-        ("kit correia", ("kit correia",)),
-        ("retrovisor", ("retrovisor",)),
-        ("sensor abs", ("sensor abs",)),
-        ("radiador", ("radiador",)),
-        ("parachoque", ("parachoque", "para choque")),
-        ("vela ignicao", ("vela ignicao", "vela de ignicao", "velas ignicao")),
-        ("motor arranque", ("motor arranque", "arranque")),
-        ("bico injetor", ("bico injetor",)),
-        ("kit embreagem", ("kit embreagem",)),
-        ("embreagem", ("embreagem",)),
-        ("lanterna traseira", ("lanterna traseira", "lanterna")),
-    ]
-    _model_aliases: dict[str, tuple[str, ...]] = {
-        "EcoSport": ("ecosport",),
-        "Fiesta": ("fiesta",),
-        "Focus": ("focus",),
-        "Gol": ("gol",),
-        "Palio": ("palio",),
-        "Uno": ("uno",),
-        "Onix": ("onix",),
-        "Corolla": ("corolla", "corola"),
-        "Civic": ("civic",),
-        "S10": ("s10",),
-        "Hilux": ("hilux",),
-    }
+    def __init__(self, *, catalog: PreSearchCatalog) -> None:
+        self._part_patterns = list(catalog.part_patterns)
+        self._brand_aliases = dict(catalog.brand_aliases)
+        self._model_aliases = dict(catalog.model_aliases)
 
     def extract(
         self,
@@ -72,6 +36,7 @@ class DictionaryPreSearchExtractor:
         return SearchCriteria(
             part_query=self._extract_part_query(normalized_text),
             part_code=self._extract_part_code(raw_text),
+            vehicle_brand=self._extract_vehicle_brand(normalized_text),
             vehicle_model=self._extract_vehicle_model(normalized_text),
             vehicle_year=self._extract_year(normalized_text),
             engine=self._extract_engine(normalized_text),
@@ -85,6 +50,7 @@ class DictionaryPreSearchExtractor:
         return SearchCriteria(
             part_query=primary.part_query or fallback.part_query,
             part_code=primary.part_code or fallback.part_code,
+            vehicle_brand=primary.vehicle_brand or fallback.vehicle_brand,
             vehicle_model=primary.vehicle_model or fallback.vehicle_model,
             vehicle_year=primary.vehicle_year or fallback.vehicle_year,
             engine=primary.engine or fallback.engine,
@@ -94,16 +60,32 @@ class DictionaryPreSearchExtractor:
         )
 
     def _extract_part_query(self, text: str) -> str | None:
+        best_canonical: str | None = None
+        best_match_len = -1
         for canonical, variations in self._part_patterns:
-            if any(pattern in text for pattern in variations):
-                return canonical
-        return None
+            for pattern in variations:
+                candidate = str(pattern or "").strip()
+                if not candidate:
+                    continue
+                if not re.search(rf"\b{re.escape(candidate)}\b", text):
+                    continue
+                if len(candidate) > best_match_len:
+                    best_match_len = len(candidate)
+                    best_canonical = canonical
+        return best_canonical
 
     def _extract_vehicle_model(self, text: str) -> str | None:
         for model, aliases in self._model_aliases.items():
             for alias in aliases:
                 if re.search(rf"\b{re.escape(alias)}\b", text):
                     return model
+        return None
+
+    def _extract_vehicle_brand(self, text: str) -> str | None:
+        for brand, aliases in self._brand_aliases.items():
+            for alias in aliases:
+                if re.search(rf"\b{re.escape(alias)}\b", text):
+                    return brand
         return None
 
     @staticmethod

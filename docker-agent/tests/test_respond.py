@@ -1,7 +1,10 @@
 from fastapi.testclient import TestClient
 
 from app.config import Settings
+from app.core.domain.pre_search_catalog import PreSearchCatalog
 from app.core.domain.pre_search import NextQuestion, PreSearchValidation, SearchCriteria
+from app.infra.pre_search_validator_llm import LLMPreSearchValidator
+from app.infra.logger import configure_logging, get_logger
 from app.main import create_app
 
 
@@ -68,6 +71,20 @@ class StubPreSearchValidator:
             )
 
         return self._ask(key="part_query", prompt="Qual peca voce precisa?")
+
+
+def _catalog_fixture() -> PreSearchCatalog:
+    return PreSearchCatalog(
+        part_patterns=[("bandeja", ("bandeja",))],
+        brand_aliases={"Ford": ("ford",)},
+        model_aliases={"EcoSport": ("ecosport",)},
+        invalid_slot_tokens={"nao"},
+        generic_ambiguous_parts={"filtro"},
+        needs_side={"bandeja"},
+        needs_position=set(),
+        needs_engine=set(),
+        engine_by_model={"ecosport": ["1.6", "2.0", "Nao sei"]},
+    )
 
 
 def _make_app():
@@ -227,11 +244,21 @@ def test_respond_returns_503_when_llm_pre_search_is_unavailable() -> None:
         AGENT_PORT=8001,
         DEFAULT_LOCALE="pt-BR",
         DEFAULT_TIMEZONE="America/Sao_Paulo",
+        catalog_db_enabled=False,
         LLM_BASE_URL="http://127.0.0.1:1",
         LLM_MODEL="deepseek-r1:8b",
         LLM_TIMEOUT_MS=1000,
     )
-    app = create_app(settings_override=settings)
+    configure_logging(settings.log_level)
+    llm_validator = LLMPreSearchValidator(
+        settings=settings,
+        logger=get_logger("test"),
+        catalog=_catalog_fixture(),
+    )
+    app = create_app(
+        settings_override=settings,
+        pre_search_validator_override=llm_validator,
+    )
     with TestClient(app) as client:
         response = client.post("/respond", json=_payload("quero bandeja ecosport 2008"))
 

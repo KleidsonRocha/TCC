@@ -10,17 +10,48 @@ services:
     networks:
       - tcc-integration
 
+  presearch-db:
+    image: postgres:16-alpine
+    container_name: presearch-db
+    environment:
+      POSTGRES_DB: ${CATALOG_DB_NAME:-presearch}
+      POSTGRES_USER: ${CATALOG_DB_USER:-presearch}
+      POSTGRES_PASSWORD: ${CATALOG_DB_PASSWORD:-presearch}
+    ports:
+      - "5433:5432"
+    volumes:
+      - presearch_db_data:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${CATALOG_DB_USER:-presearch} -d ${CATALOG_DB_NAME:-presearch}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+    networks:
+      - tcc-integration
+
   docker-agent:
     build: .
     container_name: docker-agent
     depends_on:
-      - ollama
+      ollama:
+        condition: service_started
+      presearch-db:
+        condition: service_healthy
     environment:
       APP_ENV: ${APP_ENV:-dev}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       AGENT_PORT: ${AGENT_PORT:-8001}
       DEFAULT_LOCALE: ${DEFAULT_LOCALE:-pt-BR}
       DEFAULT_TIMEZONE: ${DEFAULT_TIMEZONE:-America/Sao_Paulo}
+      CATALOG_DB_ENABLED: ${CATALOG_DB_ENABLED:-true}
+      CATALOG_DB_HOST: ${CATALOG_DB_HOST:-presearch-db}
+      CATALOG_DB_PORT: ${CATALOG_DB_PORT:-5432}
+      CATALOG_DB_NAME: ${CATALOG_DB_NAME:-presearch}
+      CATALOG_DB_USER: ${CATALOG_DB_USER:-presearch}
+      CATALOG_DB_PASSWORD: ${CATALOG_DB_PASSWORD:-presearch}
+      CATALOG_DB_CONNECT_TIMEOUT_S: ${CATALOG_DB_CONNECT_TIMEOUT_S:-2}
       LLM_BASE_URL: ${LLM_BASE_URL:-http://ollama:11434}
       LLM_MODEL: ${LLM_MODEL:-qwen2.5:7b}
       LLM_TIMEOUT_MS: ${LLM_TIMEOUT_MS:-240000}
@@ -37,6 +68,7 @@ services:
 
 volumes:
   ollama_data:
+  presearch_db_data:
 
 networks:
   tcc-integration:
