@@ -22,6 +22,7 @@ Tabelas principais:
 - `pre_search_brand_alias`
 - `pre_search_model`
 - `pre_search_model_alias`
+- `pre_search_part_group`
 - `pre_search_part_type`
 - `pre_search_part_alias`
 - `pre_search_part_rule`
@@ -35,6 +36,13 @@ Campos de governanca em todas as tabelas de dominio:
 - `updated_at`
 - `updated_by`
 
+Campos adicionais recentes:
+- `pre_search_part_rule`: `needs_axle`, `needs_variant`
+- `pre_search_engine_option`: `engine_configuration`, `engine_displacement`
+
+Carga operacional de dominio:
+- `scripts/import_pre_search_catalog_csv.py` (CSV real de grupo/subgrupo/regras/marca/modelo/motor)
+
 ## 5. Slots
 `criteria` contempla:
 - `part_query`
@@ -45,6 +53,8 @@ Campos de governanca em todas as tabelas de dominio:
 - `engine`
 - `side`
 - `position`
+- `axle`
+- `variant`
 - `quantity`
 
 ## 6. Componentes internos
@@ -56,4 +66,3 @@ Campos de governanca em todas as tabelas de dominio:
 ## 7. Falhas esperadas
 - DB indisponivel ou schema incompleto: app falha no startup (modo strict).
 - LLM indisponivel durante request: HTTP 503 no `/respond`.
-

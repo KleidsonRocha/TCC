@@ -30,7 +30,7 @@ def main() -> None:
     settings = Settings()
     configure_logging(settings.log_level)
     validator = _pick_validator(settings)
-    dataset_path = Path("docs/pre_search_eval_dataset_mvp.json")
+    dataset_path = Path("docs/assets/datasets/pre_search_eval_dataset_mvp.json")
     rows = _load_dataset(dataset_path)
 
     decision_ok = 0

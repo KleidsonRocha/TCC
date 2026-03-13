@@ -15,6 +15,7 @@ O `docker-agent` recebe mensagens do `docker-comm` em `POST /respond`, valida pr
 Modelo `dominio + aliases`:
 - `pre_search_brand` + `pre_search_brand_alias`
 - `pre_search_model` + `pre_search_model_alias`
+- `pre_search_part_group`
 - `pre_search_part_type` + `pre_search_part_alias`
 - `pre_search_part_rule`
 - `pre_search_engine_option`
@@ -23,9 +24,9 @@ Modelo `dominio + aliases`:
 
 Seed inicial:
 - `db/init/001_pre_search_catalog.sql`
+- se os CSVs estiverem em `db/init/csv/`, o proprio `001` faz bootstrap completo no nascimento da base
 
-Migracao para volume existente:
-- `db/migrations/002_pre_search_domain_aliases.sql`
+Sem migrations: em mudanca de schema, recriar volume do Postgres para reaplicar o `init`.
 
 ## 4. Modo strict de catalogo
 - `CATALOG_DB_ENABLED=true` e obrigatorio.
@@ -41,6 +42,8 @@ Migracao para volume existente:
 - `engine`
 - `side`
 - `position`
+- `axle`
+- `variant`
 - `quantity`
 
 ## 6. Regras de decisao
@@ -71,11 +74,11 @@ docker-agent/
   db/
     init/
       001_pre_search_catalog.sql
-    migrations/
-      002_pre_search_domain_aliases.sql
+      csv/
+  scripts/
+    import_pre_search_catalog_csv.py
   docs/
   tests/
   docker-compose.yml
   Dockerfile
 ```
-

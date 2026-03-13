@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass(frozen=True)
@@ -10,5 +10,10 @@ class PreSearchCatalog:
     generic_ambiguous_parts: set[str]
     needs_side: set[str]
     needs_position: set[str]
+    needs_axle: set[str]
     needs_engine: set[str]
+    needs_variant: set[str]
     engine_by_model: dict[str, list[str]]
+    criteria_weights: dict[str, int] = field(default_factory=dict)
+    min_score_to_search: int = 0
+    part_code_patterns: tuple[str, ...] = field(default_factory=tuple)

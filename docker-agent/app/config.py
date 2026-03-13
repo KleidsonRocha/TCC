@@ -35,6 +35,20 @@ class Settings(BaseSettings):
     catalog_db_user: str = Field("presearch", alias="CATALOG_DB_USER")
     catalog_db_password: str = Field("presearch", alias="CATALOG_DB_PASSWORD")
     catalog_db_connect_timeout_s: int = Field(2, alias="CATALOG_DB_CONNECT_TIMEOUT_S")
+    pre_search_review_capture_enabled: bool = Field(True, alias="PRE_SEARCH_REVIEW_CAPTURE_ENABLED")
+    ft_dataset_slug: str = Field("pre-search-ft-v1", alias="FT_DATASET_SLUG")
+    ft_target_model_prefix: str = Field("pre-search-qwen2.5-ft", alias="FT_TARGET_MODEL_PREFIX")
+    ft_golden_set_file: str = Field(
+        "docs/assets/datasets/pre_search_num_predict_golden_set.json",
+        alias="FT_GOLDEN_SET_FILE",
+    )
+    ft_train_command: str | None = Field(None, alias="FT_TRAIN_COMMAND")
+    ft_publish_command: str | None = Field(None, alias="FT_PUBLISH_COMMAND")
+    ft_active_env_file: str = Field(".env", alias="FT_ACTIVE_ENV_FILE")
+    ft_ollama_base_model: str = Field("qwen2.5:7b", alias="FT_OLLAMA_BASE_MODEL")
+    ft_ollama_artifact_kind: str = Field("adapter", alias="FT_OLLAMA_ARTIFACT_KIND")
+    ft_ollama_artifact_path: str | None = Field(None, alias="FT_OLLAMA_ARTIFACT_PATH")
+    ft_ollama_output_dir: str = Field(".tmp/ollama_models", alias="FT_OLLAMA_OUTPUT_DIR")
 
 
 @lru_cache

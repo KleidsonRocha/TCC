@@ -2,11 +2,6 @@
 
 ## Prioridade Alta
 
-- [ ] Ampliar cobertura do catalogo em banco (pre-search)
-  - Cadastrar mais `brands`, `models`, `model_aliases`, `part_types` e `part_aliases`
-  - Revisar `pre_search_part_rule` para `is_generic`, `needs_engine`, `needs_side`, `needs_position`
-  - Cadastrar mais `pre_search_engine_option` por modelo/faixa de ano
-  - Incluir erros comuns de digitacao em aliases
 
 - [ ] Implantar busca real de pecas (substituir mock)
   - Implementar `ToolsPort.search_parts` com integracao real (API/DB/ERP)
@@ -19,24 +14,25 @@
   - Manter mock apenas para testes locais (quando necessario)
   - Atualizar `README` e `docs/*` para refletir busca real
 
-- [ ] Implementar validacao por score ponderado (pre-search)
-  - Definir pesos por criterio: `part_code`, `part_query`, `vehicle_brand`, `vehicle_model`, `vehicle_year`, `engine`, `side`, `position`
-  - Definir `score_minimo` para liberar `search`
-  - Regra de corte: `part_code` valido pode liberar busca direta (override)
-  - Persistir configuracao em banco (tabela de pesos e limiares) para ajuste sem deploy
-  - Em `score` abaixo do minimo: perguntar o slot faltante de maior impacto
 
 ## Prioridade Media
 
 - [ ] Criar rotina de carga de dados (seed incremental)
   - Definir formato de entrada (CSV/JSON)
   - Criar script de importacao idempotente
-  - Versionar seeds/migrations por lote de cadastro
+  - Versionar somente seeds/init por lote de cadastro (sem migrations)
 
 - [ ] Monitoramento de qualidade
-  - Aumentar `docs/pre_search_eval_dataset_mvp.json`
-  - Rodar avaliacao periodica (`scripts/evaluate_pre_search.py`)
+  - Aumentar `docs/assets/datasets/pre_search_eval_dataset_mvp.json`
+  - Rodar avaliacao periodica (`scripts/eval/evaluate_pre_search.py`)
   - Acompanhar cobertura por marca/modelo/peca
+
+- [ ] Definir estrategia de melhoria da decisao da LLM (`search` vs `ask`)
+  - `Few-shot` (contexto no prompt): enviar exemplos de entrada + decisao correta em cada chamada.
+  - Efeito do `few-shot`: melhora comportamento na conversa atual, mas nao treina o modelo de forma permanente.
+  - `Fine-tuning` (treino do modelo): usar dataset rotulado para ajustar pesos do modelo.
+  - Efeito do `fine-tuning`: aprendizado persistente entre chamadas, com maior custo e operacao mais complexa.
+  - Regra pratica: comecar por `few-shot` + avaliacao; considerar `fine-tuning` so com volume bom de exemplos rotulados.
 
 ## Criterio de conclusao da fase
 

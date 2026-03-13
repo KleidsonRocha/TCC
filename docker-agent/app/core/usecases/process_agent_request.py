@@ -1,11 +1,14 @@
 import logging
 import time
+from typing import Any
 
 from app.api.schemas.contract_v1 import AgentRequestV1
 from app.config import Settings
 from app.core.domain.models import HandoffInfo, ProcessResult, ToolTrace
 from app.core.domain.pre_search import SearchCriteria
+from app.core.domain.pre_search import PreSearchValidation
 from app.core.domain.rules import validate_message_text, validate_schema_version
+from app.core.ports.pre_search_review_recorder import PreSearchReviewRecorderPort
 from app.core.ports.pre_search_validator import PreSearchValidatorPort
 from app.core.ports.tools import ToolsPort
 
@@ -18,11 +21,13 @@ class ProcessAgentRequestUseCase:
         pre_search_validator: PreSearchValidatorPort,
         settings: Settings,
         logger: logging.Logger,
+        review_recorder: PreSearchReviewRecorderPort,
     ) -> None:
         self._tools = tools
         self._pre_search_validator = pre_search_validator
         self._settings = settings
         self._logger = logger
+        self._review_recorder = review_recorder
 
     async def execute(self, payload: AgentRequestV1) -> ProcessResult:
         validate_schema_version(payload.schema_version)
@@ -68,13 +73,21 @@ class ProcessAgentRequestUseCase:
                     "latency_ms": latency_ms,
                 },
             )
-            return ProcessResult(
+            result = ProcessResult(
                 reply_text=reply_text,
                 actions=actions,
                 handoff=handoff,
                 confidence=confidence,
                 tool_trace=ToolTrace(used_tools=used_tools, latency_ms=latency_ms),
             )
+            self._record_review_case(
+                payload=payload,
+                last_messages=last_messages,
+                pre_search=pre_search,
+                result=result,
+                search_query=None,
+            )
+            return result
 
         if pre_search.decision == "handoff":
             reply_text = (
@@ -85,19 +98,27 @@ class ProcessAgentRequestUseCase:
             handoff = HandoffInfo(required=True, reason="pre_search_handoff")
             confidence = pre_search.confidence
             latency_ms = round((time.perf_counter() - started_at) * 1000, 2)
-            return ProcessResult(
+            result = ProcessResult(
                 reply_text=reply_text,
                 actions=actions,
                 handoff=handoff,
                 confidence=confidence,
                 tool_trace=ToolTrace(used_tools=used_tools, latency_ms=latency_ms),
             )
+            self._record_review_case(
+                payload=payload,
+                last_messages=last_messages,
+                pre_search=pre_search,
+                result=result,
+                search_query=None,
+            )
+            return result
 
         used_tools.append("search_parts")
         search_query = self._build_search_query(pre_search.criteria)
         if not search_query.strip():
             reply_text = "Preciso de mais detalhes para iniciar a pesquisa."
-            return ProcessResult(
+            result = ProcessResult(
                 reply_text=reply_text,
                 actions=actions,
                 handoff=HandoffInfo(required=False, reason=None),
@@ -107,6 +128,14 @@ class ProcessAgentRequestUseCase:
                     latency_ms=round((time.perf_counter() - started_at) * 1000, 2),
                 ),
             )
+            self._record_review_case(
+                payload=payload,
+                last_messages=last_messages,
+                pre_search=pre_search,
+                result=result,
+                search_query=search_query,
+            )
+            return result
 
         items = self._tools.search_parts(
             query=search_query,
@@ -178,13 +207,21 @@ class ProcessAgentRequestUseCase:
             },
         )
 
-        return ProcessResult(
+        result = ProcessResult(
             reply_text=reply_text,
             actions=actions,
             handoff=handoff,
             confidence=confidence,
             tool_trace=ToolTrace(used_tools=used_tools, latency_ms=latency_ms),
         )
+        self._record_review_case(
+            payload=payload,
+            last_messages=last_messages,
+            pre_search=pre_search,
+            result=result,
+            search_query=search_query,
+        )
+        return result
 
     @staticmethod
     def _build_search_query(criteria: SearchCriteria) -> str:
@@ -197,5 +234,73 @@ class ProcessAgentRequestUseCase:
             criteria.engine,
             "esquerdo" if criteria.side == "left" else "direito" if criteria.side == "right" else None,
             "dianteiro" if criteria.position == "front" else "traseiro" if criteria.position == "rear" else None,
+            "eixo dianteiro" if criteria.axle == "front" else "eixo traseiro" if criteria.axle == "rear" else None,
+            criteria.variant,
         ]
         return " ".join(token for token in tokens if token)
+
+    def _record_review_case(
+        self,
+        *,
+        payload: AgentRequestV1,
+        last_messages: list[dict[str, str]],
+        pre_search: PreSearchValidation,
+        result: ProcessResult,
+        search_query: str | None,
+    ) -> None:
+        try:
+            audit_info = self._validator_audit_info()
+            self._review_recorder.record_interaction(
+                trace_id=payload.trace_id,
+                conversation_id=payload.conversation_id,
+                branch_id=payload.business.branch_id,
+                channel_name=payload.channel.name if payload.channel else None,
+                schema_version=payload.schema_version,
+                message_text=payload.message.text,
+                last_messages=last_messages,
+                predicted_decision=pre_search.decision,
+                predicted_criteria=pre_search.criteria.model_dump(exclude_none=True),
+                predicted_missing_fields=list(pre_search.missing_fields),
+                predicted_next_question=(
+                    pre_search.next_question.model_dump(exclude_none=True)
+                    if pre_search.next_question is not None
+                    else None
+                ),
+                predicted_confidence=pre_search.confidence,
+                final_reply_text=result.reply_text,
+                final_actions=list(result.actions),
+                final_handoff_required=result.handoff.required,
+                final_handoff_reason=result.handoff.reason,
+                final_confidence=result.confidence,
+                final_used_tools=list(result.tool_trace.used_tools),
+                final_latency_ms=result.tool_trace.latency_ms,
+                search_query=search_query,
+                llm_model=self._settings.llm_model,
+                llm_num_predict=self._settings.llm_num_predict,
+                llm_endpoint_used=audit_info.get("llm_endpoint_used"),
+                llm_raw_content=audit_info.get("llm_raw_content"),
+                llm_output_valid=audit_info.get("llm_output_valid"),
+                llm_parse_error=audit_info.get("llm_parse_error"),
+                llm_fallback_used=audit_info.get("llm_fallback_used"),
+                llm_decision_raw=audit_info.get("llm_decision_raw"),
+            )
+        except Exception:
+            self._logger.warning(
+                "pre_search_review_capture_failed",
+                extra={
+                    "trace_id": payload.trace_id,
+                    "conversation_id": payload.conversation_id,
+                },
+            )
+
+    def _validator_audit_info(self) -> dict[str, Any]:
+        getter = getattr(self._pre_search_validator, "get_last_audit", None)
+        if not callable(getter):
+            return {}
+        try:
+            result = getter()
+        except Exception:
+            return {}
+        if not isinstance(result, dict):
+            return {}
+        return result

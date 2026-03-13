@@ -1,6 +1,7 @@
 import json
 import logging
 import re
+from copy import deepcopy
 from pathlib import Path
 from typing import Any
 
@@ -12,6 +13,38 @@ from app.core.domain.errors import PreSearchServiceUnavailableError
 from app.core.domain.pre_search import NextQuestion, PreSearchValidation, SearchCriteria
 from app.core.ports.pre_search_validator import PreSearchValidatorPort
 from app.infra.pre_search_dictionary_extractor import DictionaryPreSearchExtractor
+from app.infra.pre_search_part_code import (
+    compile_part_code_patterns,
+    is_valid_part_code_candidate,
+)
+
+DEFAULT_CRITERIA_WEIGHTS: dict[str, int] = {
+    "part_code": 100,
+    "part_query": 45,
+    "vehicle_model": 35,
+    "vehicle_year": 20,
+    "vehicle_brand": 15,
+    "engine": 20,
+    "side": 10,
+    "position": 10,
+    "axle": 10,
+    "variant": 10,
+    "quantity": 5,
+}
+DEFAULT_MIN_SCORE_TO_SEARCH = 70
+SCORING_FIELD_PRIORITY: tuple[str, ...] = (
+    "part_code",
+    "part_query",
+    "vehicle_model",
+    "vehicle_year",
+    "engine",
+    "vehicle_brand",
+    "side",
+    "position",
+    "axle",
+    "variant",
+    "quantity",
+)
 
 
 class LLMPreSearchValidator(PreSearchValidatorPort):
@@ -35,12 +68,23 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         self._generic_ambiguous_parts = set(catalog.generic_ambiguous_parts)
         self._needs_side = set(catalog.needs_side)
         self._needs_position = set(catalog.needs_position)
+        self._needs_axle = set(catalog.needs_axle)
         self._needs_engine = set(catalog.needs_engine)
+        self._needs_variant = set(catalog.needs_variant)
         self._engine_by_model = {
             str(model).lower(): list(options)
             for model, options in catalog.engine_by_model.items()
         }
+        self._part_code_patterns = compile_part_code_patterns(catalog.part_code_patterns)
+        self._criteria_weights = self._normalize_criteria_weights(catalog.criteria_weights)
+        self._min_score_to_search = max(int(catalog.min_score_to_search), 0)
         self._dictionary_extractor = DictionaryPreSearchExtractor(catalog=catalog)
+        self._last_audit_info: dict[str, Any] | None = None
+
+    def get_last_audit(self) -> dict[str, Any] | None:
+        if self._last_audit_info is None:
+            return None
+        return deepcopy(self._last_audit_info)
 
     def validate(
         self,
@@ -48,6 +92,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         *,
         last_messages: list[dict[str, Any]] | None = None,
     ) -> PreSearchValidation:
+        self._last_audit_info = None
         context = last_messages or []
         dictionary_criteria = self._dictionary_extractor.extract(
             message_text,
@@ -92,7 +137,21 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             parsed = self._parse_content(content)
             coerced = self._coerce_validation_payload(parsed)
             llm_validation = PreSearchValidation.model_validate(coerced)
+            self._set_last_audit_info(
+                endpoint_used=endpoint_used,
+                raw_content=content,
+                output_valid=True,
+                parse_error=None,
+                fallback_used=False,
+            )
         except Exception as exc:
+            self._set_last_audit_info(
+                endpoint_used=endpoint_used,
+                raw_content=content,
+                output_valid=False,
+                parse_error=str(exc),
+                fallback_used=True,
+            )
             ai_fallback = self._build_ai_decision_fallback(
                 raw_content=content,
                 dictionary_criteria=dictionary_criteria,
@@ -133,6 +192,13 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             last_messages=context,
         )
         if self._log_raw_response:
+            score_explicit_fields = self._build_score_explicit_fields(
+                dictionary_criteria=dictionary_criteria,
+            )
+            criteria_score = self._calculate_criteria_score(
+                llm_validation.criteria,
+                score_explicit_fields=score_explicit_fields,
+            )
             self._logger.info(
                 "pre_search_llm_final_validation",
                 extra={
@@ -140,6 +206,9 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
                     "decision": llm_validation.decision,
                     "criteria": llm_validation.criteria.model_dump(exclude_none=True),
                     "missing_fields": llm_validation.missing_fields,
+                    "criteria_score": criteria_score,
+                    "score_explicit_fields": sorted(score_explicit_fields),
+                    "min_score_to_search": self._min_score_to_search,
                     "next_question": (
                         llm_validation.next_question.model_dump(exclude_none=True)
                         if llm_validation.next_question
@@ -148,6 +217,25 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
                 },
             )
         return llm_validation
+
+    def _set_last_audit_info(
+        self,
+        *,
+        endpoint_used: str | None,
+        raw_content: str | None,
+        output_valid: bool,
+        parse_error: str | None,
+        fallback_used: bool,
+    ) -> None:
+        content = str(raw_content or "").strip() or None
+        self._last_audit_info = {
+            "llm_endpoint_used": endpoint_used,
+            "llm_raw_content": content,
+            "llm_output_valid": bool(output_valid),
+            "llm_parse_error": parse_error,
+            "llm_fallback_used": bool(fallback_used),
+            "llm_decision_raw": self._extract_decision_from_raw_content(content or ""),
+        }
 
     def _post_chat_or_generate(
         self,
@@ -182,10 +270,12 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         dictionary_seed_criteria: SearchCriteria,
     ) -> dict[str, Any]:
         instructions = self._build_system_instructions(categories_text=self._categories_text)
+        score_policy = self._build_llm_score_policy(dictionary_seed_criteria=dictionary_seed_criteria)
         user_input = {
             "message_text": message_text,
             "last_messages": last_messages,
             "dictionary_seed_criteria": dictionary_seed_criteria.model_dump(exclude_none=True),
+            "score_policy": score_policy,
         }
         return {
             "model": self._model,
@@ -210,10 +300,12 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         dictionary_seed_criteria: SearchCriteria,
     ) -> dict[str, Any]:
         instructions = self._build_system_instructions(categories_text=self._categories_text)
+        score_policy = self._build_llm_score_policy(dictionary_seed_criteria=dictionary_seed_criteria)
         user_input = {
             "message_text": message_text,
             "last_messages": last_messages,
             "dictionary_seed_criteria": dictionary_seed_criteria.model_dump(exclude_none=True),
+            "score_policy": score_policy,
         }
         prompt = (
             f"{instructions}\n\n"
@@ -305,6 +397,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         message_text: str,
         last_messages: list[dict[str, Any]],
     ) -> PreSearchValidation:
+        explicit_part_code = bool(dictionary_criteria.part_code)
         merged_criteria = llm_validation.criteria.model_dump(exclude_none=False)
         dictionary_values = dictionary_criteria.model_dump(exclude_none=False)
 
@@ -314,28 +407,70 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
                 merged_criteria[key] = dictionary_value
 
         criteria_model = SearchCriteria.model_validate(merged_criteria)
+        score_explicit_fields = self._build_score_explicit_fields(
+            dictionary_criteria=dictionary_criteria,
+        )
         decision = llm_validation.decision
         missing_fields = self._resolve_missing_fields(
             criteria=criteria_model,
             llm_missing_fields=llm_validation.missing_fields,
-            include_rule_fields=(decision == "ask"),
+            include_rule_fields=True,
+            explicit_part_code=explicit_part_code,
         )
+        criteria_score = self._calculate_criteria_score(
+            criteria_model,
+            score_explicit_fields=score_explicit_fields,
+        )
+        search_gate_missing = self._calculate_missing_fields(
+            criteria_model,
+            explicit_part_code=explicit_part_code,
+        )
+        if explicit_part_code and criteria_model.part_code:
+            decision = "search"
+            missing_fields = []
+        elif decision == "search":
+            if search_gate_missing:
+                decision = "ask"
+                missing_fields = self._resolve_missing_fields(
+                    criteria=criteria_model,
+                    llm_missing_fields=search_gate_missing,
+                    include_rule_fields=True,
+                    explicit_part_code=explicit_part_code,
+                )
+            elif (
+                self._score_threshold_applies(
+                    criteria_model,
+                    explicit_part_code=explicit_part_code,
+                )
+                and criteria_score < self._min_score_to_search
+            ):
+                decision = "ask"
+                missing_fields = self._resolve_missing_fields(
+                    criteria=criteria_model,
+                    llm_missing_fields=self._calculate_score_gap_missing_fields(
+                        criteria=criteria_model,
+                        current_missing_fields=missing_fields,
+                        score_explicit_fields=score_explicit_fields,
+                        explicit_part_code=explicit_part_code,
+                    ),
+                    include_rule_fields=True,
+                    explicit_part_code=explicit_part_code,
+                )
+
         next_question: NextQuestion | None = None
         if decision == "ask":
             llm_next_question = llm_validation.next_question
-            if not llm_next_question and missing_fields:
-                llm_next_question = self._generate_next_question_with_llm(
-                    message_text=message_text,
-                    last_messages=last_messages,
-                    criteria=criteria_model,
-                    missing_fields=missing_fields,
-                )
             next_question = self._resolve_next_question(
                 llm_next_question=llm_next_question,
                 criteria=criteria_model,
                 decision=decision,
                 missing_fields=missing_fields,
             )
+            if not next_question:
+                next_question = self._build_default_next_question(
+                    criteria=criteria_model,
+                    missing_fields=missing_fields,
+                )
             if next_question and next_question.key not in missing_fields:
                 missing_fields = [next_question.key, *missing_fields]
             if not next_question:
@@ -355,111 +490,6 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             confidence=llm_validation.confidence,
         )
 
-    def _generate_next_question_with_llm(
-        self,
-        *,
-        message_text: str,
-        last_messages: list[dict[str, Any]],
-        criteria: SearchCriteria,
-        missing_fields: list[str],
-    ) -> NextQuestion | None:
-        if not missing_fields:
-            return None
-
-        schema = {
-            "type": "object",
-            "required": ["key", "prompt", "options"],
-            "properties": {
-                "key": {"type": "string"},
-                "prompt": {"type": "string"},
-                "options": {
-                    "anyOf": [
-                        {"type": "array", "items": {"type": "string"}},
-                        {"type": "null"},
-                    ]
-                },
-            },
-            "additionalProperties": False,
-        }
-        system = (
-            "Voce gera uma unica pergunta de follow-up para pre-busca de autopecas. "
-            "Retorne somente JSON valido no formato {key,prompt,options}. "
-            "Regras: key deve ser exatamente um dos campos em missing_fields; "
-            "prompt deve ser curto, objetivo e contextualizado com os dados ja extraidos; "
-            "se key=side use options ['esquerdo','direito','Nao sei']; "
-            "se key=position use options ['dianteiro','traseiro','Nao sei']; "
-            "se key=engine e houver sugestoes no payload, use essas sugestoes em options; "
-            "se key=part_query, evite pergunta generica e contextualize com modelo/ano quando disponivel."
-        )
-        payload_input = {
-            "message_text": message_text,
-            "last_messages": last_messages,
-            "criteria": criteria.model_dump(exclude_none=True),
-            "missing_fields": missing_fields,
-            "engine_options_hint": self._engine_options_for_model(criteria.vehicle_model),
-        }
-        payload = {
-            "model": self._model,
-            "stream": False,
-            "think": self._think,
-            "format": schema,
-            "messages": [
-                {"role": "system", "content": system},
-                {"role": "user", "content": json.dumps(payload_input, ensure_ascii=False)},
-            ],
-            "options": {
-                "temperature": self._temperature,
-                "num_predict": min(self._num_predict, 96),
-            },
-        }
-
-        try:
-            chat_endpoint = f"{self._base_url}/api/chat"
-            response = httpx.post(chat_endpoint, json=payload, timeout=self._timeout)
-            if response.status_code == 404:
-                return None
-            response.raise_for_status()
-            raw_body = response.json()
-            content = self._extract_content(raw_body)
-            parsed = self._parse_content(content)
-            if not isinstance(parsed, dict):
-                return None
-
-            key = str(parsed.get("key", "")).strip()
-            prompt = str(parsed.get("prompt", "")).strip()
-            if not key or not prompt or key not in set(missing_fields):
-                return None
-
-            options: list[str] | None = None
-            raw_options = parsed.get("options")
-            if isinstance(raw_options, list):
-                options = [str(item).strip() for item in raw_options if str(item).strip()]
-                if not options:
-                    options = None
-
-            if key == "engine" and not options:
-                options = self._engine_options_for_model(criteria.vehicle_model)
-            if key == "side" and not options:
-                options = ["esquerdo", "direito", "Nao sei"]
-            if key == "position" and not options:
-                options = ["dianteiro", "traseiro", "Nao sei"]
-
-            return NextQuestion(
-                key=key,
-                prompt=prompt,
-                options=options,
-            )
-        except Exception as exc:
-            self._logger.warning(
-                "pre_search_llm_next_question_repair_failed",
-                extra={
-                    "model": self._model,
-                    "missing_fields": missing_fields,
-                    "error": str(exc),
-                },
-            )
-            return None
-
     def _should_take_dictionary_value(self, *, llm_value: Any, dictionary_value: Any) -> bool:
         if dictionary_value is None or dictionary_value == "" or dictionary_value == []:
             return False
@@ -475,8 +505,13 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         criteria: SearchCriteria,
         llm_missing_fields: list[str],
         include_rule_fields: bool = True,
+        explicit_part_code: bool = False,
     ) -> list[str]:
-        rules_missing_fields = self._calculate_missing_fields(criteria) if include_rule_fields else []
+        rules_missing_fields = (
+            self._calculate_missing_fields(criteria, explicit_part_code=explicit_part_code)
+            if include_rule_fields
+            else []
+        )
         ordered_fields = [*rules_missing_fields, *llm_missing_fields]
         deduped_fields: list[str] = []
         criteria_values = criteria.model_dump(exclude_none=False)
@@ -484,6 +519,10 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         for field in ordered_fields:
             field_name = str(field).strip()
             if not field_name or field_name in deduped_fields:
+                continue
+            if field_name == "axle" and (
+                criteria_values.get("axle") is not None or criteria_values.get("position") is not None
+            ):
                 continue
             current_value = criteria_values.get(field_name)
             if current_value is None or current_value == "" or current_value == []:
@@ -541,25 +580,76 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         message_text: str,
         last_messages: list[dict[str, Any]],
     ) -> PreSearchValidation:
+        explicit_part_code = bool(dictionary_criteria.part_code)
         ai_decision = self._extract_decision_from_raw_content(raw_content)
+        score_explicit_fields = self._build_score_explicit_fields(
+            dictionary_criteria=dictionary_criteria,
+        )
         missing_fields = self._resolve_missing_fields(
             criteria=dictionary_criteria,
             llm_missing_fields=[],
-            include_rule_fields=(ai_decision == "ask"),
+            include_rule_fields=True,
+            explicit_part_code=explicit_part_code,
         )
-        next_question: NextQuestion | None = None
-        if ai_decision == "ask":
-            next_question = self._generate_next_question_with_llm(
-                message_text=message_text,
-                last_messages=last_messages,
-                criteria=dictionary_criteria,
-                missing_fields=missing_fields,
-            )
+        criteria_score = self._calculate_criteria_score(
+            dictionary_criteria,
+            score_explicit_fields=score_explicit_fields,
+        )
+        search_gate_missing = self._calculate_missing_fields(
+            dictionary_criteria,
+            explicit_part_code=explicit_part_code,
+        )
+        if explicit_part_code and dictionary_criteria.part_code:
+            ai_decision = "search"
+            missing_fields = []
+        elif ai_decision == "search":
+            if search_gate_missing:
+                ai_decision = "ask"
+                missing_fields = self._resolve_missing_fields(
+                    criteria=dictionary_criteria,
+                    llm_missing_fields=search_gate_missing,
+                    include_rule_fields=True,
+                    explicit_part_code=explicit_part_code,
+                )
+            elif (
+                self._score_threshold_applies(
+                    dictionary_criteria,
+                    explicit_part_code=explicit_part_code,
+                )
+                and criteria_score < self._min_score_to_search
+            ):
+                ai_decision = "ask"
+                missing_fields = self._resolve_missing_fields(
+                    criteria=dictionary_criteria,
+                    llm_missing_fields=self._calculate_score_gap_missing_fields(
+                        criteria=dictionary_criteria,
+                        current_missing_fields=missing_fields,
+                        score_explicit_fields=score_explicit_fields,
+                        explicit_part_code=explicit_part_code,
+                    ),
+                    include_rule_fields=True,
+                    explicit_part_code=explicit_part_code,
+                )
+
         decision = self._resolve_decision(
             llm_decision=ai_decision,
             criteria=dictionary_criteria,
             missing_fields=missing_fields,
         )
+
+        next_question: NextQuestion | None = None
+        if decision == "ask":
+            next_question = self._resolve_next_question(
+                llm_next_question=None,
+                criteria=dictionary_criteria,
+                decision=decision,
+                missing_fields=missing_fields,
+            )
+            if not next_question:
+                next_question = self._build_default_next_question(
+                    criteria=dictionary_criteria,
+                    missing_fields=missing_fields,
+                )
 
         if decision == "ask" and not next_question:
             return self._build_no_decision_handoff(
@@ -577,6 +667,48 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             missing_fields=missing_fields,
             next_question=next_question if decision == "ask" else None,
             confidence=0.6,
+        )
+
+    def _build_default_next_question(
+        self,
+        *,
+        criteria: SearchCriteria,
+        missing_fields: list[str],
+    ) -> NextQuestion | None:
+        ordered_missing = [str(field or "").strip() for field in missing_fields if str(field or "").strip()]
+        if not ordered_missing:
+            return None
+
+        field_name = ordered_missing[0]
+        prompts: dict[str, str] = {
+            "part_query": "Qual peca voce precisa?",
+            "part_code": "Qual o codigo da peca?",
+            "vehicle_brand": "Qual a marca do veiculo?",
+            "vehicle_model": "Qual o modelo do veiculo?",
+            "vehicle_year": "Qual o ano do veiculo?",
+            "engine": "Qual a motorizacao do veiculo?",
+            "side": "Qual lado da peca?",
+            "position": "Em qual posicao a peca fica?",
+            "axle": "Qual o eixo da peca?",
+            "variant": "Qual a versao do veiculo?",
+            "quantity": "Quantas unidades voce precisa?",
+        }
+        prompt = prompts.get(field_name)
+        if not prompt:
+            return None
+
+        options: list[str] | None = None
+        if field_name == "engine":
+            options = self._engine_options_for_model(criteria.vehicle_model)
+        elif field_name == "side":
+            options = ["Esquerdo", "Direito", "Nao sei"]
+        elif field_name in {"position", "axle"}:
+            options = ["Dianteiro", "Traseiro", "Nao sei"]
+
+        return NextQuestion(
+            key=field_name,
+            prompt=prompt,
+            options=options,
         )
 
     @staticmethod
@@ -612,33 +744,289 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             return "search"
         return "ask"
 
-    def _calculate_missing_fields(self, criteria: SearchCriteria) -> list[str]:
+    def _calculate_missing_fields(
+        self,
+        criteria: SearchCriteria,
+        *,
+        explicit_part_code: bool = False,
+    ) -> list[str]:
         missing: list[str] = []
+        part_query = str(criteria.part_query or "").strip().lower() or None
+        has_explicit_part_code = bool(criteria.part_code and explicit_part_code)
 
-        if not criteria.part_query and not criteria.part_code:
+        if not part_query and not has_explicit_part_code:
             missing.append("part_query")
             return missing
 
-        if criteria.part_code:
+        if has_explicit_part_code:
             return missing
 
         if not criteria.vehicle_model:
             missing.append("vehicle_model")
             return missing
 
-        if not criteria.vehicle_year and criteria.part_query in self._generic_ambiguous_parts:
+        if not criteria.vehicle_year and part_query in self._generic_ambiguous_parts:
             missing.append("vehicle_year")
 
-        if criteria.part_query in self._needs_engine and not criteria.engine:
+        if part_query in self._needs_engine and not criteria.engine:
             missing.append("engine")
 
-        if criteria.part_query in self._needs_side and not criteria.side:
+        if part_query in self._needs_side and not criteria.side:
             missing.append("side")
 
-        if criteria.part_query in self._needs_position and not criteria.position:
+        if part_query in self._needs_position and not criteria.position:
             missing.append("position")
 
+        has_axle = criteria.axle or criteria.position
+        if part_query in self._needs_axle and not has_axle:
+            missing.append("axle")
+
+        if part_query in self._needs_variant and not criteria.variant:
+            missing.append("variant")
+
         return missing
+
+    @staticmethod
+    def _normalize_criteria_weights(raw_weights: dict[str, int] | None) -> dict[str, int]:
+        normalized_weights = dict(DEFAULT_CRITERIA_WEIGHTS)
+        if not raw_weights:
+            return normalized_weights
+
+        for raw_key, raw_weight in raw_weights.items():
+            key = str(raw_key or "").strip().lower()
+            if key not in normalized_weights:
+                continue
+            try:
+                parsed_weight = int(raw_weight)
+            except (TypeError, ValueError):
+                continue
+            normalized_weights[key] = max(parsed_weight, 0)
+
+        return normalized_weights
+
+    def _score_threshold_applies(
+        self,
+        criteria: SearchCriteria,
+        *,
+        explicit_part_code: bool = False,
+    ) -> bool:
+        if criteria.part_code and explicit_part_code:
+            return False
+        return self._min_score_to_search > 0
+
+    def _calculate_criteria_score(
+        self,
+        criteria: SearchCriteria,
+        *,
+        score_explicit_fields: set[str] | None = None,
+    ) -> int:
+        score = 0
+        for field_name, weight in self._criteria_weights.items():
+            if weight <= 0:
+                continue
+            if self._is_field_excluded_from_score(
+                field_name=field_name,
+                score_explicit_fields=score_explicit_fields,
+            ):
+                continue
+            if self._is_criteria_field_filled(criteria, field_name):
+                score += weight
+        return score
+
+    def _calculate_score_gap_missing_fields(
+        self,
+        *,
+        criteria: SearchCriteria,
+        current_missing_fields: list[str],
+        score_explicit_fields: set[str] | None = None,
+        explicit_part_code: bool = False,
+    ) -> list[str]:
+        if not self._score_threshold_applies(criteria, explicit_part_code=explicit_part_code):
+            return current_missing_fields
+
+        remaining_score = self._min_score_to_search - self._calculate_criteria_score(
+            criteria,
+            score_explicit_fields=score_explicit_fields,
+        )
+        if remaining_score <= 0:
+            return current_missing_fields
+
+        selected_fields: list[str] = []
+
+        for field_name in current_missing_fields:
+            normalized_name = str(field_name or "").strip()
+            if not normalized_name or normalized_name in selected_fields:
+                continue
+            if self._is_criteria_field_filled(criteria, normalized_name):
+                continue
+            if self._is_field_excluded_from_score(
+                field_name=normalized_name,
+                score_explicit_fields=score_explicit_fields,
+            ):
+                continue
+            selected_fields.append(normalized_name)
+            remaining_score -= max(self._criteria_weights.get(normalized_name, 0), 0)
+            if remaining_score <= 0:
+                return selected_fields
+
+        for field_name in self._sorted_weighted_fields_for_ask(criteria):
+            if field_name in selected_fields:
+                continue
+            if self._is_criteria_field_filled(criteria, field_name):
+                continue
+            if self._is_field_excluded_from_score(
+                field_name=field_name,
+                score_explicit_fields=score_explicit_fields,
+            ):
+                continue
+            selected_fields.append(field_name)
+            remaining_score -= max(self._criteria_weights.get(field_name, 0), 0)
+            if remaining_score <= 0:
+                break
+
+        if selected_fields:
+            return selected_fields
+        if not criteria.part_query and not criteria.part_code:
+            return ["part_query"]
+        if not criteria.vehicle_model:
+            return ["vehicle_model"]
+        return ["vehicle_year"]
+
+    def _build_llm_score_policy(self, *, dictionary_seed_criteria: SearchCriteria) -> dict[str, Any]:
+        explicit_part_code = bool(dictionary_seed_criteria.part_code)
+        score_explicit_fields = self._build_score_explicit_fields(
+            dictionary_criteria=dictionary_seed_criteria,
+        )
+        seed_score = self._calculate_criteria_score(
+            dictionary_seed_criteria,
+            score_explicit_fields=score_explicit_fields,
+        )
+        seed_missing_fields = self._calculate_missing_fields(
+            dictionary_seed_criteria,
+            explicit_part_code=explicit_part_code,
+        )
+        score_gap_missing_fields_hint = self._calculate_score_gap_missing_fields(
+            criteria=dictionary_seed_criteria,
+            current_missing_fields=seed_missing_fields,
+            score_explicit_fields=score_explicit_fields,
+            explicit_part_code=explicit_part_code,
+        )
+        seed_expected_decision_by_policy = self._seed_expected_decision_by_policy(
+            criteria=dictionary_seed_criteria,
+            seed_score=seed_score,
+            seed_missing_fields=seed_missing_fields,
+            explicit_part_code=explicit_part_code,
+        )
+        return {
+            "criteria_weights": dict(self._criteria_weights),
+            "min_score_to_search": self._min_score_to_search,
+            "seed_score": seed_score,
+            "seed_missing_fields": seed_missing_fields,
+            "score_gap_missing_fields_hint": score_gap_missing_fields_hint,
+            "score_explicit_fields": sorted(score_explicit_fields),
+            "score_only_if_explicit": ["vehicle_brand"],
+            "seed_expected_decision_by_policy": seed_expected_decision_by_policy,
+            "part_code_bypass": explicit_part_code,
+        }
+
+    def _seed_expected_decision_by_policy(
+        self,
+        *,
+        criteria: SearchCriteria,
+        seed_score: int,
+        seed_missing_fields: list[str],
+        explicit_part_code: bool = False,
+    ) -> str:
+        if criteria.part_code and explicit_part_code:
+            return "search_or_ask"
+        if seed_missing_fields:
+            return "ask"
+        if (
+            self._score_threshold_applies(
+                criteria,
+                explicit_part_code=explicit_part_code,
+            )
+            and seed_score < self._min_score_to_search
+        ):
+            return "ask"
+        return "search_or_ask"
+
+    @staticmethod
+    def _build_score_explicit_fields(*, dictionary_criteria: SearchCriteria) -> set[str]:
+        explicit_fields: set[str] = set()
+        if dictionary_criteria.vehicle_brand:
+            explicit_fields.add("vehicle_brand")
+        return explicit_fields
+
+    @staticmethod
+    def _is_field_excluded_from_score(
+        *,
+        field_name: str,
+        score_explicit_fields: set[str] | None,
+    ) -> bool:
+        normalized_field = str(field_name or "").strip().lower()
+        if normalized_field != "vehicle_brand":
+            return False
+        if score_explicit_fields is None:
+            return False
+        return "vehicle_brand" not in score_explicit_fields
+
+    def _sorted_weighted_fields_for_ask(self, criteria: SearchCriteria) -> list[str]:
+        weighted_fields: list[tuple[str, int]] = []
+        for field_name, weight in self._criteria_weights.items():
+            if weight <= 0:
+                continue
+            if not self._is_scoring_field_relevant(criteria, field_name):
+                continue
+            weighted_fields.append((field_name, weight))
+
+        weighted_fields.sort(
+            key=lambda item: (
+                -item[1],
+                self._field_priority(item[0]),
+            )
+        )
+        return [field_name for field_name, _ in weighted_fields]
+
+    def _is_scoring_field_relevant(self, criteria: SearchCriteria, field_name: str) -> bool:
+        normalized_name = str(field_name or "").strip().lower()
+        part_query = str(criteria.part_query or "").strip().lower() or None
+
+        if normalized_name == "part_code":
+            return not bool(criteria.part_query)
+        if normalized_name == "quantity":
+            return False
+        if normalized_name == "side":
+            return part_query in self._needs_side
+        if normalized_name == "position":
+            return part_query in self._needs_position
+        if normalized_name == "axle":
+            return part_query in self._needs_axle and not criteria.position
+        if normalized_name == "variant":
+            return part_query in self._needs_variant
+        if normalized_name == "engine":
+            return bool(criteria.vehicle_model) or (part_query in self._needs_engine)
+        return True
+
+    @staticmethod
+    def _field_priority(field_name: str) -> int:
+        try:
+            return SCORING_FIELD_PRIORITY.index(field_name)
+        except ValueError:
+            return len(SCORING_FIELD_PRIORITY)
+
+    @staticmethod
+    def _is_criteria_field_filled(criteria: SearchCriteria, field_name: str) -> bool:
+        if not hasattr(criteria, field_name):
+            return False
+        value = getattr(criteria, field_name)
+        if value is None:
+            return False
+        if isinstance(value, str):
+            return bool(value.strip())
+        if isinstance(value, (list, tuple, set, dict)):
+            return bool(value)
+        return True
 
     @staticmethod
     def _parse_content(content: str) -> dict[str, Any]:
@@ -671,6 +1059,8 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
                         "engine": {"anyOf": [{"type": "string"}, {"type": "null"}]},
                         "side": {"anyOf": [{"type": "string"}, {"type": "null"}]},
                         "position": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+                        "axle": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+                        "variant": {"anyOf": [{"type": "string"}, {"type": "null"}]},
                         "quantity": {"anyOf": [{"type": "integer"}, {"type": "null"}]},
                     },
                     "additionalProperties": False,
@@ -698,6 +1088,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
                     ]
                 },
                 "confidence": {"type": "number"},
+                "criteria_score": {"anyOf": [{"type": "number"}, {"type": "null"}]},
             },
             "additionalProperties": False,
         }
@@ -709,17 +1100,16 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         criteria_raw = parsed.get("criteria")
         criteria = criteria_raw if isinstance(criteria_raw, dict) else {}
 
-        part_code = self._as_str(criteria.get("part_code"))
-        if part_code and not self._looks_like_part_code(part_code):
-            part_code = None
-
         part_query = self._as_str(criteria.get("part_query"))
         vehicle_brand = self._clean_vehicle_brand(self._as_str(criteria.get("vehicle_brand")))
         vehicle_model = self._clean_vehicle_model(self._as_str(criteria.get("vehicle_model")))
         vehicle_year = self._parse_year(criteria.get("vehicle_year"))
+        part_code = None
         engine = self._as_str(criteria.get("engine"))
         side = self._normalize_side(self._as_str(criteria.get("side")))
         position = self._normalize_position(self._as_str(criteria.get("position")))
+        axle = self._normalize_axle(self._as_str(criteria.get("axle")))
+        variant = self._as_str(criteria.get("variant"))
         quantity = self._parse_quantity(criteria.get("quantity"))
 
         normalized_criteria: dict[str, Any] = {
@@ -731,6 +1121,8 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             "engine": engine,
             "side": side,
             "position": position,
+            "axle": axle,
+            "variant": variant,
             "quantity": quantity,
         }
 
@@ -767,6 +1159,8 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             "engine",
             "side",
             "position",
+            "axle",
+            "variant",
             "quantity",
         }
         if not isinstance(value, list):
@@ -900,8 +1294,31 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         return None
 
     @staticmethod
-    def _looks_like_part_code(value: str) -> bool:
-        return bool(re.search(r"\b[A-Za-z]{2,5}[- ]?\d{3,8}\b", value))
+    def _normalize_axle(value: str | None) -> str | None:
+        if not value:
+            return None
+        lowered = value.lower()
+        if lowered in {"front", "dianteiro", "dianteira", "eixo dianteiro", "eixo dianteira"}:
+            return "front"
+        if lowered in {"rear", "traseiro", "traseira", "eixo traseiro", "eixo traseira"}:
+            return "rear"
+        return None
+
+    def _looks_like_part_code(
+        self,
+        value: str,
+        *,
+        vehicle_brand: str | None = None,
+        vehicle_model: str | None = None,
+        vehicle_year: int | None = None,
+    ) -> bool:
+        return is_valid_part_code_candidate(
+            value,
+            compiled_patterns=self._part_code_patterns,
+            vehicle_brand=vehicle_brand,
+            vehicle_model=vehicle_model,
+            vehicle_year=vehicle_year,
+        )
 
     def _engine_options_for_model(self, model_name: str | None) -> list[str]:
         key = str(model_name or "").strip().lower()
@@ -913,14 +1330,26 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             "Voce valida pre-busca de autopecas e retorna somente JSON. "
             "Campos obrigatorios no JSON final: decision, criteria, missing_fields, next_question, confidence. "
             "decision deve ser: search, ask ou handoff. "
-            "criteria usa apenas: part_query, part_code, vehicle_brand, vehicle_model, vehicle_year, engine, side, position, quantity. "
+            "criteria usa apenas: part_query, part_code, vehicle_brand, vehicle_model, vehicle_year, engine, side, position, axle, variant, quantity. "
             "Regras: sem part_query e sem part_code -> ask; "
             "com part_code valido -> search; "
             "para termos ambiguos como filtro/correia/pastilha sem modelo ou ano -> ask; "
-            "pecas dependentes de lado/posicao podem ser search com missing_fields e next_question. "
+            "pecas dependentes de lado/posicao/eixo/versao podem ser search com missing_fields e next_question. "
             "Use message_text e last_messages juntos no contexto. "
             "Use dictionary_seed_criteria como extracao deterministica de alta confianca para preencher slots. "
             "Se houver conflito fraco, prefira dictionary_seed_criteria. "
+            "So preencha part_code quando ele aparecer literalmente em message_text, last_messages ou dictionary_seed_criteria.part_code. "
+            "Nao invente part_code combinando modelo com ano, como GOL-2010, ONIX-2018 ou similares. "
+            "Use score_policy para decidir search vs ask na PRIMEIRA resposta: "
+            "calcule criteria_score somando os pesos de score_policy.criteria_weights para cada campo preenchido em criteria; "
+            "para vehicle_brand, so pontue quando constar em score_policy.score_explicit_fields; "
+            "se score_policy.part_code_bypass for true e houver part_code valido, pode search mesmo com score baixo; "
+            "sem part_code, se criteria_score < score_policy.min_score_to_search, decision DEVE ser ask; "
+            "score_policy.seed_expected_decision_by_policy e um limite minimo de decisao para esta entrada: "
+            "se vier 'ask', sua decision nao pode ser search; use ask ou handoff. "
+            "neste caso, missing_fields deve priorizar score_policy.score_gap_missing_fields_hint. "
+            "Se decision=ask, next_question deve vir preenchido no MESMO JSON (nao pode ser null). "
+            "next_question.key deve ser um campo de missing_fields e next_question.prompt deve ser direto e especifico. "
             "Quando nao souber um slot, retorne null. "
             "Nao use strings como 'nao', 'desconhecido' ou similares em criteria."
         )

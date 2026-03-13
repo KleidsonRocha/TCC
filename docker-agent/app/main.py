@@ -9,6 +9,7 @@ from app.core.ports.pre_search_validator import PreSearchValidatorPort
 from app.core.usecases.process_agent_request import ProcessAgentRequestUseCase
 from app.infra.logger import configure_logging, get_logger
 from app.infra.pre_search_catalog_pg import resolve_pre_search_catalog
+from app.infra.pre_search_review_queue_pg import recorder_from_settings
 from app.infra.pre_search_validator_llm import LLMPreSearchValidator
 from app.infra.tools_mock import MockTools
 
@@ -37,6 +38,7 @@ def create_app(
             pre_search_validator=pre_search_validator,
             settings=settings,
             logger=logger,
+            review_recorder=recorder_from_settings(settings=settings, logger=logger),
         )
 
         app.state.settings = settings

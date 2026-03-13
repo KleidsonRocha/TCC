@@ -6,6 +6,7 @@ services:
       - "11434:11434"
     volumes:
       - ollama_data:/root/.ollama
+      - ./.tmp/ollama_models:/ollama_models
     restart: unless-stopped
     networks:
       - tcc-integration
@@ -52,6 +53,7 @@ services:
       CATALOG_DB_USER: ${CATALOG_DB_USER:-presearch}
       CATALOG_DB_PASSWORD: ${CATALOG_DB_PASSWORD:-presearch}
       CATALOG_DB_CONNECT_TIMEOUT_S: ${CATALOG_DB_CONNECT_TIMEOUT_S:-2}
+      PRE_SEARCH_REVIEW_CAPTURE_ENABLED: ${PRE_SEARCH_REVIEW_CAPTURE_ENABLED:-true}
       LLM_BASE_URL: ${LLM_BASE_URL:-http://ollama:11434}
       LLM_MODEL: ${LLM_MODEL:-qwen2.5:7b}
       LLM_TIMEOUT_MS: ${LLM_TIMEOUT_MS:-240000}
@@ -66,9 +68,51 @@ services:
     networks:
       - tcc-integration
 
+  trainer:
+    build:
+      context: .
+      dockerfile: trainer/Dockerfile
+    profiles:
+      - trainer
+    working_dir: /workspace
+    gpus: all
+    environment:
+      HF_TOKEN: ${HF_TOKEN:-}
+      HUGGINGFACE_HUB_TOKEN: ${HF_TOKEN:-}
+      NVIDIA_VISIBLE_DEVICES: ${TRAINER_NVIDIA_VISIBLE_DEVICES:-all}
+      NVIDIA_DRIVER_CAPABILITIES: ${TRAINER_NVIDIA_DRIVER_CAPABILITIES:-compute,utility}
+      TRAINER_HF_BASE_MODEL: ${TRAINER_HF_BASE_MODEL:-Qwen/Qwen2.5-7B-Instruct}
+      TRAINER_LOAD_IN_4BIT: ${TRAINER_LOAD_IN_4BIT:-true}
+      TRAINER_NUM_EPOCHS: ${TRAINER_NUM_EPOCHS:-2}
+      TRAINER_BATCH_SIZE: ${TRAINER_BATCH_SIZE:-1}
+      TRAINER_EVAL_BATCH_SIZE: ${TRAINER_EVAL_BATCH_SIZE:-1}
+      TRAINER_GRAD_ACCUM_STEPS: ${TRAINER_GRAD_ACCUM_STEPS:-8}
+      TRAINER_LEARNING_RATE: ${TRAINER_LEARNING_RATE:-0.0001}
+      TRAINER_WARMUP_RATIO: ${TRAINER_WARMUP_RATIO:-0.03}
+      TRAINER_MAX_SEQ_LENGTH: ${TRAINER_MAX_SEQ_LENGTH:-1024}
+      TRAINER_LOGGING_STEPS: ${TRAINER_LOGGING_STEPS:-5}
+      TRAINER_SAVE_STEPS: ${TRAINER_SAVE_STEPS:-50}
+      TRAINER_EVAL_STEPS: ${TRAINER_EVAL_STEPS:-50}
+      TRAINER_SAVE_TOTAL_LIMIT: ${TRAINER_SAVE_TOTAL_LIMIT:-2}
+      TRAINER_SEED: ${TRAINER_SEED:-42}
+      TRAINER_LORA_R: ${TRAINER_LORA_R:-16}
+      TRAINER_LORA_ALPHA: ${TRAINER_LORA_ALPHA:-32}
+      TRAINER_LORA_DROPOUT: ${TRAINER_LORA_DROPOUT:-0.05}
+      TRAINER_TARGET_MODULES: ${TRAINER_TARGET_MODULES:-q_proj,k_proj,v_proj,o_proj,gate_proj,up_proj,down_proj}
+      TRAINER_GRADIENT_CHECKPOINTING: ${TRAINER_GRADIENT_CHECKPOINTING:-true}
+      TRAINER_TRUST_REMOTE_CODE: ${TRAINER_TRUST_REMOTE_CODE:-false}
+      TRAINER_REPORT_TO: ${TRAINER_REPORT_TO:-none}
+    volumes:
+      - .:/workspace
+      - trainer_hf_cache:/root/.cache/huggingface
+      - ./.tmp/ollama_models:/ollama_models
+    networks:
+      - tcc-integration
+
 volumes:
   ollama_data:
   presearch_db_data:
+  trainer_hf_cache:
 
 networks:
   tcc-integration:

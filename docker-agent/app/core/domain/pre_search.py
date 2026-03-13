@@ -15,6 +15,8 @@ class SearchCriteria(BaseModel):
     engine: str | None = None
     side: Literal["left", "right"] | None = None
     position: Literal["front", "rear"] | None = None
+    axle: Literal["front", "rear"] | None = None
+    variant: str | None = None
     quantity: int | None = Field(default=None, ge=1, le=999)
 
 

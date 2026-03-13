@@ -1,0 +1,213 @@
+[
+  {
+    "id": "ask_no_part",
+    "message.text": "preciso de uma peca",
+    "context.last_messages": [],
+    "expected": {
+      "decision": "ask",
+      "criteria": {},
+      "missing_fields_contains": ["part_query"],
+      "next_question_key": "part_query"
+    }
+  },
+  {
+    "id": "ask_part_only_vehicle_model",
+    "message.text": "bandejas",
+    "context.last_messages": [],
+    "expected": {
+      "decision": "ask",
+      "criteria": {
+        "part_query": "bandejas"
+      },
+      "missing_fields_contains": ["vehicle_model"],
+      "next_question_key": "vehicle_model"
+    }
+  },
+  {
+    "id": "search_part_code",
+    "message.text": "AB-1234",
+    "context.last_messages": [],
+    "expected": {
+      "decision": "search",
+      "criteria": {
+        "part_code": "AB-1234"
+      },
+      "missing_fields_contains": [],
+      "next_question_key": null
+    }
+  },
+  {
+    "id": "ask_bandejas_axle",
+    "message.text": "bandejas ecosport 2008",
+    "context.last_messages": [],
+    "expected": {
+      "decision": "ask",
+      "criteria": {
+        "part_query": "bandejas",
+        "vehicle_model": "Ecosport",
+        "vehicle_year": 2008
+      },
+      "missing_fields_contains": ["axle"],
+      "next_question_key": "axle"
+    }
+  },
+  {
+    "id": "search_bandejas_axle",
+    "message.text": "bandejas ecosport 2008 eixo dianteiro",
+    "context.last_messages": [],
+    "expected": {
+      "decision": "search",
+      "criteria": {
+        "part_query": "bandejas",
+        "vehicle_model": "Ecosport",
+        "vehicle_year": 2008,
+        "axle": "front"
+      },
+      "missing_fields_contains": [],
+      "next_question_key": null
+    }
+  },
+  {
+    "id": "ask_correia_side",
+    "message.text": "correia de comando gol 2010",
+    "context.last_messages": [],
+    "expected": {
+      "decision": "ask",
+      "criteria": {
+        "part_query": "correia de comando",
+        "vehicle_model": "Gol",
+        "vehicle_year": 2010
+      },
+      "missing_fields_contains": ["side"],
+      "next_question_key": "side"
+    }
+  },
+  {
+    "id": "search_correia_side",
+    "message.text": "correia de comando gol 2010 lado esquerdo",
+    "context.last_messages": [],
+    "expected": {
+      "decision": "search",
+      "criteria": {
+        "part_query": "correia de comando",
+        "vehicle_model": "Gol",
+        "vehicle_year": 2010,
+        "side": "left"
+      },
+      "missing_fields_contains": [],
+      "next_question_key": null
+    }
+  },
+  {
+    "id": "ask_radiador_engine",
+    "message.text": "radiador gol 2010",
+    "context.last_messages": [],
+    "expected": {
+      "decision": "ask",
+      "criteria": {
+        "part_query": "radiador",
+        "vehicle_model": "Gol",
+        "vehicle_year": 2010
+      },
+      "missing_fields_contains": ["engine"],
+      "next_question_key": "engine"
+    }
+  },
+  {
+    "id": "search_radiador_engine",
+    "message.text": "radiador gol 2010 1.6",
+    "context.last_messages": [],
+    "expected": {
+      "decision": "search",
+      "criteria": {
+        "part_query": "radiador",
+        "vehicle_model": "Gol",
+        "vehicle_year": 2010,
+        "engine": "1.6"
+      },
+      "missing_fields_contains": [],
+      "next_question_key": null
+    }
+  },
+  {
+    "id": "ask_bico_side",
+    "message.text": "bico injetor gol 2010",
+    "context.last_messages": [],
+    "expected": {
+      "decision": "ask",
+      "criteria": {
+        "part_query": "bico injetor",
+        "vehicle_model": "Gol",
+        "vehicle_year": 2010
+      },
+      "missing_fields_contains": ["side"],
+      "next_question_key": "side"
+    }
+  },
+  {
+    "id": "search_bico_side",
+    "message.text": "bico injetor gol 2010 lado direito",
+    "context.last_messages": [],
+    "expected": {
+      "decision": "search",
+      "criteria": {
+        "part_query": "bico injetor",
+        "vehicle_model": "Gol",
+        "vehicle_year": 2010,
+        "side": "right"
+      },
+      "missing_fields_contains": [],
+      "next_question_key": null
+    }
+  },
+  {
+    "id": "search_context_engine",
+    "message.text": "1.6",
+    "context.last_messages": [
+      {
+        "role": "user",
+        "text": "radiador gol 2010"
+      },
+      {
+        "role": "assistant",
+        "text": "qual a motorizacao?"
+      }
+    ],
+    "expected": {
+      "decision": "search",
+      "criteria": {
+        "part_query": "radiador",
+        "vehicle_model": "Gol",
+        "vehicle_year": 2010,
+        "engine": "1.6"
+      },
+      "missing_fields_contains": [],
+      "next_question_key": null
+    }
+  },
+  {
+    "id": "search_context_axle",
+    "message.text": "eixo dianteiro",
+    "context.last_messages": [
+      {
+        "role": "user",
+        "text": "bandejas ecosport 2008"
+      },
+      {
+        "role": "assistant",
+        "text": "qual eixo?"
+      }
+    ],
+    "expected": {
+      "decision": "search",
+      "criteria": {
+        "part_query": "bandejas",
+        "vehicle_model": "Ecosport",
+        "vehicle_year": 2008,
+        "axle": "front"
+      },
+      "missing_fields_contains": [],
+      "next_question_key": null
+    }
+  }
+]

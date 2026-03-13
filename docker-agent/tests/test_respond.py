@@ -82,7 +82,9 @@ def _catalog_fixture() -> PreSearchCatalog:
         generic_ambiguous_parts={"filtro"},
         needs_side={"bandeja"},
         needs_position=set(),
+        needs_axle=set(),
         needs_engine=set(),
+        needs_variant=set(),
         engine_by_model={"ecosport": ["1.6", "2.0", "Nao sei"]},
     )
 

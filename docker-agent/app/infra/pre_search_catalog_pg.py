@@ -9,6 +9,21 @@ try:
 except Exception:  # pragma: no cover - optional import for local tooling
     psycopg = None  # type: ignore[assignment]
 
+DEFAULT_CRITERIA_WEIGHTS: dict[str, int] = {
+    "part_code": 100,
+    "part_query": 45,
+    "vehicle_model": 35,
+    "vehicle_year": 20,
+    "vehicle_brand": 15,
+    "engine": 20,
+    "side": 10,
+    "position": 10,
+    "axle": 10,
+    "variant": 10,
+    "quantity": 5,
+}
+DEFAULT_MIN_SCORE_TO_SEARCH = 70
+
 
 class PostgresPreSearchCatalogProvider:
     def __init__(self, *, settings: Settings, logger: logging.Logger) -> None:
@@ -34,8 +49,17 @@ class PostgresPreSearchCatalogProvider:
                 brand_aliases = self._load_brand_aliases(cur)
                 model_aliases = self._load_model_aliases(cur)
                 invalid_tokens = self._load_invalid_tokens(cur)
-                generic_parts, needs_side, needs_position, needs_engine = self._load_part_rules(cur)
+                (
+                    generic_parts,
+                    needs_side,
+                    needs_position,
+                    needs_axle,
+                    needs_engine,
+                    needs_variant,
+                ) = self._load_part_rules(cur)
                 engine_by_model = self._load_engine_options(cur)
+                criteria_weights, min_score_to_search = self._load_search_scoring(cur)
+                part_code_patterns = self._load_part_code_patterns(cur)
 
         self._assert_not_empty(part_patterns, "pre_search_part_alias/pre_search_part_type")
         self._assert_not_empty(brand_aliases, "pre_search_brand_alias/pre_search_brand")
@@ -53,8 +77,13 @@ class PostgresPreSearchCatalogProvider:
                 "generic_parts_count": len(generic_parts),
                 "needs_side_count": len(needs_side),
                 "needs_position_count": len(needs_position),
+                "needs_axle_count": len(needs_axle),
                 "needs_engine_count": len(needs_engine),
+                "needs_variant_count": len(needs_variant),
                 "engine_models_count": len(engine_by_model),
+                "criteria_weights_count": len(criteria_weights),
+                "min_score_to_search": min_score_to_search,
+                "part_code_patterns_count": len(part_code_patterns),
             },
         )
         return PreSearchCatalog(
@@ -65,8 +94,13 @@ class PostgresPreSearchCatalogProvider:
             generic_ambiguous_parts=generic_parts,
             needs_side=needs_side,
             needs_position=needs_position,
+            needs_axle=needs_axle,
             needs_engine=needs_engine,
+            needs_variant=needs_variant,
             engine_by_model=engine_by_model,
+            criteria_weights=criteria_weights,
+            min_score_to_search=min_score_to_search,
+            part_code_patterns=part_code_patterns,
         )
 
     @staticmethod
@@ -165,10 +199,32 @@ class PostgresPreSearchCatalogProvider:
         return values
 
     @staticmethod
-    def _load_part_rules(cur: "psycopg.Cursor") -> tuple[set[str], set[str], set[str], set[str]]:
+    def _load_part_rules(
+        cur: "psycopg.Cursor",
+    ) -> tuple[set[str], set[str], set[str], set[str], set[str], set[str]]:
         cur.execute(
             """
-            SELECT pt.name_normalized, pr.is_generic, pr.needs_side, pr.needs_position, pr.needs_engine
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_schema = 'public'
+              AND table_name = 'pre_search_part_rule'
+              AND column_name IN ('needs_axle', 'needs_variant')
+            """
+        )
+        optional_columns = {str(column_name or "") for (column_name,) in cur.fetchall()}
+        needs_axle_sql = "pr.needs_axle" if "needs_axle" in optional_columns else "FALSE"
+        needs_variant_sql = "pr.needs_variant" if "needs_variant" in optional_columns else "FALSE"
+
+        cur.execute(
+            f"""
+            SELECT
+                pt.name_normalized,
+                pr.is_generic,
+                pr.needs_side,
+                pr.needs_position,
+                {needs_axle_sql} AS needs_axle,
+                pr.needs_engine,
+                {needs_variant_sql} AS needs_variant
             FROM pre_search_part_rule pr
             JOIN pre_search_part_type pt ON pt.id = pr.part_type_id
             WHERE pt.is_active = TRUE
@@ -179,9 +235,11 @@ class PostgresPreSearchCatalogProvider:
         generic_parts: set[str] = set()
         needs_side: set[str] = set()
         needs_position: set[str] = set()
+        needs_axle: set[str] = set()
         needs_engine: set[str] = set()
+        needs_variant: set[str] = set()
 
-        for part_name, is_generic, side, position, engine in rows:
+        for part_name, is_generic, side, position, axle, engine, variant in rows:
             part = str(part_name or "").strip().lower()
             if not part:
                 continue
@@ -191,9 +249,13 @@ class PostgresPreSearchCatalogProvider:
                 needs_side.add(part)
             if bool(position):
                 needs_position.add(part)
+            if bool(axle):
+                needs_axle.add(part)
             if bool(engine):
                 needs_engine.add(part)
-        return generic_parts, needs_side, needs_position, needs_engine
+            if bool(variant):
+                needs_variant.add(part)
+        return generic_parts, needs_side, needs_position, needs_axle, needs_engine, needs_variant
 
     @staticmethod
     def _load_engine_options(cur: "psycopg.Cursor") -> dict[str, list[str]]:
@@ -219,6 +281,80 @@ class PostgresPreSearchCatalogProvider:
             key: list(dict.fromkeys(options))
             for key, options in values.items()
         }
+
+    def _load_part_code_patterns(self, cur: "psycopg.Cursor") -> tuple[str, ...]:
+        if not self._table_exists(cur, "pre_search_part_code_pattern"):
+            return tuple()
+
+        cur.execute(
+            """
+            SELECT pattern_regex
+            FROM pre_search_part_code_pattern
+            WHERE is_active = TRUE
+            ORDER BY brand_id NULLS FIRST, id
+            """
+        )
+        patterns: list[str] = []
+        for (pattern_regex,) in cur.fetchall():
+            pattern = str(pattern_regex or "").strip()
+            if pattern:
+                patterns.append(pattern)
+        return tuple(dict.fromkeys(patterns))
+
+    @staticmethod
+    def _table_exists(cur: "psycopg.Cursor", table_name: str) -> bool:
+        cur.execute(
+            """
+            SELECT EXISTS (
+                SELECT 1
+                FROM information_schema.tables
+                WHERE table_schema = 'public'
+                  AND table_name = %s
+            )
+            """,
+            (table_name,),
+        )
+        row = cur.fetchone()
+        return bool(row and row[0])
+
+    def _load_search_scoring(self, cur: "psycopg.Cursor") -> tuple[dict[str, int], int]:
+        criteria_weights = dict(DEFAULT_CRITERIA_WEIGHTS)
+        min_score_to_search = DEFAULT_MIN_SCORE_TO_SEARCH
+
+        if self._table_exists(cur, "pre_search_criteria_weight"):
+            cur.execute(
+                """
+                SELECT criterion_key, weight
+                FROM pre_search_criteria_weight
+                WHERE is_active = TRUE
+                """
+            )
+            for criterion_key, weight in cur.fetchall():
+                key = str(criterion_key or "").strip().lower()
+                if key not in criteria_weights:
+                    continue
+                try:
+                    parsed_weight = int(weight)
+                except (TypeError, ValueError):
+                    continue
+                criteria_weights[key] = max(parsed_weight, 0)
+
+        if self._table_exists(cur, "pre_search_decision_policy"):
+            cur.execute(
+                """
+                SELECT min_score_to_search
+                FROM pre_search_decision_policy
+                WHERE id = 1
+                """
+            )
+            row = cur.fetchone()
+            if row and row[0] is not None:
+                try:
+                    min_score_to_search = max(int(row[0]), 0)
+                except (TypeError, ValueError):
+                    min_score_to_search = DEFAULT_MIN_SCORE_TO_SEARCH
+
+        return criteria_weights, min_score_to_search
 
 
 def resolve_pre_search_catalog(*, settings: Settings, logger: logging.Logger) -> PreSearchCatalog:
