@@ -54,6 +54,7 @@ class ProcessInboundMessageUseCase:
             )
 
         history = await self._session_store.get_messages(conversation_id)
+        conversation_state = await self._session_store.get_conversation_state(conversation_id)
         user_message = HistoryMessage(role="user", text=text)
 
         payload = AgentRequestPayload(
@@ -61,7 +62,10 @@ class ProcessInboundMessageUseCase:
             conversation_id=conversation_id,
             channel=ChannelInfo(name=source),
             message=IncomingMessage(text=text),
-            context=ConversationContext(last_messages=history),
+            context=ConversationContext(
+                last_messages=history,
+                conversation_state=conversation_state,
+            ),
             runtime=RuntimeInfo(locale="pt-BR", timezone="America/Sao_Paulo"),
             business=BusinessInfo(branch_id=normalized_branch_id),
         )
@@ -82,6 +86,10 @@ class ProcessInboundMessageUseCase:
             messages=[user_message, assistant_message],
             history_limit=self._settings.history_limit,
         )
+        await self._session_store.set_conversation_state(
+            conversation_id=conversation_id,
+            conversation_state=agent_response.conversation_state,
+        )
 
         if agent_response.handoff.required:
             self._logger.info(
@@ -101,4 +109,5 @@ class ProcessInboundMessageUseCase:
             handoff=agent_response.handoff,
             confidence=agent_response.confidence,
             agent_status_code=status_code,
+            conversation_state=agent_response.conversation_state,
         )

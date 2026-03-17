@@ -12,3 +12,7 @@ class InvalidMessageError(DomainError):
 
 class PreSearchServiceUnavailableError(DomainError):
     """Raised when the pre-search validation service is unavailable."""
+
+
+class SearchPartsServiceUnavailableError(DomainError):
+    """Raised when the parts search service is unavailable."""

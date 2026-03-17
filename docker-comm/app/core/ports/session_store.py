@@ -1,10 +1,13 @@
 from typing import Protocol
 
-from app.core.domain.models import HistoryMessage
+from app.core.domain.models import ConversationState, HistoryMessage
 
 
 class SessionStore(Protocol):
     async def get_messages(self, conversation_id: str) -> list[HistoryMessage]:
+        raise NotImplementedError
+
+    async def get_conversation_state(self, conversation_id: str) -> ConversationState | None:
         raise NotImplementedError
 
     async def append_messages(
@@ -15,6 +18,12 @@ class SessionStore(Protocol):
     ) -> None:
         raise NotImplementedError
 
-    async def close(self) -> None:
+    async def set_conversation_state(
+        self,
+        conversation_id: str,
+        conversation_state: ConversationState | None,
+    ) -> None:
         raise NotImplementedError
 
+    async def close(self) -> None:
+        raise NotImplementedError

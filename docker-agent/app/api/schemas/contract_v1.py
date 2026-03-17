@@ -2,6 +2,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
+from app.core.domain.models import ConversationState
+
 
 class ChannelInfo(BaseModel):
     name: str | None = None
@@ -18,6 +20,7 @@ class ContextMessage(BaseModel):
 
 class ConversationContext(BaseModel):
     last_messages: list[ContextMessage] = Field(default_factory=list)
+    conversation_state: ConversationState | None = None
 
 
 class RuntimeInfo(BaseModel):
@@ -63,3 +66,4 @@ class AgentResponseV1(BaseModel):
     handoff: HandoffPayload = Field(default_factory=HandoffPayload)
     confidence: float = Field(0.0, ge=0.0, le=1.0)
     tool_trace: ToolTracePayload
+    conversation_state: ConversationState | None = None

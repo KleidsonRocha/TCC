@@ -2,9 +2,11 @@ import logging
 
 import pytest
 
+from app.core.domain.models import ConversationState
 from app.core.domain.errors import InvalidMessageError, UnsupportedSchemaVersionError
 from app.core.domain.pre_search_catalog import PreSearchCatalog
 from app.core.domain.rules import validate_message_text, validate_schema_version
+from app.core.domain.pre_search import SearchCriteria
 from app.infra.pre_search_dictionary_extractor import DictionaryPreSearchExtractor
 from app.infra.pre_search_validator_llm import LLMPreSearchValidator
 from app.infra.tools_mock import MockTools
@@ -16,6 +18,7 @@ def _catalog_fixture() -> PreSearchCatalog:
         part_patterns=[
             ("filtro de oleo", ("filtro de oleo", "filtro oleo")),
             ("filtro", ("filtro",)),
+            ("batentes", ("batentes",)),
             ("coxim", ("coxim",)),
             ("radiador", ("radiador",)),
             ("bandejas", ("bandejas",)),
@@ -123,6 +126,19 @@ def test_dictionary_extractor_uses_previous_full_question_when_message_is_only_y
     assert result.vehicle_year == 2008
 
 
+def test_dictionary_extractor_ignores_assistant_text_when_rebuilding_context() -> None:
+    result = DictionaryPreSearchExtractor(catalog=_catalog_fixture()).extract(
+        "2008",
+        last_messages=[
+            {"role": "user", "text": "coxim ecosport"},
+            {"role": "assistant", "text": "Talvez seja filtro focus 2011"},
+        ],
+    )
+    assert result.part_query == "coxim"
+    assert result.vehicle_model == "EcoSport"
+    assert result.vehicle_year == 2008
+
+
 def test_dictionary_extractor_extracts_axle_when_eixo_is_present() -> None:
     result = DictionaryPreSearchExtractor(catalog=_catalog_fixture()).extract(
         "quero coxim do eixo dianteiro da ecosport"
@@ -220,6 +236,36 @@ def test_llm_validator_generates_default_engine_question_when_llm_omits_it() -> 
     assert result.next_question.key == "engine"
     assert result.next_question.prompt == "Qual a motorizacao do veiculo?"
     assert result.next_question.options == ["1.0", "1.6", "2.0", "Nao sei"]
+
+
+def test_llm_validator_merges_conversation_state_when_pending_slot_exists() -> None:
+    validator = _validator()
+    validator._post_chat_or_generate = lambda **kwargs: (
+        {
+            "message": {
+                "content": (
+                    '{"decision":"search","criteria":{"engine":"1.6"},'
+                    '"missing_fields":[],"next_question":null,"confidence":0.9}'
+                )
+            }
+        },
+        "/api/chat",
+    )
+
+    result = validator.validate(
+        "1.6",
+        conversation_state=ConversationState(
+            criteria=SearchCriteria(part_query="batentes", vehicle_model="EcoSport"),
+            pending_slot="engine",
+            pending_question="Qual a motorizacao do veiculo?",
+            last_decision="ask",
+        ),
+    )
+
+    assert result.decision == "search"
+    assert result.criteria.part_query == "batentes"
+    assert result.criteria.vehicle_model == "EcoSport"
+    assert result.criteria.engine == "1.6"
 
 
 def test_llm_validator_raw_fallback_keeps_ask_for_missing_engine() -> None:

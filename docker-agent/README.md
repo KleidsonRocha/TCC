@@ -63,6 +63,13 @@ Leitura rapida da hierarquia:
    - `CATALOG_DB_USER`
    - `CATALOG_DB_PASSWORD`
    - `CATALOG_DB_CONNECT_TIMEOUT_S`
+   - `ERP_DB_ENABLED`
+   - `ERP_DB_HOST`
+   - `ERP_DB_PORT`
+   - `ERP_DB_NAME`
+   - `ERP_DB_USER`
+   - `ERP_DB_PASSWORD`
+   - `ERP_DB_CONNECT_TIMEOUT_S`
    - `LLM_BASE_URL` (ex.: `http://host.docker.internal:11434`)
    - `LLM_MODEL` (ex.: `qwen2.5:7b`)
    - `LLM_TIMEOUT_MS`

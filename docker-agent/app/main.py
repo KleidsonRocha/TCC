@@ -6,17 +6,19 @@ from app.api.routes.health import router as health_router
 from app.api.routes.respond import router as respond_router
 from app.config import Settings, get_settings
 from app.core.ports.pre_search_validator import PreSearchValidatorPort
+from app.core.ports.tools import ToolsPort
 from app.core.usecases.process_agent_request import ProcessAgentRequestUseCase
+from app.infra.erp_search_tools_pg import resolve_search_tools
 from app.infra.logger import configure_logging, get_logger
 from app.infra.pre_search_catalog_pg import resolve_pre_search_catalog
 from app.infra.pre_search_review_queue_pg import recorder_from_settings
 from app.infra.pre_search_validator_llm import LLMPreSearchValidator
-from app.infra.tools_mock import MockTools
 
 
 def create_app(
     settings_override: Settings | None = None,
     pre_search_validator_override: PreSearchValidatorPort | None = None,
+    tools_override: ToolsPort | None = None,
 ) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -24,7 +26,7 @@ def create_app(
         configure_logging(settings.log_level)
         logger = get_logger()
 
-        tools = MockTools()
+        tools = tools_override or resolve_search_tools(settings=settings, logger=logger)
         pre_search_validator = pre_search_validator_override
         if pre_search_validator is None:
             catalog = resolve_pre_search_catalog(settings=settings, logger=logger)

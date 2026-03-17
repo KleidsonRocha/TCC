@@ -1,6 +1,7 @@
 import unicodedata
 
 from app.core.domain.models import PartItem
+from app.core.domain.pre_search import SearchCriteria
 from app.core.ports.tools import ToolsPort
 
 
@@ -11,7 +12,12 @@ def _normalize_text(text: str) -> str:
 
 
 class MockTools(ToolsPort):
-    def search_parts(self, query: str, branch_id: int) -> list[PartItem]:
+    def search_parts(
+        self,
+        query: str,
+        branch_id: int,
+        criteria: SearchCriteria | None = None,
+    ) -> list[PartItem]:
         print(f"[mock_search_parts] branch_id={branch_id} query='{query}'")
         normalized_query = _normalize_text(query)
 

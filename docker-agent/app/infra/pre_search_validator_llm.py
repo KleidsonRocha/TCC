@@ -8,6 +8,7 @@ from typing import Any
 import httpx
 
 from app.config import Settings
+from app.core.domain.models import ConversationState
 from app.core.domain.pre_search_catalog import PreSearchCatalog
 from app.core.domain.errors import PreSearchServiceUnavailableError
 from app.core.domain.pre_search import NextQuestion, PreSearchValidation, SearchCriteria
@@ -91,6 +92,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         message_text: str,
         *,
         last_messages: list[dict[str, Any]] | None = None,
+        conversation_state: ConversationState | None = None,
     ) -> PreSearchValidation:
         self._last_audit_info = None
         context = last_messages or []
@@ -98,10 +100,15 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             message_text,
             last_messages=context,
         )
+        merged_seed_criteria = self._merge_dictionary_with_conversation_state(
+            dictionary_criteria=dictionary_criteria,
+            conversation_state=conversation_state,
+        )
         payload = self._build_chat_payload(
             message_text=message_text,
             last_messages=context,
-            dictionary_seed_criteria=dictionary_criteria,
+            dictionary_seed_criteria=merged_seed_criteria,
+            conversation_state=conversation_state,
         )
 
         try:
@@ -109,14 +116,15 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
                 payload=payload,
                 message_text=message_text,
                 last_messages=context,
-                dictionary_seed_criteria=dictionary_criteria,
+                dictionary_seed_criteria=merged_seed_criteria,
+                conversation_state=conversation_state,
             )
             if self._log_raw_response:
                 self._log_raw_ollama_response(
                     endpoint_used=endpoint_used,
                     message_text=message_text,
                     last_messages=context,
-                    dictionary_seed_criteria=dictionary_criteria,
+                    dictionary_seed_criteria=merged_seed_criteria,
                     raw_body=raw_body,
                 )
         except Exception as exc:
@@ -154,7 +162,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             )
             ai_fallback = self._build_ai_decision_fallback(
                 raw_content=content,
-                dictionary_criteria=dictionary_criteria,
+                dictionary_criteria=merged_seed_criteria,
                 message_text=message_text,
                 last_messages=context,
             )
@@ -187,13 +195,13 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
 
         llm_validation = self._merge_validation_with_dictionary_seed(
             llm_validation=llm_validation,
-            dictionary_criteria=dictionary_criteria,
+            dictionary_criteria=merged_seed_criteria,
             message_text=message_text,
             last_messages=context,
         )
         if self._log_raw_response:
             score_explicit_fields = self._build_score_explicit_fields(
-                dictionary_criteria=dictionary_criteria,
+                dictionary_criteria=merged_seed_criteria,
             )
             criteria_score = self._calculate_criteria_score(
                 llm_validation.criteria,
@@ -209,6 +217,11 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
                     "criteria_score": criteria_score,
                     "score_explicit_fields": sorted(score_explicit_fields),
                     "min_score_to_search": self._min_score_to_search,
+                    "conversation_state": (
+                        conversation_state.model_dump(exclude_none=True)
+                        if conversation_state
+                        else None
+                    ),
                     "next_question": (
                         llm_validation.next_question.model_dump(exclude_none=True)
                         if llm_validation.next_question
@@ -244,6 +257,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         message_text: str,
         last_messages: list[dict[str, Any]],
         dictionary_seed_criteria: SearchCriteria,
+        conversation_state: ConversationState | None,
     ) -> tuple[dict[str, Any], str]:
         chat_endpoint = f"{self._base_url}/api/chat"
         response = httpx.post(chat_endpoint, json=payload, timeout=self._timeout)
@@ -254,6 +268,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
                 message_text=message_text,
                 last_messages=last_messages,
                 dictionary_seed_criteria=dictionary_seed_criteria,
+                conversation_state=conversation_state,
             )
             generate_endpoint = f"{self._base_url}/api/generate"
             response = httpx.post(generate_endpoint, json=generate_payload, timeout=self._timeout)
@@ -268,6 +283,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         message_text: str,
         last_messages: list[dict[str, Any]],
         dictionary_seed_criteria: SearchCriteria,
+        conversation_state: ConversationState | None,
     ) -> dict[str, Any]:
         instructions = self._build_system_instructions(categories_text=self._categories_text)
         score_policy = self._build_llm_score_policy(dictionary_seed_criteria=dictionary_seed_criteria)
@@ -275,6 +291,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             "message_text": message_text,
             "last_messages": last_messages,
             "dictionary_seed_criteria": dictionary_seed_criteria.model_dump(exclude_none=True),
+            "conversation_state": conversation_state.model_dump(exclude_none=True) if conversation_state else None,
             "score_policy": score_policy,
         }
         return {
@@ -298,6 +315,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         message_text: str,
         last_messages: list[dict[str, Any]],
         dictionary_seed_criteria: SearchCriteria,
+        conversation_state: ConversationState | None,
     ) -> dict[str, Any]:
         instructions = self._build_system_instructions(categories_text=self._categories_text)
         score_policy = self._build_llm_score_policy(dictionary_seed_criteria=dictionary_seed_criteria)
@@ -305,6 +323,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             "message_text": message_text,
             "last_messages": last_messages,
             "dictionary_seed_criteria": dictionary_seed_criteria.model_dump(exclude_none=True),
+            "conversation_state": conversation_state.model_dump(exclude_none=True) if conversation_state else None,
             "score_policy": score_policy,
         }
         prompt = (
@@ -388,6 +407,25 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         if len(value) <= max_len:
             return value
         return f"{value[:max_len]}...[truncated]"
+
+    @staticmethod
+    def _merge_dictionary_with_conversation_state(
+        *,
+        dictionary_criteria: SearchCriteria,
+        conversation_state: ConversationState | None,
+    ) -> SearchCriteria:
+        if not conversation_state or not conversation_state.pending_slot:
+            return dictionary_criteria
+
+        state_values = conversation_state.criteria.model_dump(exclude_none=False)
+        merged_values = dictionary_criteria.model_dump(exclude_none=False)
+
+        for key, state_value in state_values.items():
+            current_value = merged_values.get(key)
+            if current_value is None or current_value == "" or current_value == []:
+                merged_values[key] = state_value
+
+        return SearchCriteria.model_validate(merged_values)
 
     def _merge_validation_with_dictionary_seed(
         self,

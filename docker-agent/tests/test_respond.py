@@ -1,11 +1,13 @@
 from fastapi.testclient import TestClient
 
 from app.config import Settings
+from app.core.domain.models import ConversationState
 from app.core.domain.pre_search_catalog import PreSearchCatalog
 from app.core.domain.pre_search import NextQuestion, PreSearchValidation, SearchCriteria
 from app.infra.pre_search_validator_llm import LLMPreSearchValidator
 from app.infra.logger import configure_logging, get_logger
 from app.main import create_app
+from app.infra.tools_mock import MockTools
 
 
 class StubPreSearchValidator:
@@ -34,9 +36,11 @@ class StubPreSearchValidator:
         message_text: str,
         *,
         last_messages: list[dict[str, str]] | None = None,
+        conversation_state: ConversationState | None = None,
     ) -> PreSearchValidation:
         text = (message_text or "").strip().lower()
         context_text = " ".join(message.get("text", "") for message in (last_messages or [])).lower()
+        _ = conversation_state
 
         if text == "2008" and "coxim ecosport" in context_text:
             return self._search(
@@ -100,6 +104,7 @@ def _make_app():
     return create_app(
         settings_override=settings,
         pre_search_validator_override=StubPreSearchValidator(),
+        tools_override=MockTools(),
     )
 
 
@@ -107,6 +112,7 @@ def _payload(
     text: str,
     schema_version: str = "1.0",
     context_messages: list[dict[str, str]] | None = None,
+    conversation_state: dict | None = None,
 ) -> dict:
     return {
         "schema_version": schema_version,
@@ -114,7 +120,10 @@ def _payload(
         "conversation_id": "conv-001",
         "channel": {"name": "generic"},
         "message": {"text": text},
-        "context": {"last_messages": context_messages or []},
+        "context": {
+            "last_messages": context_messages or [],
+            "conversation_state": conversation_state,
+        },
         "runtime": {"locale": "pt-BR", "timezone": "America/Sao_Paulo"},
         "business": {"branch_id": 1},
     }
@@ -137,7 +146,8 @@ def test_respond_with_bandeja_returns_request_info() -> None:
     assert response.status_code == 200
     body = response.json()
     assert body["reply"]["text"]
-    assert body["actions"][0]["type"] == "request_info"
+    assert body["actions"][0]["type"] == "show_items"
+    assert body["conversation_state"]["pending_slot"] == "result_disambiguation"
     assert body["tool_trace"]["used_tools"] == ["pre_search_validator", "search_parts"]
     assert body["handoff"]["required"] is False
 
@@ -174,6 +184,7 @@ def test_respond_with_generic_filter_requests_vehicle_year() -> None:
     body = response.json()
     assert body["actions"][0]["type"] == "request_info"
     assert body["actions"][0]["key"] == "vehicle_year"
+    assert body["conversation_state"]["pending_slot"] == "vehicle_year"
     assert body["tool_trace"]["used_tools"] == ["pre_search_validator"]
     assert body["handoff"]["required"] is False
 
@@ -219,6 +230,33 @@ def test_respond_uses_previous_user_question_when_current_message_has_only_year(
     assert body["actions"] == []
     assert body["tool_trace"]["used_tools"] == ["pre_search_validator", "search_parts"]
     assert body["handoff"]["required"] is False
+
+
+def test_respond_accepts_conversation_state_in_context() -> None:
+    app = _make_app()
+    with TestClient(app) as client:
+        response = client.post(
+            "/respond",
+            json=_payload(
+                "2008",
+                context_messages=[
+                    {"role": "user", "text": "coxim ecosport"},
+                ],
+                conversation_state={
+                    "criteria": {
+                        "part_query": "coxim",
+                        "vehicle_model": "Ecosport",
+                    },
+                    "pending_slot": "vehicle_year",
+                    "pending_question": "Qual o ano do veiculo?",
+                    "last_decision": "ask",
+                },
+            ),
+        )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["conversation_state"]["criteria"]["vehicle_year"] == 2008
 
 
 def test_respond_rejects_invalid_schema_version() -> None:

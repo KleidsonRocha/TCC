@@ -3,7 +3,7 @@ import json
 from redis.asyncio import Redis
 
 from app.config import Settings
-from app.core.domain.models import HistoryMessage
+from app.core.domain.models import ConversationState, HistoryMessage
 from app.core.ports.session_store import SessionStore
 
 
@@ -19,6 +19,9 @@ class RedisSessionStore(SessionStore):
 
     def _history_key(self, conversation_id: str) -> str:
         return f"conv:{conversation_id}:history"
+
+    def _state_key(self, conversation_id: str) -> str:
+        return f"conv:{conversation_id}:state"
 
     async def get_messages(self, conversation_id: str) -> list[HistoryMessage]:
         raw_payload = await self._redis.get(self._history_key(conversation_id))
@@ -38,6 +41,19 @@ class RedisSessionStore(SessionStore):
                 continue
         return messages
 
+    async def get_conversation_state(self, conversation_id: str) -> ConversationState | None:
+        raw_payload = await self._redis.get(self._state_key(conversation_id))
+        if not raw_payload:
+            return None
+        try:
+            parsed = json.loads(raw_payload)
+        except json.JSONDecodeError:
+            return None
+        try:
+            return ConversationState.model_validate(parsed)
+        except Exception:
+            return None
+
     async def append_messages(
         self,
         conversation_id: str,
@@ -54,6 +70,21 @@ class RedisSessionStore(SessionStore):
             ex=self._settings.session_ttl_seconds,
         )
 
+    async def set_conversation_state(
+        self,
+        conversation_id: str,
+        conversation_state: ConversationState | None,
+    ) -> None:
+        key = self._state_key(conversation_id)
+        if conversation_state is None:
+            await self._redis.delete(key)
+            return
+        serialized = json.dumps(conversation_state.model_dump(exclude_none=True), ensure_ascii=True)
+        await self._redis.set(
+            key,
+            serialized,
+            ex=self._settings.session_ttl_seconds,
+        )
+
     async def close(self) -> None:
         await self._redis.aclose()
-

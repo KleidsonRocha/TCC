@@ -6,12 +6,16 @@
   Comandos operacionais do dia a dia: stack, banco, testes, revisao, avaliacao e fine-tuning.
 - `guide/runtime_and_bootstrap.md`
   Mapa curto do runtime, bootstrap do banco e fluxo de treino.
+- `guide/erp_item_search_candidates_view.md`
+  Proposta de view no ERP para busca real de candidatos de pecas.
 - `TODO.md`
   Roadmap operacional do projeto.
 - `training/pre_search_fine_tuning.md`
   Guia vivo do fluxo de fine-tuning, revisao e promocao de modelo.
 - `assets/datasets/`
   Datasets usados por avaliacao e benchmark.
+- `assets/sql/`
+  SQLs auxiliares que servem como proposta de integracao e artefatos de apoio.
 - `assets/llm/`
   Insumos auxiliares de prompt/catalogo para a LLM.
 - `assets/db_bootstrap_csv/`

@@ -4,9 +4,8 @@ from typing import Any
 
 from app.api.schemas.contract_v1 import AgentRequestV1
 from app.config import Settings
-from app.core.domain.models import HandoffInfo, ProcessResult, ToolTrace
-from app.core.domain.pre_search import SearchCriteria
-from app.core.domain.pre_search import PreSearchValidation
+from app.core.domain.models import ConversationState, HandoffInfo, ProcessResult, ToolTrace
+from app.core.domain.pre_search import NextQuestion, PreSearchValidation, SearchCriteria
 from app.core.domain.rules import validate_message_text, validate_schema_version
 from app.core.ports.pre_search_review_recorder import PreSearchReviewRecorderPort
 from app.core.ports.pre_search_validator import PreSearchValidatorPort
@@ -33,17 +32,25 @@ class ProcessAgentRequestUseCase:
         validate_schema_version(payload.schema_version)
         query = validate_message_text(payload.message.text)
         last_messages: list[dict[str, str]] = []
+        incoming_state: ConversationState | None = None
         if payload.context:
             last_messages = [
                 {"role": message.role, "text": message.text}
                 for message in payload.context.last_messages
             ]
+            incoming_state = payload.context.conversation_state
 
         started_at = time.perf_counter()
         used_tools = ["pre_search_validator"]
         pre_search = self._pre_search_validator.validate(
             query,
             last_messages=last_messages,
+            conversation_state=incoming_state,
+        )
+        current_state = self._build_conversation_state(
+            criteria=pre_search.criteria,
+            last_decision=pre_search.decision,
+            next_question=pre_search.next_question,
         )
 
         actions: list[dict[str, object]] = []
@@ -79,6 +86,7 @@ class ProcessAgentRequestUseCase:
                 handoff=handoff,
                 confidence=confidence,
                 tool_trace=ToolTrace(used_tools=used_tools, latency_ms=latency_ms),
+                conversation_state=current_state,
             )
             self._record_review_case(
                 payload=payload,
@@ -104,6 +112,7 @@ class ProcessAgentRequestUseCase:
                 handoff=handoff,
                 confidence=confidence,
                 tool_trace=ToolTrace(used_tools=used_tools, latency_ms=latency_ms),
+                conversation_state=current_state,
             )
             self._record_review_case(
                 payload=payload,
@@ -127,6 +136,7 @@ class ProcessAgentRequestUseCase:
                     used_tools=used_tools,
                     latency_ms=round((time.perf_counter() - started_at) * 1000, 2),
                 ),
+                conversation_state=current_state,
             )
             self._record_review_case(
                 payload=payload,
@@ -140,6 +150,7 @@ class ProcessAgentRequestUseCase:
         items = self._tools.search_parts(
             query=search_query,
             branch_id=payload.business.branch_id,
+            criteria=pre_search.criteria,
         )
 
         if len(items) == 0:
@@ -166,22 +177,19 @@ class ProcessAgentRequestUseCase:
                 }
                 for item in items
             ]
-            reply_text = "Encontrei mais de uma opcao. Pode me confirmar a motorizacao?"
-            result_actions: list[dict[str, object]] = [
-                {
-                    "type": "request_info",
-                    "key": "engine",
-                    "prompt": "Qual a motorizacao do veiculo?",
-                    "options": ["1.6", "2.0", "Nao sei"],
-                },
+            reply_text = "Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca."
+            actions = actions + [
                 {
                     "type": "show_items",
                     "items": item_options,
                 },
             ]
-            if actions:
-                result_actions = actions + result_actions
-            actions = result_actions
+            current_state = self._build_conversation_state(
+                criteria=pre_search.criteria,
+                last_decision="search",
+                pending_slot="result_disambiguation",
+                pending_question="Refinar a selecao entre multiplos itens encontrados.",
+            )
             confidence = 0.82
 
         latency_ms = round((time.perf_counter() - started_at) * 1000, 2)
@@ -213,6 +221,7 @@ class ProcessAgentRequestUseCase:
             handoff=handoff,
             confidence=confidence,
             tool_trace=ToolTrace(used_tools=used_tools, latency_ms=latency_ms),
+            conversation_state=current_state,
         )
         self._record_review_case(
             payload=payload,
@@ -304,3 +313,26 @@ class ProcessAgentRequestUseCase:
         if not isinstance(result, dict):
             return {}
         return result
+
+    @staticmethod
+    def _build_conversation_state(
+        *,
+        criteria: SearchCriteria,
+        last_decision: str,
+        next_question: NextQuestion | None = None,
+        pending_slot: str | None = None,
+        pending_question: str | None = None,
+    ) -> ConversationState:
+        resolved_pending_slot = pending_slot
+        resolved_pending_question = pending_question
+
+        if next_question is not None:
+            resolved_pending_slot = next_question.key
+            resolved_pending_question = next_question.prompt
+
+        return ConversationState(
+            criteria=criteria,
+            pending_slot=resolved_pending_slot,
+            pending_question=resolved_pending_question,
+            last_decision=last_decision,
+        )

@@ -4,7 +4,12 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from app.api.deps import get_process_agent_request_use_case
 from app.api.schemas.contract_v1 import AgentRequestV1, AgentResponseV1, HandoffPayload, ReplyPayload, ToolTracePayload
-from app.core.domain.errors import InvalidMessageError, PreSearchServiceUnavailableError, UnsupportedSchemaVersionError
+from app.core.domain.errors import (
+    InvalidMessageError,
+    PreSearchServiceUnavailableError,
+    SearchPartsServiceUnavailableError,
+    UnsupportedSchemaVersionError,
+)
 from app.core.usecases.process_agent_request import ProcessAgentRequestUseCase
 
 router = APIRouter(tags=["agent"])
@@ -36,6 +41,7 @@ async def respond(
                 used_tools=result.tool_trace.used_tools,
                 latency_ms=result.tool_trace.latency_ms,
             ),
+            conversation_state=result.conversation_state,
         )
     except UnsupportedSchemaVersionError as exc:
         response_status = status.HTTP_400_BAD_REQUEST
@@ -44,6 +50,12 @@ async def respond(
         response_status = status.HTTP_400_BAD_REQUEST
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
     except PreSearchServiceUnavailableError as exc:
+        response_status = status.HTTP_503_SERVICE_UNAVAILABLE
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=str(exc),
+        ) from exc
+    except SearchPartsServiceUnavailableError as exc:
         response_status = status.HTTP_503_SERVICE_UNAVAILABLE
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,

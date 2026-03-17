@@ -214,6 +214,9 @@ class DictionaryPreSearchExtractor:
             return ""
         merged_text: list[str] = []
         for message in last_messages:
+            role = str(message.get("role", "")).strip().lower()
+            if role and role != "user":
+                continue
             text = str(message.get("text", "")).strip()
             if text:
                 merged_text.append(text)

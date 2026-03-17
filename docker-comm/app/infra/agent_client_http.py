@@ -1,7 +1,7 @@
 import httpx
 
 from app.core.domain.errors import AgentBadResponseError, AgentTimeoutError, AgentUnavailableError
-from app.core.domain.models import AgentRequestPayload, AgentResponsePayload, HandoffInfo
+from app.core.domain.models import AgentRequestPayload, AgentResponsePayload, ConversationState, HandoffInfo
 from app.core.ports.agent_client import AgentClient
 
 
@@ -77,6 +77,9 @@ class HttpAgentClient(AgentClient):
                 if isinstance(raw_payload, dict)
                 else {"required": False, "reason": None},
                 "confidence": raw_payload.get("confidence", 0.0) if isinstance(raw_payload, dict) else 0.0,
+                "conversation_state": raw_payload.get("conversation_state")
+                if isinstance(raw_payload, dict)
+                else None,
             }
 
             try:
@@ -85,6 +88,11 @@ class HttpAgentClient(AgentClient):
                     actions=list(normalized["actions"]),
                     handoff=HandoffInfo.model_validate(normalized["handoff"]),
                     confidence=float(normalized["confidence"] or 0.0),
+                    conversation_state=(
+                        ConversationState.model_validate(normalized["conversation_state"])
+                        if normalized["conversation_state"]
+                        else None
+                    ),
                 )
             except Exception as exc:
                 raise AgentBadResponseError(
