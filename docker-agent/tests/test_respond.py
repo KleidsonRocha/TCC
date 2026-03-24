@@ -2,12 +2,13 @@ from fastapi.testclient import TestClient
 
 from app.config import Settings
 from app.core.domain.models import ConversationState
+from app.core.domain.models import PartItem
 from app.core.domain.pre_search_catalog import PreSearchCatalog
 from app.core.domain.pre_search import NextQuestion, PreSearchValidation, SearchCriteria
+from app.core.ports.tools import ToolsPort
 from app.infra.pre_search_validator_llm import LLMPreSearchValidator
 from app.infra.logger import configure_logging, get_logger
 from app.main import create_app
-from app.infra.tools_mock import MockTools
 
 
 class StubPreSearchValidator:
@@ -77,6 +78,24 @@ class StubPreSearchValidator:
         return self._ask(key="part_query", prompt="Qual peca voce precisa?")
 
 
+class _FakeTools(ToolsPort):
+    def search_parts(self, query: str, branch_id: int, criteria: SearchCriteria | None = None) -> list[PartItem]:
+        normalized = (query or "").lower()
+        _ = branch_id
+        _ = criteria
+
+        if "bandeja" in normalized:
+            return [
+                PartItem(item_id="BDJ-001", title="Bandeja dianteira lado esquerdo", score=0.91),
+                PartItem(item_id="BDJ-002", title="Bandeja dianteira lado direito", score=0.89),
+            ]
+        if "filtro de oleo" in normalized:
+            return [PartItem(item_id="FLT-010", title="Filtro de oleo motor 1.6", score=0.96)]
+        if "coxim" in normalized:
+            return [PartItem(item_id="CXM-101", title="Coxim do motor dianteiro", score=0.92)]
+        return []
+
+
 def _catalog_fixture() -> PreSearchCatalog:
     return PreSearchCatalog(
         part_patterns=[("bandeja", ("bandeja",))],
@@ -104,7 +123,7 @@ def _make_app():
     return create_app(
         settings_override=settings,
         pre_search_validator_override=StubPreSearchValidator(),
-        tools_override=MockTools(),
+        tools_override=_FakeTools(),
     )
 
 
@@ -304,3 +323,61 @@ def test_respond_returns_503_when_llm_pre_search_is_unavailable() -> None:
 
     assert response.status_code == 503
     assert "indisponivel" in response.json()["detail"].lower()
+
+
+def test_app_startup_runs_validator_warmup_when_enabled() -> None:
+    class _WarmupValidator(StubPreSearchValidator):
+        def __init__(self) -> None:
+            self.warmup_calls = 0
+
+        def warmup(self) -> None:
+            self.warmup_calls += 1
+
+    validator = _WarmupValidator()
+    settings = Settings(
+        LOG_LEVEL="INFO",
+        APP_ENV="test",
+        AGENT_PORT=8001,
+        DEFAULT_LOCALE="pt-BR",
+        DEFAULT_TIMEZONE="America/Sao_Paulo",
+        LLM_WARMUP_ENABLED=True,
+    )
+    app = create_app(
+        settings_override=settings,
+        pre_search_validator_override=validator,
+        tools_override=_FakeTools(),
+    )
+
+    with TestClient(app):
+        pass
+
+    assert validator.warmup_calls == 1
+
+
+def test_app_startup_skips_validator_warmup_when_disabled() -> None:
+    class _WarmupValidator(StubPreSearchValidator):
+        def __init__(self) -> None:
+            self.warmup_calls = 0
+
+        def warmup(self) -> None:
+            self.warmup_calls += 1
+
+    validator = _WarmupValidator()
+    settings = Settings(
+        LOG_LEVEL="INFO",
+        APP_ENV="test",
+        AGENT_PORT=8001,
+        DEFAULT_LOCALE="pt-BR",
+        DEFAULT_TIMEZONE="America/Sao_Paulo",
+        LLM_WARMUP_ENABLED=False,
+    )
+    app = create_app(
+        settings_override=settings,
+        pre_search_validator_override=validator,
+        tools_override=_FakeTools(),
+    )
+
+    with TestClient(app):
+        pass
+
+    assert validator.warmup_calls == 0

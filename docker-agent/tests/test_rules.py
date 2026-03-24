@@ -7,9 +7,9 @@ from app.core.domain.errors import InvalidMessageError, UnsupportedSchemaVersion
 from app.core.domain.pre_search_catalog import PreSearchCatalog
 from app.core.domain.rules import validate_message_text, validate_schema_version
 from app.core.domain.pre_search import SearchCriteria
+from app.infra.erp_search_tools_pg import resolve_search_tools
 from app.infra.pre_search_dictionary_extractor import DictionaryPreSearchExtractor
 from app.infra.pre_search_validator_llm import LLMPreSearchValidator
-from app.infra.tools_mock import MockTools
 from app.config import Settings
 
 
@@ -73,24 +73,18 @@ def test_validate_message_text_rejects_empty_text() -> None:
         validate_message_text("   ")
 
 
-def test_mock_tool_returns_two_items_for_bandeja() -> None:
-    items = MockTools().search_parts("Preciso de bandeja da ecosport", branch_id=1)
-    assert len(items) == 2
+def test_resolve_search_tools_requires_real_backend() -> None:
+    settings = Settings(
+        LOG_LEVEL="INFO",
+        APP_ENV="test",
+        AGENT_PORT=8001,
+        DEFAULT_LOCALE="pt-BR",
+        DEFAULT_TIMEZONE="America/Sao_Paulo",
+        ERP_DB_ENABLED=False,
+    )
 
-
-def test_mock_tool_returns_single_item_for_filtro_de_oleo() -> None:
-    items = MockTools().search_parts("quero filtro de oleo", branch_id=1)
-    assert len(items) == 1
-
-
-def test_mock_tool_returns_single_item_for_coxim() -> None:
-    items = MockTools().search_parts("coxim ecosport 2008", branch_id=1)
-    assert len(items) == 1
-
-
-def test_mock_tool_returns_empty_for_unknown_query() -> None:
-    items = MockTools().search_parts("item inexistente", branch_id=1)
-    assert items == []
+    with pytest.raises(RuntimeError):
+        resolve_search_tools(settings=settings, logger=logging.getLogger("test"))
 
 
 def test_dictionary_extractor_extracts_part_model_and_year() -> None:
@@ -169,6 +163,55 @@ def test_dictionary_extractor_rejects_model_year_as_part_code() -> None:
     assert result.part_code is None
 
 
+def test_dictionary_extractor_fuzzy_matches_single_token_part_typo() -> None:
+    result = DictionaryPreSearchExtractor(catalog=_catalog_fixture()).extract(
+        "quero cuxim da ecosport 2008"
+    )
+    assert result.part_query == "coxim"
+    assert result.vehicle_model == "EcoSport"
+    assert result.vehicle_year == 2008
+
+
+def test_dictionary_extractor_fuzzy_matches_transposed_single_token_typo() -> None:
+    result = DictionaryPreSearchExtractor(catalog=_catalog_fixture()).extract(
+        "quero coxmi da ecosport 2008"
+    )
+    assert result.part_query == "coxim"
+    assert result.vehicle_model == "EcoSport"
+    assert result.vehicle_year == 2008
+
+
+def test_dictionary_extractor_fuzzy_matches_multiword_part_typo() -> None:
+    result = DictionaryPreSearchExtractor(catalog=_catalog_fixture()).extract(
+        "preciso do filtro de olei do gol 2015"
+    )
+    assert result.part_query == "filtro de oleo"
+    assert result.vehicle_model == "Gol"
+    assert result.vehicle_year == 2015
+
+
+def test_dictionary_extractor_does_not_fuzzy_match_too_short_token() -> None:
+    result = DictionaryPreSearchExtractor(catalog=_catalog_fixture()).extract(
+        "quero cox ecosport 2008"
+    )
+    assert result.part_query is None
+    assert result.vehicle_model == "EcoSport"
+    assert result.vehicle_year == 2008
+
+
+def test_dictionary_extractor_uses_fuzzy_match_from_user_history() -> None:
+    result = DictionaryPreSearchExtractor(catalog=_catalog_fixture()).extract(
+        "2008",
+        last_messages=[
+            {"role": "user", "text": "quero cuxim da ecosport"},
+            {"role": "assistant", "text": "Qual o ano do veiculo?"},
+        ],
+    )
+    assert result.part_query == "coxim"
+    assert result.vehicle_model == "EcoSport"
+    assert result.vehicle_year == 2008
+
+
 def test_llm_validator_ignores_hallucinated_part_code_from_llm() -> None:
     validator = _validator()
     validator._post_chat_or_generate = lambda **kwargs: (
@@ -211,6 +254,30 @@ def test_llm_validator_promotes_explicit_part_code_to_search() -> None:
 
     assert result.decision == "search"
     assert result.criteria.part_code == "AB-1234"
+    assert result.missing_fields == []
+
+
+def test_llm_validator_keeps_fuzzy_dictionary_seed_when_llm_misses_part_query() -> None:
+    validator = _validator()
+    validator._post_chat_or_generate = lambda **kwargs: (
+        {
+            "message": {
+                "content": (
+                    '{"decision":"search","criteria":{"vehicle_model":"EcoSport","vehicle_year":2008},'
+                    '"missing_fields":[],"next_question":null,'
+                    '"confidence":0.8}'
+                )
+            }
+        },
+        "/api/chat",
+    )
+
+    result = validator.validate("quero cuxim da ecosport 2008")
+
+    assert result.decision == "search"
+    assert result.criteria.part_query == "coxim"
+    assert str(result.criteria.vehicle_model).lower() == "ecosport"
+    assert result.criteria.vehicle_year == 2008
     assert result.missing_fields == []
 
 
@@ -266,6 +333,88 @@ def test_llm_validator_merges_conversation_state_when_pending_slot_exists() -> N
     assert result.criteria.part_query == "batentes"
     assert result.criteria.vehicle_model == "EcoSport"
     assert result.criteria.engine == "1.6"
+
+
+def test_llm_validator_preserves_llm_vehicle_year_question_when_part_code_is_irrelevant() -> None:
+    validator = _validator(
+        catalog=PreSearchCatalog(
+            part_patterns=[
+                ("amortecedor", ("amortecedor",)),
+            ],
+            brand_aliases={"Ford": ("ford",)},
+            model_aliases={"EcoSport": ("ecosport",)},
+            invalid_slot_tokens={"nao"},
+            generic_ambiguous_parts=set(),
+            needs_side=set(),
+            needs_position=set(),
+            needs_axle=set(),
+            needs_engine=set(),
+            needs_variant=set(),
+            engine_by_model={"ecosport": ["1.6", "2.0", "Nao sei"]},
+        )
+    )
+    validator._post_chat_or_generate = lambda **kwargs: (
+        {
+            "message": {
+                "content": (
+                    '{"decision":"ask","criteria":{"part_query":"amortecedor","vehicle_model":"ECOSPORT"},'
+                    '"missing_fields":["part_code"],'
+                    '"next_question":{"type":"vehicle_year","key":"vehicle_year","prompt":"Qual ano do seu Ford EcoSport?"},'
+                    '"confidence":0.35}'
+                )
+            }
+        },
+        "/api/chat",
+    )
+
+    result = validator.validate("quero amortecedor da ecosport")
+
+    assert result.decision == "ask"
+    assert result.missing_fields == ["vehicle_year"]
+    assert result.next_question is not None
+    assert result.next_question.key == "vehicle_year"
+    assert result.next_question.prompt == "Qual ano do seu Ford EcoSport?"
+
+
+def test_llm_validator_replaces_part_code_question_with_vehicle_year_when_part_query_exists() -> None:
+    validator = _validator(
+        catalog=PreSearchCatalog(
+            part_patterns=[
+                ("amortecedor", ("amortecedor",)),
+            ],
+            brand_aliases={"Ford": ("ford",)},
+            model_aliases={"EcoSport": ("ecosport",)},
+            invalid_slot_tokens={"nao"},
+            generic_ambiguous_parts=set(),
+            needs_side=set(),
+            needs_position=set(),
+            needs_axle=set(),
+            needs_engine=set(),
+            needs_variant=set(),
+            engine_by_model={"ecosport": ["1.6", "2.0", "Nao sei"]},
+        )
+    )
+    validator._post_chat_or_generate = lambda **kwargs: (
+        {
+            "message": {
+                "content": (
+                    '{"decision":"ask","criteria":{"part_query":"amortecedor","vehicle_model":"ECOSPORT"},'
+                    '"missing_fields":["part_code"],'
+                    '"next_question":{"type":"request_info","key":"part_code","prompt":"Qual o codigo da peca?"},'
+                    '"confidence":0.35}'
+                )
+            }
+        },
+        "/api/chat",
+    )
+
+    result = validator.validate("quero amortecedor da ecosport")
+
+    assert result.decision == "ask"
+    assert result.missing_fields == ["vehicle_year"]
+    assert result.next_question is not None
+    assert result.next_question.key == "vehicle_year"
+    assert result.next_question.prompt == "Qual o ano do veiculo?"
 
 
 def test_llm_validator_raw_fallback_keeps_ask_for_missing_engine() -> None:
@@ -333,6 +482,97 @@ def test_llm_validator_position_satisfies_axle_requirement() -> None:
     assert result.criteria.axle is None
 
 
+def test_llm_validator_promotes_answered_follow_up_to_search_when_requirements_are_met() -> None:
+    catalog = PreSearchCatalog(
+        part_patterns=_catalog_fixture().part_patterns,
+        brand_aliases=_catalog_fixture().brand_aliases,
+        model_aliases=_catalog_fixture().model_aliases,
+        invalid_slot_tokens=_catalog_fixture().invalid_slot_tokens,
+        generic_ambiguous_parts=_catalog_fixture().generic_ambiguous_parts,
+        needs_side=_catalog_fixture().needs_side,
+        needs_position=_catalog_fixture().needs_position,
+        needs_axle={"coxim"},
+        needs_engine=_catalog_fixture().needs_engine,
+        needs_variant=_catalog_fixture().needs_variant,
+        engine_by_model=_catalog_fixture().engine_by_model,
+    )
+    validator = _validator(catalog=catalog)
+    validator._post_chat_or_generate = lambda **kwargs: (
+        {
+            "message": {
+                "content": (
+                    '{"decision":"ask","criteria":{"position":"dianteiro"},"missing_fields":["axle"],'
+                    '"next_question":{"type":"request_info","key":"axle","prompt":"Qual eixo do veiculo esta apresentando o problema?"},'
+                    '"confidence":0.9}'
+                )
+            }
+        },
+        "/api/chat",
+    )
+
+    result = validator.validate(
+        "dianteiro",
+        last_messages=[
+            {"role": "user", "text": "coxim ecosport 2008"},
+            {"role": "assistant", "text": "Qual eixo do veiculo esta apresentando o problema?"},
+        ],
+        conversation_state=ConversationState(
+            criteria=SearchCriteria(
+                part_query="coxim",
+                vehicle_model="EcoSport",
+                vehicle_year=2008,
+            ),
+            pending_slot="axle",
+            pending_question="Qual eixo do veiculo esta apresentando o problema?",
+            last_decision="ask",
+        ),
+    )
+
+    assert result.decision == "search"
+    assert result.missing_fields == []
+    assert result.next_question is None
+    assert result.criteria.part_query == "coxim"
+    assert result.criteria.vehicle_model == "EcoSport"
+    assert result.criteria.vehicle_year == 2008
+    assert result.criteria.position == "front"
+
+
+def test_llm_validator_does_not_promote_ask_without_follow_up_state() -> None:
+    catalog = PreSearchCatalog(
+        part_patterns=_catalog_fixture().part_patterns,
+        brand_aliases=_catalog_fixture().brand_aliases,
+        model_aliases=_catalog_fixture().model_aliases,
+        invalid_slot_tokens=_catalog_fixture().invalid_slot_tokens,
+        generic_ambiguous_parts=_catalog_fixture().generic_ambiguous_parts,
+        needs_side=_catalog_fixture().needs_side,
+        needs_position=_catalog_fixture().needs_position,
+        needs_axle={"coxim"},
+        needs_engine=_catalog_fixture().needs_engine,
+        needs_variant=_catalog_fixture().needs_variant,
+        engine_by_model=_catalog_fixture().engine_by_model,
+    )
+    validator = _validator(catalog=catalog)
+    validator._post_chat_or_generate = lambda **kwargs: (
+        {
+            "message": {
+                "content": (
+                    '{"decision":"ask","criteria":{"part_query":"coxim","vehicle_model":"Ecosport",'
+                    '"vehicle_year":2008,"position":"dianteiro"},"missing_fields":[],"next_question":null,'
+                    '"confidence":0.9}'
+                )
+            }
+        },
+        "/api/chat",
+    )
+
+    result = validator.validate("coxim ecosport 2008 dianteiro")
+
+    assert result.decision == "ask"
+    assert result.next_question is not None
+    assert result.next_question.key == "engine"
+    assert result.missing_fields == ["engine"]
+
+
 def test_llm_validator_asks_when_score_is_below_minimum_even_without_rule_missing() -> None:
     catalog = PreSearchCatalog(
         part_patterns=_catalog_fixture().part_patterns,
@@ -367,3 +607,41 @@ def test_llm_validator_asks_when_score_is_below_minimum_even_without_rule_missin
     assert result.next_question is not None
     assert result.next_question.key == "vehicle_year"
     assert "vehicle_year" in result.missing_fields
+
+
+def test_llm_validator_chat_payload_includes_keep_alive() -> None:
+    validator = _validator()
+
+    payload = validator._build_chat_payload(
+        message_text="coxim ecosport 2008",
+        last_messages=[],
+        dictionary_seed_criteria=SearchCriteria(part_query="coxim", vehicle_model="EcoSport", vehicle_year=2008),
+        conversation_state=None,
+    )
+
+    assert payload["keep_alive"] == "1h"
+
+
+def test_llm_validator_generate_payload_includes_keep_alive() -> None:
+    validator = _validator()
+
+    payload = validator._build_generate_payload(
+        message_text="coxim ecosport 2008",
+        last_messages=[],
+        dictionary_seed_criteria=SearchCriteria(part_query="coxim", vehicle_model="EcoSport", vehicle_year=2008),
+        conversation_state=None,
+    )
+
+    assert payload["keep_alive"] == "1h"
+
+
+def test_llm_validator_warmup_payload_uses_keep_alive_and_minimal_generation() -> None:
+    validator = _validator()
+
+    payload = validator._build_warmup_payload()
+
+    assert payload["model"] == "qwen2.5:7b"
+    assert payload["keep_alive"] == "1h"
+    assert payload["stream"] is False
+    assert payload["options"]["num_predict"] == 1
+    assert payload["options"]["temperature"] == 0.0

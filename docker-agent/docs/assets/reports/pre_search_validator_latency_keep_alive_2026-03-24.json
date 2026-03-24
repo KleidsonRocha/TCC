@@ -1,0 +1,681 @@
+{
+  "generated_at_epoch_s": 1774377452.419,
+  "settings": {
+    "llm_base_url": "http://ollama:11434",
+    "llm_model": "qwen2.5:7b",
+    "llm_num_predict": 220,
+    "llm_keep_alive": "1h",
+    "llm_temperature": 0.0,
+    "llm_timeout_ms": 240000
+  },
+  "initial_ollama_ps": {
+    "ok": true,
+    "target_loaded": false,
+    "loaded_model_names": [],
+    "models": [],
+    "error": null
+  },
+  "sequence_battery": {
+    "measurements": [
+      {
+        "phase": "sequence_1",
+        "scenario": "ask_minimal",
+        "message_text": "preciso de uma peca",
+        "context_last_messages": [],
+        "notes": "Caso curto que tende a virar ask por falta de part_query.",
+        "dictionary_seed_criteria": {},
+        "extractor_ms": 264.7,
+        "validate_total_ms": 113759.86,
+        "decision": "ask",
+        "criteria": {},
+        "missing_fields": [
+          "part_query",
+          "part_code"
+        ],
+        "next_question": {
+          "type": "request_info",
+          "key": "part_query",
+          "prompt": "Por favor, informe qual peça você precisa."
+        },
+        "confidence": 0.5,
+        "llm_audit": {
+          "llm_endpoint_used": "/api/chat",
+          "llm_raw_content": "{\n  \"decision\": \"ask\",\n  \"criteria\": {},\n  \"missing_fields\": [\"part_query\", \"part_code\"],\n  \"next_question\": {\n    \"type\": \"part_query\",\n    \"key\": \"part_query\",\n    \"prompt\": \"Por favor, informe qual peça você precisa.\"\n  },\n  \"confidence\": 0.5\n}",
+          "llm_output_valid": true,
+          "llm_parse_error": null,
+          "llm_fallback_used": false,
+          "llm_decision_raw": "ask"
+        },
+        "ollama_ps_before": {
+          "ok": true,
+          "target_loaded": false,
+          "loaded_model_names": [],
+          "models": [],
+          "error": null
+        },
+        "ollama_ps_after": {
+          "ok": true,
+          "target_loaded": true,
+          "loaded_model_names": [
+            "qwen2.5:7b"
+          ],
+          "models": [
+            {
+              "name": "qwen2.5:7b",
+              "size_vram": 0,
+              "expires_at": "2026-03-24T19:39:26.522893858Z"
+            }
+          ],
+          "error": null
+        }
+      },
+      {
+        "phase": "sequence_1",
+        "scenario": "search_complete",
+        "message_text": "filtro oleo gol 2015",
+        "context_last_messages": [],
+        "notes": "Caso objetivo com part_query, modelo e ano.",
+        "dictionary_seed_criteria": {
+          "part_query": "filtro de oleo",
+          "vehicle_model": "GOL",
+          "vehicle_year": 2015
+        },
+        "extractor_ms": 237.57,
+        "validate_total_ms": 64945.44,
+        "decision": "ask",
+        "criteria": {
+          "part_query": "filtro de oleo",
+          "vehicle_model": "Gol",
+          "vehicle_year": 2015
+        },
+        "missing_fields": [
+          "axle"
+        ],
+        "next_question": {
+          "type": "request_info",
+          "key": "axle",
+          "prompt": "Qual eixo (dianteiro ou traseiro) o filtro de oleo esta localizado?"
+        },
+        "confidence": 0.85,
+        "llm_audit": {
+          "llm_endpoint_used": "/api/chat",
+          "llm_raw_content": "{\n  \"decision\": \"search\",\n  \"criteria\": {\n    \"part_query\": \"filtro de oleo\",\n    \"vehicle_model\": \"GOL\",\n    \"vehicle_year\": 2015\n  },\n  \"missing_fields\": [\"axle\"],\n  \"next_question\": {\n    \"type\": \"hint\",\n    \"key\": \"axle\",\n    \"prompt\": \"Qual eixo (dianteiro ou traseiro) o filtro de oleo esta localizado?\"\n  },\n  \"confidence\": 85\n}",
+          "llm_output_valid": true,
+          "llm_parse_error": null,
+          "llm_fallback_used": false,
+          "llm_decision_raw": "search"
+        },
+        "ollama_ps_before": {
+          "ok": true,
+          "target_loaded": true,
+          "loaded_model_names": [
+            "qwen2.5:7b"
+          ],
+          "models": [
+            {
+              "name": "qwen2.5:7b",
+              "size_vram": 0,
+              "expires_at": "2026-03-24T19:39:26.522893858Z"
+            }
+          ],
+          "error": null
+        },
+        "ollama_ps_after": {
+          "ok": true,
+          "target_loaded": true,
+          "loaded_model_names": [
+            "qwen2.5:7b"
+          ],
+          "models": [
+            {
+              "name": "qwen2.5:7b",
+              "size_vram": 0,
+              "expires_at": "2026-03-24T19:40:31.728107844Z"
+            }
+          ],
+          "error": null
+        }
+      },
+      {
+        "phase": "sequence_1",
+        "scenario": "follow_up_engine",
+        "message_text": "1.0",
+        "context_last_messages": [
+          {
+            "role": "user",
+            "text": "correia dentada gol 2010"
+          },
+          {
+            "role": "assistant",
+            "text": "Qual a motorizacao do veiculo?"
+          }
+        ],
+        "notes": "Caso de follow-up com historico curto.",
+        "dictionary_seed_criteria": {
+          "vehicle_model": "GOL",
+          "vehicle_year": 2010,
+          "engine": "1.0",
+          "quantity": 1
+        },
+        "extractor_ms": 222.58,
+        "validate_total_ms": 57818.01,
+        "decision": "search",
+        "criteria": {
+          "part_query": "correia dentada",
+          "vehicle_model": "Gol",
+          "vehicle_year": 2010,
+          "engine": "1.0",
+          "quantity": 1
+        },
+        "missing_fields": [],
+        "next_question": null,
+        "confidence": 1.0,
+        "llm_audit": {
+          "llm_endpoint_used": "/api/chat",
+          "llm_raw_content": "{\n  \"decision\": \"search\",\n  \"criteria\": {\n    \"part_query\": \"correia dentada\",\n    \"vehicle_model\": \"GOL\",\n    \"vehicle_year\": 2010,\n    \"engine\": \"1.0\",\n    \"quantity\": 1\n  },\n  \"missing_fields\": [],\n  \"next_question\": null,\n  \"confidence\": 100\n}",
+          "llm_output_valid": true,
+          "llm_parse_error": null,
+          "llm_fallback_used": false,
+          "llm_decision_raw": "search"
+        },
+        "ollama_ps_before": {
+          "ok": true,
+          "target_loaded": true,
+          "loaded_model_names": [
+            "qwen2.5:7b"
+          ],
+          "models": [
+            {
+              "name": "qwen2.5:7b",
+              "size_vram": 0,
+              "expires_at": "2026-03-24T19:40:31.728107844Z"
+            }
+          ],
+          "error": null
+        },
+        "ollama_ps_after": {
+          "ok": true,
+          "target_loaded": true,
+          "loaded_model_names": [
+            "qwen2.5:7b"
+          ],
+          "models": [
+            {
+              "name": "qwen2.5:7b",
+              "size_vram": 0,
+              "expires_at": "2026-03-24T19:41:29.782742043Z"
+            }
+          ],
+          "error": null
+        }
+      },
+      {
+        "phase": "sequence_1",
+        "scenario": "handoff_request",
+        "message_text": "quero falar com atendimento humano",
+        "context_last_messages": [],
+        "notes": "Caso exploratorio para observar se a LLM escolhe handoff.",
+        "dictionary_seed_criteria": {},
+        "extractor_ms": 251.86,
+        "validate_total_ms": 38678.63,
+        "decision": "handoff",
+        "criteria": {},
+        "missing_fields": [
+          "part_query",
+          "part_code"
+        ],
+        "next_question": null,
+        "confidence": 0.0,
+        "llm_audit": {
+          "llm_endpoint_used": "/api/chat",
+          "llm_raw_content": "{\n  \"decision\": \"handoff\",\n  \"criteria\": {},\n  \"missing_fields\": [\"part_query\", \"part_code\"],\n  \"next_question\": null,\n  \"confidence\": 0\n}",
+          "llm_output_valid": true,
+          "llm_parse_error": null,
+          "llm_fallback_used": false,
+          "llm_decision_raw": "handoff"
+        },
+        "ollama_ps_before": {
+          "ok": true,
+          "target_loaded": true,
+          "loaded_model_names": [
+            "qwen2.5:7b"
+          ],
+          "models": [
+            {
+              "name": "qwen2.5:7b",
+              "size_vram": 0,
+              "expires_at": "2026-03-24T19:41:29.782742043Z"
+            }
+          ],
+          "error": null
+        },
+        "ollama_ps_after": {
+          "ok": true,
+          "target_loaded": true,
+          "loaded_model_names": [
+            "qwen2.5:7b"
+          ],
+          "models": [
+            {
+              "name": "qwen2.5:7b",
+              "size_vram": 0,
+              "expires_at": "2026-03-24T19:42:08.744420633Z"
+            }
+          ],
+          "error": null
+        }
+      }
+    ],
+    "summary_by_scenario": {
+      "ask_minimal": {
+        "count": 1,
+        "latency_avg_ms": 113759.86,
+        "latency_min_ms": 113759.86,
+        "latency_max_ms": 113759.86,
+        "latency_p50_ms": 113759.86,
+        "latency_p95_ms": 113759.86,
+        "extractor_avg_ms": 264.7,
+        "decisions": [
+          "ask"
+        ],
+        "target_loaded_before_all": false,
+        "target_loaded_after_all": true
+      },
+      "search_complete": {
+        "count": 1,
+        "latency_avg_ms": 64945.44,
+        "latency_min_ms": 64945.44,
+        "latency_max_ms": 64945.44,
+        "latency_p50_ms": 64945.44,
+        "latency_p95_ms": 64945.44,
+        "extractor_avg_ms": 237.57,
+        "decisions": [
+          "ask"
+        ],
+        "target_loaded_before_all": true,
+        "target_loaded_after_all": true
+      },
+      "follow_up_engine": {
+        "count": 1,
+        "latency_avg_ms": 57818.01,
+        "latency_min_ms": 57818.01,
+        "latency_max_ms": 57818.01,
+        "latency_p50_ms": 57818.01,
+        "latency_p95_ms": 57818.01,
+        "extractor_avg_ms": 222.58,
+        "decisions": [
+          "search"
+        ],
+        "target_loaded_before_all": true,
+        "target_loaded_after_all": true
+      },
+      "handoff_request": {
+        "count": 1,
+        "latency_avg_ms": 38678.63,
+        "latency_min_ms": 38678.63,
+        "latency_max_ms": 38678.63,
+        "latency_p50_ms": 38678.63,
+        "latency_p95_ms": 38678.63,
+        "extractor_avg_ms": 251.86,
+        "decisions": [
+          "handoff"
+        ],
+        "target_loaded_before_all": true,
+        "target_loaded_after_all": true
+      }
+    }
+  },
+  "idle_battery": {
+    "measurements": [
+      {
+        "phase": "idle_baseline",
+        "scenario": "ask_minimal",
+        "message_text": "preciso de uma peca",
+        "context_last_messages": [],
+        "notes": "Caso curto que tende a virar ask por falta de part_query.",
+        "dictionary_seed_criteria": {},
+        "extractor_ms": 240.38,
+        "validate_total_ms": 46055.91,
+        "decision": "ask",
+        "criteria": {},
+        "missing_fields": [
+          "part_query",
+          "part_code"
+        ],
+        "next_question": {
+          "type": "request_info",
+          "key": "part_query",
+          "prompt": "Por favor, informe qual peça você precisa."
+        },
+        "confidence": 0.5,
+        "llm_audit": {
+          "llm_endpoint_used": "/api/chat",
+          "llm_raw_content": "{\n  \"decision\": \"ask\",\n  \"criteria\": {},\n  \"missing_fields\": [\"part_query\", \"part_code\"],\n  \"next_question\": {\n    \"type\": \"part_query\",\n    \"key\": \"part_query\",\n    \"prompt\": \"Por favor, informe qual peça você precisa.\"\n  },\n  \"confidence\": 0.5\n}",
+          "llm_output_valid": true,
+          "llm_parse_error": null,
+          "llm_fallback_used": false,
+          "llm_decision_raw": "ask"
+        },
+        "ollama_ps_before": {
+          "ok": true,
+          "target_loaded": true,
+          "loaded_model_names": [
+            "qwen2.5:7b"
+          ],
+          "models": [
+            {
+              "name": "qwen2.5:7b",
+              "size_vram": 0,
+              "expires_at": "2026-03-24T19:42:08.744420633Z"
+            }
+          ],
+          "error": null
+        },
+        "ollama_ps_after": {
+          "ok": true,
+          "target_loaded": true,
+          "loaded_model_names": [
+            "qwen2.5:7b"
+          ],
+          "models": [
+            {
+              "name": "qwen2.5:7b",
+              "size_vram": 0,
+              "expires_at": "2026-03-24T19:42:55.05113795Z"
+            }
+          ],
+          "error": null
+        }
+      },
+      {
+        "phase": "idle_after_330s",
+        "scenario": "ask_minimal",
+        "message_text": "preciso de uma peca",
+        "context_last_messages": [],
+        "notes": "Caso curto que tende a virar ask por falta de part_query.",
+        "dictionary_seed_criteria": {},
+        "extractor_ms": 382.13,
+        "validate_total_ms": 34924.23,
+        "decision": "ask",
+        "criteria": {},
+        "missing_fields": [
+          "part_query",
+          "part_code"
+        ],
+        "next_question": {
+          "type": "request_info",
+          "key": "part_query",
+          "prompt": "Por favor, informe qual peça você precisa."
+        },
+        "confidence": 0.5,
+        "llm_audit": {
+          "llm_endpoint_used": "/api/chat",
+          "llm_raw_content": "{\n  \"decision\": \"ask\",\n  \"criteria\": {},\n  \"missing_fields\": [\"part_query\", \"part_code\"],\n  \"next_question\": {\n    \"type\": \"part_query\",\n    \"key\": \"part_query\",\n    \"prompt\": \"Por favor, informe qual peça você precisa.\"\n  },\n  \"confidence\": 0.5\n}",
+          "llm_output_valid": true,
+          "llm_parse_error": null,
+          "llm_fallback_used": false,
+          "llm_decision_raw": "ask"
+        },
+        "ollama_ps_before": {
+          "ok": true,
+          "target_loaded": true,
+          "loaded_model_names": [
+            "qwen2.5:7b"
+          ],
+          "models": [
+            {
+              "name": "qwen2.5:7b",
+              "size_vram": 0,
+              "expires_at": "2026-03-24T19:42:55.05113795Z"
+            }
+          ],
+          "error": null
+        },
+        "ollama_ps_after": {
+          "ok": true,
+          "target_loaded": true,
+          "loaded_model_names": [
+            "qwen2.5:7b"
+          ],
+          "models": [
+            {
+              "name": "qwen2.5:7b",
+              "size_vram": 0,
+              "expires_at": "2026-03-24T19:49:00.389318312Z"
+            }
+          ],
+          "error": null
+        },
+        "idle_seconds": 330,
+        "ollama_ps_before_sleep": {
+          "ok": true,
+          "target_loaded": true,
+          "loaded_model_names": [
+            "qwen2.5:7b"
+          ],
+          "models": [
+            {
+              "name": "qwen2.5:7b",
+              "size_vram": 0,
+              "expires_at": "2026-03-24T19:42:55.05113795Z"
+            }
+          ],
+          "error": null
+        },
+        "ollama_ps_after_sleep": {
+          "ok": true,
+          "target_loaded": true,
+          "loaded_model_names": [
+            "qwen2.5:7b"
+          ],
+          "models": [
+            {
+              "name": "qwen2.5:7b",
+              "size_vram": 0,
+              "expires_at": "2026-03-24T19:42:55.05113795Z"
+            }
+          ],
+          "error": null
+        }
+      },
+      {
+        "phase": "idle_baseline",
+        "scenario": "search_complete",
+        "message_text": "filtro oleo gol 2015",
+        "context_last_messages": [],
+        "notes": "Caso objetivo com part_query, modelo e ano.",
+        "dictionary_seed_criteria": {
+          "part_query": "filtro de oleo",
+          "vehicle_model": "GOL",
+          "vehicle_year": 2015
+        },
+        "extractor_ms": 229.05,
+        "validate_total_ms": 56635.49,
+        "decision": "ask",
+        "criteria": {
+          "part_query": "filtro de oleo",
+          "vehicle_model": "Gol",
+          "vehicle_year": 2015
+        },
+        "missing_fields": [
+          "axle"
+        ],
+        "next_question": {
+          "type": "request_info",
+          "key": "axle",
+          "prompt": "Qual eixo (dianteiro ou traseiro) o filtro de oleo esta localizado?"
+        },
+        "confidence": 0.85,
+        "llm_audit": {
+          "llm_endpoint_used": "/api/chat",
+          "llm_raw_content": "{\n  \"decision\": \"search\",\n  \"criteria\": {\n    \"part_query\": \"filtro de oleo\",\n    \"vehicle_model\": \"GOL\",\n    \"vehicle_year\": 2015\n  },\n  \"missing_fields\": [\"axle\"],\n  \"next_question\": {\n    \"type\": \"hint\",\n    \"key\": \"axle\",\n    \"prompt\": \"Qual eixo (dianteiro ou traseiro) o filtro de oleo esta localizado?\"\n  },\n  \"confidence\": 85\n}",
+          "llm_output_valid": true,
+          "llm_parse_error": null,
+          "llm_fallback_used": false,
+          "llm_decision_raw": "search"
+        },
+        "ollama_ps_before": {
+          "ok": true,
+          "target_loaded": true,
+          "loaded_model_names": [
+            "qwen2.5:7b"
+          ],
+          "models": [
+            {
+              "name": "qwen2.5:7b",
+              "size_vram": 0,
+              "expires_at": "2026-03-24T19:49:00.389318312Z"
+            }
+          ],
+          "error": null
+        },
+        "ollama_ps_after": {
+          "ok": true,
+          "target_loaded": true,
+          "loaded_model_names": [
+            "qwen2.5:7b"
+          ],
+          "models": [
+            {
+              "name": "qwen2.5:7b",
+              "size_vram": 0,
+              "expires_at": "2026-03-24T19:49:57.269929472Z"
+            }
+          ],
+          "error": null
+        }
+      },
+      {
+        "phase": "idle_after_330s",
+        "scenario": "search_complete",
+        "message_text": "filtro oleo gol 2015",
+        "context_last_messages": [],
+        "notes": "Caso objetivo com part_query, modelo e ano.",
+        "dictionary_seed_criteria": {
+          "part_query": "filtro de oleo",
+          "vehicle_model": "GOL",
+          "vehicle_year": 2015
+        },
+        "extractor_ms": 223.07,
+        "validate_total_ms": 55895.68,
+        "decision": "ask",
+        "criteria": {
+          "part_query": "filtro de oleo",
+          "vehicle_model": "Gol",
+          "vehicle_year": 2015
+        },
+        "missing_fields": [
+          "axle"
+        ],
+        "next_question": {
+          "type": "request_info",
+          "key": "axle",
+          "prompt": "Qual eixo (dianteiro ou traseiro) o filtro de oleo esta localizado?"
+        },
+        "confidence": 0.85,
+        "llm_audit": {
+          "llm_endpoint_used": "/api/chat",
+          "llm_raw_content": "{\n  \"decision\": \"search\",\n  \"criteria\": {\n    \"part_query\": \"filtro de oleo\",\n    \"vehicle_model\": \"GOL\",\n    \"vehicle_year\": 2015\n  },\n  \"missing_fields\": [\"axle\"],\n  \"next_question\": {\n    \"type\": \"hint\",\n    \"key\": \"axle\",\n    \"prompt\": \"Qual eixo (dianteiro ou traseiro) o filtro de oleo esta localizado?\"\n  },\n  \"confidence\": 85\n}",
+          "llm_output_valid": true,
+          "llm_parse_error": null,
+          "llm_fallback_used": false,
+          "llm_decision_raw": "search"
+        },
+        "ollama_ps_before": {
+          "ok": true,
+          "target_loaded": true,
+          "loaded_model_names": [
+            "qwen2.5:7b"
+          ],
+          "models": [
+            {
+              "name": "qwen2.5:7b",
+              "size_vram": 0,
+              "expires_at": "2026-03-24T19:49:57.269929472Z"
+            }
+          ],
+          "error": null
+        },
+        "ollama_ps_after": {
+          "ok": true,
+          "target_loaded": true,
+          "loaded_model_names": [
+            "qwen2.5:7b"
+          ],
+          "models": [
+            {
+              "name": "qwen2.5:7b",
+              "size_vram": 0,
+              "expires_at": "2026-03-24T19:56:23.403956838Z"
+            }
+          ],
+          "error": null
+        },
+        "idle_seconds": 330,
+        "ollama_ps_before_sleep": {
+          "ok": true,
+          "target_loaded": true,
+          "loaded_model_names": [
+            "qwen2.5:7b"
+          ],
+          "models": [
+            {
+              "name": "qwen2.5:7b",
+              "size_vram": 0,
+              "expires_at": "2026-03-24T19:49:57.269929472Z"
+            }
+          ],
+          "error": null
+        },
+        "ollama_ps_after_sleep": {
+          "ok": true,
+          "target_loaded": true,
+          "loaded_model_names": [
+            "qwen2.5:7b"
+          ],
+          "models": [
+            {
+              "name": "qwen2.5:7b",
+              "size_vram": 0,
+              "expires_at": "2026-03-24T19:49:57.269929472Z"
+            }
+          ],
+          "error": null
+        }
+      }
+    ],
+    "summary_by_scenario": {
+      "ask_minimal": {
+        "count": 2,
+        "latency_avg_ms": 40490.07,
+        "latency_min_ms": 34924.23,
+        "latency_max_ms": 46055.91,
+        "latency_p50_ms": 40490.07,
+        "latency_p95_ms": 45499.33,
+        "extractor_avg_ms": 311.25,
+        "decisions": [
+          "ask",
+          "ask"
+        ],
+        "target_loaded_before_all": true,
+        "target_loaded_after_all": true
+      },
+      "search_complete": {
+        "count": 2,
+        "latency_avg_ms": 56265.58,
+        "latency_min_ms": 55895.68,
+        "latency_max_ms": 56635.49,
+        "latency_p50_ms": 56265.58,
+        "latency_p95_ms": 56598.5,
+        "extractor_avg_ms": 226.06,
+        "decisions": [
+          "ask",
+          "ask"
+        ],
+        "target_loaded_before_all": true,
+        "target_loaded_after_all": true
+      }
+    }
+  },
+  "total_runtime_s": 1131.06
+}

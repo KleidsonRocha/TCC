@@ -440,6 +440,23 @@ INSERT INTO pre_search_decision_policy (id, min_score_to_search, is_active, upda
 VALUES (1, 70, TRUE, 'seed')
 ON CONFLICT (id) DO NOTHING;
 
+CREATE OR REPLACE FUNCTION pre_search_normalize_text(value TEXT)
+RETURNS TEXT AS $$
+    SELECT NULLIF(
+        REGEXP_REPLACE(
+            TRANSLATE(
+                LOWER(BTRIM(COALESCE(value, ''))),
+                'áàãâäéèêëíìîïóòõôöúùûüçñýÿ',
+                'aaaaaeeeeiiiiooooouuuucnyy'
+            ),
+            '\s+',
+            ' ',
+            'g'
+        ),
+        ''
+    );
+$$ LANGUAGE sql IMMUTABLE;
+
 CREATE OR REPLACE FUNCTION pre_search_load_catalog_from_csv(
     base_path TEXT DEFAULT '/docker-entrypoint-initdb.d/csv'
 ) RETURNS VOID AS $$
@@ -450,7 +467,9 @@ DECLARE
     has_brand BOOLEAN;
     has_model BOOLEAN;
     has_engine BOOLEAN;
+    has_part_alias BOOLEAN;
     rule_header TEXT;
+    part_alias_header TEXT;
 BEGIN
     has_grupo := COALESCE((pg_stat_file(base_path || '/grupo.csv', true)).size, 0) > 0;
     has_subgrupo := COALESCE((pg_stat_file(base_path || '/subgrupo.csv', true)).size, 0) > 0;
@@ -458,6 +477,7 @@ BEGIN
     has_brand := COALESCE((pg_stat_file(base_path || '/vehicle_brand.csv', true)).size, 0) > 0;
     has_model := COALESCE((pg_stat_file(base_path || '/vehicle_model.csv', true)).size, 0) > 0;
     has_engine := COALESCE((pg_stat_file(base_path || '/engine_option.csv', true)).size, 0) > 0;
+    has_part_alias := COALESCE((pg_stat_file(base_path || '/pre_search_part_alias.csv', true)).size, 0) > 0;
 
     IF NOT (has_grupo AND has_subgrupo AND has_rule AND has_brand AND has_model AND has_engine) THEN
         RAISE NOTICE 'CSV bootstrap ignorado. Coloque os arquivos em % para carga completa.', base_path;
@@ -467,6 +487,15 @@ BEGIN
     rule_header := LOWER(COALESCE(SPLIT_PART(pg_read_file(base_path || '/pre_search_part_rule.csv', 0, 4000, true), E'\n', 1), ''));
     IF POSITION('cd_grupo' IN rule_header) = 0 THEN
         RAISE EXCEPTION 'pre_search_part_rule.csv deve conter coluna cd_grupo para chave composta (cd_grupo + part_type_id).';
+    END IF;
+
+    IF has_part_alias THEN
+        part_alias_header := LOWER(COALESCE(SPLIT_PART(pg_read_file(base_path || '/pre_search_part_alias.csv', 0, 4000, true), E'\n', 1), ''));
+        IF POSITION('cd_grupo' IN part_alias_header) = 0
+           OR POSITION('cd_subgrupo' IN part_alias_header) = 0
+           OR POSITION('alias' IN part_alias_header) = 0 THEN
+            RAISE EXCEPTION 'pre_search_part_alias.csv deve conter colunas cd_grupo, cd_subgrupo e alias.';
+        END IF;
     END IF;
 
     CREATE TEMP TABLE stg_grupo (
@@ -515,6 +544,12 @@ BEGIN
         cilindrada TEXT
     ) ON COMMIT DROP;
 
+    CREATE TEMP TABLE stg_part_alias (
+        cd_grupo INTEGER,
+        cd_subgrupo INTEGER,
+        alias TEXT
+    ) ON COMMIT DROP;
+
     EXECUTE format(
         'COPY stg_grupo FROM %L WITH (FORMAT csv, HEADER true, ENCODING ''UTF8'')',
         base_path || '/grupo.csv'
@@ -539,6 +574,12 @@ BEGIN
         'COPY stg_engine FROM %L WITH (FORMAT csv, HEADER true, ENCODING ''UTF8'')',
         base_path || '/engine_option.csv'
     );
+    IF has_part_alias THEN
+        EXECUTE format(
+            'COPY stg_part_alias FROM %L WITH (FORMAT csv, HEADER true, ENCODING ''UTF8'')',
+            base_path || '/pre_search_part_alias.csv'
+        );
+    END IF;
 
     IF EXISTS (
         SELECT 1
@@ -574,7 +615,7 @@ BEGIN
     SELECT DISTINCT
         sg.cd_grupo,
         TRIM(sg.nm_grupo),
-        LOWER(REGEXP_REPLACE(TRIM(sg.nm_grupo), '\s+', ' ', 'g')),
+        pre_search_normalize_text(sg.nm_grupo),
         LOWER(COALESCE(TRIM(sg.fl_ativo), 's')) <> 'n',
         'seed_csv'
     FROM stg_grupo sg
@@ -600,7 +641,7 @@ BEGIN
         pg.id,
         ss.cd_subgrupo,
         TRIM(ss.nm_subgrupo),
-        LOWER(REGEXP_REPLACE(TRIM(ss.nm_subgrupo), '\s+', ' ', 'g')),
+        pre_search_normalize_text(ss.nm_subgrupo),
         TRUE,
         'seed_csv'
     FROM stg_subgrupo ss
@@ -635,6 +676,35 @@ BEGIN
         is_active = TRUE,
         updated_at = NOW(),
         updated_by = EXCLUDED.updated_by;
+
+    IF has_part_alias THEN
+        INSERT INTO pre_search_part_alias (
+            part_type_id,
+            alias,
+            alias_normalized,
+            is_active,
+            updated_by
+        )
+        SELECT DISTINCT
+            pt.id,
+            BTRIM(spa.alias),
+            pre_search_normalize_text(spa.alias),
+            TRUE,
+            'seed_csv'
+        FROM stg_part_alias spa
+        JOIN pre_search_part_group pg
+          ON pg.source_group_code = spa.cd_grupo
+        JOIN pre_search_part_type pt
+          ON pt.part_group_id = pg.id
+         AND pt.source_subgroup_code = spa.cd_subgrupo
+        WHERE spa.alias IS NOT NULL
+          AND BTRIM(spa.alias) <> ''
+        ON CONFLICT (part_type_id, alias_normalized) DO UPDATE
+        SET alias = EXCLUDED.alias,
+            is_active = TRUE,
+            updated_at = NOW(),
+            updated_by = EXCLUDED.updated_by;
+    END IF;
 
     WITH rule_target AS (
         SELECT
@@ -690,7 +760,7 @@ BEGIN
     )
     SELECT DISTINCT
         TRIM(sb.montadora),
-        LOWER(REGEXP_REPLACE(TRIM(sb.montadora), '\s+', ' ', 'g')),
+        pre_search_normalize_text(sb.montadora),
         TRUE,
         'seed_csv'
     FROM stg_brand sb
@@ -733,6 +803,23 @@ BEGIN
     VALUES ('SEM_MARCA_MAPEADA', 'sem_marca_mapeada', TRUE, 'seed_csv')
     ON CONFLICT (name_normalized) DO NOTHING;
 
+    WITH normalized_model_seed AS (
+        SELECT DISTINCT ON (pre_search_normalize_text(sm.veiculo))
+            b.id AS brand_id,
+            TRIM(sm.veiculo) AS model_name,
+            pre_search_normalize_text(sm.veiculo) AS model_name_normalized
+        FROM stg_model sm
+        JOIN pre_search_brand b
+          ON b.name_normalized = 'sem_marca_mapeada'
+        WHERE sm.veiculo IS NOT NULL
+          AND TRIM(sm.veiculo) <> ''
+          AND TRIM(sm.veiculo) NOT IN ('-', '--')
+          AND TRIM(sm.veiculo) !~ '^\(.*\)$'
+        ORDER BY
+            pre_search_normalize_text(sm.veiculo),
+            LENGTH(TRIM(sm.veiculo)),
+            TRIM(sm.veiculo)
+    )
     INSERT INTO pre_search_model (
         brand_id,
         name,
@@ -740,19 +827,13 @@ BEGIN
         is_active,
         updated_by
     )
-    SELECT DISTINCT
-        b.id,
-        TRIM(sm.veiculo),
-        LOWER(REGEXP_REPLACE(TRIM(sm.veiculo), '\s+', ' ', 'g')),
+    SELECT
+        nms.brand_id,
+        nms.model_name,
+        nms.model_name_normalized,
         TRUE,
         'seed_csv'
-    FROM stg_model sm
-    JOIN pre_search_brand b
-      ON b.name_normalized = 'sem_marca_mapeada'
-    WHERE sm.veiculo IS NOT NULL
-      AND TRIM(sm.veiculo) <> ''
-      AND TRIM(sm.veiculo) NOT IN ('-', '--')
-      AND TRIM(sm.veiculo) !~ '^\(.*\)$'
+    FROM normalized_model_seed nms
     ON CONFLICT (brand_id, name_normalized) DO UPDATE
     SET name = EXCLUDED.name,
         is_active = TRUE,
@@ -773,6 +854,44 @@ BEGIN
         TRUE,
         'seed_csv'
     FROM pre_search_model m
+    ON CONFLICT (alias_normalized) DO UPDATE
+    SET model_id = EXCLUDED.model_id,
+        alias = EXCLUDED.alias,
+        is_active = TRUE,
+        updated_at = NOW(),
+        updated_by = EXCLUDED.updated_by;
+
+    WITH normalized_model_alias_seed AS (
+        SELECT DISTINCT ON (pre_search_normalize_text(sm.veiculo))
+            m.id AS model_id,
+            TRIM(sm.veiculo) AS alias,
+            pre_search_normalize_text(sm.veiculo) AS alias_normalized
+        FROM stg_model sm
+        JOIN pre_search_model m
+          ON m.name_normalized = pre_search_normalize_text(sm.veiculo)
+        WHERE sm.veiculo IS NOT NULL
+          AND TRIM(sm.veiculo) <> ''
+          AND TRIM(sm.veiculo) NOT IN ('-', '--')
+          AND TRIM(sm.veiculo) !~ '^\(.*\)$'
+        ORDER BY
+            pre_search_normalize_text(sm.veiculo),
+            LENGTH(TRIM(sm.veiculo)),
+            TRIM(sm.veiculo)
+    )
+    INSERT INTO pre_search_model_alias (
+        model_id,
+        alias,
+        alias_normalized,
+        is_active,
+        updated_by
+    )
+    SELECT
+        nmas.model_id,
+        nmas.alias,
+        nmas.alias_normalized,
+        TRUE,
+        'seed_csv'
+    FROM normalized_model_alias_seed nmas
     ON CONFLICT (alias_normalized) DO UPDATE
     SET model_id = EXCLUDED.model_id,
         alias = EXCLUDED.alias,
@@ -802,7 +921,7 @@ BEGIN
             END AS year_to
         FROM stg_engine se
         JOIN pre_search_model m
-          ON m.name_normalized = LOWER(REGEXP_REPLACE(TRIM(se.veiculo), '\s+', ' ', 'g'))
+          ON m.name_normalized = pre_search_normalize_text(se.veiculo)
         WHERE se.veiculo IS NOT NULL
           AND TRIM(se.veiculo) <> ''
           AND TRIM(se.veiculo) NOT IN ('-', '--')
@@ -873,6 +992,7 @@ $$ LANGUAGE plpgsql;
 
 SELECT pre_search_load_catalog_from_csv();
 DROP FUNCTION pre_search_load_catalog_from_csv(TEXT);
+DROP FUNCTION pre_search_normalize_text(TEXT);
 
 CREATE TABLE IF NOT EXISTS pre_search_fine_tuning_dataset (
     id BIGSERIAL PRIMARY KEY,

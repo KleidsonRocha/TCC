@@ -1,0 +1,2393 @@
+cd_grupo,cd_subgrupo,alias
+1,2,baliza
+1,2,balizas
+1,2,lanterna lateral
+1,2,balisa
+1,2,baliza carroceria
+1,2,balizas carroceria
+1,2,baliza acessorio
+1,3,batentes
+1,3,batente
+1,3,batente amortecedor
+1,3,btentes
+1,3,batentes carroceria
+1,3,batente carroceria
+1,3,batentes acessorio
+1,5,borrachas
+1,5,borracha
+1,5,borraxas
+1,5,brrachas
+1,5,borrachas carroceria
+1,5,borracha carroceria
+1,5,borrachas acessorio
+1,6,caixa de bateria
+1,6,caixa bateria
+1,6,caixas de bateria
+1,6,caixas bateria
+1,6,caixa de bteria
+1,6,caixa de bateria carroceria
+1,6,caixas de baterias carroceria
+1,7,canaleta de porta
+1,7,canaleta porta
+1,7,canaletas de porta
+1,7,canaletas porta
+1,7,cnaleta de porta
+1,7,canaleta de porta carroceria
+1,7,canaletas de portas carroceria
+1,8,chaves de roda
+1,8,chaves roda
+1,8,chave de roda
+1,8,chave roda
+1,8,xaves de roda
+1,8,chaves de roda carroceria
+1,8,chave de roda carroceria
+1,10,diversos
+1,10,diverso
+1,10,dversos
+1,10,diversos carroceria
+1,10,diverso carroceria
+1,10,diversos acessorio
+1,10,diverso acessorio
+1,12,escapamentos
+1,12,escapamento
+1,12,escpamentos
+1,12,escapamentos carroceria
+1,12,escapamento carroceria
+1,12,escapamentos acessorio
+1,12,escapamento acessorio
+1,13,espelhos
+1,13,espelho
+1,13,retrovisor
+1,13,retrovisores
+1,13,esplhos
+1,13,espelhos carroceria
+1,13,espelho carroceria
+1,14,fechaduras
+1,14,fechadura
+1,14,fexaduras
+1,14,fchaduras
+1,14,fechaduras carroceria
+1,14,fechadura carroceria
+1,14,fechaduras acessorio
+1,16,manivelas de vidro
+1,16,manivelas vidro
+1,16,manivela de vidro
+1,16,manivela vidro
+1,16,mnivelas de vidro
+1,16,manivelas de vidro carroceria
+1,16,manivela de vidro carroceria
+1,17,maquinas de vidro
+1,17,maquinas vidro
+1,17,maquina de vidro
+1,17,maquina vidro
+1,17,mquinas de vidro
+1,17,maquinas de vidro carroceria
+1,17,maquina de vidro carroceria
+1,18,palhetas
+1,18,palheta
+1,18,palheta limpador
+1,18,palheta parabrisa
+1,18,palhetas limpador
+1,18,palhetas parabrisa
+1,18,plhetas
+1,19,pedais
+1,19,pedal
+1,19,pedais carroceria
+1,19,pedal carroceria
+1,19,pedais acessorio
+1,19,pedal acessorio
+1,19,pedais autopeca
+1,20,pino de porta
+1,20,pino porta
+1,20,pinos de porta
+1,20,pinos porta
+1,20,pino de porta carroceria
+1,20,pinos de portas carroceria
+1,20,pino de porta acessorio
+1,22,tampa de tanque
+1,22,tampa tanque
+1,22,tampas de tanque
+1,22,tampas tanque
+1,22,tampa de tanque carroceria
+1,22,tampas de tanques carroceria
+1,22,tampa de tanque acessorio
+1,25,fitas
+1,25,fita
+1,25,fitas carroceria
+1,25,fita carroceria
+1,25,fitas acessorio
+1,25,fita acessorio
+1,25,fitas autopeca
+1,26,graxeiras
+1,26,graxeira
+1,26,grxeiras
+1,26,graxeiras carroceria
+1,26,graxeira carroceria
+1,26,graxeiras acessorio
+1,26,graxeira acessorio
+3,49,bomba de vacuo
+3,49,bomba vacuo
+3,49,bombas de vacuo
+3,49,bombas vacuo
+3,49,bomba de vacuo motor
+3,49,bombas de vacuos motor
+3,49,bomba de vacuo arrefecimento
+2,2,amortecedor de cabine/banco
+2,2,amortecedor de cabine banco
+2,2,amortecedor de cabine e banco
+2,2,amortecedor de cabinebanco
+2,2,amortecedor cabine banco
+2,2,amortecedores de cabine banco
+2,2,amortecedores cabine banco
+2,2,amort de cabine banco
+2,2,amortecedor de cabine
+2,2,banco
+2,2,amrtecedor de cabine banco
+2,6,diversos
+2,6,diverso
+2,6,dversos
+2,6,diversos suspensao
+2,6,diverso suspensao
+2,6,diversos amortecedor
+2,6,diverso amortecedor
+3,1,aditivos
+3,1,aditivo
+3,1,adtivos
+3,1,aditivos motor
+3,1,aditivo motor
+3,1,aditivos arrefecimento
+3,1,aditivo arrefecimento
+3,2,anti-chama
+3,2,anti chama
+3,2,anti e chama
+3,2,antichama
+3,2,antis chama
+3,2,anti xama
+3,2,anti chama motor
+3,3,balancim do comando
+3,3,balancim comando
+3,3,balancins do comando
+3,3,balancins comando
+3,3,blancim do comando
+3,3,balancim do comando motor
+3,3,balancins do comandos motor
+3,5,bomba alimentador diesel
+3,5,bombas alimentador diesel
+3,5,bomba almentador diesel
+3,5,bomba alimentador diesel motor
+3,5,bombas alimentadores diesel motor
+3,5,bomba alimentador diesel arrefecimento
+3,5,bombas alimentadores diesel arrefecimento
+3,6,bomba de agua
+3,6,bomba agua
+3,6,bombas de agua
+3,6,bombas agua
+3,6,bomba de agua motor
+3,6,bombas de aguas motor
+3,6,bomba de agua arrefecimento
+3,8,bomba manual
+3,8,bombas manual
+3,8,bomba manual motor
+3,8,bombas manuais motor
+3,8,bomba manual arrefecimento
+3,8,bombas manuais arrefecimento
+3,8,bomba manual autopeca
+3,10,capas
+3,10,capa
+3,10,capas motor
+3,10,capa motor
+3,10,capas arrefecimento
+3,10,capa arrefecimento
+3,10,capas autopeca
+3,12,carter
+3,12,carteres
+3,12,carter motor
+3,12,carteres motor
+3,12,carter arrefecimento
+3,12,carteres arrefecimento
+3,12,carter autopeca
+3,13,corrente tensor
+3,13,correntes tensor
+3,13,crrente tensor
+3,13,corrente tensor motor
+3,13,correntes tensores motor
+3,13,corrente tensor arrefecimento
+3,13,correntes tensores arrefecimento
+3,14,eixo do comando
+3,14,eixo comando
+3,14,eixos do comando
+3,14,eixos comando
+3,14,eixo do cmando
+3,14,eixo do comando motor
+3,14,eixos do comandos motor
+3,15,embreagem viscosa
+3,15,embreagens viscosa
+3,15,embr viscosa
+3,15,enbreagem viscosa
+3,15,embragem viscosa
+3,15,embreagem viscosa motor
+3,15,embreagens viscosas motor
+3,16,engrenagens
+3,16,engrenagem
+3,16,engrnagens
+3,16,engrenagens motor
+3,16,engrenagem motor
+3,16,engrenagens arrefecimento
+3,16,engrenagem arrefecimento
+3,17,kit tensor do comando
+3,17,kit tensor comando
+3,17,kit tensor do cmando
+3,17,kit tensor do comando motor
+3,17,kit tensores do comandos motor
+3,17,kit tensor do comando arrefecimento
+3,17,kit tensores do comandos arrefecimento
+3,18,mangueiras
+3,18,mangueira
+3,18,mngueiras
+3,18,mangueiras motor
+3,18,mangueira motor
+3,18,mangueiras arrefecimento
+3,18,mangueira arrefecimento
+3,19,ventilador
+3,19,ventiladores
+3,19,vntilador
+3,19,ventilador motor
+3,19,ventiladores motor
+3,19,ventilador arrefecimento
+3,19,ventiladores arrefecimento
+3,20,polia bomba de agua
+3,20,polia bomba agua
+3,20,polias bomba de agua
+3,20,polias bomba agua
+3,20,polia bomba de agua motor
+3,20,polias bombas de aguas motor
+3,20,polia bomba de agua arrefecimento
+3,22,polia do virabrequim
+3,22,polia virabrequim
+3,22,polias do virabrequim
+3,22,polias virabrequim
+3,22,polia do virabrequin
+3,22,polia do vrabrequim
+3,22,polia do virabrequim motor
+3,24,radiador
+3,24,radiadores
+3,24,rdiador
+3,24,radiador motor
+3,24,radiadores motor
+3,24,radiador arrefecimento
+3,24,radiadores arrefecimento
+3,25,reparo bomba de agua
+3,25,reparo bomba agua
+3,25,reparos bomba de agua
+3,25,reparos bomba agua
+3,25,reparo bomba de agua motor
+3,25,reparos bombas de aguas motor
+3,25,reparo bomba de agua arrefecimento
+3,27,selo do motor
+3,27,selo motor
+3,27,selos do motor
+3,27,selos motor
+3,27,selo do motor arrefecimento
+3,27,selos do motores arrefecimento
+3,27,selo do motor autopeca
+3,28,separador de vapor
+3,28,separador vapor
+3,28,separadores de vapor
+3,28,separadores vapor
+3,28,sparador de vapor
+3,28,separador de vapor motor
+3,28,separadores de vapores motor
+3,31,tampa radiador
+3,31,tampas radiador
+3,31,tampa rdiador
+3,31,tampa radiador motor
+3,31,tampas radiadores motor
+3,31,tampa radiador arrefecimento
+3,31,tampas radiadores arrefecimento
+3,33,travessa do motor
+3,33,travessa motor
+3,33,travessas do motor
+3,33,travessas motor
+3,33,travesa do motor
+3,33,trvessa do motor
+3,33,travessa do motor arrefecimento
+3,35,tubo bomba de agua
+3,35,tubo bomba agua
+3,35,tubos bomba de agua
+3,35,tubos bomba agua
+3,35,tubo bomba de agua motor
+3,35,tubos bombas de aguas motor
+3,35,tubo bomba de agua arrefecimento
+3,36,tubo de agua de motor
+3,36,tubo agua motor
+3,36,tubos de agua de motor
+3,36,tubos agua motor
+3,36,tubo de agua de motor arrefecimento
+3,36,tubos de aguas de motores arrefecimento
+3,36,tubo de agua de motor autopeca
+3,37,tucho de velas
+3,37,tucho velas
+3,37,tuchos de velas
+3,37,tuchos velas
+3,37,tuxo de velas
+3,37,tucho de velas motor
+3,37,tucho de vela motor
+3,38,tuchos de motor
+3,38,tuchos motor
+3,38,tucho de motor
+3,38,tucho motor
+3,38,tuxos de motor
+3,38,tuchos de motor arrefecimento
+3,38,tucho de motor arrefecimento
+3,43,diversos
+3,43,diverso
+3,43,dversos
+3,43,diversos motor
+3,43,diverso motor
+3,43,diversos arrefecimento
+3,43,diverso arrefecimento
+3,44,suporte de motor
+3,44,suporte motor
+3,44,suportes de motor
+3,44,suportes motor
+3,44,sporte de motor
+3,44,suporte de motor arrefecimento
+3,44,suportes de motores arrefecimento
+3,45,tubo enchimento oleo
+3,45,tubos enchimento oleo
+3,45,tubo enximento oleo
+3,45,tubo enchmento oleo
+3,45,tubo enchimento oleo motor
+3,45,tubos enchimentos oleos motor
+3,45,tubo enchimento oleo arrefecimento
+4,1,buchas
+4,1,bucha
+4,1,buxas
+4,1,buchas suspensao
+4,1,bucha suspensao
+4,1,buchas borracha
+4,1,bucha borracha
+4,2,coxins
+4,2,coxim
+4,2,coxins suspensao
+4,2,coxim suspensao
+4,2,coxins borracha
+4,2,coxim borracha
+4,2,coxins autopeca
+4,3,sanfonas
+4,3,sanfona
+4,3,snfonas
+4,3,sanfonas suspensao
+4,3,sanfona suspensao
+4,3,sanfonas borracha
+4,3,sanfona borracha
+4,4,diversos
+4,4,diverso
+4,4,dversos
+4,4,diversos suspensao
+4,4,diverso suspensao
+4,4,diversos borracha
+4,4,diverso borracha
+5,1,cabo de afogador
+5,1,cabo afogador
+5,1,cabos de afogador
+5,1,cabos afogador
+5,1,cabo de afgador
+5,1,cabo de afogador autopeca
+5,1,cabos de afogadores autopeca
+5,2,cabo de embreagem
+5,2,cabo embreagem
+5,2,cabos de embreagem
+5,2,cabos embreagem
+5,2,cabo de embr
+5,2,cabos de embr
+5,2,cabo de enbreagem
+5,2,cabo de embragem
+5,3,cabo de freio
+5,3,cabo freio
+5,3,cabos de freio
+5,3,cabos freio
+5,3,cabo de freio autopeca
+5,3,cabos de freios autopeca
+5,3,cabo de freio automotiva
+5,5,cabo do acelerador
+5,5,cabo acelerador
+5,5,cabos do acelerador
+5,5,cabos acelerador
+5,5,cabo do aclerador
+5,5,cabo do acelerador autopeca
+5,5,cabos do aceleradores autopeca
+5,6,cabo estrangulador
+5,6,cabos estrangulador
+5,6,cabo estrngulador
+5,6,cabo estrangulador autopeca
+5,6,cabos estranguladores autopeca
+5,6,cabo estrangulador automotiva
+5,6,cabos estranguladores automotiva
+5,8,cabo capo
+5,8,cabos capo
+5,8,cabo capo autopeca
+5,8,cabos capos autopeca
+5,8,cabo capo automotiva
+5,8,cabos capos automotiva
+5,8,cabo capo carro
+5,9,diversos
+5,9,diverso
+5,9,dversos
+5,9,diversos cabo
+5,9,diverso cabo
+5,9,diversos autopeca
+5,9,diverso autopeca
+6,1,anel trava rolamento diferencial
+6,1,aneis trava rolamento diferencial
+6,1,anel trava rlamento diferencial
+6,1,anel trava rolamento diferencial cardan
+6,1,aneis travas rolamentos diferenciais cardan
+6,1,anel trava rolamento diferencial autopeca
+6,1,aneis travas rolamentos diferenciais autopeca
+6,2,arruelas
+6,2,arruela
+6,2,arrelas
+6,2,arruelas cardan
+6,2,arruela cardan
+6,2,arruelas diferencial
+6,2,arruela diferencial
+6,5,cardan completo
+6,5,cardans completo
+6,5,cardan cmpleto
+6,5,cardan completo diferencial
+6,5,cardans completos diferencial
+6,5,cardan completo autopeca
+6,5,cardans completos autopeca
+6,7,cruzetas cardan
+6,7,cruzeta cardan
+6,7,crusetas cardan
+6,7,crzetas cardan
+6,7,cruzetas cardan diferencial
+6,7,cruzeta cardan diferencial
+6,7,cruzetas cardans diferencial
+6,8,eixo reduzida
+6,8,eixos reduzida
+6,8,eixo redusida
+6,8,eixo rduzida
+6,8,eixo reduzida cardan
+6,8,eixos reduzidas cardan
+6,8,eixo reduzida diferencial
+6,10,flanges e terminais cardan
+6,10,flanges terminais cardan
+6,10,flange e terminais cardan
+6,10,flange terminais cardan
+6,10,flnges e terminais cardan
+6,10,flanges e terminais cardan diferencial
+6,10,flange e terminal cardan diferencial
+6,11,garfos cardan
+6,11,garfo cardan
+6,11,garfos cardan diferencial
+6,11,garfo cardan diferencial
+6,11,garfos cardans diferencial
+6,11,garfos cardan autopeca
+6,11,garfo cardan autopeca
+6,12,juntas
+6,12,junta
+6,12,juntas cardan
+6,12,junta cardan
+6,12,juntas diferencial
+6,12,junta diferencial
+6,12,juntas autopeca
+6,13,reparos
+6,13,reparo
+6,13,rparos
+6,13,reparos cardan
+6,13,reparo cardan
+6,13,reparos diferencial
+6,13,reparo diferencial
+6,14,luvas
+6,14,luva
+6,14,luvas cardan
+6,14,luva cardan
+6,14,luvas diferencial
+6,14,luva diferencial
+6,14,luvas autopeca
+6,16,ponteiras cardan
+6,16,ponteira cardan
+6,16,pnteiras cardan
+6,16,ponteiras cardan diferencial
+6,16,ponteira cardan diferencial
+6,16,ponteiras cardans diferencial
+6,16,ponteiras cardan autopeca
+6,17,porcas
+6,17,porca
+6,17,porcas cardan
+6,17,porca cardan
+6,17,porcas diferencial
+6,17,porca diferencial
+6,17,porcas autopeca
+6,18,retentores
+6,18,retentor
+6,18,rtentores
+6,18,retentores cardan
+6,18,retentor cardan
+6,18,retentores diferencial
+6,18,retentor diferencial
+6,19,rolamentos
+6,19,rolamento
+6,19,rlamentos
+6,19,rolamentos cardan
+6,19,rolamento cardan
+6,19,rolamentos diferencial
+6,19,rolamento diferencial
+6,20,semieixo diferencial
+6,20,semieixos diferencial
+6,20,smieixo diferencial
+6,20,semieixo diferencial cardan
+6,20,semieixos diferenciais cardan
+6,20,semieixo diferencial autopeca
+6,20,semieixos diferenciais autopeca
+6,21,diversos
+6,21,diverso
+6,21,dversos
+6,21,diversos cardan
+6,21,diverso cardan
+6,21,diversos diferencial
+6,21,diverso diferencial
+7,1,correia automotiva
+7,1,correias automotiva
+7,1,crreia automotiva
+7,1,correia automotiva motor
+7,1,correias automotivas motor
+7,1,correia automotiva distribuicao
+7,1,correias automotivas distribuicao
+7,2,correia de alternador
+7,2,correia alternador
+7,2,correias de alternador
+7,2,correias alternador
+7,2,crreia de alternador
+7,2,correia de alternador motor
+7,2,correias de alternadores motor
+7,3,correia de ar condicionado
+7,3,correia ar condicionado
+7,3,correias de ar condicionado
+7,3,correias ar condicionado
+7,3,correia de ar cond
+7,3,correias de ar cond
+7,3,crreia de ar condicionado
+7,4,correia de comando
+7,4,correia comando
+7,4,correias de comando
+7,4,correias comando
+7,4,crreia de comando
+7,4,correia de comando motor
+7,4,correias de comandos motor
+7,6,correia e kit comando
+7,6,correia kit comando
+7,6,correias e kit comando
+7,6,correias kit comando
+7,6,crreia e kit comando
+7,6,correia e kit comando motor
+7,6,correias e kit comandos motor
+7,7,correia industrial
+7,7,correias industrial
+7,7,crreia industrial
+7,7,correia industrial motor
+7,7,correias industriais motor
+7,7,correia industrial distribuicao
+7,7,correias industriais distribuicao
+7,8,diversos
+7,8,diverso
+7,8,dversos
+7,8,diversos motor
+7,8,diverso motor
+7,8,diversos distribuicao
+7,8,diverso distribuicao
+22,1,ferro fundido
+22,1,ferros fundido
+22,1,ferro fndido
+22,1,ferro fundido suspensao
+22,1,ferros fundidos suspensao
+22,1,ferro fundido dianteira
+22,1,ferros fundidos dianteira
+8,4,pivos / buchas manga eixo
+8,4,pivos buchas manga eixo
+8,4,pivos e buchas manga eixo
+8,4,pivo buchas manga eixo
+8,4,pivos
+8,4,buchas manga eixo
+8,4,pivos manga eixo
+8,4,pivo manga eixo
+8,4,pivos buxas manga eixo
+8,7,setor / sem fim
+8,7,setor sem fim
+8,7,setor e sem fim
+8,7,setor fim
+8,7,setores sem fim
+8,7,setores fim
+8,7,setor
+8,7,sem fim
+8,8,embuchamentos
+8,8,embuchamento
+8,8,embuxamentos
+8,8,embchamentos
+8,8,embuchamentos eletrica
+8,8,embuchamento eletrica
+8,8,embuchamentos ignicao
+8,10,reparos
+8,10,reparo
+8,10,rparos
+8,10,reparos eletrica
+8,10,reparo eletrica
+8,10,reparos ignicao
+8,10,reparo ignicao
+8,14,sanfona mecanismo
+8,14,sanfonas mecanismo
+8,14,snfona mecanismo
+8,14,sanfona mecanismo eletrica
+8,14,sanfonas mecanismos eletrica
+8,14,sanfona mecanismo ignicao
+8,14,sanfonas mecanismos ignicao
+8,15,diversos
+8,15,diverso
+8,15,dversos
+8,15,diversos eletrica
+8,15,diverso eletrica
+8,15,diversos ignicao
+8,15,diverso ignicao
+9,4,boia de tanque
+9,4,boia tanque
+9,4,boias de tanque
+9,4,boias tanque
+9,4,boia de tanque cambio
+9,4,boias de tanques cambio
+9,4,boia de tanque transmissao
+22,2,papel
+22,2,papeis
+22,2,papel suspensao
+22,2,papeis suspensao
+22,2,papel dianteira
+22,2,papeis dianteira
+22,2,papel autopeca
+1,9,conexoes
+1,9,conexao
+1,9,cnexoes
+1,9,conexoes carroceria
+1,9,conexao carroceria
+1,9,conexoes acessorio
+1,9,conexao acessorio
+21,6,vela aquecedora
+21,6,velas aquecedora
+21,6,vela aqecedora
+21,6,vela aquecedora transmissao
+21,6,velas aquecedoras transmissao
+21,6,vela aquecedora cambio
+21,6,velas aquecedoras cambio
+9,7,cabos de baterias
+9,7,cabos baterias
+9,7,cabo de baterias
+9,7,cabo baterias
+9,7,cabos de bterias
+9,7,cabos de baterias cambio
+9,7,cabo de bateria cambio
+9,10,condensador do distribuidor
+9,10,condensador distribuidor
+9,10,condensadores do distribuidor
+9,10,condensadores distribuidor
+9,10,cndensador do distribuidor
+9,10,condensador do distribuidor cambio
+9,10,condensadores do distribuidores cambio
+9,11,distribuidor completo
+9,11,distribuidores completo
+9,11,dstribuidor completo
+9,11,distribuidor completo cambio
+9,11,distribuidores completos cambio
+9,11,distribuidor completo transmissao
+9,11,distribuidores completos transmissao
+9,13,flange da bomba do tanque
+9,13,flange bomba tanque
+9,13,flanges da bomba do tanque
+9,13,flanges bomba tanque
+9,13,flange da bomba do tanque cambio
+9,13,flanges da bombas do tanques cambio
+9,13,flange da bomba do tanque transmissao
+9,15,induzidos
+9,15,induzido
+9,15,indusidos
+9,15,indzidos
+9,15,induzidos cambio
+9,15,induzido cambio
+9,15,induzidos transmissao
+9,16,interruptores
+9,16,interruptor
+9,16,intrruptores
+9,16,interruptores cambio
+9,16,interruptor cambio
+9,16,interruptores transmissao
+9,16,interruptor transmissao
+9,17,lampadas
+9,17,lampada
+9,17,lmpadas
+9,17,lampadas cambio
+9,17,lampada cambio
+9,17,lampadas transmissao
+9,17,lampada transmissao
+9,18,modulos
+9,18,modulo
+9,18,mdulos
+9,18,modulos cambio
+9,18,modulo cambio
+9,18,modulos transmissao
+9,18,modulo transmissao
+9,20,platinado do distribuidor
+9,20,platinado distribuidor
+9,20,platinados do distribuidor
+9,20,platinados distribuidor
+9,20,pltinado do distribuidor
+9,20,platinado do distribuidor cambio
+9,20,platinados do distribuidores cambio
+9,21,regulador de voltagem
+9,21,regulador voltagem
+9,21,reguladores de voltagem
+9,21,reguladores voltagem
+9,21,rgulador de voltagem
+9,21,regulador de voltagem cambio
+9,21,reguladores de voltagens cambio
+9,22,rotor do distribuidor
+9,22,rotor distribuidor
+9,22,rotores do distribuidor
+9,22,rotores distribuidor
+9,22,rotor do dstribuidor
+9,22,rotor do distribuidor cambio
+9,22,rotores do distribuidores cambio
+9,23,sensores
+9,23,sensor
+9,23,snsores
+9,23,sensores cambio
+9,23,sensor cambio
+9,23,sensores transmissao
+9,23,sensor transmissao
+9,24,tampa do distribuidor
+9,24,tampa distribuidor
+9,24,tampas do distribuidor
+9,24,tampas distribuidor
+9,24,tampa do dstribuidor
+9,24,tampa do distribuidor cambio
+9,24,tampas do distribuidores cambio
+9,25,terminais de bateria
+9,25,terminais bateria
+9,25,terminal de bateria
+9,25,terminal bateria
+9,25,trminais de bateria
+9,25,terminais de bateria cambio
+9,25,terminal de bateria cambio
+15,7,mangueira turbina/intercooler
+15,7,mangueira turbina intercooler
+15,7,mangueira turbina e intercooler
+15,7,mangueira turbinaintercooler
+15,7,mangueiras turbina intercooler
+15,7,mangueira turbina
+15,7,intercooler
+15,7,mangera turbina intercooler
+15,7,mngueira turbina intercooler
+9,27,diversos
+9,27,diverso
+9,27,dversos
+9,27,diversos cambio
+9,27,diverso cambio
+9,27,diversos transmissao
+9,27,diverso transmissao
+10,2,anel sincronizador
+10,2,aneis sincronizador
+10,2,anel sincronisador
+10,2,anel sncronizador
+10,2,anel sincronizador freio
+10,2,aneis sincronizadores freio
+10,2,anel sincronizador freios
+10,3,atuador de embreagem
+10,3,atuador embreagem
+10,3,atuadores de embreagem
+10,3,atuadores embreagem
+10,3,atuador de embr
+10,3,atuadores de embr
+10,3,atador de embreagem
+10,4,eixo piloto
+10,4,eixos piloto
+10,4,eixo piloto freio
+10,4,eixos pilotos freio
+10,4,eixo piloto freios
+10,4,eixos pilotos freios
+10,4,eixo piloto autopeca
+10,6,cubo de embreagem
+10,6,cubo embreagem
+10,6,cubos de embreagem
+10,6,cubos embreagem
+10,6,cubo de embr
+10,6,cubos de embr
+10,6,cubo de enbreagem
+10,6,cubo de embragem
+10,7,disco de embreagem
+10,7,disco embreagem
+10,7,discos de embreagem
+10,7,discos embreagem
+10,7,disco de embr
+10,7,discos de embr
+10,7,disco de enbreagem
+10,7,disco de embragem
+10,9,flexiveis de embreagem
+10,9,flexiveis embreagem
+10,9,flexivel de embreagem
+10,9,flexivel embreagem
+10,9,flexiveis de embr
+10,9,flexivel de embr
+10,9,flxiveis de embreagem
+10,10,garfo da tulipa
+10,10,garfo tulipa
+10,10,garfos da tulipa
+10,10,garfos tulipa
+10,10,garfo da tulipa freio
+10,10,garfos da tulipas freio
+10,10,garfo da tulipa freios
+10,12,garfo de embreagem
+10,12,garfo embreagem
+10,12,garfos de embreagem
+10,12,garfos embreagem
+10,12,garfo de embr
+10,12,garfos de embr
+10,12,garfo de enbreagem
+10,12,garfo de embragem
+10,13,kit de embreagem
+10,13,kit embreagem
+10,13,kit de embr
+10,13,kit de enbreagem
+10,13,kit de embragem
+10,13,kit de embreagem freio
+10,13,kit de embreagens freio
+10,14,reparos
+10,14,reparo
+10,14,rparos
+10,14,reparos freio
+10,14,reparo freio
+10,14,reparos freios
+10,14,reparo freios
+10,17,diversos
+10,17,diverso
+10,17,dversos
+10,17,diversos freio
+10,17,diverso freio
+10,17,diversos freios
+10,17,diverso freios
+10,19,tampas
+10,19,tampa
+10,19,tampas freio
+10,19,tampa freio
+10,19,tampas freios
+10,19,tampa freios
+10,19,tampas autopeca
+10,20,trambulador
+10,20,trambuladores
+10,20,seletora trambulador
+10,20,trmbulador
+10,20,trambulador freio
+10,20,trambuladores freio
+10,20,trambulador freios
+10,21,trizetas
+10,21,trizeta
+10,21,trisetas
+10,21,trzetas
+10,21,trizetas freio
+10,21,trizeta freio
+10,21,trizetas freios
+11,1,filtro de ar condicionado
+11,1,filtro ar condicionado
+11,1,filtros de ar condicionado
+11,1,filtros ar condicionado
+11,1,filtro de ar cond
+11,1,filtros de ar cond
+11,1,filtro de ar cndicionado
+11,2,filtro de ar do motor
+11,2,filtro ar motor
+11,2,filtros de ar do motor
+11,2,filtros ar motor
+11,2,filtro de ar do motor autopeca
+11,2,filtros de ar do motores autopeca
+11,2,filtro de ar do motor automotiva
+11,3,filtro de cabine
+11,3,filtro cabine
+11,3,filtros de cabine
+11,3,filtros cabine
+11,3,filtro de cabine motor
+11,3,filtros de cabines motor
+11,3,filtro de cabine autopeca
+11,6,diversos
+11,6,diverso
+11,6,dversos
+11,6,diversos filtro
+11,6,diverso filtro
+11,6,diversos motor
+11,6,diverso motor
+12,1,alavanca de freio
+12,1,alavanca freio
+12,1,alavancas de freio
+12,1,alavancas freio
+12,1,alvanca de freio
+12,1,alavanca de freio injecao
+12,1,alavancas de freios injecao
+12,3,canos
+12,3,cano
+12,3,canos injecao
+12,3,cano injecao
+12,3,canos combustivel
+12,3,cano combustivel
+12,3,canos autopeca
+12,5,diafragma freio a ar
+12,5,diafragma freio ar
+12,5,diafragmas freio a ar
+12,5,diafragmas freio ar
+12,5,dafragma freio a ar
+12,5,diafragma freio a ar injecao
+12,5,diafragmas freios a ar injecao
+12,4,cilindro roda
+12,4,cilindros roda
+12,4,clindro roda
+12,4,cilindro roda injecao
+12,4,cilindros rodas injecao
+12,4,cilindro roda combustivel
+12,4,cilindros rodas combustivel
+10,5,cilindro embreagem mestre/auxiliar
+10,5,cilindro embreagem mestre auxiliar
+10,5,cilindro embreagem mestre e auxiliar
+10,5,cilindro embreagem mestreauxiliar
+10,5,cilindros embreagem mestre auxiliar
+10,5,cilindro embr mestre auxiliar
+10,5,cilindros embr mestre auxiliar
+10,5,cilindro embreagem mestre
+10,5,auxiliar
+10,5,clindro embreagem mestre auxiliar
+10,18,rolamentos de embreagem e cambio
+10,18,rolamentos embreagem cambio
+10,18,rolamento de embreagem e cambio
+10,18,rolamento embreagem cambio
+10,18,rolamentos de embr e cambio
+10,18,rolamento de embr e cambio
+10,18,rlamentos de embreagem e cambio
+12,6,discos de freio
+12,6,discos freio
+12,6,disco de freio
+12,6,disco freio
+12,6,discos de freio injecao
+12,6,disco de freio injecao
+12,6,discos de freios injecao
+2,5,batentes suspensao
+2,5,batente suspensao
+2,5,batentes susp
+2,5,batente susp
+2,5,btentes suspensao
+2,5,batentes suspensao amortecedor
+2,5,batente suspensao amortecedor
+4,5,suporte motor e cambio
+4,5,suporte motor cambio
+4,5,suportes motor e cambio
+4,5,suportes motor cambio
+4,5,sporte motor e cambio
+4,5,suporte motor e cambio suspensao
+4,5,suportes motores e cambios suspensao
+12,9,interruptores de freio
+12,9,interruptores freio
+12,9,interruptor de freio
+12,9,interruptor freio
+12,9,intrruptores de freio
+12,9,interruptores de freio injecao
+12,9,interruptor de freio injecao
+12,10,lonas
+12,10,lona
+12,10,lonas injecao
+12,10,lona injecao
+12,10,lonas combustivel
+12,10,lona combustivel
+12,10,lonas autopeca
+12,11,pastilhas de freio
+12,11,pastilhas freio
+12,11,pastilha de freio
+12,11,pastilha freio
+12,11,pastilha
+12,11,pastilhas
+12,11,pstilhas de freio
+12,13,pinos
+12,13,pino
+12,13,pinos injecao
+12,13,pino injecao
+12,13,pinos combustivel
+12,13,pino combustivel
+12,13,pinos autopeca
+12,14,rebites para lonas
+12,14,rebites lonas
+12,14,rebite para lonas
+12,14,rebite lonas
+12,14,rbites para lonas
+12,14,rebites para lonas injecao
+12,14,rebite para lona injecao
+12,15,regulador de freio
+12,15,regulador freio
+12,15,reguladores de freio
+12,15,reguladores freio
+12,15,rgulador de freio
+12,15,regulador de freio injecao
+12,15,reguladores de freios injecao
+12,16,reparos
+12,16,reparo
+12,16,rparos
+12,16,reparos injecao
+12,16,reparo injecao
+12,16,reparos combustivel
+12,16,reparo combustivel
+12,19,diversos
+12,19,diverso
+12,19,dversos
+12,19,diversos injecao
+12,19,diverso injecao
+12,19,diversos combustivel
+12,19,diverso combustivel
+12,20,sapatas de freio
+12,20,sapatas freio
+12,20,sapata de freio
+12,20,sapata freio
+12,20,sapata
+12,20,sapatas
+12,20,spatas de freio
+12,21,servo freio
+12,21,servos freio
+12,21,servo freio injecao
+12,21,servos freios injecao
+12,21,servo freio combustivel
+12,21,servos freios combustivel
+12,21,servo freio autopeca
+12,22,spring brake
+12,22,springs brake
+12,22,spring brake injecao
+12,22,springs brakes injecao
+12,22,spring brake combustivel
+12,22,springs brakes combustivel
+12,22,spring brake autopeca
+12,23,tambores de freio
+12,23,tambores freio
+12,23,tambor de freio
+12,23,tambor freio
+12,23,tmbores de freio
+12,23,tambores de freio injecao
+12,23,tambor de freio injecao
+13,4,kits reparos
+13,4,kit reparos
+13,4,kits rparos
+13,4,kits reparos rolamento
+13,4,kit reparo rolamento
+13,4,kits reparos cubo
+13,4,kit reparo cubo
+13,5,ponta de eixo traseiro
+13,5,ponta eixo traseiro
+13,5,pontas de eixo traseiro
+13,5,pontas eixo traseiro
+13,5,ponta de eixo tras
+13,5,pontas de eixo tras
+13,5,ponta de eixo trseiro
+13,8,diversos
+13,8,diverso
+13,8,dversos
+13,8,diversos rolamento
+13,8,diverso rolamento
+13,8,diversos cubo
+13,8,diverso cubo
+15,1,mangueiras de agua radiador
+15,1,mangueiras agua radiador
+15,1,mangueira de agua radiador
+15,1,mangueira agua radiador
+15,1,mngueiras de agua radiador
+15,1,mangueiras de agua radiador motor
+15,1,mangueira de agua radiador motor
+15,3,mangueiras de filtro de ar
+15,3,mangueiras filtro ar
+15,3,mangueira de filtro de ar
+15,3,mangueira filtro ar
+15,3,mngueiras de filtro de ar
+15,3,mangueiras de filtro de ar motor
+15,3,mangueira de filtro de ar motor
+15,5,diversos
+15,5,diverso
+15,5,dversos
+15,5,diversos mangueira
+15,5,diverso mangueira
+15,5,diversos motor
+15,5,diverso motor
+15,6,mangueiras para diesel e freio a ar
+15,6,mangueiras diesel freio ar
+15,6,mangueira para diesel e freio a ar
+15,6,mangueira diesel freio ar
+15,6,mngueiras para diesel e freio a ar
+15,6,mangueiras para diesel e freio a ar motor
+15,6,mangueira para diesel e freio a ar motor
+16,1,agulhas carburador
+16,1,agulha carburador
+16,1,aglhas carburador
+16,1,agulhas carburador injecao
+16,1,agulha carburador injecao
+16,1,agulhas carburadores injecao
+16,1,agulhas carburador carburacao
+16,3,bico injetor
+16,3,bicos injetor
+16,3,bico injtor
+16,3,bico injetor injecao
+16,3,bicos injetores injecao
+16,3,bico injetor carburacao
+16,3,bicos injetores carburacao
+16,4,boias carburador
+16,4,boia carburador
+16,4,boias crburador
+16,4,boias carburador injecao
+16,4,boia carburador injecao
+16,4,boias carburadores injecao
+16,4,boias carburador carburacao
+16,5,bombas
+16,5,bomba
+16,5,bombas injecao
+16,5,bomba injecao
+16,5,bombas carburacao
+16,5,bomba carburacao
+16,5,bombas autopeca
+16,6,capsulas
+16,6,capsula
+16,6,cpsulas
+16,6,capsulas injecao
+16,6,capsula injecao
+16,6,capsulas carburacao
+16,6,capsula carburacao
+16,7,carburador
+16,7,carburadores
+16,7,crburador
+16,7,carburador injecao
+16,7,carburadores injecao
+16,7,carburador carburacao
+16,7,carburadores carburacao
+16,8,conectores
+16,8,conector
+16,8,cnectores
+16,8,conectores injecao
+16,8,conector injecao
+16,8,conectores carburacao
+16,8,conector carburacao
+16,9,diafragmas
+16,9,diafragma
+16,9,dafragmas
+16,9,diafragmas injecao
+16,9,diafragma injecao
+16,9,diafragmas carburacao
+16,9,diafragma carburacao
+16,10,gliceur
+16,10,gliceures
+16,10,glceur
+16,10,gliceur injecao
+16,10,gliceures injecao
+16,10,gliceur carburacao
+16,10,gliceures carburacao
+16,11,reparos
+16,11,reparo
+16,11,rparos
+16,11,reparos injecao
+16,11,reparo injecao
+16,11,reparos carburacao
+16,11,reparo carburacao
+16,12,motor de passo
+16,12,motor passo
+16,12,motores de passo
+16,12,motores passo
+16,12,motor de paso
+16,12,motor de passo injecao
+16,12,motores de passos injecao
+16,17,sensores
+16,17,sensor
+16,17,snsores
+16,17,sensores injecao
+16,17,sensor injecao
+16,17,sensores carburacao
+16,17,sensor carburacao
+16,18,sonda lambda
+16,18,sondas lambda
+16,18,sonda lambda injecao
+16,18,sondas lambdas injecao
+16,18,sonda lambda carburacao
+16,18,sondas lambdas carburacao
+16,18,sonda lambda autopeca
+16,19,tubo injetor do carburador
+16,19,tubo injetor carburador
+16,19,tubos injetor do carburador
+16,19,tubos injetor carburador
+16,19,tubo injtor do carburador
+16,19,tubo injetor do carburador injecao
+16,19,tubos injetores do carburadores injecao
+16,20,diversos
+16,20,diverso
+16,20,dversos
+16,20,diversos injecao
+16,20,diverso injecao
+16,20,diversos carburacao
+16,20,diverso carburacao
+16,21,corpo de borboleta
+16,21,corpo borboleta
+16,21,corpos de borboleta
+16,21,corpos borboleta
+16,21,corpo de brboleta
+16,21,corpo de borboleta injecao
+16,21,corpos de borboletas injecao
+17,1,aditivos
+17,1,aditivo
+17,1,adtivos
+17,1,aditivos quimico
+17,1,aditivo quimico
+17,1,aditivos uso
+17,1,aditivo uso
+17,2,lubrificantes
+17,2,lubrificante
+17,2,lbrificantes
+17,2,lubrificantes quimico
+17,2,lubrificante quimico
+17,2,lubrificantes uso
+17,2,lubrificante uso
+17,3,vedantes
+17,3,vedante
+17,3,vdantes
+17,3,vedantes quimico
+17,3,vedante quimico
+17,3,vedantes uso
+17,3,vedante uso
+17,4,limpeza
+17,4,limpezas
+17,4,limpesa
+17,4,lmpeza
+17,4,limpeza quimico
+17,4,limpezas quimico
+17,4,limpeza uso
+17,6,diversos
+17,6,diverso
+17,6,dversos
+17,6,diversos quimico
+17,6,diverso quimico
+17,6,diversos uso
+17,6,diverso uso
+17,7,abrasivos
+17,7,abrasivo
+17,7,abrsivos
+17,7,abrasivos quimico
+17,7,abrasivo quimico
+17,7,abrasivos uso
+17,7,abrasivo uso
+17,8,fluido de freio
+17,8,fluido freio
+17,8,fluidos de freio
+17,8,fluidos freio
+17,8,fluido de freio quimico
+17,8,fluidos de freios quimico
+17,8,fluido de freio uso
+18,1,retentor de cambio
+18,1,retentor cambio
+18,1,retentores de cambio
+18,1,retentores cambio
+18,1,rtentor de cambio
+18,1,retentor de cambio autopeca
+18,1,retentores de cambios autopeca
+18,3,retentor de motor
+18,3,retentor motor
+18,3,retentores de motor
+18,3,retentores motor
+18,3,rtentor de motor
+18,3,retentor de motor autopeca
+18,3,retentores de motores autopeca
+18,4,retentor de roda
+18,4,retentor roda
+18,4,retentores de roda
+18,4,retentores roda
+18,4,rtentor de roda
+18,4,retentor de roda autopeca
+18,4,retentores de rodas autopeca
+18,6,diversos
+18,6,diverso
+18,6,dversos
+18,6,diversos retentor
+18,6,diverso retentor
+18,6,diversos autopeca
+18,6,diverso autopeca
+19,1,diversos
+19,1,diverso
+19,1,dversos
+19,1,diversos rolamento
+19,1,diverso rolamento
+19,1,diversos cubo
+19,1,diverso cubo
+19,2,cubos de roda
+19,2,cubos roda
+19,2,cubo de roda
+19,2,cubo roda
+19,2,cubos de roda rolamento
+19,2,cubo de roda rolamento
+19,2,cubos de rodas rolamento
+9,28,carregador de bateria
+9,28,carregador bateria
+9,28,carregadores de bateria
+9,28,carregadores bateria
+9,28,crregador de bateria
+9,28,carregador de bateria cambio
+9,28,carregadores de baterias cambio
+19,5,rolamento alternador
+19,5,rolamentos alternador
+19,5,rlamento alternador
+19,5,rolamento alternador cubo
+19,5,rolamentos alternadores cubo
+19,5,rolamento alternador autopeca
+19,5,rolamentos alternadores autopeca
+19,6,rolamento ar condicionado
+19,6,rolamentos ar condicionado
+19,6,rolamento ar cond
+19,6,rolamentos ar cond
+19,6,rlamento ar condicionado
+19,6,rolamento ar condicionado cubo
+19,6,rolamentos ar condicionados cubo
+19,7,rolamento cambio
+19,7,rolamentos cambio
+19,7,rlamento cambio
+19,7,rolamento cambio cubo
+19,7,rolamentos cambios cubo
+19,7,rolamento cambio autopeca
+19,7,rolamentos cambios autopeca
+19,8,rolamento cardam
+19,8,rolamentos cardam
+19,8,rlamento cardam
+19,8,rolamento cardam cubo
+19,8,rolamentos cardans cubo
+19,8,rolamento cardam autopeca
+19,8,rolamentos cardans autopeca
+10,1,alavanca de cambio
+10,1,alavanca cambio
+10,1,alavancas de cambio
+10,1,alavancas cambio
+10,1,alvanca de cambio
+10,1,alavanca de cambio freio
+10,1,alavancas de cambios freio
+10,8,engrenagens cambio
+10,8,engrenagem cambio
+10,8,engrnagens cambio
+10,8,engrenagens cambio freio
+10,8,engrenagem cambio freio
+10,8,engrenagens cambios freio
+10,8,engrenagens cambio freios
+19,9,rolamento de roda
+19,9,rolamento roda
+19,9,rolamentos de roda
+19,9,rolamentos roda
+19,9,rlamento de roda
+19,9,rolamento de roda cubo
+19,9,rolamentos de rodas cubo
+19,11,rolamento diferencial
+19,11,rolamentos diferencial
+19,11,rlamento diferencial
+19,11,rolamento diferencial cubo
+19,11,rolamentos diferenciais cubo
+19,11,rolamento diferencial autopeca
+19,11,rolamentos diferenciais autopeca
+19,13,rolamento diversos
+19,13,rolamentos diversos
+19,13,rlamento diversos
+19,13,rolamento diversos cubo
+19,13,rolamento diverso cubo
+19,13,rolamentos diversos cubo
+19,13,rolamento diversos autopeca
+19,14,rolamento embreagem
+19,14,rolamentos embreagem
+19,14,rolamento embr
+19,14,rolamentos embr
+19,14,rlamento embreagem
+19,14,rolamento embreagem cubo
+19,14,rolamentos embreagens cubo
+19,15,rolamento industrial
+19,15,rolamentos industrial
+19,15,rlamento industrial
+19,15,rolamento industrial cubo
+19,15,rolamentos industriais cubo
+19,15,rolamento industrial autopeca
+19,15,rolamentos industriais autopeca
+19,16,tensores e polias
+19,16,tensores polias
+19,16,tensor e polias
+19,16,tensor polias
+19,16,tnsores e polias
+19,16,tensores e polias rolamento
+19,16,tensor e polia rolamento
+19,17,rolamento semi eixo
+19,17,rolamentos semi eixo
+19,17,rlamento semi eixo
+19,17,rolamento semi eixo cubo
+19,17,rolamentos semis eixos cubo
+19,17,rolamento semi eixo autopeca
+19,17,rolamentos semis eixos autopeca
+19,18,rolamento bomba dagua
+19,18,rolamentos bomba dagua
+19,18,rlamento bomba dagua
+19,18,rolamento bomba dagua cubo
+19,18,rolamentos bombas daguas cubo
+19,18,rolamento bomba dagua autopeca
+19,18,rolamentos bombas daguas autopeca
+20,1,algemas
+20,1,algema
+20,1,algmas
+20,1,algemas suspensao
+20,1,algema suspensao
+20,1,algemas eixo
+20,1,algema eixo
+20,2,bandejas
+20,2,bandeja
+20,2,bandeja balanca
+20,2,balanca
+20,2,balancas
+20,2,bndejas
+20,2,bandejas suspensao
+20,3,barras
+20,3,barra
+20,3,barras suspensao
+20,3,barra suspensao
+20,3,barras eixo
+20,3,barra eixo
+20,3,barras autopeca
+20,4,bieletas
+20,4,bieleta
+20,4,bieletas estabilizadoras
+20,4,beletas
+20,4,bieletas suspensao
+20,4,bieleta suspensao
+20,4,bieletas eixo
+20,6,buchas de mola
+20,6,buchas mola
+20,6,bucha de mola
+20,6,bucha mola
+20,6,buxas de mola
+20,6,buchas de mola suspensao
+20,6,bucha de mola suspensao
+20,7,estabilizador
+20,7,estabilizadores
+20,7,estabilisador
+20,7,estbilizador
+20,7,estabilizador suspensao
+20,7,estabilizadores suspensao
+20,7,estabilizador eixo
+20,8,feixes de mola
+20,8,feixes mola
+20,8,feixe de mola
+20,8,feixe mola
+20,8,feixes de mola suspensao
+20,8,feixe de mola suspensao
+20,8,feixes de molas suspensao
+20,9,molas
+20,9,mola
+20,9,molas suspensao
+20,9,mola suspensao
+20,9,molas eixo
+20,9,mola eixo
+20,9,molas autopeca
+20,10,pinos
+20,10,pino
+20,10,pinos suspensao
+20,10,pino suspensao
+20,10,pinos eixo
+20,10,pino eixo
+20,10,pinos autopeca
+20,12,reparos
+20,12,reparo
+20,12,rparos
+20,12,reparos suspensao
+20,12,reparo suspensao
+20,12,reparos eixo
+20,12,reparo eixo
+20,16,jumelo do feixe de mola
+20,16,jumelo feixe mola
+20,16,jumelos do feixe de mola
+20,16,jumelos feixe mola
+20,16,jumelo do feixe de mola suspensao
+20,16,jumelos do feixes de molas suspensao
+20,16,jumelo do feixe de mola eixo
+20,17,diversos
+20,17,diverso
+20,17,dversos
+20,17,diversos suspensao
+20,17,diverso suspensao
+20,17,diversos eixo
+20,17,diverso eixo
+21,1,cabos de velas
+21,1,cabos velas
+21,1,cabo de velas
+21,1,cabo velas
+21,1,cabos de velas transmissao
+21,1,cabo de vela transmissao
+21,1,cabos de velas cambio
+21,5,diversos
+21,5,diverso
+21,5,dversos
+21,5,diversos transmissao
+21,5,diverso transmissao
+21,5,diversos cambio
+21,5,diverso cambio
+12,18,revestimentos
+12,18,revestimento
+12,18,rvestimentos
+12,18,revestimentos injecao
+12,18,revestimento injecao
+12,18,revestimentos combustivel
+12,18,revestimento combustivel
+20,18,batentes
+20,18,batente
+20,18,batente amortecedor
+20,18,btentes
+20,18,batentes suspensao
+20,18,batente suspensao
+20,18,batentes eixo
+8,16,bomba hidraulica
+8,16,bombas hidraulica
+8,16,bomba hidr
+8,16,bombas hidr
+8,16,bomba hdraulica
+8,16,bomba hidraulica eletrica
+8,16,bombas hidraulicas eletrica
+17,9,condicionador de metais
+17,9,condicionador metais
+17,9,condicionadores de metais
+17,9,condicionadores metais
+17,9,cndicionador de metais
+17,9,condicionador de metais quimico
+17,9,condicionador de metal quimico
+19,3,parafusos porcas e arruelas
+19,3,parafusos porcas arruelas
+19,3,parafuso porcas e arruelas
+19,3,parafuso porcas arruelas
+19,3,prafusos porcas e arruelas
+19,3,parafusos porcas e arruelas rolamento
+19,3,parafuso porca e arruela rolamento
+23,1,jogo de chaves
+23,1,jogo chaves
+23,1,jogos de chaves
+23,1,jogos chaves
+23,1,jogo de xaves
+23,1,jogo de chaves ferramenta
+23,1,jogo de chave ferramenta
+1,4,bomba de transferencia
+1,4,bomba transferencia
+1,4,bombas de transferencia
+1,4,bombas transferencia
+1,4,bomba de trnsferencia
+1,4,bomba de transferencia carroceria
+1,4,bombas de transferencias carroceria
+1,11,dobradicas
+1,11,dobradica
+1,11,dbradicas
+1,11,dobradicas carroceria
+1,11,dobradica carroceria
+1,11,dobradicas acessorio
+1,11,dobradica acessorio
+1,15,macanetas
+1,15,macaneta
+1,15,mcanetas
+1,15,macanetas carroceria
+1,15,macaneta carroceria
+1,15,macanetas acessorio
+1,15,macaneta acessorio
+1,21,reservatorio agua limpador
+1,21,reservatorios agua limpador
+1,21,rservatorio agua limpador
+1,21,reservatorio agua limpador carroceria
+1,21,reservatorios aguas limpadores carroceria
+1,21,reservatorio agua limpador acessorio
+1,21,reservatorios aguas limpadores acessorio
+1,23,tanque de combustivel
+1,23,tanque combustivel
+1,23,tanques de combustivel
+1,23,tanques combustivel
+1,23,tanque de comb
+1,23,tanques de comb
+1,23,tanque de cmbustivel
+1,24,seguranca
+1,24,segurancas
+1,24,sguranca
+1,24,seguranca carroceria
+1,24,segurancas carroceria
+1,24,seguranca acessorio
+1,24,segurancas acessorio
+2,3,amortecedor de direcao
+2,3,amortecedor direcao
+2,3,amortecedores de direcao
+2,3,amortecedores direcao
+2,3,amort de dir
+2,3,amrtecedor de direcao
+2,3,amortecedor de direcao suspensao
+2,4,amortecedor mola a gas/tampa/capo
+2,4,amortecedor mola a gas tampa capo
+2,4,amortecedor mola a gas e tampa e capo
+2,4,amortecedor mola a gastampacapo
+2,4,amortecedor mola gas tampa capo
+2,4,amortecedores mola a gas tampa capo
+2,4,amortecedores mola gas tampa capo
+2,4,amort mola a gas tampa capo
+2,4,amortecedor mola a gas
+2,4,tampa
+2,4,capo
+2,4,amrtecedor mola a gas tampa capo
+3,4,bocal do oleo
+3,4,bocal oleo
+3,4,bocais do oleo
+3,4,bocais oleo
+3,4,bocal do oleo motor
+3,4,bocais do oleos motor
+3,4,bocal do oleo arrefecimento
+3,7,bomba de oleo
+3,7,bomba oleo
+3,7,bombas de oleo
+3,7,bombas oleo
+3,7,bomba de oleo motor
+3,7,bombas de oleos motor
+3,7,bomba de oleo arrefecimento
+3,9,bujao
+3,9,bujaos
+3,9,bujao motor
+3,9,bujaos motor
+3,9,bujao arrefecimento
+3,9,bujaos arrefecimento
+3,9,bujao autopeca
+3,11,carcacas
+3,11,carcaca
+3,11,crcacas
+3,11,carcacas motor
+3,11,carcaca motor
+3,11,carcacas arrefecimento
+3,11,carcaca arrefecimento
+3,21,polia direcao hidraulica
+3,21,polias direcao hidraulica
+3,21,polia dir hidr
+3,21,polias dir hidr
+3,21,polia drecao hidraulica
+3,21,polia direcao hidraulica motor
+3,21,polias direcaos hidraulicas motor
+3,23,protecao para motor
+3,23,protecao motor
+3,23,protecaos para motor
+3,23,protecaos motor
+3,23,prtecao para motor
+3,23,protecao para motor arrefecimento
+3,23,protecaos para motores arrefecimento
+3,26,reservatorio de agua
+3,26,reservatorio agua
+3,26,reservatorios de agua
+3,26,reservatorios agua
+3,26,rservatorio de agua
+3,26,reservatorio de agua motor
+3,26,reservatorios de aguas motor
+3,29,tampa de valvula
+3,29,tampa valvula
+3,29,tampas de valvula
+3,29,tampas valvula
+3,29,tampa de vlvula
+3,29,tampa de valvula motor
+3,29,tampas de valvulas motor
+3,30,tampa do oleo
+3,30,tampa oleo
+3,30,tampas do oleo
+3,30,tampas oleo
+3,30,tampa do oleo motor
+3,30,tampas do oleos motor
+3,30,tampa do oleo arrefecimento
+3,32,tampa reservatorio de agua
+3,32,tampa reservatorio agua
+3,32,tampas reservatorio de agua
+3,32,tampas reservatorio agua
+3,32,tampa rservatorio de agua
+3,32,tampa reservatorio de agua motor
+3,32,tampas reservatorios de aguas motor
+3,34,coletor de admissao
+3,34,coletor admissao
+3,34,coletores de admissao
+3,34,coletores admissao
+3,34,cletor de admissao
+3,34,coletor de admissao motor
+3,34,coletores de admissaos motor
+3,39,valvula de oleo
+3,39,valvula oleo
+3,39,valvulas de oleo
+3,39,valvulas oleo
+3,39,vlvula de oleo
+3,39,valvula de oleo motor
+3,39,valvulas de oleos motor
+3,40,valvula do ar quente
+3,40,valvula ar quente
+3,40,valvulas do ar quente
+3,40,valvulas ar quente
+3,40,vlvula do ar quente
+3,40,valvula do ar quente motor
+3,40,valvulas do ar quentes motor
+3,41,valvula termostatica
+3,41,valvulas termostatica
+3,41,vlvula termostatica
+3,41,valvula termostatica motor
+3,41,valvulas termostaticas motor
+3,41,valvula termostatica arrefecimento
+3,41,valvulas termostaticas arrefecimento
+5,4,cabo de velocimetro
+5,4,cabo velocimetro
+5,4,cabos de velocimetro
+5,4,cabos velocimetro
+5,4,cabo de vlocimetro
+5,4,cabo de velocimetro autopeca
+5,4,cabos de velocimetros autopeca
+5,7,cabo tacografo
+5,7,cabos tacografo
+5,7,cabo tcografo
+5,7,cabo tacografo autopeca
+5,7,cabos tacografos autopeca
+5,7,cabo tacografo automotiva
+5,7,cabos tacografos automotiva
+6,6,coroa e pinhao
+6,6,coroa pinhao
+6,6,coroas e pinhao
+6,6,coroas pinhao
+6,6,coroa e pinhao cardan
+6,6,coroas e pinhaos cardan
+6,6,coroa e pinhao diferencial
+6,9,engrenagens caixa satelite
+6,9,engrenagem caixa satelite
+6,9,engrnagens caixa satelite
+6,9,engrenagens caixa satelite cardan
+6,9,engrenagem caixa satelite cardan
+6,9,engrenagens caixas satelites cardan
+6,9,engrenagens caixa satelite diferencial
+6,15,parafuso caixa satelite
+6,15,parafusos caixa satelite
+6,15,prafuso caixa satelite
+6,15,parafuso caixa satelite cardan
+6,15,parafusos caixas satelites cardan
+6,15,parafuso caixa satelite diferencial
+6,15,parafusos caixas satelites diferencial
+7,5,correia de direcao hidraulica
+7,5,correia direcao hidraulica
+7,5,correias de direcao hidraulica
+7,5,correias direcao hidraulica
+7,5,correia de dir hidr
+7,5,correias de dir hidr
+7,5,crreia de direcao hidraulica
+8,1,articulacao axial
+8,1,articulacaos axial
+8,1,artculacao axial
+8,1,articulacao axial eletrica
+8,1,articulacaos axiais eletrica
+8,1,articulacao axial ignicao
+8,1,articulacaos axiais ignicao
+8,3,braco auxiliar / pitman
+8,3,braco auxiliar pitman
+8,3,braco auxiliar e pitman
+8,3,bracos auxiliar pitman
+8,3,braco auxiliar
+8,3,pitman
+8,3,braco axiliar pitman
+8,5,coluna de direcao
+8,5,coluna direcao
+8,5,colunas de direcao
+8,5,colunas direcao
+8,5,coluna de dir
+8,5,colunas de dir
+8,5,coluna de drecao
+8,6,rolamento da coluna de direcao
+8,6,rolamento coluna direcao
+8,6,rolamentos da coluna de direcao
+8,6,rolamentos coluna direcao
+8,6,rolamento da coluna de dir
+8,6,rolamentos da coluna de dir
+8,6,rlamento da coluna de direcao
+8,9,junta elastica
+8,9,juntas elastica
+8,9,junta elstica
+8,9,junta elastica eletrica
+8,9,juntas elasticas eletrica
+8,9,junta elastica ignicao
+8,9,juntas elasticas ignicao
+8,11,mecanismos de direcao
+8,11,mecanismos direcao
+8,11,mecanismo de direcao
+8,11,mecanismo direcao
+8,11,mecanismos de dir
+8,11,mecanismo de dir
+8,11,mcanismos de direcao
+8,12,pinhao e cremalheira
+8,12,pinhao cremalheira
+8,12,pinhaos e cremalheira
+8,12,pinhaos cremalheira
+8,12,pinhao e crmalheira
+8,12,pinhao e cremalheira eletrica
+8,12,pinhaos e cremalheiras eletrica
+8,13,pino central direcao
+8,13,pinos central direcao
+8,13,pino central dir
+8,13,pinos central dir
+8,13,pino cntral direcao
+8,13,pino central direcao eletrica
+8,13,pinos centrais direcaos eletrica
+9,1,bobina de ignicao
+9,1,bobina ignicao
+9,1,bobinas de ignicao
+9,1,bobinas ignicao
+9,1,bobina de igncao
+9,1,bobina de ignicao cambio
+9,1,bobinas de ignicaos cambio
+9,2,bobina distribuicao
+9,2,bobinas distribuicao
+9,2,bobina dstribuicao
+9,2,bobina distribuicao cambio
+9,2,bobinas distribuicaos cambio
+9,2,bobina distribuicao transmissao
+9,2,bobinas distribuicaos transmissao
+9,6,botao de partida
+9,6,botao partida
+9,6,botaos de partida
+9,6,botaos partida
+9,6,botao de prtida
+9,6,botao de partida cambio
+9,6,botaos de partidas cambio
+9,8,chave magnetica
+9,8,chaves magnetica
+9,8,xave magnetica
+9,8,chave magnetica cambio
+9,8,chaves magneticas cambio
+9,8,chave magnetica transmissao
+9,8,chaves magneticas transmissao
+9,9,cilindro de ignicao
+9,9,cilindro ignicao
+9,9,cilindros de ignicao
+9,9,cilindros ignicao
+9,9,clindro de ignicao
+9,9,cilindro de ignicao cambio
+9,9,cilindros de ignicaos cambio
+9,12,embreagem de distribuicao
+9,12,embreagem distribuicao
+9,12,embreagens de distribuicao
+9,12,embreagens distribuicao
+9,12,embr de distribuicao
+9,12,enbreagem de distribuicao
+9,12,embragem de distribuicao
+9,14,fusiveis
+9,14,fusivel
+9,14,fsiveis
+9,14,fusiveis cambio
+9,14,fusivel cambio
+9,14,fusiveis transmissao
+9,14,fusivel transmissao
+9,19,pinhao impulsor
+9,19,pinhaos impulsor
+9,19,pinhao implsor
+9,19,pinhao impulsor cambio
+9,19,pinhaos impulsores cambio
+9,19,pinhao impulsor transmissao
+9,19,pinhaos impulsores transmissao
+10,11,garfo de cambio
+10,11,garfo cambio
+10,11,garfos de cambio
+10,11,garfos cambio
+10,11,garfo de cambio freio
+10,11,garfos de cambios freio
+10,11,garfo de cambio freios
+11,4,filtro de combustivel
+11,4,filtro combustivel
+11,4,filtros de combustivel
+11,4,filtros combustivel
+11,4,filtro de comb
+11,4,filtros de comb
+11,4,filtro de cmbustivel
+11,5,filtro de oleo
+11,5,filtro oleo
+11,5,filtros de oleo
+11,5,filtros oleo
+11,5,filtro de oleo motor
+11,5,filtros de oleos motor
+11,5,filtro de oleo autopeca
+12,2,conexoes de freio
+12,2,conexoes freio
+12,2,conexao de freio
+12,2,conexao freio
+12,2,cnexoes de freio
+12,2,conexoes de freio injecao
+12,2,conexao de freio injecao
+12,7,flexiveis de freio
+12,7,flexiveis freio
+12,7,flexivel de freio
+12,7,flexivel freio
+12,7,flxiveis de freio
+12,7,flexiveis de freio injecao
+12,7,flexivel de freio injecao
+12,12,pinca de freio
+12,12,pinca freio
+12,12,pincas de freio
+12,12,pincas freio
+12,12,pinca de freio injecao
+12,12,pincas de freios injecao
+12,12,pinca de freio combustivel
+12,17,reservatorio liquido de freio
+12,17,reservatorio liquido freio
+12,17,reservatorios liquido de freio
+12,17,reservatorios liquido freio
+12,17,rservatorio liquido de freio
+12,17,reservatorio liquido de freio injecao
+12,17,reservatorios liquidos de freios injecao
+12,24,valvula equalizadora
+12,24,valvulas equalizadora
+12,24,vlvula equalizadora
+12,24,valvula equalizadora injecao
+12,24,valvulas equalizadoras injecao
+12,24,valvula equalizadora combustivel
+12,24,valvulas equalizadoras combustivel
+13,1,junta homocinetica roda
+13,1,juntas homocinetica roda
+13,1,junta homoc roda
+13,1,juntas homoc roda
+13,1,junta homocinetca roda
+13,1,junta hmocinetica roda
+13,1,junta homocinetica roda rolamento
+13,2,junta homocinetica deslizante cambio
+13,2,juntas homocinetica deslizante cambio
+13,2,junta homoc deslizante cambio
+13,2,juntas homoc deslizante cambio
+13,2,junta homocinetca deslizante cambio
+13,2,junta hmocinetica deslizante cambio
+13,2,junta homocinetica deslizante cambio rolamento
+13,3,junta homocinetica eixo completo
+13,3,juntas homocinetica eixo completo
+13,3,junta homoc eixo completo
+13,3,juntas homoc eixo completo
+13,3,junta homocinetca eixo completo
+13,3,junta hmocinetica eixo completo
+13,3,junta homocinetica eixo completo rolamento
+13,6,carcaca manga de eixo
+13,6,carcaca manga eixo
+13,6,carcacas manga de eixo
+13,6,carcacas manga eixo
+13,6,crcaca manga de eixo
+13,6,carcaca manga de eixo rolamento
+13,6,carcacas mangas de eixos rolamento
+13,7,porca homocinetica
+13,7,porcas homocinetica
+13,7,porca homoc
+13,7,porcas homoc
+13,7,porca homocinetca
+13,7,porca hmocinetica
+13,7,porca homocinetica rolamento
+15,2,mangueiras de combustivel
+15,2,mangueiras combustivel
+15,2,mangueira de combustivel
+15,2,mangueira combustivel
+15,2,mangueiras de comb
+15,2,mangueira de comb
+15,2,mngueiras de combustivel
+15,4,mangueiras de oleo / antichama
+15,4,mangueiras de oleo antichama
+15,4,mangueiras de oleo e antichama
+15,4,mangueiras oleo antichama
+15,4,mangueira de oleo antichama
+15,4,mangueira oleo antichama
+15,4,mangueiras de oleo
+15,4,antichama
+15,4,mngueiras de oleo antichama
+16,2,anel de vedacao
+16,2,anel vedacao
+16,2,aneis de vedacao
+16,2,aneis vedacao
+16,2,anel de vdacao
+16,2,anel de vedacao injecao
+16,2,aneis de vedacaos injecao
+16,13,pistao injetor do carburador
+16,13,pistao injetor carburador
+16,13,pistaos injetor do carburador
+16,13,pistaos injetor carburador
+16,13,pistao injtor do carburador
+16,13,pistao injetor do carburador injecao
+16,13,pistaos injetores do carburadores injecao
+16,14,plug eletronico
+16,14,plugs eletronico
+16,14,plug eltronico
+16,14,plug eletronico injecao
+16,14,plugs eletronicos injecao
+16,14,plug eletronico carburacao
+16,14,plugs eletronicos carburacao
+16,15,pre filtro injecao
+16,15,pres filtro injecao
+16,15,pre filtro injcao
+16,15,pre filtro injecao carburacao
+16,15,pres filtros injecaos carburacao
+16,15,pre filtro injecao autopeca
+16,15,pres filtros injecaos autopeca
+16,16,regulador de pressao
+16,16,regulador pressao
+16,16,reguladores de pressao
+16,16,reguladores pressao
+16,16,rgulador de pressao
+16,16,regulador de pressao injecao
+16,16,reguladores de pressaos injecao
+17,5,fixacao
+17,5,fixacaos
+17,5,fxacao
+17,5,fixacao quimico
+17,5,fixacaos quimico
+17,5,fixacao uso
+17,5,fixacaos uso
+18,5,retentor linha agricola
+18,5,retentores linha agricola
+18,5,rtentor linha agricola
+18,5,retentor linha agricola autopeca
+18,5,retentores linhas agricolas autopeca
+18,5,retentor linha agricola automotiva
+18,5,retentores linhas agricolas automotiva
+19,4,rolamento agricola
+19,4,rolamentos agricola
+19,4,rlamento agricola
+19,4,rolamento agricola cubo
+19,4,rolamentos agricolas cubo
+19,4,rolamento agricola autopeca
+19,4,rolamentos agricolas autopeca
+19,10,rolamento de suspensao
+19,10,rolamento suspensao
+19,10,rolamentos de suspensao
+19,10,rolamentos suspensao
+19,10,rolamento de susp
+19,10,rolamentos de susp
+19,10,rlamento de suspensao
+19,12,rolamento direcao
+19,12,rolamentos direcao
+19,12,rolamento dir
+19,12,rolamentos dir
+19,12,rlamento direcao
+19,12,rolamento direcao cubo
+19,12,rolamentos direcaos cubo
+20,5,bracos
+20,5,braco
+20,5,bracos suspensao
+20,5,braco suspensao
+20,5,bracos eixo
+20,5,braco eixo
+20,5,bracos autopeca
+20,11,pivo de suspensao
+20,11,pivo suspensao
+20,11,pivos de suspensao
+20,11,pivos suspensao
+20,11,pivo de susp
+20,11,pivos de susp
+20,11,pivo de sspensao
+20,13,suporte de suspensao
+20,13,suporte suspensao
+20,13,suportes de suspensao
+20,13,suportes suspensao
+20,13,suporte de susp
+20,13,suportes de susp
+20,13,sporte de suspensao
+20,14,tampa do facao
+20,14,tampa facao
+20,14,tampas do facao
+20,14,tampas facao
+20,14,tampa do facao suspensao
+20,14,tampas do facaos suspensao
+20,14,tampa do facao eixo
+20,15,tensor da suspensao
+20,15,tensor suspensao
+20,15,tensores da suspensao
+20,15,tensores suspensao
+20,15,tensor da susp
+20,15,tensores da susp
+20,15,tensor da sspensao
+21,2,velas de ignicao agricola
+21,2,velas ignicao agricola
+21,2,vela de ignicao agricola
+21,2,vela ignicao agricola
+21,2,velas de igncao agricola
+21,2,velas de ignicao agricola transmissao
+21,2,vela de ignicao agricola transmissao
+21,3,velas de ignicao automotivas
+21,3,velas ignicao automotivas
+21,3,vela de ignicao automotivas
+21,3,vela ignicao automotivas
+21,3,velas de igncao automotivas
+21,3,velas de ignicao automotivas transmissao
+21,3,vela de ignicao automotiva transmissao
+3,47,radiador oleo
+3,47,radiadores oleo
+3,47,rdiador oleo
+3,47,radiador oleo motor
+3,47,radiadores oleos motor
+3,47,radiador oleo arrefecimento
+3,47,radiadores oleos arrefecimento
+3,42,cabecote
+3,42,cabecotes
+3,42,cbecote
+3,42,cabecote motor
+3,42,cabecotes motor
+3,42,cabecote arrefecimento
+3,42,cabecotes arrefecimento
+8,2,barras e terminais de direcao
+8,2,barras terminais direcao
+8,2,barra e terminais de direcao
+8,2,barra terminais direcao
+8,2,barras e terminais de dir
+8,2,barra e terminais de dir
+8,2,barras e trminais de direcao
+1,1,abracadeiras
+1,1,abracadeira
+1,1,abrcadeiras
+1,1,abracadeiras carroceria
+1,1,abracadeira carroceria
+1,1,abracadeiras acessorio
+1,1,abracadeira acessorio
+6,4,caixas satelite
+6,4,caixa satelite
+6,4,caixas stelite
+6,4,caixas satelite cardan
+6,4,caixa satelite cardan
+6,4,caixas satelites cardan
+6,4,caixas satelite diferencial
+12,25,reparo cilindro mestre
+12,25,reparos cilindro mestre
+12,25,reparo clindro mestre
+12,25,reparo cilindro mestre injecao
+12,25,reparos cilindros mestres injecao
+12,25,reparo cilindro mestre combustivel
+12,25,reparos cilindros mestres combustivel
+12,26,reparo cilindro roda
+12,26,reparos cilindro roda
+12,26,reparo clindro roda
+12,26,reparo cilindro roda injecao
+12,26,reparos cilindros rodas injecao
+12,26,reparo cilindro roda combustivel
+12,26,reparos cilindros rodas combustivel
+10,22,reparo cilindro mestre/auxiliar
+10,22,reparo cilindro mestre auxiliar
+10,22,reparo cilindro mestre e auxiliar
+10,22,reparo cilindro mestreauxiliar
+10,22,reparos cilindro mestre auxiliar
+10,22,reparo cilindro mestre
+10,22,auxiliar
+10,22,reparo clindro mestre auxiliar
+3,46,tampa de combustivel
+3,46,tampa combustivel
+3,46,tampas de combustivel
+3,46,tampas combustivel
+3,46,tampa de comb
+3,46,tampas de comb
+3,46,tampa de cmbustivel
+9,3,bobina do distribuidor
+9,3,bobina distribuidor
+9,3,bobinas do distribuidor
+9,3,bobinas distribuidor
+9,3,bobina do dstribuidor
+9,3,bobina do distribuidor cambio
+9,3,bobinas do distribuidores cambio
+11,7,filtro de cambio
+11,7,filtro cambio
+11,7,filtros de cambio
+11,7,filtros cambio
+11,7,filtro de cambio motor
+11,7,filtros de cambios motor
+11,7,filtro de cambio autopeca
+1,27,grampo
+1,27,grampos
+1,27,grampo carroceria
+1,27,grampos carroceria
+1,27,grampo acessorio
+1,27,grampos acessorio
+1,27,grampo autopeca
+1,28,bucha
+1,28,buchas
+1,28,buxa
+1,28,bucha carroceria
+1,28,buchas carroceria
+1,28,bucha acessorio
+1,28,buchas acessorio
+1,29,parafuso e porca
+1,29,parafuso porca
+1,29,parafusos e porca
+1,29,parafusos porca
+1,29,prafuso e porca
+1,29,parafuso e porca carroceria
+1,29,parafusos e porcas carroceria
+9,29,sensores de abs
+9,29,sensores abs
+9,29,sensor de abs
+9,29,sensor abs
+9,29,snsores de abs
+9,29,sensores de abs cambio
+9,29,sensor de abs cambio
+9,5,bomba de agua limpador de para-brisa
+9,5,bomba de agua limpador de para brisa
+9,5,bomba de agua limpador de para e brisa
+9,5,bomba de agua limpador de parabrisa
+9,5,bomba agua limpador brisa
+9,5,bombas de agua limpador de para brisa
+9,5,bombas agua limpador brisa
+9,5,bomba de agua lmpador de para brisa
+12,8,hastes
+12,8,haste
+12,8,hastes injecao
+12,8,haste injecao
+12,8,hastes combustivel
+12,8,haste combustivel
+12,8,hastes autopeca
+10,15,pino
+10,15,pinos
+10,15,pino freio
+10,15,pinos freio
+10,15,pino freios
+10,15,pinos freios
+10,15,pino autopeca
+18,2,retentor de diferencial
+18,2,retentor diferencial
+18,2,retentores de diferencial
+18,2,retentores diferencial
+18,2,rtentor de diferencial
+18,2,retentor de diferencial autopeca
+18,2,retentores de diferenciais autopeca
+14,1,junta de cambio
+14,1,junta cambio
+14,1,juntas de cambio
+14,1,juntas cambio
+14,1,junta de cambio autopeca
+14,1,juntas de cambios autopeca
+14,1,junta de cambio automotiva
+14,2,junta de carburador
+14,2,junta carburador
+14,2,juntas de carburador
+14,2,juntas carburador
+14,2,junta de crburador
+14,2,junta de carburador autopeca
+14,2,juntas de carburadores autopeca
+14,3,junta de diferencial
+14,3,junta diferencial
+14,3,juntas de diferencial
+14,3,juntas diferencial
+14,3,junta de dferencial
+14,3,junta de diferencial autopeca
+14,3,juntas de diferenciais autopeca
+14,4,junta de motor
+14,4,junta motor
+14,4,juntas de motor
+14,4,juntas motor
+14,4,junta de motor autopeca
+14,4,juntas de motores autopeca
+14,4,junta de motor automotiva
+14,5,diversos
+14,5,diverso
+14,5,dversos
+14,5,diversos junta
+14,5,diverso junta
+14,5,diversos autopeca
+14,5,diverso autopeca
+21,4,velas de ignicao para motos
+21,4,velas ignicao motos
+21,4,vela de ignicao para motos
+21,4,vela ignicao motos
+21,4,velas de igncao para motos
+21,4,velas de ignicao para motos transmissao
+21,4,vela de ignicao para moto transmissao
+10,16,plato embreagem
+10,16,platos embreagem
+10,16,plato embr
+10,16,platos embr
+10,16,plato enbreagem
+10,16,plato embragem
+10,16,plato embreagem freio
+9,26,travas
+9,26,trava
+9,26,travas cambio
+9,26,trava cambio
+9,26,travas transmissao
+9,26,trava transmissao
+9,26,travas autopeca
+9,30,eletroventilador
+9,30,eletroventiladores
+9,30,eltroventilador
+9,30,eletroventilador cambio
+9,30,eletroventiladores cambio
+9,30,eletroventilador transmissao
+9,30,eletroventiladores transmissao
+12,27,cilindro mestre freio
+12,27,cilindros mestre freio
+12,27,clindro mestre freio
+12,27,cilindro mestre freio injecao
+12,27,cilindros mestres freios injecao
+12,27,cilindro mestre freio combustivel
+12,27,cilindros mestres freios combustivel
+10,23,volante motor
+10,23,volantes motor
+10,23,vlante motor
+10,23,volante motor freio
+10,23,volantes motores freio
+10,23,volante motor freios
+10,23,volantes motores freios
+3,48,bomba agua + kit sincronismo
+3,48,bomba agua kit sincronismo
+3,48,bomba agua e kit sincronismo
+3,48,bombas agua kit sincronismo
+3,48,bomba agua
+3,48,kit sincronismo
+3,48,bomba agua sincronismo
+3,48,bomba agua kit sncronismo
+23,2,leitores falhas
+23,2,leitor falhas
+23,2,litores falhas
+23,2,leitores falhas ferramenta
+23,2,leitor falha ferramenta
+23,2,leitores falhas autopeca
+23,2,leitor falha autopeca
+2,1,amortecedores suspensao
+2,1,amortecedor suspensao
+2,1,amort susp
+2,1,amortecedor
+2,1,amortecedores
+2,1,amrtecedores suspensao
+2,1,amortecedores suspensao autopeca
+13,9,semi eixo
+13,9,semis eixo
+13,9,semi eixo rolamento
+13,9,semis eixos rolamento
+13,9,semi eixo cubo
+13,9,semis eixos cubo
+13,9,semi eixo autopeca
+13,10,tulipa
+13,10,tulipas
+13,10,tulipa rolamento
+13,10,tulipas rolamento
+13,10,tulipa cubo
+13,10,tulipas cubo
+13,10,tulipa autopeca
+13,11,trizeta
+13,11,trizetas
+13,11,triseta
+13,11,trzeta
+13,11,trizeta rolamento
+13,11,trizetas rolamento
+13,11,trizeta cubo
+5,10,cabo de cambio
+5,10,cabo cambio
+5,10,cabos de cambio
+5,10,cabos cambio
+5,10,cabo de cambio autopeca
+5,10,cabos de cambios autopeca
+5,10,cabo de cambio automotiva
+12,28,atuador freio
+12,28,atuadores freio
+12,28,atador freio
+12,28,atuador freio injecao
+12,28,atuadores freios injecao
+12,28,atuador freio combustivel
+12,28,atuadores freios combustivel
+9,31,cinta de airbag
+9,31,cinta airbag
+9,31,cintas de airbag
+9,31,cintas airbag
+9,31,cinta de airbag cambio
+9,31,cintas de airbag cambio
+9,31,cinta de airbag transmissao
+4,6,coxim amortecedor
+4,6,coxins amortecedor
+4,6,coxim amort
+4,6,coxins amort
+4,6,coxim do amortecedor
+4,6,coxim amortec
+4,6,coxin amortecedor

@@ -105,31 +105,17 @@ ORDER BY id DESC
 LIMIT 10;
 ```
 
-Reapply the consolidated SQL without dropping the database:
-
-```bash
-python scripts/db/apply_sql_file.py \
-  --sql-file db/init/pre_search_init.sql \
-  --db-host localhost --db-port 5433 --db-name presearch --db-user presearch --db-password presearch
-```
-
-## Load Or Reload The Deterministic Catalog
+## Recreate The Deterministic Catalog
 
 The bootstrap source used by Postgres on a fresh volume is:
 - `db/init/pre_search_init.sql`
 - `db/init/csv/`
 
-Reload the CSV catalog manually:
+Recreate the database from the consolidated bootstrap:
 
 ```bash
-python scripts/db/import_pre_search_catalog_csv.py \
-  --grupo-csv "db/init/csv/grupo.csv" \
-  --subgrupo-csv "db/init/csv/subgrupo.csv" \
-  --part-rule-csv "db/init/csv/pre_search_part_rule.csv" \
-  --vehicle-brand-csv "db/init/csv/vehicle_brand.csv" \
-  --vehicle-model-csv "db/init/csv/vehicle_model.csv" \
-  --engine-option-csv "db/init/csv/engine_option.csv" \
-  --db-host localhost --db-port 5433 --db-name presearch --db-user presearch --db-password presearch
+docker compose down -v
+docker compose up -d --build
 ```
 
 ## Run Tests
@@ -192,6 +178,12 @@ Run the `LLM_NUM_PREDICT` benchmark:
 
 ```bash
 python scripts/eval/benchmark_llm_num_predict.py
+```
+
+Run the latency battery:
+
+```bash
+python scripts/eval/benchmark_pre_search_latency.py
 ```
 
 ## Fine-Tuning Cycle

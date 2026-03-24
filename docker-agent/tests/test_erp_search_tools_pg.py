@@ -5,7 +5,7 @@ import pytest
 from app.config import Settings
 from app.core.domain.errors import SearchPartsServiceUnavailableError
 from app.core.domain.pre_search import SearchCriteria
-from app.infra.erp_search_tools_pg import PostgresErpSearchTools
+from app.infra.erp_search_tools_pg import PostgresErpSearchTools, resolve_search_tools
 from app.infra import erp_search_tools_pg
 
 
@@ -125,3 +125,9 @@ def test_postgres_erp_tools_sql_uses_exact_code_match_without_part_query() -> No
     assert "lower(cd_item) = %(part_code_norm)s" in sql
     assert params["part_code_norm"] == "c.178"
     assert params["part_query"] is None
+
+
+def test_resolve_search_tools_returns_postgres_backend_when_enabled() -> None:
+    tools = resolve_search_tools(settings=_settings(), logger=logging.getLogger("test"))
+
+    assert isinstance(tools, PostgresErpSearchTools)

@@ -1,32 +1,42 @@
-# Scripts Map
+# Mapa De Scripts
 
-## Hierarquia
+Este diretorio concentra automacoes auxiliares. O runtime principal continua em `app/`, enquanto `scripts/` cobre avaliacao offline e evolucao do modelo.
 
-- `db/`
-  Scripts de schema, carga e manutencao do catalogo no Postgres.
+## Divisao
+
 - `eval/`
   Scripts de benchmark e avaliacao offline.
 - `training/`
-  Scripts de captura revisada, exportacao do dataset, empacotamento no Ollama e ciclo de fine-tuning.
+  Scripts de revisao, exportacao de dataset, empacotamento de modelo e ciclo de treino.
 
-## O que cada grupo faz
+Observacao:
+- o bootstrap do banco ficou centralizado em `db/init/pre_search_init.sql` + `db/init/csv/`
+- nao ha mais fluxo versionado de importacao manual por CSV em `scripts/db/`
 
-### `db/`
-- `apply_sql_file.py`: aplica SQL adicional em banco ja existente
-- `import_pre_search_catalog_csv.py`: importa catalogo deterministico a partir de CSV
+## Scripts Principais
 
 ### `eval/`
-- `evaluate_pre_search.py`: roda avaliacao no dataset MVP
-- `benchmark_llm_num_predict.py`: compara configuracoes de `LLM_NUM_PREDICT`
+
+- `evaluate_pre_search.py`
+  Roda avaliacao funcional no dataset MVP.
+- `benchmark_llm_num_predict.py`
+  Compara configuracoes de `LLM_NUM_PREDICT`.
+- `benchmark_pre_search_latency.py`
+  Mede latencia do `pre_search_validator` em sequencia e apos idle.
+  Serve para revalidar `LLM_KEEP_ALIVE`, warmup e cold start.
 
 ### `training/`
-- `export_pre_search_fine_tuning_dataset.py`: exporta dataset rotulado do Postgres
-- `review_pre_search_queue.py`: revisa interacoes reais e promove para treino
-- `package_pre_search_ollama_model.py`: cria `Modelfile` e publica modelo no Ollama
-- `run_pre_search_fine_tuning_cycle.py`: orquestra exportacao, treino, benchmark e promocao
 
-## Regra de organizacao
+- `export_pre_search_fine_tuning_dataset.py`
+  Exporta dataset rotulado do Postgres.
+- `review_pre_search_queue.py`
+  Revisa interacoes reais e promove para treino.
+- `package_pre_search_ollama_model.py`
+  Cria `Modelfile` e publica modelo no Ollama.
+- `run_pre_search_fine_tuning_cycle.py`
+  Orquestra exportacao, treino, benchmark e promocao.
 
-- se mexe no Postgres/catalogo: `db/`
-- se mede qualidade/desempenho: `eval/`
-- se mexe em dataset, modelo ou ciclo de treino: `training/`
+## Leitura
+
+- para medir qualidade: va para `eval/`
+- para treino e melhoria de modelo: va para `training/`

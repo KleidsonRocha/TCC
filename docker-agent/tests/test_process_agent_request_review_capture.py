@@ -3,10 +3,10 @@ import asyncio
 
 from app.api.schemas.contract_v1 import AgentRequestV1
 from app.config import Settings
-from app.core.domain.models import ConversationState
+from app.core.domain.models import ConversationState, PartItem
 from app.core.domain.pre_search import NextQuestion, PreSearchValidation, SearchCriteria
+from app.core.ports.tools import ToolsPort
 from app.core.usecases.process_agent_request import ProcessAgentRequestUseCase
-from app.infra.tools_mock import MockTools
 
 
 class _StubValidator:
@@ -42,7 +42,24 @@ class _SpyRecorder:
         self.calls.append(kwargs)
 
 
-class _SpyTools(MockTools):
+class _FakeTools(ToolsPort):
+    def search_parts(self, query: str, branch_id: int, criteria=None):
+        normalized = (query or "").lower()
+        _ = branch_id
+        _ = criteria
+        if "bandeja" in normalized:
+            return [
+                PartItem(item_id="BDJ-001", title="Bandeja dianteira lado esquerdo", score=0.91),
+                PartItem(item_id="BDJ-002", title="Bandeja dianteira lado direito", score=0.89),
+            ]
+        if "coxim" in normalized:
+            return [
+                PartItem(item_id="CXM-101", title="Coxim do motor dianteiro", score=0.92),
+            ]
+        return []
+
+
+class _SpyTools(_FakeTools):
     def __init__(self) -> None:
         self.calls: list[dict] = []
 
@@ -78,7 +95,7 @@ class _HandoffValidator:
 def test_process_agent_request_records_review_capture() -> None:
     recorder = _SpyRecorder()
     use_case = ProcessAgentRequestUseCase(
-        tools=MockTools(),
+        tools=_FakeTools(),
         pre_search_validator=_StubValidator(),
         settings=Settings(
             LOG_LEVEL="INFO",
@@ -269,7 +286,7 @@ def test_process_agent_request_passes_conversation_state_to_validator() -> None:
     validator = _StateAwareValidator()
     recorder = _SpyRecorder()
     use_case = ProcessAgentRequestUseCase(
-        tools=MockTools(),
+        tools=_FakeTools(),
         pre_search_validator=validator,
         settings=Settings(
             LOG_LEVEL="INFO",
@@ -330,7 +347,7 @@ def test_process_agent_request_multiple_results_returns_only_show_items() -> Non
 
     recorder = _SpyRecorder()
     use_case = ProcessAgentRequestUseCase(
-        tools=MockTools(),
+        tools=_FakeTools(),
         pre_search_validator=_SearchValidator(),
         settings=Settings(
             LOG_LEVEL="INFO",

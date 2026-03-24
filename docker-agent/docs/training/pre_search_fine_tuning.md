@@ -106,19 +106,11 @@ Ele:
 
 ## Como preparar o banco
 
-Se voce for iniciar do zero:
+Se voce for iniciar do zero ou reaplicar o bootstrap consolidado:
 
 ```bash
 docker compose down -v
 docker compose up -d --build
-```
-
-Se o banco ja existe e voce quer reaplicar o schema consolidado:
-
-```bash
-python scripts/db/apply_sql_file.py \
-  --sql-file db/init/pre_search_init.sql \
-  --db-host localhost --db-port 5433 --db-name presearch --db-user presearch --db-password presearch
 ```
 
 ## Como exportar os exemplos

@@ -2,12 +2,6 @@
 
 ## Prioridade Alta
 
-- [ ] Reduzir a latencia do `pre_search_validator`
-  - O gargalo atual e a chamada ao Ollama, nao a busca no ERP
-  - Reduzir `LLM_NUM_PREDICT` e revisar tamanho do prompt
-  - Avaliar bypass parcial da LLM quando `dictionary_seed_criteria` + `conversation_state` forem suficientes
-  - Medir tempo medio por cenario: `ask`, `search` e `handoff`
-
 - [ ] Endurecer o criterio de liberacao para `search`
   - O threshold atual (`min_score_to_search = 70`) esta permissivo demais
   - Revisar score minimo global e/ou permitir threshold por familia de peca
@@ -32,14 +26,6 @@
   - Evitar perguntas vagas como "qual tipo de amortecedor?" quando o termo da peca ja esta explicito
   - Manter a futura desambiguacao por muitos resultados baseada nos candidatos retornados
 
-- [ ] Melhorar a cobertura lexical do catalogo de pecas
-  - Cobrir singular/plural e variacoes simples de alias antes de depender da LLM
-  - Exemplos recorrentes:
-    - `batente` vs `batentes`
-    - `amortecedor` vs `amortecedores`
-  - Priorizar termos que hoje ficam sem `dictionary_seed_criteria.part_query`
-  - Tratar isso como curadoria de catalogo e nao como responsabilidade exclusiva da LLM
-
 - [ ] Refinar relevancia da busca ERP
   - Melhorar ranking para reduzir empates e itens excessivamente genericos
   - Penalizar familias relacionadas quando o usuario pediu uma peca mais especifica
@@ -52,12 +38,11 @@
 
 ## Prioridade Media
 
-- [ ] Criar pre-validacao lexical antes da LLM
-  - Avaliar uso de SQL/Postgres com `pg_trgm` para aproximacao textual de aliases e nomes de peca
-  - Usar essa etapa para canonizar termos com erro de digitacao recorrente antes da chamada da LLM
+- [ ] Expandir e calibrar a pre-validacao lexical
+  - A base atual ja cobre aliases curados e fuzzy conservador para `part_query`
+  - Avaliar expansao para `vehicle_model` e `vehicle_brand` somente com threshold seguro
+  - Medir impacto em abreviacoes, truncamentos e erros simples sem aumentar falso-positivo
   - Priorizar uso como guardrail e enriquecimento do `dictionary_seed_criteria`, sem substituir a decisao conversacional da LLM
-  - Medir impacto em casos como abreviacoes, truncamentos e erros simples
-  - Aplicar fuzzy apenas em campos curtos de alias/peca/codigo
 
 - [ ] Pergunta inteligente de desambiguacao para muitos resultados
   - Escolher o melhor discriminador entre os itens retornados
@@ -75,10 +60,16 @@
 
 - [ ] Criar rotina de carga de dados (seed incremental)
   - Definir formato de entrada (CSV/JSON)
-  - Criar script de importacao idempotente
+  - Reaproveitar o bootstrap consolidado como fonte principal
   - Versionar somente seeds/init por lote de cadastro
 
 ## Prioridade Baixa
+
+- [ ] Reavaliar a latencia residual do `pre_search_validator`
+  - `LLM_KEEP_ALIVE=1h` e warmup no startup ja mitigaram o unload apos idle e a primeira chamada util
+  - O modelo ainda fica lento mesmo carregado, entao a frente saiu do topo do backlog, mas nao foi zerada
+  - Manter revalidacao com `scripts/eval/benchmark_pre_search_latency.py`
+  - Futuras frentes: GPU no Ollama, bypass deterministico de casos obvios, duracoes detalhadas (`load_duration`, `prompt_eval_duration`, `eval_duration`) e revisao de prompt apenas se houver ganho funcional
 
 - [ ] Definir estrategia de melhoria da decisao da LLM (`search` vs `ask`)
   - Comecar por `few-shot` e avaliacao

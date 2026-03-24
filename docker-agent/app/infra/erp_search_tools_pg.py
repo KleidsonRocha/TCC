@@ -7,7 +7,6 @@ from app.core.domain.errors import SearchPartsServiceUnavailableError
 from app.core.domain.models import PartItem
 from app.core.domain.pre_search import SearchCriteria
 from app.core.ports.tools import ToolsPort
-from app.infra.tools_mock import MockTools
 
 try:
     import psycopg
@@ -332,8 +331,13 @@ def resolve_search_tools(*, settings: Settings, logger: logging.Logger) -> Tools
         )
         return PostgresErpSearchTools(settings=settings, logger=logger)
 
-    logger.warning(
-        "search_tools_resolved",
-        extra={"search_tools_backend": "mock"},
+    logger.error(
+        "search_tools_unconfigured",
+        extra={
+            "search_tools_backend": "none",
+            "erp_db_enabled": settings.erp_db_enabled,
+        },
     )
-    return MockTools()
+    raise RuntimeError(
+        "Busca real de pecas nao configurada: defina ERP_DB_ENABLED=true para iniciar o docker-agent."
+    )

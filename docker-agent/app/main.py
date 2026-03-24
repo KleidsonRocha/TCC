@@ -35,6 +35,20 @@ def create_app(
                 logger=logger,
                 catalog=catalog,
             )
+        warmup = getattr(pre_search_validator, "warmup", None)
+        if settings.llm_warmup_enabled and callable(warmup):
+            try:
+                logger.info(
+                    "pre_search_llm_warmup_started",
+                    extra={"model": settings.llm_model},
+                )
+                warmup()
+            except Exception:
+                logger.warning(
+                    "pre_search_llm_warmup_failed",
+                    extra={"model": settings.llm_model},
+                    exc_info=True,
+                )
         use_case = ProcessAgentRequestUseCase(
             tools=tools,
             pre_search_validator=pre_search_validator,

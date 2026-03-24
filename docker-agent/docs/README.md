@@ -1,38 +1,49 @@
-# Docs Map
+# Mapa Da Documentacao
 
-## O que fica aqui
+Este diretorio concentra a documentacao normativa e os artefatos auxiliares do projeto.
 
-- `guide/operational_commands.md`
-  Comandos operacionais do dia a dia: stack, banco, testes, revisao, avaliacao e fine-tuning.
-- `guide/runtime_and_bootstrap.md`
-  Mapa curto do runtime, bootstrap do banco e fluxo de treino.
-- `guide/erp_item_search_candidates_view.md`
-  Proposta de view no ERP para busca real de candidatos de pecas.
-- `TODO.md`
-  Roadmap operacional do projeto.
-- `training/pre_search_fine_tuning.md`
-  Guia vivo do fluxo de fine-tuning, revisao e promocao de modelo.
-- `assets/datasets/`
-  Datasets usados por avaliacao e benchmark.
-- `assets/sql/`
-  SQLs auxiliares que servem como proposta de integracao e artefatos de apoio.
-- `assets/llm/`
-  Insumos auxiliares de prompt/catalogo para a LLM.
-- `assets/db_bootstrap_csv/`
-  Templates de CSV do catalogo deterministico. Servem para referencia de formato.
-- `archive/`
-  Documentacao historica. Nao deve ser tratada como fonte principal de operacao.
+## Leitura Recomendada
 
-## Regra de organizacao
-
-- documento operacional atual: fica em `docs/` ou `docs/training/`
-- dataset ou arquivo auxiliar: fica em `docs/assets/`
-- material antigo, duplicado ou historico: vai para `docs/archive/`
-
-## Ordem de leitura
+### Para banca e orientacao
 
 1. `../README.md`
-2. `guide/operational_commands.md`
-3. `guide/runtime_and_bootstrap.md`
-4. `training/pre_search_fine_tuning.md`
-5. `TODO.md`
+2. `guide/repository_reading_path.md`
+3. `guide/pre_search_runtime_flow.md`
+4. `guide/problem_solution_catalog.md`
+5. `guide/runtime_and_bootstrap.md`
+6. `TODO.md`
+
+### Para operacao
+
+1. `guide/operational_commands.md`
+2. `guide/runtime_and_bootstrap.md`
+3. `training/pre_search_fine_tuning.md`
+
+## O Que Cada Area Contem
+
+- `guide/`
+  Guias normativos do runtime, da leitura do repositorio e da operacao.
+- `training/`
+  Fluxo de revisao, exportacao de dataset, benchmark e promocao de modelo.
+- `assets/datasets/`
+  Datasets usados em avaliacao e benchmark.
+- `assets/db_bootstrap_csv/`
+  Templates de CSV para referencia de formato.
+- `assets/sql/`
+  SQLs auxiliares e propostas de integracao.
+- `archive/`
+  Material historico. Nao e a fonte principal para leitura inicial.
+
+## Regra De Organizacao
+
+- documento atual e normativo: fica em `docs/guide/` ou `docs/training/`
+- dataset, exemplo e artefato auxiliar: fica em `docs/assets/`
+- material antigo, duplicado ou apenas historico: vai para `docs/archive/`
+
+## Criterio De Uso
+
+- se voce quer entender o funcionamento do agente: comece por `guide/pre_search_runtime_flow.md`
+- se voce quer ver o mapa de problemas e solucoes adotados: va para `guide/problem_solution_catalog.md`
+- se voce quer reproduzir ambiente e banco: va para `guide/runtime_and_bootstrap.md`
+- se voce quer operar a stack: va para `guide/operational_commands.md`
+- se voce quer entender treino e revisao: va para `training/pre_search_fine_tuning.md`

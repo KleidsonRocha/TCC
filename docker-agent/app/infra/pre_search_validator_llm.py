@@ -1,6 +1,7 @@
 import json
 import logging
 import re
+import time
 from copy import deepcopy
 from pathlib import Path
 from typing import Any
@@ -62,6 +63,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         self._timeout = max(settings.llm_timeout_ms, 1000) / 1000
         self._temperature = settings.llm_temperature
         self._num_predict = max(settings.llm_num_predict, 64)
+        self._keep_alive = self._normalize_keep_alive(settings.llm_keep_alive)
         self._think = settings.llm_think
         self._log_raw_response = settings.llm_log_raw_response
         self._categories_text = self._load_categories_text(settings.llm_categories_file)
@@ -86,6 +88,33 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         if self._last_audit_info is None:
             return None
         return deepcopy(self._last_audit_info)
+
+    def warmup(self) -> dict[str, Any]:
+        payload = self._build_warmup_payload()
+        started_at = time.perf_counter()
+        response = httpx.post(
+            f"{self._base_url}/api/generate",
+            json=payload,
+            timeout=self._timeout,
+        )
+        response.raise_for_status()
+        raw_body = response.json()
+        elapsed_ms = round((time.perf_counter() - started_at) * 1000, 2)
+        summary = {
+            "elapsed_ms": elapsed_ms,
+            "load_duration_ms": self._duration_ns_to_ms(raw_body.get("load_duration")),
+            "total_duration_ms": self._duration_ns_to_ms(raw_body.get("total_duration")),
+            "keep_alive": payload.get("keep_alive"),
+            "done": raw_body.get("done"),
+        }
+        self._logger.info(
+            "pre_search_llm_warmup_completed",
+            extra={
+                "model": self._model,
+                **summary,
+            },
+        )
+        return summary
 
     def validate(
         self,
@@ -198,6 +227,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             dictionary_criteria=merged_seed_criteria,
             message_text=message_text,
             last_messages=context,
+            conversation_state=conversation_state,
         )
         if self._log_raw_response:
             score_explicit_fields = self._build_score_explicit_fields(
@@ -307,6 +337,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
                 "temperature": self._temperature,
                 "num_predict": self._num_predict,
             },
+            **({"keep_alive": self._keep_alive} if self._keep_alive else {}),
         }
 
     def _build_generate_payload(
@@ -342,7 +373,21 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
                 "temperature": self._temperature,
                 "num_predict": self._num_predict,
             },
+            **({"keep_alive": self._keep_alive} if self._keep_alive else {}),
         }
+
+    def _build_warmup_payload(self) -> dict[str, Any]:
+        payload: dict[str, Any] = {
+            "model": self._model,
+            "stream": False,
+            "options": {
+                "temperature": 0.0,
+                "num_predict": 1,
+            },
+        }
+        if self._keep_alive:
+            payload["keep_alive"] = self._keep_alive
+        return payload
 
     @staticmethod
     def _extract_content(raw_body: dict[str, Any]) -> str:
@@ -434,6 +479,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         dictionary_criteria: SearchCriteria,
         message_text: str,
         last_messages: list[dict[str, Any]],
+        conversation_state: ConversationState | None,
     ) -> PreSearchValidation:
         explicit_part_code = bool(dictionary_criteria.part_code)
         merged_criteria = llm_validation.criteria.model_dump(exclude_none=False)
@@ -494,6 +540,23 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
                     include_rule_fields=True,
                     explicit_part_code=explicit_part_code,
                 )
+        elif decision == "ask" and self._should_promote_follow_up_ask_to_search(
+            conversation_state=conversation_state,
+            criteria=criteria_model,
+            search_gate_missing=search_gate_missing,
+            criteria_score=criteria_score,
+            explicit_part_code=explicit_part_code,
+        ):
+            decision = "search"
+            missing_fields = []
+
+        if decision == "ask" and not missing_fields:
+            missing_fields = self._resolve_missing_fields(
+                criteria=criteria_model,
+                llm_missing_fields=self._infer_ask_missing_fields(criteria_model),
+                include_rule_fields=True,
+                explicit_part_code=explicit_part_code,
+            )
 
         next_question: NextQuestion | None = None
         if decision == "ask":
@@ -528,6 +591,32 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             confidence=llm_validation.confidence,
         )
 
+    def _should_promote_follow_up_ask_to_search(
+        self,
+        *,
+        conversation_state: ConversationState | None,
+        criteria: SearchCriteria,
+        search_gate_missing: list[str],
+        criteria_score: int,
+        explicit_part_code: bool = False,
+    ) -> bool:
+        if not conversation_state or not conversation_state.pending_slot:
+            return False
+        if conversation_state.last_decision and conversation_state.last_decision != "ask":
+            return False
+
+        pending_slot = str(conversation_state.pending_slot or "").strip()
+        if pending_slot not in SearchCriteria.model_fields:
+            return False
+        if search_gate_missing:
+            return False
+        if (
+            self._score_threshold_applies(criteria, explicit_part_code=explicit_part_code)
+            and criteria_score < self._min_score_to_search
+        ):
+            return False
+        return True
+
     def _should_take_dictionary_value(self, *, llm_value: Any, dictionary_value: Any) -> bool:
         if dictionary_value is None or dictionary_value == "" or dictionary_value == []:
             return False
@@ -557,6 +646,8 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         for field in ordered_fields:
             field_name = str(field).strip()
             if not field_name or field_name in deduped_fields:
+                continue
+            if not self._is_follow_up_field_allowed(criteria=criteria, field_name=field_name):
                 continue
             if field_name == "axle" and (
                 criteria_values.get("axle") is not None or criteria_values.get("position") is not None
@@ -606,7 +697,8 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             return None
 
         if missing_fields and next_key not in missing_fields:
-            return None
+            if not self._is_follow_up_field_allowed(criteria=criteria, field_name=next_key):
+                return None
 
         return llm_next_question
 
@@ -930,6 +1022,22 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             return ["vehicle_model"]
         return ["vehicle_year"]
 
+    def _infer_ask_missing_fields(self, criteria: SearchCriteria) -> list[str]:
+        for field_name in self._sorted_weighted_fields_for_ask(criteria):
+            if self._is_criteria_field_filled(criteria, field_name):
+                continue
+            if not self._is_follow_up_field_allowed(criteria=criteria, field_name=field_name):
+                continue
+            return [field_name]
+
+        if not criteria.part_query and not criteria.part_code:
+            return ["part_query"]
+        if not criteria.vehicle_model:
+            return ["vehicle_model"]
+        if criteria.part_query and not criteria.vehicle_year:
+            return ["vehicle_year"]
+        return []
+
     def _build_llm_score_policy(self, *, dictionary_seed_criteria: SearchCriteria) -> dict[str, Any]:
         explicit_part_code = bool(dictionary_seed_criteria.part_code)
         score_explicit_fields = self._build_score_explicit_fields(
@@ -1045,6 +1153,18 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         if normalized_name == "engine":
             return bool(criteria.vehicle_model) or (part_query in self._needs_engine)
         return True
+
+    def _is_follow_up_field_allowed(self, *, criteria: SearchCriteria, field_name: str) -> bool:
+        normalized_name = str(field_name or "").strip().lower()
+        if not normalized_name:
+            return False
+        if normalized_name == "part_code":
+            return not bool(criteria.part_query)
+        if normalized_name == "vehicle_brand":
+            return not bool(criteria.vehicle_model)
+        if normalized_name == "quantity":
+            return False
+        return self._is_scoring_field_relevant(criteria, normalized_name)
 
     @staticmethod
     def _field_priority(field_name: str) -> int:
@@ -1406,3 +1526,15 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         if not content:
             return None
         return content[:4000]
+
+    @staticmethod
+    def _normalize_keep_alive(value: str | None) -> str | None:
+        normalized = str(value or "").strip()
+        return normalized or None
+
+    @staticmethod
+    def _duration_ns_to_ms(value: Any) -> float | None:
+        try:
+            return round(float(value) / 1_000_000, 2)
+        except (TypeError, ValueError):
+            return None

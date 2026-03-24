@@ -24,6 +24,8 @@ class Settings(BaseSettings):
     llm_timeout_ms: int = Field(240000, alias="LLM_TIMEOUT_MS")
     llm_temperature: float = Field(0.0, alias="LLM_TEMPERATURE")
     llm_num_predict: int = Field(220, alias="LLM_NUM_PREDICT")
+    llm_keep_alive: str | None = Field("1h", alias="LLM_KEEP_ALIVE")
+    llm_warmup_enabled: bool = Field(True, alias="LLM_WARMUP_ENABLED")
     llm_think: bool = Field(False, alias="LLM_THINK")
     llm_log_raw_response: bool = Field(False, alias="LLM_LOG_RAW_RESPONSE")
     llm_categories_file: str | None = Field(None, alias="LLM_CATEGORIES_FILE")
