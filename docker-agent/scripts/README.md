@@ -1,31 +1,62 @@
 # Mapa De Scripts
 
-Este diretorio concentra automacoes auxiliares. O runtime principal continua em `app/`, enquanto `scripts/` cobre avaliacao offline e evolucao do modelo.
+Este diretorio concentra automacoes auxiliares. O runtime principal continua em `app/`, enquanto `scripts/` cobre avaliacao e evolucao do modelo.
 
 ## Divisao
 
 - `eval/`
-  Scripts de benchmark e avaliacao offline.
+  Avaliacao offline, bateria real e diagnosticos auxiliares.
 - `training/`
-  Scripts de revisao, exportacao de dataset, empacotamento de modelo e ciclo de treino.
+  Revisao, exportacao de dataset, empacotamento de modelo e ciclo de treino.
 
 Observacao:
 - o bootstrap do banco ficou centralizado em `db/init/pre_search_init.sql` + `db/init/csv/`
 - nao ha mais fluxo versionado de importacao manual por CSV em `scripts/db/`
 
-## Scripts Principais
+## Fluxo Recomendado
 
-### `eval/`
+Operacionalmente, `eval/` deve ser usado por apenas dois entrypoints:
+
+- `generate_eval_report.py`
+  Gera um relatorio consolidado com:
+  - avaliacao offline no dataset MVP
+  - benchmark no golden set
+  - sweep de `LLM_NUM_PREDICT`
+  - resumo da bateria real, quando o JSON existir
+- `run_real_respond_battery.py`
+  Executa a bateria real contra `POST /respond` e grava:
+  - JSON bruto dos casos
+  - relatorio Markdown consolidado
+
+Exemplos:
+
+```powershell
+python .\scripts\eval\generate_eval_report.py
+python .\scripts\eval\run_real_respond_battery.py
+```
+
+Smoke rapido do consolidado:
+
+```powershell
+python .\scripts\eval\generate_eval_report.py --skip-mvp-eval --skip-golden-benchmark --skip-num-predict-sweep
+```
+
+Observacao:
+- a execucao completa do consolidado pode demorar varios minutos, porque roda validacoes reais da LLM no dataset MVP e no golden set
+- o smoke acima serve apenas para validar o entrypoint, a leitura do JSON real e a geracao dos arquivos finais
+
+## Scripts Auxiliares De `eval/`
+
+Os arquivos abaixo permanecem como utilitarios pontuais e nao devem ser tratados como fluxo principal:
 
 - `evaluate_pre_search.py`
-  Roda avaliacao funcional no dataset MVP.
+  Execucao enxuta do dataset MVP.
 - `benchmark_llm_num_predict.py`
-  Compara configuracoes de `LLM_NUM_PREDICT`.
+  Benchmark isolado apenas para tuning de `LLM_NUM_PREDICT`.
 - `benchmark_pre_search_latency.py`
-  Mede latencia do `pre_search_validator` em sequencia e apos idle.
-  Serve para revalidar `LLM_KEEP_ALIVE`, warmup e cold start.
+  Diagnostico de latencia, warmup, idle e `LLM_KEEP_ALIVE`.
 
-### `training/`
+## `training/`
 
 - `export_pre_search_fine_tuning_dataset.py`
   Exporta dataset rotulado do Postgres.
@@ -38,5 +69,6 @@ Observacao:
 
 ## Leitura
 
-- para medir qualidade: va para `eval/`
+- para avaliacao operacional: use os dois entrypoints acima em `eval/`
+- para investigacao tecnica pontual: use os scripts auxiliares de `eval/`
 - para treino e melhoria de modelo: va para `training/`

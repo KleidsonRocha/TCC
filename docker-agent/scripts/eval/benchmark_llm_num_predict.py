@@ -61,7 +61,7 @@ def main() -> None:
     print(
         json.dumps(
             {
-                "dataset": args.dataset,
+                "dataset": str(Path(args.dataset)),
                 "values": values,
                 "recommendation": {
                     "num_predict": recommendation["num_predict"],

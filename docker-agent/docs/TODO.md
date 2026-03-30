@@ -1,85 +1,139 @@
-# TODO - Proximos Passos (docker-agent)
+# TODO - Prioridades Reais Do Produto (docker-agent)
 
-## Prioridade Alta
+## Base desta priorizacao
 
-- [ ] Endurecer o criterio de liberacao para `search`
-  - O threshold atual (`min_score_to_search = 70`) esta permissivo demais
-  - Revisar score minimo global e/ou permitir threshold por familia de peca
-  - Exigir mais contexto para pecas ambiguas antes de liberar busca
-  - Validar casos como:
-    - `amortecedor ecosport`
-    - `coxim ecosport`
-    - `pastilha corolla`
-  - Evitar que `part_query + vehicle_model` sozinho libere `search` em familias que normalmente exigem mais discriminadores
+Este backlog foi reordenado a partir de:
 
-- [ ] Revisar regras obrigatorias por familia de peca
-  - Auditar `needs_side`, `needs_position`, `needs_axle`, `needs_engine` e `needs_variant`
-  - Validar se a regra cadastrada condiz com a pergunta esperada ao usuario
-  - Corrigir inconsistencias entre slot e prompt, por exemplo:
-    - `side` deve significar `esquerdo/direito`
-    - `position` deve significar `dianteiro/traseiro`
-  - Priorizar familias com maior volume e maior ambiguidade operacional
+- `docs/assets/reports/real_respond_battery_2026-03-25.json`
+- `docs/assets/reports/product_owner_analysis_real_battery_2026-03-26.md`
 
-- [ ] Melhorar a escolha da proxima pergunta
-  - Quando a busca ainda nao puder ser liberada, perguntar o dado mais util para destravar `search`
-  - Quando `part_query` ja estiver claro e faltar contexto do veiculo, priorizar `vehicle_model`, `vehicle_year` ou `engine`
-  - Evitar perguntas vagas como "qual tipo de amortecedor?" quando o termo da peca ja esta explicito
-  - Manter a futura desambiguacao por muitos resultados baseada nos candidatos retornados
+Criterio de ordenacao:
 
-- [ ] Refinar relevancia da busca ERP
-  - Melhorar ranking para reduzir empates e itens excessivamente genericos
-  - Penalizar familias relacionadas quando o usuario pediu uma peca mais especifica
-  - Validar separacao entre:
-    - `amortecedor`
-    - `kit amortecedor`
-    - `coxim amortecedor`
-    - `batente e coifa`
-  - Melhorar match exato de modelo para evitar poluicao como `COROLLA` vs `COROLLA CROSS`
+- primeiro, corrigir o que mais afeta confianca
+- depois, corrigir o que mais afeta fluidez operacional
+- so entao expandir cobertura, treino e automacoes secundarias
 
-## Prioridade Media
+## Prioridade 0 - Parar erros com conviccao
 
-- [ ] Expandir e calibrar a pre-validacao lexical
-  - A base atual ja cobre aliases curados e fuzzy conservador para `part_query`
-  - Avaliar expansao para `vehicle_model` e `vehicle_brand` somente com threshold seguro
-  - Medir impacto em abreviacoes, truncamentos e erros simples sem aumentar falso-positivo
-  - Priorizar uso como guardrail e enriquecimento do `dictionary_seed_criteria`, sem substituir a decisao conversacional da LLM
+- [ ] Canonizar `part_query` final antes de aplicar regras e antes de montar a busca
+  - Garantir que o valor final sempre caia em uma familia canonica do catalogo
+  - Cobrir casos como `disco de freio` -> `discos de freio`
+  - Cobrir casos como `pstilhas` -> `pastilhas de freio`
+  - Tratar familias nao catalogadas, como `farol`, sem deixar passar direto para `search`
 
-- [ ] Pergunta inteligente de desambiguacao para muitos resultados
-  - Escolher o melhor discriminador entre os itens retornados
-  - Permitir configurar o threshold de "muitos resultados"
-  - Priorizar perguntas que reduzam mais o conjunto de resultados com a menor friccao para o usuario
+- [ ] Bloquear qualquer `part_code` inventado
+  - Encontrar a origem do caso real `FREIO-2010`
+  - So aceitar `part_code` literal da mensagem, do contexto ou validado pelo extractor
+  - Criar regressao especifica para `pastilha de freio 2010 1.0`
 
-- [ ] Monitoramento de qualidade
-  - Aumentar `docs/assets/datasets/pre_search_eval_dataset_mvp.json`
-  - Rodar avaliacao periodica (`scripts/eval/evaluate_pre_search.py`)
-  - Acompanhar cobertura por marca/modelo/peca
-  - Separar metricas de:
-    - liberacao correta para `search`
-    - qualidade da proxima pergunta
-    - qualidade do ranking ERP
+- [ ] Revisar regras de catalogo que geram perguntas sem sentido
+  - Corrigir `filtro de  oleo -> needs_axle`
+  - Corrigir `filtro de ar do motor -> needs_axle`
+  - Corrigir `filtro de combustivel -> needs_side`
+  - Auditar familias similares antes da proxima bateria real
 
-- [ ] Criar rotina de carga de dados (seed incremental)
-  - Definir formato de entrada (CSV/JSON)
-  - Reaproveitar o bootstrap consolidado como fonte principal
-  - Versionar somente seeds/init por lote de cadastro
+- [ ] Endurecer a liberacao para `search`
+  - Recalibrar `min_score_to_search`
+  - Permitir threshold por familia, se necessario
+  - Impedir que `part_query + vehicle_model` sozinho libere busca em familias ambiguas
+  - Garantir que `needs_engine`, `needs_side`, `needs_position`, `needs_axle` e `needs_variant` prevalecam sobre a decisao otimista da LLM
 
-## Prioridade Baixa
+## Prioridade 1 - Trazer a latencia para nivel operacional
 
-- [ ] Reavaliar a latencia residual do `pre_search_validator`
-  - `LLM_KEEP_ALIVE=1h` e warmup no startup ja mitigaram o unload apos idle e a primeira chamada util
-  - O modelo ainda fica lento mesmo carregado, entao a frente saiu do topo do backlog, mas nao foi zerada
-  - Manter revalidacao com `scripts/eval/benchmark_pre_search_latency.py`
-  - Futuras frentes: GPU no Ollama, bypass deterministico de casos obvios, duracoes detalhadas (`load_duration`, `prompt_eval_duration`, `eval_duration`) e revisao de prompt apenas se houver ganho funcional
+- [ ] Criar caminho deterministico para casos obvios
+  - Bypass da LLM quando extractor + catalogo + regras ja forem suficientes
+  - Priorizar pedidos completos e follow-ups simples
+  - Priorizar reducao de latencia nos fluxos mais comuns da bateria real
 
-- [ ] Definir estrategia de melhoria da decisao da LLM (`search` vs `ask`)
-  - Comecar por `few-shot` e avaliacao
-  - Considerar `fine-tuning` so com volume suficiente de exemplos rotulados
-  - Nao usar treino como compensacao para falhas de catalogo, regras ou orquestracao
+- [ ] Medir latencia por etapa
+  - Separar `pre_search_validator`, `search_parts` e montagem de resposta
+  - Identificar claramente onde esta o maior custo real
+  - Manter comparacao antes e depois dos bypasses
 
-## Criterio de conclusao da fase
+- [ ] Reavaliar infraestrutura somente depois do bypass
+  - GPU no Ollama
+  - ajustes de `LLM_KEEP_ALIVE`
+  - revisao de prompt somente se trouxer ganho real de tempo ou qualidade
 
-- [ ] Fluxo conversacional consistente entre `ask -> follow-up -> search`
-- [ ] `dictionary_seed_criteria` cobrindo as familias mais frequentes do negocio
-- [ ] Liberacao para `search` mais precisa, com menos falso-positivo
-- [ ] Proxima pergunta mais util e menos generica
-- [ ] Ranking ERP aceitavel para os casos reais priorizados
+## Prioridade 2 - Fazer a conversa ficar coerente ate o fim
+
+- [ ] Corrigir follow-up com motor textual
+  - Aceitar `zetec rocam`, `duratec`, `sigma` e equivalentes textuais como `engine`
+  - Revalidar explicitamente o fluxo `coxim amortecedor ecosport 2008 -> zetec rocam`
+
+- [ ] Melhorar a resposta de `no_match`
+  - Usar `conversation_state` para dizer o que realmente falta ou conflitou
+  - Nao pedir novamente dados que o usuario ja informou
+  - Separar `nao encontrei nada` de `sua informacao ainda esta insuficiente`
+
+- [ ] Criar desambiguacao real quando houver muitos itens
+  - Em vez de apenas listar itens, perguntar o melhor discriminador seguinte
+  - Exemplos: `com ou sem ar`, `aro`, `lado`, `dianteiro ou traseiro`
+  - Tratar `result_disambiguation` como etapa funcional, nao so estado salvo
+
+- [ ] Revisar consistencia dos prompts
+  - `side` deve significar `esquerdo/direito`
+  - `position` deve significar `dianteiro/traseiro`
+  - `axle` so deve ser usado quando fizer sentido no dominio
+  - Manter perguntas curtas, diretas e especificas
+
+## Prioridade 3 - Melhorar a qualidade da busca
+
+- [ ] Refinar ranking do ERP
+  - Penalizar itens correlatos quando o usuario pediu a peca principal
+  - Reduzir ruido de `tampa`, `mangueira`, `kit`, `parafuso`, `lampada` e similares
+  - Reduzir empates de score
+  - Priorizar aplicacao exata sobre familia apenas relacionada
+
+- [ ] Corrigir normalizacao de texto e encoding
+  - Eliminar saidas quebradas como `veiculo`, `oleo` e `automatico` com encoding ruim
+  - Garantir titulos legiveis nas listas retornadas
+
+- [ ] Expandir a pre-validacao lexical com seguranca
+  - Melhorar cobertura de typos e abreviacoes sem aumentar falso positivo
+  - Priorizar `part_query`, `vehicle_model` e motor textual
+
+## Prioridade 4 - Fechar o ciclo de qualidade com evidencias reais
+
+- [ ] Reexecutar a bateria real apos cada bloco critico
+  - bloco 1: canonizacao + `part_code` + regras de catalogo
+  - bloco 2: motor textual + `no_match` + desambiguacao
+  - bloco 3: ranking + latencia
+
+- [ ] Transformar erros reais em regressao automatizada
+  - Destacar pelo menos:
+  - `filtro de oleo gol 2010`
+  - `filtro ar motor gol 2010`
+  - `filtro de combustivel gol 2010`
+  - `coxim amortecedor ecosport 2008 -> zetec rocam`
+  - `pastilha de freio 2010 1.0`
+  - `pstilhas gol 2010`
+  - `farol gol 2010`
+
+- [ ] Consolidar os artefatos finais de avaliacao
+  - manter bateria real como evidencia principal
+  - manter relatorio consolidado como leitura executiva
+  - manter este backlog alinhado com os achados reais
+
+## Fora do topo agora
+
+- [ ] Fine-tuning da LLM
+  - Nao usar treino como solucao primaria para erro de catalogo, ranking ou orquestracao
+
+- [ ] Seed incremental e rotinas de carga
+  - Importante, mas nao antes de corrigir as falhas que ja apareceram na bateria real
+
+- [ ] Benchmarks isolados que nao mudem decisao de produto
+  - Manter como diagnostico, nao como foco principal
+
+## Criterio de conclusao desta fase
+
+- [ ] Nenhuma pergunta absurda em familias comuns de filtro, farol, freio, radiador e bandeja
+- [ ] `part_query` sempre canonico antes de aplicar regras
+- [ ] Nenhum `part_code` inventado na bateria real
+- [ ] Follow-up textual de motor funcionando
+- [ ] `show_items` acompanhado de refinamento util quando necessario
+- [ ] `no_match` contextual e sem regressao de contexto
+- [ ] Ranking aceitavel nos casos reais priorizados
+- [ ] Latencia `p50 <= 15s`
+- [ ] Latencia `p95 <= 25s`
