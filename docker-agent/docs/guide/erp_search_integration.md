@@ -1,31 +1,31 @@
-# ERP Candidate Search View
+# Integracao De Pesquisa Com O ERP
 
-This guide describes a first ERP-side view for candidate retrieval.
+Este guia descreve a camada de integracao de pesquisa com o ERP.
 
-Use this in the ERP database, not in the local `docker-agent` catalog database.
+Use isso no banco ERP, nao no banco local de catalogo do `docker-agent`.
 
-Suggested object name:
+Nome esperado do objeto final:
 - `soccol.item_search_candidates`
 
-## Goal
+## Objetivo
 
-The first real search integration should return only candidate items:
+A primeira integracao real de busca deve retornar apenas itens candidatos:
 - `item_id`
-- display title
-- search score calculated by the query
+- titulo de exibicao
+- score de busca calculado pela query
 
-This first cut should not bring:
-- pricing
-- stock
-- taxation
+Esta primeira camada nao deve trazer:
+- preco
+- estoque
+- tributacao
 - WMS
-- technical detail enrichment
+- enriquecimento tecnico detalhado
 
-That enrichment can be a second query after the item list is known.
+Esse enriquecimento pode ficar para uma segunda consulta, depois que a lista de itens ja for conhecida.
 
-## Why A View
+## Por Que Criar Uma View Ou Camada Equivalente
 
-The ERP search data is spread across multiple tables:
+Os dados de busca no ERP estao espalhados por varias tabelas:
 - `item`
 - `item_produto`
 - `produto_veiculos`
@@ -33,27 +33,24 @@ The ERP search data is spread across multiple tables:
 - `grupo_similar_item`
 - `grupo_similar_outros_codigos`
 
-If the `docker-agent` queries those tables directly, the integration becomes too coupled to ERP internals.
+Se o `docker-agent` consultar essas tabelas diretamente, a integracao fica acoplada demais aos detalhes internos do ERP.
 
-The view gives one candidate row per `id_item`, already flattening:
-- item code and names
-- brand and model dimensions from ERP vehicle tables
-- product codes
-- vehicle application text
-- year range
-- vehicle complement, injection, motor and transmission codes
-- similar codes
-- auxiliary search text
+Essa camada entrega uma linha por `id_item`, ja achatando:
+- codigo e nome do item
+- dimensoes de marca e modelo vindas das tabelas veiculares do ERP
+- codigos do produto
+- texto de aplicacao veicular
+- faixa de anos
+- codigos de complemento, injecao, motor e transmissao
+- codigos similares
+- texto auxiliar de busca
 
-## Proposed View
+## Modulo SQL De Integracao
 
-SQL file:
-- [erp_item_search_candidates_view.sql](/d:/TCC/docker-agent/docs/assets/sql/erp_item_search_candidates_view.sql:1)
+Arquivo principal:
+- [erp_search_integration_candidates_runtime.sql](/d:/TCC/docker-agent/docs/assets/sql/erp_search_integration_candidates_runtime.sql:1)
 
-Runtime-oriented version:
-- [erp_item_search_candidates_runtime_v2.sql](/d:/TCC/docker-agent/docs/assets/sql/erp_item_search_candidates_runtime_v2.sql:1)
-
-Output fields worth using in the first integration:
+Campos de saida mais uteis para a primeira integracao:
 - `id_item`
 - `cd_item`
 - `candidate_title`
@@ -73,22 +70,22 @@ Output fields worth using in the first integration:
 - `search_text`
 - `pesquisa_full_text_txt`
 
-## Practical Notes
+## Observacoes Praticas
 
-- `item_produto.obs_ficha_tecnica` and `item_pesquisa.ficha_tecnica_item` are cleaned from HTML so they can be reused later.
-- `produto_veiculos` is aggregated so the view keeps one row per item.
-- `veiculo_montadora` and `veiculo_modelo` are resolved into brand/model names.
-- `grupo_similar_outros_codigos` is aggregated into a single text field.
-- `veiculo_complemento`, `veiculo_injecao`, `veiculo_motor` and `veiculo_transmissao` are resolved into readable names.
-- the relation tables by model still remain exposed as aggregated codes and names.
-- The view already excludes inactive items and items with `cd_tipo = '07'`.
+- `item_produto.obs_ficha_tecnica` e `item_pesquisa.ficha_tecnica_item` sao limpos de HTML para reuso posterior.
+- `produto_veiculos` e agregado para a camada final manter uma linha por item.
+- `veiculo_montadora` e `veiculo_modelo` sao resolvidos para nomes legiveis de marca e modelo.
+- `grupo_similar_outros_codigos` e agregado em um unico campo textual.
+- `veiculo_complemento`, `veiculo_injecao`, `veiculo_motor` e `veiculo_transmissao` sao resolvidos em nomes legiveis.
+- as tabelas relacionais por modelo continuam expostas como codigos e nomes agregados.
+- a camada final ja exclui itens inativos e itens com `cd_tipo = '07'`.
 
-## Example Search Query
+## Exemplo De Query De Busca
 
-Example for:
-- part: `coxim`
-- model: `ecosport`
-- year: `2008`
+Exemplo para:
+- peca: `coxim`
+- modelo: `ecosport`
+- ano: `2008`
 
 ```sql
 WITH params AS (
@@ -167,45 +164,42 @@ ORDER BY score DESC, v.id_item
 LIMIT 20;
 ```
 
-## Naming
+## Nome Final Esperado
 
-The guide now assumes:
+Este guia assume:
 - schema: `soccol`
-- object name: `item_search_candidates`
+- nome do objeto: `item_search_candidates`
 
-So the expected usage is:
+Entao o uso esperado e:
 
 ```sql
 SELECT * FROM soccol.item_search_candidates LIMIT 10;
 ```
 
-## Important Limitation
+## Limitacao Importante
 
-If you want `pg_trgm` indexes later, a plain `VIEW` is not the best final target.
+Se voce quiser indices com `pg_trgm` depois, uma `VIEW` simples nao e o melhor alvo final.
 
-For performance, the likely progression is:
-1. start with this `VIEW`
-2. validate search quality
-3. if needed, move to:
-   - a `MATERIALIZED VIEW`, or
-   - a dedicated ERP search table refreshed periodically
+Para desempenho, a evolucao mais provavel e:
+1. comecar com essa estrutura de integracao
+2. validar a qualidade da busca
+3. se necessario, evoluir para:
+   - `MATERIALIZED VIEW`, ou
+   - tabela dedicada de busca no ERP com refresh periodico
 
-That is the right place for heavier indexing and trigram search.
+Esse e o lugar certo para indexacao mais pesada e busca trigram.
 
-## Runtime Recommendation
+## Estrutura Criada Pelo Modulo
 
-If the single-view version is too slow in the ERP, use the runtime v2 SQL:
-- [erp_item_search_candidates_runtime_v2.sql](/d:/TCC/docker-agent/docs/assets/sql/erp_item_search_candidates_runtime_v2.sql:1)
-
-It changes the design to:
+O SQL de integracao cria:
 1. `soccol.item_vehicle_model_agg_mv`
 2. `soccol.item_vehicle_agg_mv`
 3. `soccol.item_search_candidates_mv`
-4. `soccol.item_search_candidates` as a thin wrapper view
+4. `soccol.item_search_candidates` como view final fina
 
-This reduces repeated aggregation over `produto_veiculos` and allows indexes on the final search dataset.
+Isso reduz agregacoes repetidas sobre `produto_veiculos` e permite indices sobre o dataset final de busca.
 
-Refresh order:
+Ordem de refresh:
 
 ```sql
 REFRESH MATERIALIZED VIEW soccol.item_vehicle_model_agg_mv;
@@ -213,16 +207,16 @@ REFRESH MATERIALIZED VIEW soccol.item_vehicle_agg_mv;
 REFRESH MATERIALIZED VIEW soccol.item_search_candidates_mv;
 ```
 
-## What Is Still Missing
+## O Que Ainda Falta Definir
 
-This proposal already resolves official brand/model names through:
+Esta proposta ja resolve nomes oficiais de marca e modelo por meio de:
 - `veiculo_montadora`
 - `veiculo_modelo`
 
-What is still missing is only the business decision of how much each new dimension should weigh in ranking:
-- complement
-- injection
+O que ainda falta definir e a decisao de negocio sobre o peso de cada nova dimensao no ranking:
+- complemento
+- injecao
 - motor
-- transmission
+- transmissao
 
-The view now exposes both codes and readable names for these dimensions.
+A camada final ja expoe tanto codigos quanto nomes legiveis para essas dimensoes.

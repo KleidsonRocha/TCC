@@ -1,41 +1,41 @@
-# Operational Commands
+# Comandos Operacionais
 
-Execute the commands below from the project root: `docker-agent/`.
+Execute os comandos abaixo a partir da raiz do projeto: `docker-agent/`.
 
-This guide is the shortest operational path for the current stack:
-- `docker-agent` serves the API
-- `presearch-db` holds the catalog, review queue and fine-tuning dataset
-- `ollama` hosts the inference models
-- `trainer` is used only when you trigger fine-tuning
+Este guia concentra o caminho operacional mais curto para a stack atual:
+- `docker-agent` expoe a API
+- `presearch-db` guarda catalogo, fila de revisao e dataset de fine-tuning
+- `ollama` hospeda os modelos de inferencia
+- `trainer` e usado apenas quando voce dispara fine-tuning
 
-## Start And Stop The Stack
+## Subir E Derrubar A Stack
 
-Start or rebuild the base stack:
+Subir ou rebuildar a stack base:
 
 ```bash
 docker compose up -d --build
 ```
 
-Stop the containers and keep volumes:
+Derrubar os containers e manter volumes:
 
 ```bash
 docker compose down
 ```
 
-Stop the containers and recreate the database and Ollama volumes:
+Derrubar os containers e recriar os volumes do banco e do Ollama:
 
 ```bash
 docker compose down -v
 docker compose up -d --build
 ```
 
-Check container status:
+Ver status dos containers:
 
 ```bash
 docker compose ps
 ```
 
-Follow the main service logs:
+Seguir logs principais:
 
 ```bash
 docker compose logs -f docker-agent
@@ -43,7 +43,7 @@ docker compose logs -f presearch-db
 docker compose logs -f ollama
 ```
 
-## Validate The API
+## Validar A API
 
 Health check:
 
@@ -51,7 +51,7 @@ Health check:
 curl http://localhost:8001/health
 ```
 
-Example `POST /respond`:
+Exemplo de `POST /respond`:
 
 ```powershell
 curl -X POST http://localhost:8001/respond `
@@ -65,31 +65,31 @@ curl -X POST http://localhost:8001/respond `
   }'
 ```
 
-If the API returns `Validador de pesquisa indisponivel no momento.`, check whether the model exists in `ollama`:
+Se a API retornar `Validador de pesquisa indisponivel no momento.`, verifique se o modelo existe no `ollama`:
 
 ```bash
 docker exec ollama ollama list
 docker exec ollama ollama pull qwen2.5:7b
 ```
 
-## Validate The Database
+## Validar O Banco
 
-Open `psql` in the container:
+Abrir `psql` no container:
 
 ```bash
 docker exec -it presearch-db psql -U presearch -d presearch
 ```
 
-Inside `psql`, validate the main tables:
+Dentro do `psql`, validar as tabelas principais:
 
 ```sql
 \d pre_search_review_interaction
-\d pre_search_fine_tuning_dataset
-\d pre_search_fine_tuning_example
+\d pre_search_fine_tuning_dataset_header
+\d pre_search_fine_tuning_dataset_record
 \d pre_search_fine_tuning_run
 ```
 
-Check the latest captured review interactions:
+Ver as ultimas interacoes capturadas:
 
 ```sql
 SELECT
@@ -105,48 +105,76 @@ ORDER BY id DESC
 LIMIT 10;
 ```
 
-## Recreate The Deterministic Catalog
+## Recriar O Catalogo Deterministico
 
-The bootstrap source used by Postgres on a fresh volume is:
+A fonte de bootstrap usada pelo Postgres em um volume novo e:
 - `db/init/pre_search_init.sql`
 - `db/init/csv/`
 
-Recreate the database from the consolidated bootstrap:
+Recriar o banco a partir do bootstrap consolidado:
 
 ```bash
 docker compose down -v
 docker compose up -d --build
 ```
 
-## Run Tests
+## Rodar Testes
 
-Run the full test suite in the container:
+Rodar a suite completa no container:
 
 ```bash
 docker compose run --rm -v d:\TCC\docker-agent:/app docker-agent pytest -q
 ```
 
-Run only business-rule tests:
+Rodar apenas os testes de regra de negocio:
 
 ```bash
 docker compose run --rm -v d:\TCC\docker-agent:/app docker-agent pytest -q tests/test_rules.py
 ```
 
-Run only review-capture flow tests:
+Rodar apenas os testes de captura de revisao:
 
 ```bash
 docker compose run --rm -v d:\TCC\docker-agent:/app docker-agent pytest -q tests/test_process_agent_request_review_capture.py
 ```
 
-## Review Queue
+## Mutation Testing
 
-List pending interactions:
+`mutmut` exige ambiente com `fork`. No contexto deste projeto, a forma mais segura de usar isso em Windows e via container Linux do `docker-agent`.
+
+Listar os perfis curados:
+
+```bash
+docker compose run --rm -v d:\TCC\docker-agent:/app docker-agent python scripts/testing/run_mutation_tests.py --list
+```
+
+Rodar mutacao apenas na fila de revisao:
+
+```bash
+docker compose run --rm -v d:\TCC\docker-agent:/app docker-agent python scripts/testing/run_mutation_tests.py review_queue --clean --results
+```
+
+Rodar o pacote curado inteiro:
+
+```bash
+docker compose run --rm -v d:\TCC\docker-agent:/app docker-agent python scripts/testing/run_mutation_tests.py all_curated --clean --results
+```
+
+Perfis atuais:
+- `review_queue`
+- `export_dataset`
+- `training_cycle`
+- `format_payloads`
+
+## Fila De Revisao
+
+Listar interacoes pendentes:
 
 ```bash
 python scripts/training/review_pre_search_queue.py list --status pending --limit 20
 ```
 
-Review one interaction:
+Revisar uma interacao:
 
 ```bash
 python scripts/training/review_pre_search_queue.py review \
@@ -157,7 +185,7 @@ python scripts/training/review_pre_search_queue.py review \
   --notes "Deveria pedir engine antes de buscar"
 ```
 
-Promote a reviewed interaction to the fine-tuning dataset:
+Promover uma interacao revisada para o dataset de fine-tuning:
 
 ```bash
 python scripts/training/review_pre_search_queue.py promote \
@@ -166,58 +194,58 @@ python scripts/training/review_pre_search_queue.py promote \
   --interaction-id 12
 ```
 
-## Offline Evaluation And Benchmark
+## Avaliacao Offline E Benchmark
 
-Run the MVP evaluation dataset:
+Rodar o dataset MVP de avaliacao:
 
 ```bash
 python scripts/eval/evaluate_pre_search.py
 ```
 
-Run the `LLM_NUM_PREDICT` benchmark:
+Rodar o benchmark de `LLM_NUM_PREDICT`:
 
 ```bash
 python scripts/eval/benchmark_llm_num_predict.py
 ```
 
-Run the latency battery:
+Rodar a bateria de latencia:
 
 ```bash
 python scripts/eval/benchmark_pre_search_latency.py
 ```
 
-## Fine-Tuning Cycle
+## Ciclo De Fine-Tuning
 
-Build the training image:
+Buildar a imagem de treino:
 
 ```bash
 docker compose --profile trainer build trainer
 ```
 
-Validate GPU availability inside the training container:
+Validar a disponibilidade de GPU dentro do container de treino:
 
 ```bash
 docker compose --profile trainer run --rm trainer python -c "import torch; print(torch.cuda.is_available(), torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'no-gpu')"
 ```
 
-Run the full fine-tuning cycle:
+Rodar o ciclo completo de fine-tuning:
 
 ```bash
 python scripts/training/run_pre_search_fine_tuning_cycle.py --promote-if-better --restart-agent
 ```
 
-What this command does:
-- exports the dataset from Postgres
-- runs the `trainer`
-- generates an adapter
-- creates a new model in `ollama`
-- compares candidate vs current model on the golden set
-- updates `LLM_MODEL` in `.env` only if the candidate is better
-- restarts `docker-agent`
+O que esse comando faz:
+- exporta o dataset a partir do Postgres
+- executa o `trainer`
+- gera um adapter
+- cria um novo modelo no `ollama`
+- compara o candidato com o modelo atual no golden set
+- atualiza `LLM_MODEL` no `.env` apenas se o candidato for melhor
+- reinicia o `docker-agent`
 
-## Manual Fine-Tuning Flow
+## Fluxo Manual De Fine-Tuning
 
-Export the fine-tuning dataset:
+Exportar o dataset de fine-tuning:
 
 ```bash
 python scripts/training/export_pre_search_fine_tuning_dataset.py \
@@ -225,7 +253,7 @@ python scripts/training/export_pre_search_fine_tuning_dataset.py \
   --output-dir .tmp/fine_tuning
 ```
 
-Train the adapter manually:
+Treinar o adapter manualmente:
 
 ```bash
 docker compose --profile trainer run --rm trainer \
@@ -236,7 +264,7 @@ docker compose --profile trainer run --rm trainer \
   --output-dir .tmp/trainer_runs/pre-search-qwen2.5-ft-v1
 ```
 
-Package and publish the adapter in `ollama`:
+Empacotar e publicar o adapter no `ollama`:
 
 ```bash
 python scripts/training/package_pre_search_ollama_model.py \
@@ -248,24 +276,12 @@ python scripts/training/package_pre_search_ollama_model.py \
   --create-via-docker
 ```
 
-## Common Recovery Commands
+## Comandos Comuns De Recuperacao
 
-Recreate the whole stack and volumes:
+Recriar a stack inteira e os volumes:
 
 ```bash
 docker compose down -v
 docker compose up -d --build
 docker exec ollama ollama pull qwen2.5:7b
-```
-
-Restart only the API after changing `.env`:
-
-```bash
-docker compose up -d docker-agent
-```
-
-List the models currently available in `ollama`:
-
-```bash
-docker exec ollama ollama list
 ```

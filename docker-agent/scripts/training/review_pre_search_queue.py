@@ -146,7 +146,7 @@ def promote_cases(
     with psycopg.connect(_conninfo(settings), row_factory=dict_row) as conn:
         with conn.cursor() as cur:
             cur.execute(
-                "SELECT id FROM pre_search_fine_tuning_dataset WHERE slug = %s",
+                "SELECT id FROM pre_search_fine_tuning_dataset_header WHERE slug = %s",
                 (dataset_slug,),
             )
             dataset_row = cur.fetchone()
@@ -209,7 +209,7 @@ def promote_cases(
 
                 cur.execute(
                     """
-                    INSERT INTO pre_search_fine_tuning_example (
+                    INSERT INTO pre_search_fine_tuning_dataset_record (
                         dataset_id,
                         example_key,
                         data_split,

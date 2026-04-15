@@ -1,42 +1,229 @@
 # TODO - Prioridades Reais Do Produto (docker-agent)
 
-## Base desta priorizacao
+## Plano operacional - Home office para fine-tuning
 
-Este backlog foi reordenado a partir de:
+Objetivo:
 
-- `docs/assets/reports/real_respond_battery_2026-03-25.json`
-- `docs/assets/reports/product_owner_analysis_real_battery_2026-03-26.md`
+- Viabilizar `1-2` dias de trabalho em home office para executar o treino do modelo em uma maquina com `RTX 5060 16 GB`, preservando os dados curados do banco e garantindo retorno controlado do artefato treinado para o ambiente da empresa.
 
-Criterio de ordenacao:
+Antes do home office:
 
-- primeiro, corrigir o que mais afeta confianca
-- depois, corrigir o que mais afeta fluidez operacional
-- so entao expandir cobertura, treino e automacoes secundarias
+- [ ] Validar que os dados de bootstrap de regras de negocio sobem pelo repositorio e entram na criacao do banco
+  - conferir no `db/init/pre_search_init.sql` a carga de `engine`, `grupo`, `subgrupo`, `brand` e `model`
+  - recriar o banco em ambiente descartavel e validar se essas tabelas ficam populadas sem carga manual adicional
+  - registrar quais dados sao seed do repositorio e quais dados dependem de dump/import posterior
+
+- [ ] Fazer backup das tabelas dinamicas de fine-tuning e revisao
+  - exportar `pre_search_review_interaction`
+  - exportar `pre_search_fine_tuning_dataset_header`
+  - exportar `pre_search_fine_tuning_dataset_record`
+  - exportar `pre_search_fine_tuning_run`
+  - definir e testar o procedimento de restore no banco do PC de casa
+
+- [ ] Validar reproducao minima da stack antes de sair da empresa
+  - garantir que o repositorio atualizado sobe `ollama`, `presearch-db`, `docker-agent` e `trainer`
+  - garantir que o modelo base `qwen2.5:7b` pode ser puxado no `ollama`
+  - garantir que o dataset revisado/exportado esta consistente para treino
+
+- [ ] Preparar acesso remoto entre os dois PCs
+  - criar acesso remoto do PC da empresa para o PC de casa
+  - criar acesso remoto do PC de casa para o PC da empresa
+  - testar acesso a arquivos, banco, logs e artefatos necessarios para contingencia
+
+Em casa:
+
+- [ ] Restaurar o banco e validar a stack no PC com GPU
+  - importar o dump das tabelas dinamicas no banco local
+  - subir os containers do projeto
+  - validar conectividade entre `docker-agent`, `presearch-db`, `ollama` e `trainer`
+
+- [ ] Executar o fine-tuning com `LoRA/QLoRA`
+  - buildar o `trainer`
+  - exportar o dataset de treino se necessario
+  - rodar o treino com base em `Qwen/Qwen2.5-7B-Instruct`
+  - acompanhar consumo de VRAM, tempo de treino e artefatos gerados
+
+- [ ] Validar o artefato treinado antes de trazer de volta
+  - confirmar geracao do diretorio `adapter`
+  - registrar `training_summary.json`
+  - empacotar o modelo no `ollama`, se necessario, para teste local
+  - comparar candidato vs modelo base no benchmark/golden set
+
+- [ ] Preparar retorno do artefato para a empresa
+  - salvar o `adapter` treinado e os arquivos de apoio necessarios
+  - copiar o artefato para um meio de transporte seguro ou sincronizacao controlada
+  - documentar o comando de import/publicacao no PC da empresa
+
+Entregaveis esperados no retorno:
+
+- [ ] Dump/restauracao das tabelas dinamicas validado
+- [ ] Evidencia de que o bootstrap do banco sobe os dados estruturais do dominio
+- [ ] `adapter` do fine-tuning exportado
+- [ ] Resumo de treino e benchmark do candidato
+- [ ] Passo a passo de restauracao/publicacao do modelo no ambiente da empresa
+
+## Fora do topo agora
+
+- [ ] Fine-tuning da LLM
+  - Nao usar treino como solucao primaria para erro de catalogo, ranking ou orquestracao
+
+- [ ] Avaliar classificador auxiliar em portugues para slot filling
+  - Considerar `BERTimbau` ou modelo equivalente apenas como apoio ao extractor deterministico
+  - Usar para classificar campos como `part_query`, `brand`, `model`, `vehicle_year`, `engine`, `side` e `position` quando houver baixa confianca lexical
+  - Nao substituir a LLM principal nem introduzir essa camada antes de estabilizar a `Prioridade 0`
+  - So seguir se a bateria real mostrar ganho claro em extracao/normalizacao que nao compense com regra ou heuristica simples
+
+- [ ] Seed incremental e rotinas de carga
+  - Importante, mas nao antes de corrigir as falhas que ja apareceram na bateria real
+
+- [ ] Benchmarks isolados que nao mudem decisao de produto
+  - Manter como diagnostico, nao como foco principal
 
 ## Prioridade 0 - Parar erros com conviccao
-
-- [ ] Canonizar `part_query` final antes de aplicar regras e antes de montar a busca
-  - Garantir que o valor final sempre caia em uma familia canonica do catalogo
-  - Cobrir casos como `disco de freio` -> `discos de freio`
-  - Cobrir casos como `pstilhas` -> `pastilhas de freio`
-  - Tratar familias nao catalogadas, como `farol`, sem deixar passar direto para `search`
-
-- [ ] Bloquear qualquer `part_code` inventado
-  - Encontrar a origem do caso real `FREIO-2010`
-  - So aceitar `part_code` literal da mensagem, do contexto ou validado pelo extractor
-  - Criar regressao especifica para `pastilha de freio 2010 1.0`
-
-- [ ] Revisar regras de catalogo que geram perguntas sem sentido
-  - Corrigir `filtro de  oleo -> needs_axle`
-  - Corrigir `filtro de ar do motor -> needs_axle`
-  - Corrigir `filtro de combustivel -> needs_side`
-  - Auditar familias similares antes da proxima bateria real
 
 - [ ] Endurecer a liberacao para `search`
   - Recalibrar `min_score_to_search`
   - Permitir threshold por familia, se necessario
   - Impedir que `part_query + vehicle_model` sozinho libere busca em familias ambiguas
   - Garantir que `needs_engine`, `needs_side`, `needs_position`, `needs_axle` e `needs_variant` prevalecam sobre a decisao otimista da LLM
+  - Prompt sugerido para agent:
+
+```text
+Leia obrigatoriamente: AGENTS.md, README.md, docs/DECISIONS.md, docs/TODO.md, docs/guide/pre_search_runtime_flow.md.
+
+Objetivo:
+Endurecer a liberacao para `search` na Prioridade 0.
+
+Escopo:
+- Recalibrar `min_score_to_search`
+- Impedir que `part_query + vehicle_model` sozinho libere `search` em familias ambiguas
+- Garantir que `needs_engine`, `needs_side`, `needs_position`, `needs_axle` e `needs_variant` prevalecam sobre decisao otimista da LLM
+
+Arquivos provaveis:
+- app/core/usecases/process_agent_request.py
+- app/infra/pre_search_validator_llm.py
+- app/infra/pre_search_catalog_pg.py
+- tests/test_rules.py
+- tests/test_process_agent_request_review_capture.py
+- testes adicionais se necessario
+
+Restricoes:
+- Nao usar ML para mascarar erro de regra
+- Nao mudar fine-tuning
+- Nao alterar ERP search ranking nesta tarefa
+
+Entregavel:
+- codigo ajustado
+- regressao automatizada cobrindo os casos criticos
+- resumo objetivo do que foi endurecido e do risco residual
+```
+
+- [ ] Canonizar `part_query` final antes de aplicar regras e antes de montar a busca
+  - Garantir que o valor final sempre caia em uma familia canonica do catalogo
+  - Cobrir casos como `disco de freio` -> `discos de freio`
+  - Cobrir casos como `pstilhas` -> `pastilhas de freio`
+  - Tratar familias nao catalogadas, como `farol`, sem deixar passar direto para `search`
+  - Prompt sugerido para agent:
+
+```text
+Leia obrigatoriamente: AGENTS.md, README.md, docs/DECISIONS.md, docs/TODO.md.
+
+Objetivo:
+Canonizar `part_query` final antes de aplicar regras e antes de montar a busca.
+
+Escopo:
+- Garantir que `part_query` sempre caia em uma familia canonica do catalogo
+- Cobrir casos como `disco de freio` -> `discos de freio`
+- Cobrir casos como `pstilhas` -> `pastilhas de freio`
+- Tratar familias nao catalogadas, como `farol`, sem liberar `search` indevidamente
+
+Arquivos provaveis:
+- app/infra/pre_search_catalog_pg.py
+- app/core/usecases/process_agent_request.py
+- db/init/pre_search_init.sql se houver ajuste de alias/regra
+- tests/test_rules.py
+- testes de fluxo relacionados
+
+Restricoes:
+- Preservar a arquitetura hibrida
+- Nao introduzir nova camada de ML
+- Se mudar bootstrap, atualizar testes/docs impactados
+
+Entregavel:
+- canonizacao consistente no runtime
+- testes de regressao para typos e sinonimos criticos
+- nota curta sobre os casos cobertos
+```
+
+- [ ] Bloquear qualquer `part_code` inventado
+  - Encontrar a origem do caso real `FREIO-2010`
+  - So aceitar `part_code` literal da mensagem, do contexto ou validado pelo extractor
+  - Criar regressao especifica para `pastilha de freio 2010 1.0`
+  - Prompt sugerido para agent:
+
+```text
+Leia obrigatoriamente: AGENTS.md, README.md, docs/TODO.md.
+
+Objetivo:
+Bloquear qualquer `part_code` inventado.
+
+Escopo:
+- Encontrar a origem do caso real `FREIO-2010`
+- Aceitar `part_code` apenas quando for literal da mensagem, do contexto ou validado pelo extractor
+- Criar regressao especifica para `pastilha de freio 2010 1.0`
+
+Arquivos provaveis:
+- app/core/usecases/process_agent_request.py
+- app/infra/pre_search_validator_llm.py
+- app/infra/pre_search_fine_tuning_format.py se houver reflexo no payload
+- tests/test_rules.py
+- tests/test_respond.py
+- testes adicionais necessarios
+
+Restricoes:
+- Nao relaxar validacao para "fazer passar"
+- Nao mexer em ranking ERP nesta tarefa
+
+Entregavel:
+- bloqueio defensivo de `part_code` inventado
+- teste cobrindo o caso real e variacoes proximas
+- explicacao objetiva da origem corrigida
+```
+
+- [ ] Revisar regras de catalogo que geram perguntas sem sentido
+  - Corrigir `filtro de  oleo -> needs_axle`
+  - Corrigir `filtro de ar do motor -> needs_axle`
+  - Corrigir `filtro de combustivel -> needs_side`
+  - Auditar familias similares antes da proxima bateria real
+  - Prompt sugerido para agent:
+
+```text
+Leia obrigatoriamente: AGENTS.md, README.md, docs/TODO.md, db/init/pre_search_init.sql.
+
+Objetivo:
+Revisar regras de catalogo que geram perguntas sem sentido.
+
+Escopo:
+- Corrigir `filtro de oleo -> needs_axle`
+- Corrigir `filtro de ar do motor -> needs_axle`
+- Corrigir `filtro de combustivel -> needs_side`
+- Auditar familias similares antes da proxima bateria real
+
+Arquivos provaveis:
+- db/init/pre_search_init.sql
+- possiveis CSVs em db/init/csv/
+- testes de regra/catalogo
+
+Restricoes:
+- Ajustar fonte de verdade no bootstrap
+- Nao criar seed paralelo em docs
+- Atualizar testes se naming/contrato mudar
+
+Entregavel:
+- regras corrigidas no bootstrap consolidado
+- testes cobrindo filtros e familias similares
+- lista curta do que foi auditado alem dos tres casos obrigatorios
+```
 
 ## Prioridade 1 - Trazer a latencia para nivel operacional
 
@@ -54,12 +241,41 @@ Criterio de ordenacao:
   - GPU no Ollama
   - ajustes de `LLM_KEEP_ALIVE`
   - revisao de prompt somente se trouxer ganho real de tempo ou qualidade
+  - Prompt sugerido para agent:
+
+```text
+Leia obrigatoriamente: AGENTS.md, README.md, docs/TODO.md.
+
+Objetivo:
+Prioridade 1 - trazer a latencia para nivel operacional.
+
+Escopo:
+- Criar caminho deterministico para casos obvios
+- Medir latencia por etapa
+- So depois reavaliar infraestrutura
+
+Arquivos provaveis:
+- app/core/usecases/process_agent_request.py
+- app/infra/pre_search_validator_llm.py
+- scripts/eval/benchmark_pre_search_latency.py
+- testes de fluxo e benchmark
+
+Restricoes:
+- Nao quebrar comportamento funcional
+- Priorizar bypass seguro para casos obvios
+- Nao mexer em fine-tuning
+
+Entregavel:
+- bypass deterministico seguro
+- medicao antes/depois
+- regressao automatizada dos casos otimizados
+```
 
 ## Prioridade 2 - Fazer a conversa ficar coerente ate o fim
 
 - [ ] Corrigir follow-up com motor textual
   - Aceitar `zetec rocam`, `duratec`, `sigma` e equivalentes textuais como `engine`
-  - Revalidar explicitamente o fluxo `coxim amortecedor ecosport 2008 -> zetec rocam`
+  - Revalidar explicitamente o fluxo `co  xim amortecedor ecosport 2008 -> zetec rocam`
 
 - [ ] Melhorar a resposta de `no_match`
   - Usar `conversation_state` para dizer o que realmente falta ou conflitou
@@ -76,6 +292,37 @@ Criterio de ordenacao:
   - `position` deve significar `dianteiro/traseiro`
   - `axle` so deve ser usado quando fizer sentido no dominio
   - Manter perguntas curtas, diretas e especificas
+  - Prompt sugerido para agent:
+
+```text
+Leia obrigatoriamente: AGENTS.md, README.md, docs/TODO.md.
+
+Objetivo:
+Prioridade 2 - fazer a conversa ficar coerente ate o fim.
+
+Escopo:
+- Corrigir follow-up com motor textual (`zetec rocam`, `duratec`, `sigma`)
+- Melhorar resposta de `no_match`
+- Criar desambiguacao real
+- Revisar consistencia dos prompts de `side`, `position` e `axle`
+
+Arquivos provaveis:
+- app/core/usecases/process_agent_request.py
+- app/infra/pre_search_validator_llm.py
+- app/infra/pre_search_catalog_pg.py
+- tests/test_respond.py
+- tests/test_rules.py
+
+Restricoes:
+- Nao introduzir camada nova de ML
+- Preservar coerencia multi-turno
+- Transformar erros reais em regressao quando possivel
+
+Entregavel:
+- follow-up coerente
+- `no_match` menos repetitivo
+- testes cobrindo fluxo conversacional real
+```
 
 ## Prioridade 3 - Melhorar a qualidade da busca
 
@@ -92,6 +339,36 @@ Criterio de ordenacao:
 - [ ] Expandir a pre-validacao lexical com seguranca
   - Melhorar cobertura de typos e abreviacoes sem aumentar falso positivo
   - Priorizar `part_query`, `vehicle_model` e motor textual
+  - Prompt sugerido para agent:
+
+```text
+Leia obrigatoriamente: AGENTS.md, README.md, docs/TODO.md, docs/guide/erp_search_integration.md.
+
+Objetivo:
+Prioridade 3 - melhorar a qualidade da busca.
+
+Escopo:
+- Refinar ranking do ERP
+- Corrigir normalizacao de texto e encoding
+- Expandir pre-validacao lexical com seguranca
+
+Arquivos provaveis:
+- app/infra/erp_search_tools_pg.py
+- app/infra/pre_search_catalog_pg.py
+- docs/assets/sql/erp_search_integration_candidates_runtime.sql se houver reflexo documental
+- tests/test_erp_search_tools_pg.py
+- tests/test_rules.py
+
+Restricoes:
+- Nao mover SQL de integracao ERP para db/init/
+- Nao piorar ruido de correlatos
+- Manter foco em precisao, nao volume
+
+Entregavel:
+- ranking mais aderente
+- strings/titulos sem encoding quebrado
+- testes cobrindo ruido e aplicacao exata
+```
 
 ## Prioridade 4 - Fechar o ciclo de qualidade com evidencias reais
 
@@ -114,26 +391,32 @@ Criterio de ordenacao:
   - manter bateria real como evidencia principal
   - manter relatorio consolidado como leitura executiva
   - manter este backlog alinhado com os achados reais
+  - Prompt sugerido para agent:
 
-## Fora do topo agora
+```text
+Leia obrigatoriamente: AGENTS.md, README.md, docs/TODO.md, scripts/README.md.
 
-- [ ] Fine-tuning da LLM
-  - Nao usar treino como solucao primaria para erro de catalogo, ranking ou orquestracao
+Objetivo:
+Prioridade 4 - fechar o ciclo de qualidade com evidencias reais.
 
-- [ ] Seed incremental e rotinas de carga
-  - Importante, mas nao antes de corrigir as falhas que ja apareceram na bateria real
+Escopo:
+- Reexecutar a bateria real apos cada bloco critico
+- Transformar erros reais em regressao automatizada
+- Consolidar artefatos finais de avaliacao
 
-- [ ] Benchmarks isolados que nao mudem decisao de produto
-  - Manter como diagnostico, nao como foco principal
+Arquivos provaveis:
+- scripts/eval/run_real_respond_battery.py
+- scripts/eval/generate_eval_report.py
+- tests/
+- docs/assets/reports/
+- docs/PROGRESS.md se necessario
 
-## Criterio de conclusao desta fase
+Restricoes:
+- Nao criar relatorio duplicado sem necessidade
+- Evidencia principal deve continuar sendo bateria real + regressao automatizada
 
-- [ ] Nenhuma pergunta absurda em familias comuns de filtro, farol, freio, radiador e bandeja
-- [ ] `part_query` sempre canonico antes de aplicar regras
-- [ ] Nenhum `part_code` inventado na bateria real
-- [ ] Follow-up textual de motor funcionando
-- [ ] `show_items` acompanhado de refinamento util quando necessario
-- [ ] `no_match` contextual e sem regressao de contexto
-- [ ] Ranking aceitavel nos casos reais priorizados
-- [ ] Latencia `p50 <= 15s`
-- [ ] Latencia `p95 <= 25s`
+Entregavel:
+- regressao dos casos reais listados no TODO
+- artefatos de avaliacao atualizados
+- resumo objetivo do antes/depois
+```

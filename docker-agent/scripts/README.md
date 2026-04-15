@@ -6,6 +6,8 @@ Este diretorio concentra automacoes auxiliares. O runtime principal continua em 
 
 - `eval/`
   Avaliacao offline, bateria real e diagnosticos auxiliares.
+- `testing/`
+  Ferramentas de suporte a `pytest` e mutation testing curado com `mutmut`.
 - `training/`
   Revisao, exportacao de dataset, empacotamento de modelo e ciclo de treino.
 
@@ -66,6 +68,11 @@ Os arquivos abaixo permanecem como utilitarios pontuais e nao devem ser tratados
   Cria `Modelfile` e publica modelo no Ollama.
 - `run_pre_search_fine_tuning_cycle.py`
   Orquestra exportacao, treino, benchmark e promocao.
+
+## `testing/`
+
+- `run_mutation_tests.py`
+  Executa perfis curados de mutation testing nos modulos mais sensiveis sem tentar mutar o projeto inteiro de uma vez.
 
 ## Leitura
 

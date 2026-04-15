@@ -5,6 +5,7 @@ __pycache__/
 .pytest_cache/
 .coverage
 htmlcov/
+mutants/
 
 .tmp/*
 !.tmp/.gitkeep
@@ -14,6 +15,7 @@ docs/assets/datasets/*_candidates_auto.json
 .venv/
 .mypy_cache/
 .ruff_cache/
+.tmp
 
 Thumbs.db
 .DS_Store

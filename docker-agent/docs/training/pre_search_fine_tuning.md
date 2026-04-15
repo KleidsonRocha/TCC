@@ -13,8 +13,8 @@ O fine-tuning aqui serve para adaptar a LLM ao dominio de autopecas, com foco em
 O Postgres nao guarda "o modelo treinado". Ele guarda o **dataset rotulado** que sera usado no treino.
 
 Tabelas:
-- `pre_search_fine_tuning_dataset`: cabecalho do dataset
-- `pre_search_fine_tuning_example`: exemplos rotulados de treino/validacao/teste
+- `pre_search_fine_tuning_dataset_header`: cabecalho do dataset
+- `pre_search_fine_tuning_dataset_record`: registros rotulados de treino/validacao/teste
 - `pre_search_fine_tuning_run`: historico de exports e runs de treinamento
 - `pre_search_review_interaction`: captura de conversas reais para revisao
 
@@ -314,21 +314,3 @@ python scripts/training/run_pre_search_fine_tuning_cycle.py \
   --promote-if-better \
   --restart-agent
 ```
-
-## Recomendacao pratica para o TCC
-
-Para sustentar bem a proposta academica:
-
-1. use o dataset seed como baseline
-2. adicione exemplos reais revisados
-3. separe `train`, `validation` e `test`
-4. compare:
-   - modelo base
-   - modelo base + few-shot
-   - modelo fine-tuned
-5. meca:
-   - acuracia de `decision`
-   - acuracia de `missing_fields`
-   - taxa de `part_code` hallucinado
-   - taxa de `handoff` indevido
-   - latencia

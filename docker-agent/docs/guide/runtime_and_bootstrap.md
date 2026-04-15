@@ -32,7 +32,6 @@ Os dados de bootstrap ficam em:
 Uso pratico:
 - `db/init/csv/` contem os seeds reais consumidos pelo banco
 - `pre_search_part_alias.csv` concentra cobertura lexical curada
-- `docs/assets/db_bootstrap_csv/` guarda apenas templates e exemplos de formato
 - qualquer mudanca estrutural de catalogo deve ser refletida no SQL consolidado e nos CSVs de bootstrap
 - para reaplicar o catalogo, o fluxo padrao do projeto e recriar o volume do Postgres
 

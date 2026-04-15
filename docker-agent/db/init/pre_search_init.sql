@@ -994,7 +994,7 @@ SELECT pre_search_load_catalog_from_csv();
 DROP FUNCTION pre_search_load_catalog_from_csv(TEXT);
 DROP FUNCTION pre_search_normalize_text(TEXT);
 
-CREATE TABLE IF NOT EXISTS pre_search_fine_tuning_dataset (
+CREATE TABLE IF NOT EXISTS pre_search_fine_tuning_dataset_header (
     id BIGSERIAL PRIMARY KEY,
     slug TEXT NOT NULL UNIQUE,
     name TEXT NOT NULL,
@@ -1009,9 +1009,9 @@ CREATE TABLE IF NOT EXISTS pre_search_fine_tuning_dataset (
     updated_by TEXT NOT NULL DEFAULT 'seed'
 );
 
-CREATE TABLE IF NOT EXISTS pre_search_fine_tuning_example (
+CREATE TABLE IF NOT EXISTS pre_search_fine_tuning_dataset_record (
     id BIGSERIAL PRIMARY KEY,
-    dataset_id BIGINT NOT NULL REFERENCES pre_search_fine_tuning_dataset(id) ON DELETE CASCADE,
+    dataset_id BIGINT NOT NULL REFERENCES pre_search_fine_tuning_dataset_header(id) ON DELETE CASCADE,
     example_key TEXT NOT NULL,
     data_split TEXT NOT NULL CHECK (data_split IN ('train', 'validation', 'test')),
     input_message_text TEXT NOT NULL,
@@ -1043,7 +1043,7 @@ CREATE TABLE IF NOT EXISTS pre_search_fine_tuning_example (
 
 CREATE TABLE IF NOT EXISTS pre_search_fine_tuning_run (
     id BIGSERIAL PRIMARY KEY,
-    dataset_id BIGINT NOT NULL REFERENCES pre_search_fine_tuning_dataset(id) ON DELETE CASCADE,
+    dataset_id BIGINT NOT NULL REFERENCES pre_search_fine_tuning_dataset_header(id) ON DELETE CASCADE,
     provider TEXT NOT NULL,
     base_model TEXT NOT NULL,
     target_model_name TEXT NOT NULL,
@@ -1059,14 +1059,14 @@ CREATE TABLE IF NOT EXISTS pre_search_fine_tuning_run (
     updated_by TEXT NOT NULL DEFAULT 'seed'
 );
 
-CREATE INDEX IF NOT EXISTS ix_pre_search_ft_example_dataset_split
-    ON pre_search_fine_tuning_example(dataset_id, data_split)
+CREATE INDEX IF NOT EXISTS ix_pre_search_ft_dataset_record_dataset_split
+    ON pre_search_fine_tuning_dataset_record(dataset_id, data_split)
     WHERE is_active AND include_in_fine_tune;
 
 CREATE INDEX IF NOT EXISTS ix_pre_search_ft_run_dataset
     ON pre_search_fine_tuning_run(dataset_id, status);
 
-CREATE OR REPLACE VIEW pre_search_fine_tuning_example_export AS
+CREATE OR REPLACE VIEW pre_search_fine_tuning_dataset_record_export AS
 SELECT
     ds.slug AS dataset_slug,
     ds.name AS dataset_name,
@@ -1088,14 +1088,14 @@ SELECT
     ex.part_code_source,
     ex.tags,
     ex.notes
-FROM pre_search_fine_tuning_dataset ds
-JOIN pre_search_fine_tuning_example ex
+FROM pre_search_fine_tuning_dataset_header ds
+JOIN pre_search_fine_tuning_dataset_record ex
   ON ex.dataset_id = ds.id
 WHERE ds.is_active
   AND ex.is_active
   AND ex.include_in_fine_tune;
 
-INSERT INTO pre_search_fine_tuning_dataset (
+INSERT INTO pre_search_fine_tuning_dataset_header (
     slug,
     name,
     description,
@@ -1118,7 +1118,7 @@ SET name = EXCLUDED.name,
 
 WITH dataset_target AS (
     SELECT id
-    FROM pre_search_fine_tuning_dataset
+    FROM pre_search_fine_tuning_dataset_header
     WHERE slug = 'pre-search-ft-v1'
 ),
 seed_rows AS (
@@ -1322,7 +1322,7 @@ seed_rows AS (
         notes
     )
 )
-INSERT INTO pre_search_fine_tuning_example (
+INSERT INTO pre_search_fine_tuning_dataset_record (
     dataset_id,
     example_key,
     data_split,

@@ -1,5 +1,9 @@
--- ERP candidate search runtime v2
--- Use this when the direct single-view version is functionally correct but too slow.
+-- ERP search integration module - candidate search dataset for runtime
+-- This SQL must be applied in the ERP database, not in the local docker-agent catalog database.
+-- It creates the integration layer consumed by the runtime through soccol.item_search_candidates.
+--
+-- Use this runtime-oriented version when a direct single-view implementation is functionally correct
+-- but too slow for operational use.
 --
 -- Strategy:
 -- 1. Pre-aggregate vehicle dimensions by model

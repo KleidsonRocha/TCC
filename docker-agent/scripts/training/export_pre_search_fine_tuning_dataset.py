@@ -76,7 +76,7 @@ def _load_dataset(cur: psycopg.Cursor[Any], dataset_slug: str) -> dict[str, Any]
             output_schema_version,
             base_model_hint,
             system_prompt_override
-        FROM pre_search_fine_tuning_dataset
+        FROM pre_search_fine_tuning_dataset_header
         WHERE slug = %s
           AND is_active
         """,
@@ -104,7 +104,7 @@ def _load_examples(cur: psycopg.Cursor[Any], dataset_slug: str) -> list[dict[str
             part_code_source,
             tags,
             notes
-        FROM pre_search_fine_tuning_example_export
+        FROM pre_search_fine_tuning_dataset_record_export
         WHERE dataset_slug = %s
         ORDER BY
             CASE data_split

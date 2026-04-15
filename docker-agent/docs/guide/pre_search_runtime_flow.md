@@ -8,7 +8,9 @@ Este documento descreve o fluxo que transforma texto livre em:
 - pesquisa automatica no ERP
 - handoff
 
-O foco aqui e o caminho operacional atual, incluindo o fallback fuzzy de `part_query`.
+O foco aqui e o detalhamento operacional do caminho atual, incluindo o fallback fuzzy de `part_query`.
+
+O `README.md` raiz do projeto contem a versao resumida desse fluxo.
 
 ## Fluxo Geral
 
