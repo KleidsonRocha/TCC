@@ -9,17 +9,7 @@ from psycopg.rows import dict_row
 from psycopg.types.json import Jsonb
 
 from app.config import Settings
-
-
-def _conninfo(settings: Settings) -> str:
-    return (
-        f"host={settings.catalog_db_host} "
-        f"port={settings.catalog_db_port} "
-        f"dbname={settings.catalog_db_name} "
-        f"user={settings.catalog_db_user} "
-        f"password={settings.catalog_db_password} "
-        f"connect_timeout={settings.catalog_db_connect_timeout_s}"
-    )
+from app.infra.postgres_conninfo import build_catalog_conninfo
 
 
 def _json_value(raw: str | None, *, default: Any) -> Any:
@@ -34,7 +24,7 @@ def _normalize_example_key(raw: str) -> str:
 
 
 def list_queue(*, settings: Settings, status: str, limit: int) -> None:
-    with psycopg.connect(_conninfo(settings), row_factory=dict_row) as conn:
+    with psycopg.connect(build_catalog_conninfo(settings), row_factory=dict_row) as conn:
         with conn.cursor() as cur:
             cur.execute(
                 """
@@ -92,7 +82,7 @@ def review_case(
     if decision == "ask" and (not question_key or not question_prompt):
         raise ValueError("Para decision=ask informe --question-key e --question-prompt.")
 
-    with psycopg.connect(_conninfo(settings), row_factory=dict_row) as conn:
+    with psycopg.connect(build_catalog_conninfo(settings), row_factory=dict_row) as conn:
         with conn.cursor() as cur:
             cur.execute(
                 """
@@ -143,7 +133,7 @@ def promote_cases(
     reviewed_by: str | None,
 ) -> None:
     promoted: list[dict[str, Any]] = []
-    with psycopg.connect(_conninfo(settings), row_factory=dict_row) as conn:
+    with psycopg.connect(build_catalog_conninfo(settings), row_factory=dict_row) as conn:
         with conn.cursor() as cur:
             cur.execute(
                 "SELECT id FROM pre_search_fine_tuning_dataset_header WHERE slug = %s",

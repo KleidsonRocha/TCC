@@ -258,6 +258,62 @@ Ainda pendente de ajuste.
 
 Em alguns casos, o agent perguntou algo generico ou pouco util, mesmo quando ja havia informacao suficiente para escolher um slot mais relevante.
 
+## 12. A liberacao para `search` continuava permissiva em familias ambiguas
+
+### Problema
+
+Mesmo depois da integracao completa do pre-search, ainda havia casos em que o backend liberava `search` cedo demais.
+
+Exemplos observados na bateria real:
+- `part_query + vehicle_model` liberando busca sem discriminador suficiente
+- familias como `bandeja`, `pastilhas de freio` e `discos de freio` seguindo para busca sem `side` ou `position`
+- filtros especificos herdando regras stale de `side`, `position` ou `axle`
+
+### Causa identificada
+
+A decisao final ainda dependia demais da leitura otimista da LLM e de um threshold global de score.
+
+Na pratica:
+- o score agregado de `part_query` + `vehicle_model` ja ficava alto demais
+- o runtime aceitava regras de catalogo antigas sem override defensivo
+- o follow-up podia promover `ask -> search` cedo demais
+
+### Solucao aplicada
+
+O gate de `search` foi endurecido no backend do `docker-agent`.
+
+Principais ajustes:
+- a decisao final de `search` passou a revalidar campos obrigatorios por familia
+- `part_query + vehicle_model` sozinho deixou de liberar busca em familias ambiguas
+- `bandeja/bandejas` passaram a exigir `side`
+- `pastilha(s) de freio` e `disco(s) de freio` passaram a exigir `position`
+- filtros especificos passaram a ignorar regras stale de `side`, `position` e `axle`
+- o runtime passou a suportar threshold de score por familia, alem do minimo global
+
+Arquivos centrais da mudanca:
+- `docker-agent/app/infra/pre_search_validator_llm.py`
+- `docker-agent/app/core/domain/pre_search_catalog.py`
+- `docker-agent/tests/test_rules.py`
+
+### Evidencias
+
+- suite automatizada com `111 passed`
+- bateria real rerrodada em `docker-agent/docs/assets/reports/real_respond_battery_2026-03-25.md`
+
+### Resultado observado
+
+Os efeitos mais claros na bateria real foram:
+- mais casos pedindo o discriminador correto antes da busca
+- reducao de liberacao precoce de `search`
+- reducao de `handoff` indevido em cenarios com typo e follow-up
+
+### Pendencias que permaneceram fora desse ajuste
+
+Este bloco nao resolveu:
+- `part_code` inventado, como `FREIO-2010`
+- follow-up de motor textual, como `zetec rocam`
+- problema de latencia operacional da LLM
+
 Exemplo observado:
 - quando a peca ja esta clara, a proxima pergunta mais util pode ser `vehicle_model`
 - porem a pergunta devolvida pode ser vaga ou desalinhada

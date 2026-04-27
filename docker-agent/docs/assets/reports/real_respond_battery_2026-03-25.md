@@ -11,24 +11,24 @@ Relatorio gerado por chamadas reais ao `POST /respond`, sem `StubPreSearchValida
 ## Resumo
 
 - respostas HTTP 200: `48`
-- respostas com `request_info`: `18`
-- respostas com `show_items`: `23`
-- respostas com `handoff.required=true`: `7`
+- respostas com `request_info`: `27`
+- respostas com `show_items`: `17`
+- respostas com `handoff.required=true`: `4`
 - erros HTTP: `2`
-- latencia minima observada: `3.26 ms`
-- latencia maxima observada: `93893.93 ms`
-- latencia media observada: `39398.82 ms`
+- latencia minima observada: `3.46 ms`
+- latencia maxima observada: `67884.72 ms`
+- latencia media observada: `39279.70 ms`
 
 ## Resumo Por Categoria
 
-- `complete`: casos=`5`, http_200=`5`, request_info=`0`, show_items=`5`, handoff=`0`, erros=`0`
-- `complete_alias`: casos=`7`, http_200=`7`, request_info=`0`, show_items=`7`, handoff=`0`, erros=`0`
-- `follow_up`: casos=`14`, http_200=`14`, request_info=`3`, show_items=`6`, handoff=`5`, erros=`0`
+- `complete`: casos=`5`, http_200=`5`, request_info=`2`, show_items=`3`, handoff=`0`, erros=`0`
+- `complete_alias`: casos=`7`, http_200=`7`, request_info=`2`, show_items=`5`, handoff=`0`, erros=`0`
+- `follow_up`: casos=`14`, http_200=`14`, request_info=`6`, show_items=`4`, handoff=`4`, erros=`0`
 - `follow_up_text_engine`: casos=`1`, http_200=`1`, request_info=`1`, show_items=`0`, handoff=`0`, erros=`0`
-- `partial`: casos=`13`, http_200=`13`, request_info=`11`, show_items=`2`, handoff=`0`, erros=`0`
+- `partial`: casos=`13`, http_200=`13`, request_info=`10`, show_items=`3`, handoff=`0`, erros=`0`
 - `partial_generic`: casos=`2`, http_200=`2`, request_info=`2`, show_items=`0`, handoff=`0`, erros=`0`
-- `typo_complete`: casos=`4`, http_200=`4`, request_info=`0`, show_items=`3`, handoff=`1`, erros=`0`
-- `typo_partial`: casos=`2`, http_200=`2`, request_info=`1`, show_items=`0`, handoff=`1`, erros=`0`
+- `typo_complete`: casos=`4`, http_200=`4`, request_info=`2`, show_items=`2`, handoff=`0`, erros=`0`
+- `typo_partial`: casos=`2`, http_200=`2`, request_info=`2`, show_items=`0`, handoff=`0`, erros=`0`
 - `validation_error`: casos=`2`, http_200=`0`, request_info=`0`, show_items=`0`, handoff=`0`, erros=`2`
 
 ## Casos
@@ -39,11 +39,11 @@ Relatorio gerado por chamadas reais ao `POST /respond`, sem `StubPreSearchValida
 - `conversation_id`: `conv-radiador-gol-direct-001`
 - pergunta: `radiador gol 2010 1.0`
 - status HTTP: `200`
-- latencia total observada: `93893.93 ms`
+- latencia total observada: `67884.72 ms`
 - resposta: `Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca.`
 - ferramentas usadas: `['pre_search_validator', 'search_parts']`
 - handoff: `False`
-- actions: `[{'type': 'show_items', 'items': [{'item_id': 'RV-12528', 'title': 'RADIADOR COM AR CONDICIONADO VW NOVO GOL/VOYAGE 08/ - GOL 1.0 12V - SAVEIRO 10/ - FOX/ 1.0/1.6 06/', 'score': 0.64}, {'item_id': 'IR48108', 'title': 'RADIADOR SEM AR CONDICIONADO VW NOVO GOL/VOYAGE 08/ - NOVA SAVEIRO 10/ - FOX/POLO 1.0/1.6 06/ - A/M', 'score': 0.64}, {'item_id': 'IR48109', 'title': 'RADIADOR COM AR CONDICIONADO VW NOVO GOL/VOYAGE 08/ - NOVA SAVEIRO 10/ - FOX/POLO 1.0/1.6 06/ - F.T', 'score': 0.64}, {'item_id': 'RV-12527', 'title': 'RADIADOR SEM AR CONDICIONADO VW NOVO GOL/VOYAGE 08/ - NOVA SAVEIRO 10/ - FOX/POLO 1.0/1.6 06/ - A/M', 'score': 0.64}, {'item_id': 'TRC0017', 'title': 'RADIADOR/RESFRIADOR DE ÓLEO MOTOR VW TIGUAN/UP!/POLO/VIRTUS/GOLF/JETTA MSI/MPI/TSI/TSFI 1.0/1.4/1.6', 'score': 0.64}, {'item_id': 'KT-40023', 'title': 'KIT COXIM RADIADOR VW PASSAT/GOL/VOYAGE GRANDE', 'score': 0.56}, {'item_id': 'MF-11', 'title': 'TAMPA RADIADOR VW PASSAT/GOL/VOYAGE/PARATI /86', 'score': 0.56}, {'item_id': 'KT-40028', 'title': 'KIT COXIM RADIADOR VW PASSAT/GOL/VOYAGE PEQUENO', 'score': 0.56}, {'item_id': '20434', 'title': 'MANGUEIRA VW GOL 1.0 II 95/96 - SUPERIOR RADIADOR', 'score': 0.56}, {'item_id': '20403', 'title': 'MANGUEIRA VW GOL/PARATI AP 95/ - INFERIOR RADIADOR', 'score': 0.56}]}]`
+- actions: `[{'type': 'show_items', 'items': [{'item_id': 'RV-12528', 'title': 'RADIADOR COM AR CONDICIONADO VW NOVO GOL/VOYAGE 08/ - GOL 1.0 12V - SAVEIRO 10/ - FOX/ 1.0/1.6 06/', 'score': 0.64}, {'item_id': 'IR48108', 'title': 'RADIADOR SEM AR CONDICIONADO VW NOVO GOL/VOYAGE 08/ - NOVA SAVEIRO 10/ - FOX/POLO 1.0/1.6 06/ - A/M', 'score': 0.64}, {'item_id': 'IR48109', 'title': 'RADIADOR COM AR CONDICIONADO VW NOVO GOL/VOYAGE 08/ - NOVA SAVEIRO 10/ - FOX/POLO 1.0/1.6 06/ - F.T', 'score': 0.64}, {'item_id': 'RV-12527', 'title': 'RADIADOR SEM AR CONDICIONADO VW NOVO GOL/VOYAGE 08/ - NOVA SAVEIRO 10/ - FOX/POLO 1.0/1.6 06/ - A/M', 'score': 0.64}, {'item_id': 'TRC0017', 'title': 'RADIADOR/RESFRIADOR DE ÓLEO MOTOR VW TIGUAN/UP!/POLO/VIRTUS/GOLF/JETTA MSI/MPI/TSI/TSFI 1.0/1.4/1.6', 'score': 0.64}, {'item_id': 'KT-40023', 'title': 'KIT COXIM RADIADOR VW PASSAT/GOL/VOYAGE GRANDE', 'score': 0.56}, {'item_id': 'KT-40028', 'title': 'KIT COXIM RADIADOR VW PASSAT/GOL/VOYAGE PEQUENO', 'score': 0.56}, {'item_id': '20434', 'title': 'MANGUEIRA VW GOL 1.0 II 95/96 - SUPERIOR RADIADOR', 'score': 0.56}, {'item_id': '20403', 'title': 'MANGUEIRA VW GOL/PARATI AP 95/ - INFERIOR RADIADOR', 'score': 0.56}, {'item_id': '20405', 'title': 'MANGUEIRA VW GOL/PARATI AP 95/ - SUPERIOR RADIADOR', 'score': 0.56}]}]`
 - criteria em `conversation_state`: `{'part_query': 'radiador', 'part_code': None, 'vehicle_brand': None, 'vehicle_model': 'Gol', 'vehicle_year': 2010, 'engine': '1.0', 'side': None, 'position': None, 'axle': None, 'variant': None, 'quantity': 1}`
 - top items:
   - `RV-12528` | `RADIADOR COM AR CONDICIONADO VW NOVO GOL/VOYAGE 08/ - GOL 1.0 12V - SAVEIRO 10/ - FOX/ 1.0/1.6 06/` | `score=0.64`
@@ -58,11 +58,11 @@ Relatorio gerado por chamadas reais ao `POST /respond`, sem `StubPreSearchValida
 - `conversation_id`: `conv-radiador-ecosport-direct-001`
 - pergunta: `radiador ecosport 2008 1.6`
 - status HTTP: `200`
-- latencia total observada: `35429.19 ms`
+- latencia total observada: `33998.06 ms`
 - resposta: `Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca.`
 - ferramentas usadas: `['pre_search_validator', 'search_parts']`
 - handoff: `False`
-- actions: `[{'type': 'show_items', 'items': [{'item_id': 'IR48524', 'title': 'RADIADOR FORD NOVO FIESTA 1.0 SUPERCHARGER - 1.6 03/10 - ECOSPORT 1.0/1.6 8V - 2.0 16V 03/10  TODOS', 'score': 0.64}, {'item_id': 'RV-12733', 'title': 'RADIADOR FORD NOVO FIESTA 1.0 SUPERCHARGER - 1.6 03/10 - ECOSPORT 1.0/1.6 8V - 2.0 16V 03/10  TODOS', 'score': 0.64}, {'item_id': 'RV-12733*A', 'title': 'RADIADOR FORD NOVO FIESTA 1.0 SUPERCHARGER - 1.6 03/10 - ECOSPORT 1.0/1.6 8V - 2.0 16V 03/10  TODDOS', 'score': 0.64}, {'item_id': 'JAM-7555', 'title': 'MANGUEIRA SUPERIOR DO RADIADOR FORD ECOSPORT 2.0', 'score': 0.56}, {'item_id': 'JAM-7553', 'title': 'MANGUEIRA RADIADOR FORD ECOSPORT 1.6 2003/ - SUPERIOR', 'score': 0.56}, {'item_id': 'JAM-7554', 'title': 'MANGUEIRA RADIADOR FORD ECOSPORT 1.6 2003/ - INFERIOR', 'score': 0.56}, {'item_id': 'JAM-7556', 'title': 'MANGUEIRA RADIADOR FORD ECOSPORT 2.0 2004/ - INFERIOR', 'score': 0.56}, {'item_id': 'G-1114', 'title': 'RESERVATÓRIO ÁGUA DO RADIADOR 2 SAÍDAS FORD NOVO FIESTA/ECOSPORT 2002/', 'score': 0.56}, {'item_id': 'MF-12462', 'title': 'RESERVATÓRIO ÁGUA DO RADIADOR 2 SAÍDAS FORD NOVO FIESTA/ECOSPORT 2002/', 'score': 0.56}, {'item_id': 'MF-462', 'title': 'RESERVATÓRIO ÁGUA DO RADIADOR 2 SAÍDAS FORD NOVO FIESTA/ECOSPORT 2002/', 'score': 0.56}]}]`
+- actions: `[{'type': 'show_items', 'items': [{'item_id': 'IR48524', 'title': 'RADIADOR FORD NOVO FIESTA 1.0 SUPERCHARGER - 1.6 03/10 - ECOSPORT 1.0/1.6 8V - 2.0 16V 03/10  TODOS', 'score': 0.64}, {'item_id': 'RV-12733', 'title': 'RADIADOR FORD NOVO FIESTA 1.0 SUPERCHARGER - 1.6 03/10 - ECOSPORT 1.0/1.6 8V - 2.0 16V 03/10  TODOS', 'score': 0.64}, {'item_id': 'RV-12733*A', 'title': 'RADIADOR FORD NOVO FIESTA 1.0 SUPERCHARGER - 1.6 03/10 - ECOSPORT 1.0/1.6 8V - 2.0 16V 03/10  TODDOS', 'score': 0.64}, {'item_id': 'JAM-7555', 'title': 'MANGUEIRA SUPERIOR DO RADIADOR FORD ECOSPORT 2.0', 'score': 0.56}, {'item_id': 'JAM-7553', 'title': 'MANGUEIRA RADIADOR FORD ECOSPORT 1.6 2003/ - SUPERIOR', 'score': 0.56}, {'item_id': 'JAM-7554', 'title': 'MANGUEIRA RADIADOR FORD ECOSPORT 1.6 2003/ - INFERIOR', 'score': 0.56}, {'item_id': 'JAM-7556', 'title': 'MANGUEIRA RADIADOR FORD ECOSPORT 2.0 2004/ - INFERIOR', 'score': 0.56}, {'item_id': 'G-1114', 'title': 'RESERVATÓRIO ÁGUA DO RADIADOR 2 SAÍDAS FORD NOVO FIESTA/ECOSPORT 2002/', 'score': 0.56}, {'item_id': 'MF-12462', 'title': 'RESERVATÓRIO ÁGUA DO RADIADOR 2 SAÍDAS FORD NOVO FIESTA/ECOSPORT 2002/', 'score': 0.56}, {'item_id': 'MV-312', 'title': 'RESERVATÓRIO ÁGUA DO RADIADOR 2 SAÍDAS FORD NOVO FIESTA/ECOSPORT 2002/', 'score': 0.56}]}]`
 - criteria em `conversation_state`: `{'part_query': 'radiador', 'part_code': None, 'vehicle_brand': None, 'vehicle_model': 'Ecosport', 'vehicle_year': 2008, 'engine': '1.6', 'side': None, 'position': None, 'axle': None, 'variant': None, 'quantity': 1}`
 - top items:
   - `IR48524` | `RADIADOR FORD NOVO FIESTA 1.0 SUPERCHARGER - 1.6 03/10 - ECOSPORT 1.0/1.6 8V - 2.0 16V 03/10  TODOS` | `score=0.64`
@@ -77,11 +77,11 @@ Relatorio gerado por chamadas reais ao `POST /respond`, sem `StubPreSearchValida
 - `conversation_id`: `conv-radiador-ecosport-typo-001`
 - pergunta: `rdiador ecosport 2008 1.6`
 - status HTTP: `200`
-- latencia total observada: `36662.89 ms`
+- latencia total observada: `35228.44 ms`
 - resposta: `Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca.`
 - ferramentas usadas: `['pre_search_validator', 'search_parts']`
 - handoff: `False`
-- actions: `[{'type': 'show_items', 'items': [{'item_id': 'IR48524', 'title': 'RADIADOR FORD NOVO FIESTA 1.0 SUPERCHARGER - 1.6 03/10 - ECOSPORT 1.0/1.6 8V - 2.0 16V 03/10  TODOS', 'score': 0.64}, {'item_id': 'RV-12733', 'title': 'RADIADOR FORD NOVO FIESTA 1.0 SUPERCHARGER - 1.6 03/10 - ECOSPORT 1.0/1.6 8V - 2.0 16V 03/10  TODOS', 'score': 0.64}, {'item_id': 'RV-12733*A', 'title': 'RADIADOR FORD NOVO FIESTA 1.0 SUPERCHARGER - 1.6 03/10 - ECOSPORT 1.0/1.6 8V - 2.0 16V 03/10  TODDOS', 'score': 0.64}, {'item_id': 'JAM-7555', 'title': 'MANGUEIRA SUPERIOR DO RADIADOR FORD ECOSPORT 2.0', 'score': 0.56}, {'item_id': 'JAM-7553', 'title': 'MANGUEIRA RADIADOR FORD ECOSPORT 1.6 2003/ - SUPERIOR', 'score': 0.56}, {'item_id': 'JAM-7554', 'title': 'MANGUEIRA RADIADOR FORD ECOSPORT 1.6 2003/ - INFERIOR', 'score': 0.56}, {'item_id': 'JAM-7556', 'title': 'MANGUEIRA RADIADOR FORD ECOSPORT 2.0 2004/ - INFERIOR', 'score': 0.56}, {'item_id': 'G-1114', 'title': 'RESERVATÓRIO ÁGUA DO RADIADOR 2 SAÍDAS FORD NOVO FIESTA/ECOSPORT 2002/', 'score': 0.56}, {'item_id': 'MF-12462', 'title': 'RESERVATÓRIO ÁGUA DO RADIADOR 2 SAÍDAS FORD NOVO FIESTA/ECOSPORT 2002/', 'score': 0.56}, {'item_id': 'MF-462', 'title': 'RESERVATÓRIO ÁGUA DO RADIADOR 2 SAÍDAS FORD NOVO FIESTA/ECOSPORT 2002/', 'score': 0.56}]}]`
+- actions: `[{'type': 'show_items', 'items': [{'item_id': 'IR48524', 'title': 'RADIADOR FORD NOVO FIESTA 1.0 SUPERCHARGER - 1.6 03/10 - ECOSPORT 1.0/1.6 8V - 2.0 16V 03/10  TODOS', 'score': 0.64}, {'item_id': 'RV-12733', 'title': 'RADIADOR FORD NOVO FIESTA 1.0 SUPERCHARGER - 1.6 03/10 - ECOSPORT 1.0/1.6 8V - 2.0 16V 03/10  TODOS', 'score': 0.64}, {'item_id': 'RV-12733*A', 'title': 'RADIADOR FORD NOVO FIESTA 1.0 SUPERCHARGER - 1.6 03/10 - ECOSPORT 1.0/1.6 8V - 2.0 16V 03/10  TODDOS', 'score': 0.64}, {'item_id': 'JAM-7555', 'title': 'MANGUEIRA SUPERIOR DO RADIADOR FORD ECOSPORT 2.0', 'score': 0.56}, {'item_id': 'JAM-7553', 'title': 'MANGUEIRA RADIADOR FORD ECOSPORT 1.6 2003/ - SUPERIOR', 'score': 0.56}, {'item_id': 'JAM-7554', 'title': 'MANGUEIRA RADIADOR FORD ECOSPORT 1.6 2003/ - INFERIOR', 'score': 0.56}, {'item_id': 'JAM-7556', 'title': 'MANGUEIRA RADIADOR FORD ECOSPORT 2.0 2004/ - INFERIOR', 'score': 0.56}, {'item_id': 'G-1114', 'title': 'RESERVATÓRIO ÁGUA DO RADIADOR 2 SAÍDAS FORD NOVO FIESTA/ECOSPORT 2002/', 'score': 0.56}, {'item_id': 'MF-12462', 'title': 'RESERVATÓRIO ÁGUA DO RADIADOR 2 SAÍDAS FORD NOVO FIESTA/ECOSPORT 2002/', 'score': 0.56}, {'item_id': 'MV-312', 'title': 'RESERVATÓRIO ÁGUA DO RADIADOR 2 SAÍDAS FORD NOVO FIESTA/ECOSPORT 2002/', 'score': 0.56}]}]`
 - criteria em `conversation_state`: `{'part_query': 'radiador', 'part_code': None, 'vehicle_brand': None, 'vehicle_model': 'Ecosport', 'vehicle_year': 2008, 'engine': '1.6', 'side': None, 'position': None, 'axle': None, 'variant': None, 'quantity': 1}`
 - top items:
   - `IR48524` | `RADIADOR FORD NOVO FIESTA 1.0 SUPERCHARGER - 1.6 03/10 - ECOSPORT 1.0/1.6 8V - 2.0 16V 03/10  TODOS` | `score=0.64`
@@ -96,11 +96,11 @@ Relatorio gerado por chamadas reais ao `POST /respond`, sem `StubPreSearchValida
 - `conversation_id`: `conv-radiador-gol-alias-001`
 - pergunta: `radiador motor gol 2010 1.0`
 - status HTTP: `200`
-- latencia total observada: `35341.28 ms`
+- latencia total observada: `37129.42 ms`
 - resposta: `Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca.`
 - ferramentas usadas: `['pre_search_validator', 'search_parts']`
 - handoff: `False`
-- actions: `[{'type': 'show_items', 'items': [{'item_id': 'RV-12528', 'title': 'RADIADOR COM AR CONDICIONADO VW NOVO GOL/VOYAGE 08/ - GOL 1.0 12V - SAVEIRO 10/ - FOX/ 1.0/1.6 06/', 'score': 0.64}, {'item_id': 'IR48108', 'title': 'RADIADOR SEM AR CONDICIONADO VW NOVO GOL/VOYAGE 08/ - NOVA SAVEIRO 10/ - FOX/POLO 1.0/1.6 06/ - A/M', 'score': 0.64}, {'item_id': 'IR48109', 'title': 'RADIADOR COM AR CONDICIONADO VW NOVO GOL/VOYAGE 08/ - NOVA SAVEIRO 10/ - FOX/POLO 1.0/1.6 06/ - F.T', 'score': 0.64}, {'item_id': 'RV-12527', 'title': 'RADIADOR SEM AR CONDICIONADO VW NOVO GOL/VOYAGE 08/ - NOVA SAVEIRO 10/ - FOX/POLO 1.0/1.6 06/ - A/M', 'score': 0.64}, {'item_id': 'TRC0017', 'title': 'RADIADOR/RESFRIADOR DE ÓLEO MOTOR VW TIGUAN/UP!/POLO/VIRTUS/GOLF/JETTA MSI/MPI/TSI/TSFI 1.0/1.4/1.6', 'score': 0.64}, {'item_id': 'KT-40023', 'title': 'KIT COXIM RADIADOR VW PASSAT/GOL/VOYAGE GRANDE', 'score': 0.56}, {'item_id': 'MF-11', 'title': 'TAMPA RADIADOR VW PASSAT/GOL/VOYAGE/PARATI /86', 'score': 0.56}, {'item_id': 'KT-40028', 'title': 'KIT COXIM RADIADOR VW PASSAT/GOL/VOYAGE PEQUENO', 'score': 0.56}, {'item_id': '20434', 'title': 'MANGUEIRA VW GOL 1.0 II 95/96 - SUPERIOR RADIADOR', 'score': 0.56}, {'item_id': '20403', 'title': 'MANGUEIRA VW GOL/PARATI AP 95/ - INFERIOR RADIADOR', 'score': 0.56}]}]`
+- actions: `[{'type': 'show_items', 'items': [{'item_id': 'RV-12528', 'title': 'RADIADOR COM AR CONDICIONADO VW NOVO GOL/VOYAGE 08/ - GOL 1.0 12V - SAVEIRO 10/ - FOX/ 1.0/1.6 06/', 'score': 0.64}, {'item_id': 'IR48108', 'title': 'RADIADOR SEM AR CONDICIONADO VW NOVO GOL/VOYAGE 08/ - NOVA SAVEIRO 10/ - FOX/POLO 1.0/1.6 06/ - A/M', 'score': 0.64}, {'item_id': 'IR48109', 'title': 'RADIADOR COM AR CONDICIONADO VW NOVO GOL/VOYAGE 08/ - NOVA SAVEIRO 10/ - FOX/POLO 1.0/1.6 06/ - F.T', 'score': 0.64}, {'item_id': 'RV-12527', 'title': 'RADIADOR SEM AR CONDICIONADO VW NOVO GOL/VOYAGE 08/ - NOVA SAVEIRO 10/ - FOX/POLO 1.0/1.6 06/ - A/M', 'score': 0.64}, {'item_id': 'TRC0017', 'title': 'RADIADOR/RESFRIADOR DE ÓLEO MOTOR VW TIGUAN/UP!/POLO/VIRTUS/GOLF/JETTA MSI/MPI/TSI/TSFI 1.0/1.4/1.6', 'score': 0.64}, {'item_id': 'KT-40023', 'title': 'KIT COXIM RADIADOR VW PASSAT/GOL/VOYAGE GRANDE', 'score': 0.56}, {'item_id': 'KT-40028', 'title': 'KIT COXIM RADIADOR VW PASSAT/GOL/VOYAGE PEQUENO', 'score': 0.56}, {'item_id': '20434', 'title': 'MANGUEIRA VW GOL 1.0 II 95/96 - SUPERIOR RADIADOR', 'score': 0.56}, {'item_id': '20403', 'title': 'MANGUEIRA VW GOL/PARATI AP 95/ - INFERIOR RADIADOR', 'score': 0.56}, {'item_id': '20405', 'title': 'MANGUEIRA VW GOL/PARATI AP 95/ - SUPERIOR RADIADOR', 'score': 0.56}]}]`
 - criteria em `conversation_state`: `{'part_query': 'radiador', 'part_code': None, 'vehicle_brand': None, 'vehicle_model': 'Gol', 'vehicle_year': 2010, 'engine': '1.0', 'side': None, 'position': None, 'axle': None, 'variant': None, 'quantity': 1}`
 - top items:
   - `RV-12528` | `RADIADOR COM AR CONDICIONADO VW NOVO GOL/VOYAGE 08/ - GOL 1.0 12V - SAVEIRO 10/ - FOX/ 1.0/1.6 06/` | `score=0.64`
@@ -115,7 +115,7 @@ Relatorio gerado por chamadas reais ao `POST /respond`, sem `StubPreSearchValida
 - `conversation_id`: `conv-coxim-ecosport-direct-001`
 - pergunta: `coxim amortecedor ecosport 2008 1.6`
 - status HTTP: `200`
-- latencia total observada: `35431.88 ms`
+- latencia total observada: `41861.94 ms`
 - resposta: `Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca.`
 - ferramentas usadas: `['pre_search_validator', 'search_parts']`
 - handoff: `False`
@@ -134,7 +134,7 @@ Relatorio gerado por chamadas reais ao `POST /respond`, sem `StubPreSearchValida
 - `conversation_id`: `conv-coxim-ecosport-typo-001`
 - pergunta: `coxin amortecedor ecosport 2008 1.6`
 - status HTTP: `200`
-- latencia total observada: `35343.26 ms`
+- latencia total observada: `39918.42 ms`
 - resposta: `Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca.`
 - ferramentas usadas: `['pre_search_validator', 'search_parts']`
 - handoff: `False`
@@ -153,7 +153,7 @@ Relatorio gerado por chamadas reais ao `POST /respond`, sem `StubPreSearchValida
 - `conversation_id`: `conv-coxim-ecosport-alias-001`
 - pergunta: `coxim amort ecosport 2008 1.6`
 - status HTTP: `200`
-- latencia total observada: `35285.25 ms`
+- latencia total observada: `38390.16 ms`
 - resposta: `Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca.`
 - ferramentas usadas: `['pre_search_validator', 'search_parts']`
 - handoff: `False`
@@ -172,11 +172,11 @@ Relatorio gerado por chamadas reais ao `POST /respond`, sem `StubPreSearchValida
 - `conversation_id`: `conv-coxim-ecosport-plural-001`
 - pergunta: `coxins amortecedor ecosport 2008 1.6`
 - status HTTP: `200`
-- latencia total observada: `35600.51 ms`
+- latencia total observada: `41674.62 ms`
 - resposta: `Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca.`
 - ferramentas usadas: `['pre_search_validator', 'search_parts']`
 - handoff: `False`
-- actions: `[{'type': 'show_items', 'items': [{'item_id': '022.1505', 'title': 'COXIM AMORTECEDOR FORD NOVO FIESTA/ECOSPORT 2002/ - S/ROL.', 'score': 0.64}, {'item_id': '022.1553', 'title': 'COXIM AMORTECEDOR FORD NOVO FIESTA/ECOSPORT 2002/ - C/ROL.', 'score': 0.64}, {'item_id': 'SP-2722', 'title': 'COXIM AMORTECEDOR FORD NOVO FIESTA/ECOSPORT 2002/ - S/ROL.', 'score': 0.64}, {'item_id': '043.1688', 'title': 'COXIM AMORTECEDOR FORD NOVO FIESTA/ECOSPORT 2002/ - TRASEIRO', 'score': 0.64}, {'item_id': 'SP-2722A', 'title': 'COXIM AMORTECEDOR FORD NOVO FIESTA/ECOSPORT 2002/ - C/ROL. INA', 'score': 0.64}, {'item_id': 'SP-2722B', 'title': 'COXIM AMORTECEDOR FORD NOVO FIESTA/ECOSPORT 2002/ - C/ROL. BSB', 'score': 0.64}, {'item_id': 'NK0237', 'title': 'KIT AMORTECEDOR TRASEIRO FORD E COSPORT 2003/2012 - FIESTA 2003/2014', 'score': 0.32}, {'item_id': 'NK0237*A', 'title': 'KIT AMORTECEDOR TRASEIRO FORD ECOSPORT 2003/2012 - FIESTA 2003/2014', 'score': 0.32}]}]`
+- actions: `[{'type': 'show_items', 'items': [{'item_id': '022.1505', 'title': 'COXIM AMORTECEDOR FORD NOVO FIESTA/ECOSPORT 2002/ - S/ROL.', 'score': 0.64}, {'item_id': '022.1553', 'title': 'COXIM AMORTECEDOR FORD NOVO FIESTA/ECOSPORT 2002/ - C/ROL.', 'score': 0.64}, {'item_id': 'SP-2722', 'title': 'COXIM AMORTECEDOR FORD NOVO FIESTA/ECOSPORT 2002/ - S/ROL.', 'score': 0.64}, {'item_id': '043.1688', 'title': 'COXIM AMORTECEDOR FORD NOVO FIESTA/ECOSPORT 2002/ - TRASEIRO', 'score': 0.64}, {'item_id': 'SP-2722A', 'title': 'COXIM AMORTECEDOR FORD NOVO FIESTA/ECOSPORT 2002/ - C/ROL. INA', 'score': 0.64}, {'item_id': 'SP-2722B', 'title': 'COXIM AMORTECEDOR FORD NOVO FIESTA/ECOSPORT 2002/ - C/ROL. BSB', 'score': 0.64}, {'item_id': 'NK0237', 'title': 'KIT AMORTECEDOR TRASEIRO FORD ECOSPORT 2003/2012 - FIESTA 2003/2014', 'score': 0.32}, {'item_id': 'NK0237*A', 'title': 'KIT AMORTECEDOR TRASEIRO FORD ECOSPORT 2003/2012 - FIESTA 2003/2014', 'score': 0.32}]}]`
 - criteria em `conversation_state`: `{'part_query': 'coxim amortecedor', 'part_code': None, 'vehicle_brand': None, 'vehicle_model': 'Ecosport', 'vehicle_year': 2008, 'engine': '1.6', 'side': None, 'position': None, 'axle': None, 'variant': None, 'quantity': 1}`
 - top items:
   - `022.1505` | `COXIM AMORTECEDOR FORD NOVO FIESTA/ECOSPORT 2002/ - S/ROL.` | `score=0.64`
@@ -184,25 +184,19 @@ Relatorio gerado por chamadas reais ao `POST /respond`, sem `StubPreSearchValida
   - `SP-2722` | `COXIM AMORTECEDOR FORD NOVO FIESTA/ECOSPORT 2002/ - S/ROL.` | `score=0.64`
   - `043.1688` | `COXIM AMORTECEDOR FORD NOVO FIESTA/ECOSPORT 2002/ - TRASEIRO` | `score=0.64`
   - `SP-2722A` | `COXIM AMORTECEDOR FORD NOVO FIESTA/ECOSPORT 2002/ - C/ROL. INA` | `score=0.64`
- 
+
 ### case_009 - complete
 
 - `trace_id`: `real-battery-20260325-case_009`
 - `conversation_id`: `conv-pastilha-gol-direct-001`
 - pergunta: `pastilha de freio gol 2010 1.0`
 - status HTTP: `200`
-- latencia total observada: `36039.35 ms`
-- resposta: `Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca.`
-- ferramentas usadas: `['pre_search_validator', 'search_parts']`
+- latencia total observada: `41645.29 ms`
+- resposta: `Em qual posicao a peca fica?`
+- ferramentas usadas: `['pre_search_validator']`
 - handoff: `False`
-- actions: `[{'type': 'show_items', 'items': [{'item_id': 'P-44-NA', 'title': 'PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 - 94/ TEVES', 'score': 0.48}, {'item_id': 'P-45-NA', 'title': 'PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 - 94/ VARGA', 'score': 0.48}, {'item_id': 'PD/45-NA', 'title': 'PASTILHA DE FREIO VW GOL/PARATI/QUANTUM/SANTANA/SAVEIRO 1995/', 'score': 0.48}, {'item_id': 'PD/44-B-NA', 'title': 'PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 94/ - C/ALARME TEVES', 'score': 0.48}, {'item_id': 'P-368-NA', 'title': 'PASTILHA DE FREIO VW NOVO GOL/VOYAGE 08/ - FOX 1.0 2003/ ARO 13 - TEVES', 'score': 0.48}, {'item_id': 'P-54-NA', 'title': 'PASTILHA DE FREIO DIANTEIRA VARGA VW GOL/PARATI 1.0/1.6/1.8 96/ - GM CORSA 96/', 'score': 0.48}, {'item_id': 'PD/54-NA', 'title': 'PASTILHA DE FREIO DIANTEIRA VARGA VW GOL/PARATI 1.0/1.6/1.8 96/ - GM CORSA 96/', 'score': 0.48}, {'item_id': 'P-367-NA', 'title': 'PASTILHA DE FREIO VW NOVO GOL/SAVEIRO 08/ BOSCH - GOLF 94/ 94/95 - POLO CLASSIC 97/', 'score': 0.48}, {'item_id': 'PD/367-NA', 'title': 'PASTILHA DE FREIO VW NOVO GOL/SAVEIRO 08/ BOSCH - GOLF 94/ 94/95 - POLO CLASSIC 97/', 'score': 0.48}, {'item_id': 'P-51-NA', 'title': 'PASTILHA DE FREIO DIANTEIRA VW GOL/PARATI/SAVEIRO 1.0/1.6/1.8 2000/ - SISTEMA ATE/TEVES', 'score': 0.48}]}]`
+- actions: `[{'type': 'request_info', 'key': 'position', 'prompt': 'Em qual posicao a peca fica?', 'options': ['Dianteiro', 'Traseiro', 'Nao sei']}]`
 - criteria em `conversation_state`: `{'part_query': 'pastilhas de freio', 'part_code': None, 'vehicle_brand': None, 'vehicle_model': 'Gol', 'vehicle_year': 2010, 'engine': '1.0', 'side': None, 'position': None, 'axle': None, 'variant': None, 'quantity': 1}`
-- top items:
-  - `P-44-NA` | `PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 - 94/ TEVES` | `score=0.48`
-  - `P-45-NA` | `PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 - 94/ VARGA` | `score=0.48`
-  - `PD/45-NA` | `PASTILHA DE FREIO VW GOL/PARATI/QUANTUM/SANTANA/SAVEIRO 1995/` | `score=0.48`
-  - `PD/44-B-NA` | `PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 94/ - C/ALARME TEVES` | `score=0.48`
-  - `P-368-NA` | `PASTILHA DE FREIO VW NOVO GOL/VOYAGE 08/ - FOX 1.0 2003/ ARO 13 - TEVES` | `score=0.48`
 
 ### case_010 - typo_complete
 
@@ -210,18 +204,12 @@ Relatorio gerado por chamadas reais ao `POST /respond`, sem `StubPreSearchValida
 - `conversation_id`: `conv-pastilha-gol-typo-001`
 - pergunta: `pstilhas de freio gol 2010 1.0`
 - status HTTP: `200`
-- latencia total observada: `37496.79 ms`
-- resposta: `Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca.`
-- ferramentas usadas: `['pre_search_validator', 'search_parts']`
+- latencia total observada: `41964.87 ms`
+- resposta: `Em qual posicao a peca fica?`
+- ferramentas usadas: `['pre_search_validator']`
 - handoff: `False`
-- actions: `[{'type': 'show_items', 'items': [{'item_id': 'P-44-NA', 'title': 'PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 - 94/ TEVES', 'score': 0.48}, {'item_id': 'P-45-NA', 'title': 'PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 - 94/ VARGA', 'score': 0.48}, {'item_id': 'PD/45-NA', 'title': 'PASTILHA DE FREIO VW GOL/PARATI/QUANTUM/SANTANA/SAVEIRO 1995/', 'score': 0.48}, {'item_id': 'PD/44-B-NA', 'title': 'PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 94/ - C/ALARME TEVES', 'score': 0.48}, {'item_id': 'P-368-NA', 'title': 'PASTILHA DE FREIO VW NOVO GOL/VOYAGE 08/ - FOX 1.0 2003/ ARO 13 - TEVES', 'score': 0.48}, {'item_id': 'P-54-NA', 'title': 'PASTILHA DE FREIO DIANTEIRA VARGA VW GOL/PARATI 1.0/1.6/1.8 96/ - GM CORSA 96/', 'score': 0.48}, {'item_id': 'PD/54-NA', 'title': 'PASTILHA DE FREIO DIANTEIRA VARGA VW GOL/PARATI 1.0/1.6/1.8 96/ - GM CORSA 96/', 'score': 0.48}, {'item_id': 'P-367-NA', 'title': 'PASTILHA DE FREIO VW NOVO GOL/SAVEIRO 08/ BOSCH - GOLF 94/ 94/95 - POLO CLASSIC 97/', 'score': 0.48}, {'item_id': 'PD/367-NA', 'title': 'PASTILHA DE FREIO VW NOVO GOL/SAVEIRO 08/ BOSCH - GOLF 94/ 94/95 - POLO CLASSIC 97/', 'score': 0.48}, {'item_id': 'P-51-NA', 'title': 'PASTILHA DE FREIO DIANTEIRA VW GOL/PARATI/SAVEIRO 1.0/1.6/1.8 2000/ - SISTEMA ATE/TEVES', 'score': 0.48}]}]`
+- actions: `[{'type': 'request_info', 'key': 'position', 'prompt': 'Em qual posicao a peca fica?', 'options': ['Dianteiro', 'Traseiro', 'Nao sei']}]`
 - criteria em `conversation_state`: `{'part_query': 'pastilhas de freio', 'part_code': None, 'vehicle_brand': None, 'vehicle_model': 'Gol', 'vehicle_year': 2010, 'engine': '1.0', 'side': None, 'position': None, 'axle': None, 'variant': None, 'quantity': 1}`
-- top items:
-  - `P-44-NA` | `PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 - 94/ TEVES` | `score=0.48`
-  - `P-45-NA` | `PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 - 94/ VARGA` | `score=0.48`
-  - `PD/45-NA` | `PASTILHA DE FREIO VW GOL/PARATI/QUANTUM/SANTANA/SAVEIRO 1995/` | `score=0.48`
-  - `PD/44-B-NA` | `PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 94/ - C/ALARME TEVES` | `score=0.48`
-  - `P-368-NA` | `PASTILHA DE FREIO VW NOVO GOL/VOYAGE 08/ - FOX 1.0 2003/ ARO 13 - TEVES` | `score=0.48`
 
 ### case_011 - complete_alias
 
@@ -229,18 +217,12 @@ Relatorio gerado por chamadas reais ao `POST /respond`, sem `StubPreSearchValida
 - `conversation_id`: `conv-pastilha-gol-alias-001`
 - pergunta: `pastilhas freio gol 2010 1.0`
 - status HTTP: `200`
-- latencia total observada: `37343.66 ms`
-- resposta: `Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca.`
-- ferramentas usadas: `['pre_search_validator', 'search_parts']`
+- latencia total observada: `38414.99 ms`
+- resposta: `Em qual posicao a peca fica?`
+- ferramentas usadas: `['pre_search_validator']`
 - handoff: `False`
-- actions: `[{'type': 'show_items', 'items': [{'item_id': 'P-44-NA', 'title': 'PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 - 94/ TEVES', 'score': 0.48}, {'item_id': 'P-45-NA', 'title': 'PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 - 94/ VARGA', 'score': 0.48}, {'item_id': 'PD/45-NA', 'title': 'PASTILHA DE FREIO VW GOL/PARATI/QUANTUM/SANTANA/SAVEIRO 1995/', 'score': 0.48}, {'item_id': 'PD/44-B-NA', 'title': 'PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 94/ - C/ALARME TEVES', 'score': 0.48}, {'item_id': 'P-368-NA', 'title': 'PASTILHA DE FREIO VW NOVO GOL/VOYAGE 08/ - FOX 1.0 2003/ ARO 13 - TEVES', 'score': 0.48}, {'item_id': 'P-54-NA', 'title': 'PASTILHA DE FREIO DIANTEIRA VARGA VW GOL/PARATI 1.0/1.6/1.8 96/ - GM CORSA 96/', 'score': 0.48}, {'item_id': 'PD/54-NA', 'title': 'PASTILHA DE FREIO DIANTEIRA VARGA VW GOL/PARATI 1.0/1.6/1.8 96/ - GM CORSA 96/', 'score': 0.48}, {'item_id': 'P-367-NA', 'title': 'PASTILHA DE FREIO VW NOVO GOL/SAVEIRO 08/ BOSCH - GOLF 94/ 94/95 - POLO CLASSIC 97/', 'score': 0.48}, {'item_id': 'PD/367-NA', 'title': 'PASTILHA DE FREIO VW NOVO GOL/SAVEIRO 08/ BOSCH - GOLF 94/ 94/95 - POLO CLASSIC 97/', 'score': 0.48}, {'item_id': 'P-51-NA', 'title': 'PASTILHA DE FREIO DIANTEIRA VW GOL/PARATI/SAVEIRO 1.0/1.6/1.8 2000/ - SISTEMA ATE/TEVES', 'score': 0.48}]}]`
+- actions: `[{'type': 'request_info', 'key': 'position', 'prompt': 'Em qual posicao a peca fica?', 'options': ['Dianteiro', 'Traseiro', 'Nao sei']}]`
 - criteria em `conversation_state`: `{'part_query': 'pastilhas de freio', 'part_code': None, 'vehicle_brand': None, 'vehicle_model': 'Gol', 'vehicle_year': 2010, 'engine': '1.0', 'side': None, 'position': None, 'axle': None, 'variant': None, 'quantity': 1}`
-- top items:
-  - `P-44-NA` | `PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 - 94/ TEVES` | `score=0.48`
-  - `P-45-NA` | `PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 - 94/ VARGA` | `score=0.48`
-  - `PD/45-NA` | `PASTILHA DE FREIO VW GOL/PARATI/QUANTUM/SANTANA/SAVEIRO 1995/` | `score=0.48`
-  - `PD/44-B-NA` | `PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 94/ - C/ALARME TEVES` | `score=0.48`
-  - `P-368-NA` | `PASTILHA DE FREIO VW NOVO GOL/VOYAGE 08/ - FOX 1.0 2003/ ARO 13 - TEVES` | `score=0.48`
 
 ### case_012 - complete_alias
 
@@ -248,18 +230,12 @@ Relatorio gerado por chamadas reais ao `POST /respond`, sem `StubPreSearchValida
 - `conversation_id`: `conv-pastilha-gol-short-001`
 - pergunta: `pastilha gol 2010 1.0`
 - status HTTP: `200`
-- latencia total observada: `37134.62 ms`
-- resposta: `Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca.`
-- ferramentas usadas: `['pre_search_validator', 'search_parts']`
+- latencia total observada: `40736.51 ms`
+- resposta: `Em qual posicao a peca fica?`
+- ferramentas usadas: `['pre_search_validator']`
 - handoff: `False`
-- actions: `[{'type': 'show_items', 'items': [{'item_id': 'P-44-NA', 'title': 'PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 - 94/ TEVES', 'score': 0.48}, {'item_id': 'P-45-NA', 'title': 'PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 - 94/ VARGA', 'score': 0.48}, {'item_id': 'PD/45-NA', 'title': 'PASTILHA DE FREIO VW GOL/PARATI/QUANTUM/SANTANA/SAVEIRO 1995/', 'score': 0.48}, {'item_id': 'PD/44-B-NA', 'title': 'PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 94/ - C/ALARME TEVES', 'score': 0.48}, {'item_id': 'P-368-NA', 'title': 'PASTILHA DE FREIO VW NOVO GOL/VOYAGE 08/ - FOX 1.0 2003/ ARO 13 - TEVES', 'score': 0.48}, {'item_id': 'P-54-NA', 'title': 'PASTILHA DE FREIO DIANTEIRA VARGA VW GOL/PARATI 1.0/1.6/1.8 96/ - GM CORSA 96/', 'score': 0.48}, {'item_id': 'PD/54-NA', 'title': 'PASTILHA DE FREIO DIANTEIRA VARGA VW GOL/PARATI 1.0/1.6/1.8 96/ - GM CORSA 96/', 'score': 0.48}, {'item_id': 'P-367-NA', 'title': 'PASTILHA DE FREIO VW NOVO GOL/SAVEIRO 08/ BOSCH - GOLF 94/ 94/95 - POLO CLASSIC 97/', 'score': 0.48}, {'item_id': 'PD/367-NA', 'title': 'PASTILHA DE FREIO VW NOVO GOL/SAVEIRO 08/ BOSCH - GOLF 94/ 94/95 - POLO CLASSIC 97/', 'score': 0.48}, {'item_id': 'P-51-NA', 'title': 'PASTILHA DE FREIO DIANTEIRA VW GOL/PARATI/SAVEIRO 1.0/1.6/1.8 2000/ - SISTEMA ATE/TEVES', 'score': 0.48}]}]`
+- actions: `[{'type': 'request_info', 'key': 'position', 'prompt': 'Em qual posicao a peca fica?', 'options': ['Dianteiro', 'Traseiro', 'Nao sei']}]`
 - criteria em `conversation_state`: `{'part_query': 'pastilhas de freio', 'part_code': None, 'vehicle_brand': None, 'vehicle_model': 'Gol', 'vehicle_year': 2010, 'engine': '1.0', 'side': None, 'position': None, 'axle': None, 'variant': None, 'quantity': 1}`
-- top items:
-  - `P-44-NA` | `PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 - 94/ TEVES` | `score=0.48`
-  - `P-45-NA` | `PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 - 94/ VARGA` | `score=0.48`
-  - `PD/45-NA` | `PASTILHA DE FREIO VW GOL/PARATI/QUANTUM/SANTANA/SAVEIRO 1995/` | `score=0.48`
-  - `PD/44-B-NA` | `PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 94/ - C/ALARME TEVES` | `score=0.48`
-  - `P-368-NA` | `PASTILHA DE FREIO VW NOVO GOL/VOYAGE 08/ - FOX 1.0 2003/ ARO 13 - TEVES` | `score=0.48`
 
 ### case_013 - complete
 
@@ -267,18 +243,12 @@ Relatorio gerado por chamadas reais ao `POST /respond`, sem `StubPreSearchValida
 - `conversation_id`: `conv-disco-gol-direct-001`
 - pergunta: `disco de freio gol 2010 dianteiro`
 - status HTTP: `200`
-- latencia total observada: `34720.57 ms`
-- resposta: `Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca.`
-- ferramentas usadas: `['pre_search_validator', 'search_parts']`
+- latencia total observada: `35521.02 ms`
+- resposta: `Qual a motorizacao do veiculo?`
+- ferramentas usadas: `['pre_search_validator']`
 - handoff: `False`
-- actions: `[{'type': 'show_items', 'items': [{'item_id': 'BD-5298', 'title': 'DISCO DE FREIO DIANTEIRO VW NOVO GOL/VOYAGE 1.0 2008/ ARO 13 - VENTILADO 239MM 4 FUROS', 'score': 0.6}, {'item_id': 'HF-87', 'title': 'DISCO DE FREIO DIANTEIRO VW NOVO GOL/VOYAGE 1.0 2008/ ARO 13 - VENTILADO 239MM 4 FUROS', 'score': 0.6}, {'item_id': 'FLDI00126', 'title': 'DISCO DE FREIO DIANTEIRO VW GOL/VOYAGE/SAVEIRO/PASSAT - SANTANA /89 - SÓLIDO 239MM 4 FUROS', 'score': 0.6}, {'item_id': 'RPDI00480', 'title': 'DISCO DE FREIO DIANTEIRO VW GOL/VOYAGE/SAVEIRO/PASSAT - SANTANA /89 - SÓLIDO 239MM 4 FUROS', 'score': 0.6}, {'item_id': 'BD-3790', 'title': 'DISCO DE FREIO DIANTEIRO VW SANTANA 94/ GOL GTI 95/ POLO 97/ GOLF 1.8 GTI 93/98 - VENTILADO 256M', 'score': 0.6}, {'item_id': 'RCDI01030', 'title': 'DISCO DE FREIO DIANTEIRO VW SANTANA 94/ GOL GTI 95/ POLO 97/ GOLF 1.8 GTI 93/98 - VENTILADO 256M', 'score': 0.6}, {'item_id': 'BD-5297', 'title': 'DISCO DE FREIO DIANTEIRO NOVO GOL/VOYAGE/SAVEIRO 1.6 08/ ARO 14 - VENTILADO 256MM - ESPESSURA 19MM', 'score': 0.6}, {'item_id': 'HF-87A', 'title': 'DISCO DE FREIO DIANTEIRO NOVO GOL/VOYAGE/SAVEIRO 1.6 08/ ARO 14 - VENTILADO 256MM - ESPESSURA 19MM', 'score': 0.6}, {'item_id': 'MR005', 'title': 'DISCO DE FREIO DIANTEIRO NOVO GOL/VOYAGE/SAVEIRO 1.6 08/ ARO 14 - VENTILADO 256MM - ESPESSURA 19MM', 'score': 0.6}, {'item_id': 'BD-9614', 'title': 'DISCO DE FREIO DIANTEIRO VW UP! TSI 14/ - NOVO GOL/VOYAGE/SAVEIRO 13/ VENTILADO 256M ESPESSURA 22MM', 'score': 0.6}]}]`
-- criteria em `conversation_state`: `{'part_query': 'disco de freio', 'part_code': None, 'vehicle_brand': None, 'vehicle_model': 'Gol', 'vehicle_year': 2010, 'engine': None, 'side': None, 'position': 'front', 'axle': None, 'variant': None, 'quantity': None}`
-- top items:
-  - `BD-5298` | `DISCO DE FREIO DIANTEIRO VW NOVO GOL/VOYAGE 1.0 2008/ ARO 13 - VENTILADO 239MM 4 FUROS` | `score=0.6`
-  - `HF-87` | `DISCO DE FREIO DIANTEIRO VW NOVO GOL/VOYAGE 1.0 2008/ ARO 13 - VENTILADO 239MM 4 FUROS` | `score=0.6`
-  - `FLDI00126` | `DISCO DE FREIO DIANTEIRO VW GOL/VOYAGE/SAVEIRO/PASSAT - SANTANA /89 - SÓLIDO 239MM 4 FUROS` | `score=0.6`
-  - `RPDI00480` | `DISCO DE FREIO DIANTEIRO VW GOL/VOYAGE/SAVEIRO/PASSAT - SANTANA /89 - SÓLIDO 239MM 4 FUROS` | `score=0.6`
-  - `BD-3790` | `DISCO DE FREIO DIANTEIRO VW SANTANA 94/ GOL GTI 95/ POLO 97/ GOLF 1.8 GTI 93/98 - VENTILADO 256M` | `score=0.6`
+- actions: `[{'type': 'request_info', 'key': 'engine', 'prompt': 'Qual a motorizacao do veiculo?', 'options': ['1.6 L 8V SOHC L4', '1300 AR', '1600 AR', 'AP 1600', 'AP 1800', 'AP 2000', 'CHT', 'EA111', 'EA111 AT', 'EA111 TEC', 'EA111 VHT', 'EA211']}]`
+- criteria em `conversation_state`: `{'part_query': 'discos de freio', 'part_code': None, 'vehicle_brand': None, 'vehicle_model': 'Gol', 'vehicle_year': 2010, 'engine': None, 'side': None, 'position': 'front', 'axle': None, 'variant': None, 'quantity': None}`
 
 ### case_014 - complete_alias
 
@@ -286,11 +256,11 @@ Relatorio gerado por chamadas reais ao `POST /respond`, sem `StubPreSearchValida
 - `conversation_id`: `conv-radiador-ecosport-plural-001`
 - pergunta: `radiadores motor ecosport 2008 1.6`
 - status HTTP: `200`
-- latencia total observada: `37706.01 ms`
+- latencia total observada: `37568.67 ms`
 - resposta: `Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca.`
 - ferramentas usadas: `['pre_search_validator', 'search_parts']`
 - handoff: `False`
-- actions: `[{'type': 'show_items', 'items': [{'item_id': 'IR48524', 'title': 'RADIADOR FORD NOVO FIESTA 1.0 SUPERCHARGER - 1.6 03/10 - ECOSPORT 1.0/1.6 8V - 2.0 16V 03/10  TODOS', 'score': 0.64}, {'item_id': 'RV-12733', 'title': 'RADIADOR FORD NOVO FIESTA 1.0 SUPERCHARGER - 1.6 03/10 - ECOSPORT 1.0/1.6 8V - 2.0 16V 03/10  TODOS', 'score': 0.64}, {'item_id': 'RV-12733*A', 'title': 'RADIADOR FORD NOVO FIESTA 1.0 SUPERCHARGER - 1.6 03/10 - ECOSPORT 1.0/1.6 8V - 2.0 16V 03/10  TODDOS', 'score': 0.64}, {'item_id': 'JAM-7555', 'title': 'MANGUEIRA SUPERIOR DO RADIADOR FORD ECOSPORT 2.0', 'score': 0.56}, {'item_id': 'JAM-7553', 'title': 'MANGUEIRA RADIADOR FORD ECOSPORT 1.6 2003/ - SUPERIOR', 'score': 0.56}, {'item_id': 'JAM-7554', 'title': 'MANGUEIRA RADIADOR FORD ECOSPORT 1.6 2003/ - INFERIOR', 'score': 0.56}, {'item_id': 'JAM-7556', 'title': 'MANGUEIRA RADIADOR FORD ECOSPORT 2.0 2004/ - INFERIOR', 'score': 0.56}, {'item_id': 'G-1114', 'title': 'RESERVATÓRIO ÁGUA DO RADIADOR 2 SAÍDAS FORD NOVO FIESTA/ECOSPORT 2002/', 'score': 0.56}, {'item_id': 'MF-12462', 'title': 'RESERVATÓRIO ÁGUA DO RADIADOR 2 SAÍDAS FORD NOVO FIESTA/ECOSPORT 2002/', 'score': 0.56}, {'item_id': 'MF-462', 'title': 'RESERVATÓRIO ÁGUA DO RADIADOR 2 SAÍDAS FORD NOVO FIESTA/ECOSPORT 2002/', 'score': 0.56}]}]`
+- actions: `[{'type': 'show_items', 'items': [{'item_id': 'IR48524', 'title': 'RADIADOR FORD NOVO FIESTA 1.0 SUPERCHARGER - 1.6 03/10 - ECOSPORT 1.0/1.6 8V - 2.0 16V 03/10  TODOS', 'score': 0.64}, {'item_id': 'RV-12733', 'title': 'RADIADOR FORD NOVO FIESTA 1.0 SUPERCHARGER - 1.6 03/10 - ECOSPORT 1.0/1.6 8V - 2.0 16V 03/10  TODOS', 'score': 0.64}, {'item_id': 'RV-12733*A', 'title': 'RADIADOR FORD NOVO FIESTA 1.0 SUPERCHARGER - 1.6 03/10 - ECOSPORT 1.0/1.6 8V - 2.0 16V 03/10  TODDOS', 'score': 0.64}, {'item_id': 'JAM-7555', 'title': 'MANGUEIRA SUPERIOR DO RADIADOR FORD ECOSPORT 2.0', 'score': 0.56}, {'item_id': 'JAM-7553', 'title': 'MANGUEIRA RADIADOR FORD ECOSPORT 1.6 2003/ - SUPERIOR', 'score': 0.56}, {'item_id': 'JAM-7554', 'title': 'MANGUEIRA RADIADOR FORD ECOSPORT 1.6 2003/ - INFERIOR', 'score': 0.56}, {'item_id': 'JAM-7556', 'title': 'MANGUEIRA RADIADOR FORD ECOSPORT 2.0 2004/ - INFERIOR', 'score': 0.56}, {'item_id': 'G-1114', 'title': 'RESERVATÓRIO ÁGUA DO RADIADOR 2 SAÍDAS FORD NOVO FIESTA/ECOSPORT 2002/', 'score': 0.56}, {'item_id': 'MF-12462', 'title': 'RESERVATÓRIO ÁGUA DO RADIADOR 2 SAÍDAS FORD NOVO FIESTA/ECOSPORT 2002/', 'score': 0.56}, {'item_id': 'MV-312', 'title': 'RESERVATÓRIO ÁGUA DO RADIADOR 2 SAÍDAS FORD NOVO FIESTA/ECOSPORT 2002/', 'score': 0.56}]}]`
 - criteria em `conversation_state`: `{'part_query': 'radiador', 'part_code': None, 'vehicle_brand': None, 'vehicle_model': 'Ecosport', 'vehicle_year': 2008, 'engine': '1.6', 'side': None, 'position': None, 'axle': None, 'variant': None, 'quantity': 1}`
 - top items:
   - `IR48524` | `RADIADOR FORD NOVO FIESTA 1.0 SUPERCHARGER - 1.6 03/10 - ECOSPORT 1.0/1.6 8V - 2.0 16V 03/10  TODOS` | `score=0.64`
@@ -305,11 +275,11 @@ Relatorio gerado por chamadas reais ao `POST /respond`, sem `StubPreSearchValida
 - `conversation_id`: `conv-radiador-gol-plural-001`
 - pergunta: `radiadores arrefecimento gol 2010 1.0`
 - status HTTP: `200`
-- latencia total observada: `36919.39 ms`
+- latencia total observada: `42977.5 ms`
 - resposta: `Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca.`
 - ferramentas usadas: `['pre_search_validator', 'search_parts']`
 - handoff: `False`
-- actions: `[{'type': 'show_items', 'items': [{'item_id': 'RV-12528', 'title': 'RADIADOR COM AR CONDICIONADO VW NOVO GOL/VOYAGE 08/ - GOL 1.0 12V - SAVEIRO 10/ - FOX/ 1.0/1.6 06/', 'score': 0.64}, {'item_id': 'IR48108', 'title': 'RADIADOR SEM AR CONDICIONADO VW NOVO GOL/VOYAGE 08/ - NOVA SAVEIRO 10/ - FOX/POLO 1.0/1.6 06/ - A/M', 'score': 0.64}, {'item_id': 'IR48109', 'title': 'RADIADOR COM AR CONDICIONADO VW NOVO GOL/VOYAGE 08/ - NOVA SAVEIRO 10/ - FOX/POLO 1.0/1.6 06/ - F.T', 'score': 0.64}, {'item_id': 'RV-12527', 'title': 'RADIADOR SEM AR CONDICIONADO VW NOVO GOL/VOYAGE 08/ - NOVA SAVEIRO 10/ - FOX/POLO 1.0/1.6 06/ - A/M', 'score': 0.64}, {'item_id': 'TRC0017', 'title': 'RADIADOR/RESFRIADOR DE ÓLEO MOTOR VW TIGUAN/UP!/POLO/VIRTUS/GOLF/JETTA MSI/MPI/TSI/TSFI 1.0/1.4/1.6', 'score': 0.64}, {'item_id': 'KT-40023', 'title': 'KIT COXIM RADIADOR VW PASSAT/GOL/VOYAGE GRANDE', 'score': 0.56}, {'item_id': 'MF-11', 'title': 'TAMPA RADIADOR VW PASSAT/GOL/VOYAGE/PARATI /86', 'score': 0.56}, {'item_id': 'KT-40028', 'title': 'KIT COXIM RADIADOR VW PASSAT/GOL/VOYAGE PEQUENO', 'score': 0.56}, {'item_id': '20434', 'title': 'MANGUEIRA VW GOL 1.0 II 95/96 - SUPERIOR RADIADOR', 'score': 0.56}, {'item_id': '20403', 'title': 'MANGUEIRA VW GOL/PARATI AP 95/ - INFERIOR RADIADOR', 'score': 0.56}]}]`
+- actions: `[{'type': 'show_items', 'items': [{'item_id': 'RV-12528', 'title': 'RADIADOR COM AR CONDICIONADO VW NOVO GOL/VOYAGE 08/ - GOL 1.0 12V - SAVEIRO 10/ - FOX/ 1.0/1.6 06/', 'score': 0.64}, {'item_id': 'IR48108', 'title': 'RADIADOR SEM AR CONDICIONADO VW NOVO GOL/VOYAGE 08/ - NOVA SAVEIRO 10/ - FOX/POLO 1.0/1.6 06/ - A/M', 'score': 0.64}, {'item_id': 'IR48109', 'title': 'RADIADOR COM AR CONDICIONADO VW NOVO GOL/VOYAGE 08/ - NOVA SAVEIRO 10/ - FOX/POLO 1.0/1.6 06/ - F.T', 'score': 0.64}, {'item_id': 'RV-12527', 'title': 'RADIADOR SEM AR CONDICIONADO VW NOVO GOL/VOYAGE 08/ - NOVA SAVEIRO 10/ - FOX/POLO 1.0/1.6 06/ - A/M', 'score': 0.64}, {'item_id': 'TRC0017', 'title': 'RADIADOR/RESFRIADOR DE ÓLEO MOTOR VW TIGUAN/UP!/POLO/VIRTUS/GOLF/JETTA MSI/MPI/TSI/TSFI 1.0/1.4/1.6', 'score': 0.64}, {'item_id': 'KT-40023', 'title': 'KIT COXIM RADIADOR VW PASSAT/GOL/VOYAGE GRANDE', 'score': 0.56}, {'item_id': 'KT-40028', 'title': 'KIT COXIM RADIADOR VW PASSAT/GOL/VOYAGE PEQUENO', 'score': 0.56}, {'item_id': '20434', 'title': 'MANGUEIRA VW GOL 1.0 II 95/96 - SUPERIOR RADIADOR', 'score': 0.56}, {'item_id': '20403', 'title': 'MANGUEIRA VW GOL/PARATI AP 95/ - INFERIOR RADIADOR', 'score': 0.56}, {'item_id': '20405', 'title': 'MANGUEIRA VW GOL/PARATI AP 95/ - SUPERIOR RADIADOR', 'score': 0.56}]}]`
 - criteria em `conversation_state`: `{'part_query': 'radiador', 'part_code': None, 'vehicle_brand': None, 'vehicle_model': 'Gol', 'vehicle_year': 2010, 'engine': '1.0', 'side': None, 'position': None, 'axle': None, 'variant': None, 'quantity': 1}`
 - top items:
   - `RV-12528` | `RADIADOR COM AR CONDICIONADO VW NOVO GOL/VOYAGE 08/ - GOL 1.0 12V - SAVEIRO 10/ - FOX/ 1.0/1.6 06/` | `score=0.64`
@@ -324,7 +294,7 @@ Relatorio gerado por chamadas reais ao `POST /respond`, sem `StubPreSearchValida
 - `conversation_id`: `conv-radiador-gol-follow-001`
 - pergunta: `radiador gol 2010`
 - status HTTP: `200`
-- latencia total observada: `31609.46 ms`
+- latencia total observada: `32754.46 ms`
 - resposta: `Qual a motorizacao do veiculo?`
 - ferramentas usadas: `['pre_search_validator']`
 - handoff: `False`
@@ -337,11 +307,11 @@ Relatorio gerado por chamadas reais ao `POST /respond`, sem `StubPreSearchValida
 - `conversation_id`: `conv-radiador-ecosport-follow-001`
 - pergunta: `radiador ecosport 2008`
 - status HTTP: `200`
-- latencia total observada: `41223.35 ms`
-- resposta: `Por favor, informe o tipo do motor do seu Ford EcoSport de 2008.`
+- latencia total observada: `44492.85 ms`
+- resposta: `Por favor, informe o motor do seu Ford EcoSport 2008.`
 - ferramentas usadas: `['pre_search_validator']`
 - handoff: `False`
-- actions: `[{'type': 'request_info', 'key': 'engine', 'prompt': 'Por favor, informe o tipo do motor do seu Ford EcoSport de 2008.'}]`
+- actions: `[{'type': 'request_info', 'key': 'engine', 'prompt': 'Por favor, informe o motor do seu Ford EcoSport 2008.'}]`
 - criteria em `conversation_state`: `{'part_query': 'radiador', 'part_code': None, 'vehicle_brand': None, 'vehicle_model': 'Ecosport', 'vehicle_year': 2008, 'engine': None, 'side': None, 'position': None, 'axle': None, 'variant': None, 'quantity': None}`
 
 ### case_018 - partial
@@ -350,11 +320,11 @@ Relatorio gerado por chamadas reais ao `POST /respond`, sem `StubPreSearchValida
 - `conversation_id`: `conv-coxim-ecosport-follow-num-001`
 - pergunta: `coxim amortecedor ecosport 2008`
 - status HTTP: `200`
-- latencia total observada: `42024.84 ms`
-- resposta: `Por favor, informe o motor do seu Ford EcoSport de 2008.`
+- latencia total observada: `45300.0 ms`
+- resposta: `Por favor, informe o motor do seu Ford EcoSport 2008.`
 - ferramentas usadas: `['pre_search_validator']`
 - handoff: `False`
-- actions: `[{'type': 'request_info', 'key': 'engine', 'prompt': 'Por favor, informe o motor do seu Ford EcoSport de 2008.'}]`
+- actions: `[{'type': 'request_info', 'key': 'engine', 'prompt': 'Por favor, informe o motor do seu Ford EcoSport 2008.'}]`
 - criteria em `conversation_state`: `{'part_query': 'coxim amortecedor', 'part_code': None, 'vehicle_brand': None, 'vehicle_model': 'Ecosport', 'vehicle_year': 2008, 'engine': None, 'side': None, 'position': None, 'axle': None, 'variant': None, 'quantity': None}`
 
 ### case_019 - partial
@@ -363,11 +333,11 @@ Relatorio gerado por chamadas reais ao `POST /respond`, sem `StubPreSearchValida
 - `conversation_id`: `conv-pastilha-gol-follow-001`
 - pergunta: `pastilha de freio gol 2010`
 - status HTTP: `200`
-- latencia total observada: `41876.07 ms`
-- resposta: `Por favor, informe o motor do seu veículo GOL de 2010.`
+- latencia total observada: `33070.62 ms`
+- resposta: `Qual a motorizacao do veiculo?`
 - ferramentas usadas: `['pre_search_validator']`
 - handoff: `False`
-- actions: `[{'type': 'request_info', 'key': 'engine', 'prompt': 'Por favor, informe o motor do seu veículo GOL de 2010.'}]`
+- actions: `[{'type': 'request_info', 'key': 'engine', 'prompt': 'Qual a motorizacao do veiculo?', 'options': ['1.6 L 8V SOHC L4', '1300 AR', '1600 AR', 'AP 1600', 'AP 1800', 'AP 2000', 'CHT', 'EA111', 'EA111 AT', 'EA111 TEC', 'EA111 VHT', 'EA211']}]`
 - criteria em `conversation_state`: `{'part_query': 'pastilhas de freio', 'part_code': None, 'vehicle_brand': None, 'vehicle_model': 'Gol', 'vehicle_year': 2010, 'engine': None, 'side': None, 'position': None, 'axle': None, 'variant': None, 'quantity': None}`
 
 ### case_020 - partial
@@ -376,12 +346,18 @@ Relatorio gerado por chamadas reais ao `POST /respond`, sem `StubPreSearchValida
 - `conversation_id`: `conv-filtro-oleo-gol-follow-001`
 - pergunta: `filtro de oleo gol 2010`
 - status HTTP: `200`
-- latencia total observada: `41009.84 ms`
-- resposta: `Qual eixo do seu carro (dianteiro ou traseiro)?`
-- ferramentas usadas: `['pre_search_validator']`
+- latencia total observada: `34365.6 ms`
+- resposta: `Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca.`
+- ferramentas usadas: `['pre_search_validator', 'search_parts']`
 - handoff: `False`
-- actions: `[{'type': 'request_info', 'key': 'axle', 'prompt': 'Qual eixo do seu carro (dianteiro ou traseiro)?'}]`
+- actions: `[{'type': 'show_items', 'items': [{'item_id': 'LBM1', 'title': 'MAXI FILTRO DE OLEO FIAT 147/UNO/TEMPRA - FORD/VW CHT TODOS - KA/', 'score': 0.48}, {'item_id': 'LBM1*A', 'title': 'MAXI FILTRO DE OLEO FIAT 147/UNO/TEMPRA - FORD/VW CHT TODOS - KA/', 'score': 0.48}, {'item_id': 'W712/8', 'title': 'FILTRO OLEO PEUGEOT 106/206/306/405/504/605', 'score': 0.4}, {'item_id': 'W712/53', 'title': 'FILTRO OLEO VW GOL/PARATI 1.0 MI 8/16V - TODOS', 'score': 0.4}, {'item_id': 'W7125', 'title': 'FILTRO OLEO VW GOL/PARATI 1.0 MI 8/16V - TODOS', 'score': 0.4}, {'item_id': 'W7143', 'title': 'FILTRO OLEO FORD FIESTA/COURIER 96/99 ENDURA - KA TODOS', 'score': 0.4}, {'item_id': 'W7MULTI3/4-S', 'title': 'FILTRO OLEO MULTI VW AE TODOS - FIESTA/ECOSPORT/KA/FOCUS', 'score': 0.4}, {'item_id': 'W7MULTI3/4-S*A', 'title': 'FILTRO OLEO MULTI VW AE TODOS - FIESTA/ECOSPORT/KA/FOCUS', 'score': 0.4}, {'item_id': 'LBM2', 'title': 'MAXI FILTRO OLEO FORD C/MOTOR AP TODOS - VW TODOS C/MOTOR AP/AT', 'score': 0.4}, {'item_id': 'LBM2*A', 'title': 'MAXI FILTRO OLEO FORD C/MOTOR AP TODOS - VW TODOS C/MOTOR AP/AT', 'score': 0.4}]}]`
 - criteria em `conversation_state`: `{'part_query': 'filtro de oleo', 'part_code': None, 'vehicle_brand': None, 'vehicle_model': 'Gol', 'vehicle_year': 2010, 'engine': None, 'side': None, 'position': None, 'axle': None, 'variant': None, 'quantity': None}`
+- top items:
+  - `LBM1` | `MAXI FILTRO DE OLEO FIAT 147/UNO/TEMPRA - FORD/VW CHT TODOS - KA/` | `score=0.48`
+  - `LBM1*A` | `MAXI FILTRO DE OLEO FIAT 147/UNO/TEMPRA - FORD/VW CHT TODOS - KA/` | `score=0.48`
+  - `W712/8` | `FILTRO OLEO PEUGEOT 106/206/306/405/504/605` | `score=0.4`
+  - `W712/53` | `FILTRO OLEO VW GOL/PARATI 1.0 MI 8/16V - TODOS` | `score=0.4`
+  - `W7125` | `FILTRO OLEO VW GOL/PARATI 1.0 MI 8/16V - TODOS` | `score=0.4`
 
 ### case_021 - partial
 
@@ -389,11 +365,11 @@ Relatorio gerado por chamadas reais ao `POST /respond`, sem `StubPreSearchValida
 - `conversation_id`: `conv-bandeja-ecosport-follow-001`
 - pergunta: `bandeja ecosport 2008`
 - status HTTP: `200`
-- latencia total observada: `43887.53 ms`
-- resposta: `Qual eixo (dianteiro ou traseiro) você precisa da bandeja do Ecosport 2008?`
+- latencia total observada: `32677.08 ms`
+- resposta: `Qual lado da peca?`
 - ferramentas usadas: `['pre_search_validator']`
 - handoff: `False`
-- actions: `[{'type': 'request_info', 'key': 'axle', 'prompt': 'Qual eixo (dianteiro ou traseiro) você precisa da bandeja do Ecosport 2008?'}]`
+- actions: `[{'type': 'request_info', 'key': 'side', 'prompt': 'Qual lado da peca?', 'options': ['Esquerdo', 'Direito', 'Nao sei']}]`
 - criteria em `conversation_state`: `{'part_query': 'bandejas', 'part_code': None, 'vehicle_brand': None, 'vehicle_model': 'Ecosport', 'vehicle_year': 2008, 'engine': None, 'side': None, 'position': None, 'axle': None, 'variant': None, 'quantity': None}`
 
 ### case_022 - partial
@@ -402,12 +378,18 @@ Relatorio gerado por chamadas reais ao `POST /respond`, sem `StubPreSearchValida
 - `conversation_id`: `conv-filtro-comb-gol-follow-001`
 - pergunta: `filtro de combustivel gol 2010`
 - status HTTP: `200`
-- latencia total observada: `39730.43 ms`
-- resposta: `Qual lado do veículo você precisa do filtro de combustível?`
-- ferramentas usadas: `['pre_search_validator']`
+- latencia total observada: `34322.48 ms`
+- resposta: `Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca.`
+- ferramentas usadas: `['pre_search_validator', 'search_parts']`
 - handoff: `False`
-- actions: `[{'type': 'request_info', 'key': 'side', 'prompt': 'Qual lado do veículo você precisa do filtro de combustível?'}]`
+- actions: `[{'type': 'show_items', 'items': [{'item_id': 'WK58/3', 'title': 'FILTRO DE COMBUSTIVEL RENAULT LOGAN/SANDERO/FLUENCE/DUSTER/MEGANE - VW NOVO GOL/VOYAGE/SAVEIRO 2008/', 'score': 0.56}, {'item_id': 'WK730/4', 'title': 'FILTRO COMBUSTIVEL VW GOL/SAVEIRO TOTALFLEX', 'score': 0.4}, {'item_id': 'WK830/7*A', 'title': 'FILTRO COMBUSTIVEL VW PASSAT ALEMAO 1.8/2.0/2.8 - 96/', 'score': 0.4}, {'item_id': 'WK613/4', 'title': 'FILTRO COMBUSTIVEL VW GOL/PARATI/SANTANA/QUANTUM /96 TODOS', 'score': 0.4}, {'item_id': 'UN68', 'title': 'FILTRO COMBUSTIVEL UNIVERSAL GRANDE 6/8 MM - P/VEICULOS CARBURADOS', 'score': 0.4}, {'item_id': 'UN86', 'title': 'FILTRO COMBUSTIVEL UNIVERSAL PEQUENO 6/8 MM - P/VEICULOS CARBURADOS', 'score': 0.4}, {'item_id': 'FS07/1', 'title': 'FILTRO COMBUSTIVEL VW GOL/PARATI/SANTANA/QUANTUM /96 TODOS - BICO FINO/GROSSO', 'score': 0.4}, {'item_id': 'FS12/7', 'title': 'FILTRO COMBUSTIVEL VW GOL/PARATI/SAVEIRO 2003/ FLEX - FOX/CROSSFOX/SPACEFOX 2003/ FLEX', 'score': 0.4}, {'item_id': 'WK613/3', 'title': 'FILTRO COMBUSTIVEL VW GOL/PARATI/SAVEIRO/KOMBI MI 97/ TODOS - FOX 1.6 - NOVO POLO 1.0/1.6', 'score': 0.4}, {'item_id': 'FS50/7', 'title': 'FILTRO COMBUSTÍVEL RENAULT DUSTER OROCH 15/ CHERY QQ 10/15 CITROEN AIR CROSS 10/ HYUNDAI CRETA', 'score': 0.4}]}]`
 - criteria em `conversation_state`: `{'part_query': 'filtro de combustivel', 'part_code': None, 'vehicle_brand': None, 'vehicle_model': 'Gol', 'vehicle_year': 2010, 'engine': None, 'side': None, 'position': None, 'axle': None, 'variant': None, 'quantity': None}`
+- top items:
+  - `WK58/3` | `FILTRO DE COMBUSTIVEL RENAULT LOGAN/SANDERO/FLUENCE/DUSTER/MEGANE - VW NOVO GOL/VOYAGE/SAVEIRO 2008/` | `score=0.56`
+  - `WK730/4` | `FILTRO COMBUSTIVEL VW GOL/SAVEIRO TOTALFLEX` | `score=0.4`
+  - `WK830/7*A` | `FILTRO COMBUSTIVEL VW PASSAT ALEMAO 1.8/2.0/2.8 - 96/` | `score=0.4`
+  - `WK613/4` | `FILTRO COMBUSTIVEL VW GOL/PARATI/SANTANA/QUANTUM /96 TODOS` | `score=0.4`
+  - `UN68` | `FILTRO COMBUSTIVEL UNIVERSAL GRANDE 6/8 MM - P/VEICULOS CARBURADOS` | `score=0.4`
 
 ### case_023 - partial
 
@@ -415,12 +397,18 @@ Relatorio gerado por chamadas reais ao `POST /respond`, sem `StubPreSearchValida
 - `conversation_id`: `conv-filtro-ar-gol-follow-001`
 - pergunta: `filtro ar motor gol 2010`
 - status HTTP: `200`
-- latencia total observada: `40031.68 ms`
-- resposta: `Qual eixo do veículo você está procurando?`
-- ferramentas usadas: `['pre_search_validator']`
+- latencia total observada: `37739.44 ms`
+- resposta: `Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca.`
+- ferramentas usadas: `['pre_search_validator', 'search_parts']`
 - handoff: `False`
-- actions: `[{'type': 'request_info', 'key': 'axle', 'prompt': 'Qual eixo do veículo você está procurando?'}]`
+- actions: `[{'type': 'show_items', 'items': [{'item_id': 'HLP6093', 'title': 'FILTRO AR VW GOLF IV 1.6/1.8/2.0 98/ - BORA TODOS', 'score': 0.4}, {'item_id': 'HLP6093*A', 'title': 'FILTRO AR VW GOLF IV 1.6/1.8/2.0 98/ - BORA TODOS', 'score': 0.4}, {'item_id': 'C2990', 'title': 'FILTRO AR VW GOL/PARATI 1.0 MI 16V/POWER 01.01/ - GOLF 1.6 8V', 'score': 0.4}, {'item_id': 'C29108', 'title': 'FILTRO AR VW GOL 1.0 95/96 1.0 16V 97/ - GOL 2.0 EFI 95/ - GOL', 'score': 0.4}, {'item_id': 'CU3162', 'title': 'FILTRO AR CONDICIONADO VW GOL/PARATI/SAVEIRO 99/ - GERACAO III', 'score': 0.4}, {'item_id': 'CU3162*A', 'title': 'FILTRO AR CONDICIONADO VW GOL/PARATI/SAVEIRO 99/ - GERACAO III', 'score': 0.4}, {'item_id': 'HLP6091', 'title': 'FILTRO AR VW GOL 1.0 95/96 1.0 16V 97/ - GOL 2.0 EFI 95/ - GOL', 'score': 0.4}, {'item_id': 'HLP6091*A', 'title': 'FILTRO AR VW GOL 1.0 95/96 1.0 16V 97/ - GOL 2.0 EFI 95/ - GOL', 'score': 0.4}, {'item_id': 'HLP6096', 'title': 'FILTRO AR VW GOL/PARATI 1.0 8V/POWER 08.2001/ - FOX 1.0 2003/ - BAIXO', 'score': 0.4}, {'item_id': 'HLP6096*A', 'title': 'FILTRO AR VW GOL/PARATI 1.0 8V/POWER 08.2001/ - FOX 1.0 2003/ - BAIXO', 'score': 0.4}]}]`
 - criteria em `conversation_state`: `{'part_query': 'filtro de ar do motor', 'part_code': None, 'vehicle_brand': None, 'vehicle_model': 'Gol', 'vehicle_year': 2010, 'engine': None, 'side': None, 'position': None, 'axle': None, 'variant': None, 'quantity': None}`
+- top items:
+  - `HLP6093` | `FILTRO AR VW GOLF IV 1.6/1.8/2.0 98/ - BORA TODOS` | `score=0.4`
+  - `HLP6093*A` | `FILTRO AR VW GOLF IV 1.6/1.8/2.0 98/ - BORA TODOS` | `score=0.4`
+  - `C2990` | `FILTRO AR VW GOL/PARATI 1.0 MI 16V/POWER 01.01/ - GOLF 1.6 8V` | `score=0.4`
+  - `C29108` | `FILTRO AR VW GOL 1.0 95/96 1.0 16V 97/ - GOL 2.0 EFI 95/ - GOL` | `score=0.4`
+  - `CU3162` | `FILTRO AR CONDICIONADO VW GOL/PARATI/SAVEIRO 99/ - GERACAO III` | `score=0.4`
 
 ### case_024 - partial
 
@@ -428,18 +416,12 @@ Relatorio gerado por chamadas reais ao `POST /respond`, sem `StubPreSearchValida
 - `conversation_id`: `conv-disco-gol-follow-001`
 - pergunta: `disco de freio gol 2010`
 - status HTTP: `200`
-- latencia total observada: `40251.51 ms`
-- resposta: `Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca.`
-- ferramentas usadas: `['pre_search_validator', 'search_parts']`
+- latencia total observada: `35470.19 ms`
+- resposta: `Qual a motorizacao do veiculo?`
+- ferramentas usadas: `['pre_search_validator']`
 - handoff: `False`
-- actions: `[{'type': 'show_items', 'items': [{'item_id': 'BD-5298', 'title': 'DISCO DE FREIO DIANTEIRO VW NOVO GOL/VOYAGE 1.0 2008/ ARO 13 - VENTILADO 239MM 4 FUROS', 'score': 0.56}, {'item_id': 'HF-87', 'title': 'DISCO DE FREIO DIANTEIRO VW NOVO GOL/VOYAGE 1.0 2008/ ARO 13 - VENTILADO 239MM 4 FUROS', 'score': 0.56}, {'item_id': 'FLDI00126', 'title': 'DISCO DE FREIO DIANTEIRO VW GOL/VOYAGE/SAVEIRO/PASSAT - SANTANA /89 - SÓLIDO 239MM 4 FUROS', 'score': 0.56}, {'item_id': 'RPDI00480', 'title': 'DISCO DE FREIO DIANTEIRO VW GOL/VOYAGE/SAVEIRO/PASSAT - SANTANA /89 - SÓLIDO 239MM 4 FUROS', 'score': 0.56}, {'item_id': 'BD-3790', 'title': 'DISCO DE FREIO DIANTEIRO VW SANTANA 94/ GOL GTI 95/ POLO 97/ GOLF 1.8 GTI 93/98 - VENTILADO 256M', 'score': 0.56}, {'item_id': 'RCDI01030', 'title': 'DISCO DE FREIO DIANTEIRO VW SANTANA 94/ GOL GTI 95/ POLO 97/ GOLF 1.8 GTI 93/98 - VENTILADO 256M', 'score': 0.56}, {'item_id': 'BD-5297', 'title': 'DISCO DE FREIO DIANTEIRO NOVO GOL/VOYAGE/SAVEIRO 1.6 08/ ARO 14 - VENTILADO 256MM - ESPESSURA 19MM', 'score': 0.56}, {'item_id': 'HF-87A', 'title': 'DISCO DE FREIO DIANTEIRO NOVO GOL/VOYAGE/SAVEIRO 1.6 08/ ARO 14 - VENTILADO 256MM - ESPESSURA 19MM', 'score': 0.56}, {'item_id': 'MR005', 'title': 'DISCO DE FREIO DIANTEIRO NOVO GOL/VOYAGE/SAVEIRO 1.6 08/ ARO 14 - VENTILADO 256MM - ESPESSURA 19MM', 'score': 0.56}, {'item_id': 'BD-9614', 'title': 'DISCO DE FREIO DIANTEIRO VW UP! TSI 14/ - NOVO GOL/VOYAGE/SAVEIRO 13/ VENTILADO 256M ESPESSURA 22MM', 'score': 0.56}]}]`
-- criteria em `conversation_state`: `{'part_query': 'disco de freio', 'part_code': None, 'vehicle_brand': None, 'vehicle_model': 'Gol', 'vehicle_year': 2010, 'engine': None, 'side': None, 'position': None, 'axle': None, 'variant': None, 'quantity': None}`
-- top items:
-  - `BD-5298` | `DISCO DE FREIO DIANTEIRO VW NOVO GOL/VOYAGE 1.0 2008/ ARO 13 - VENTILADO 239MM 4 FUROS` | `score=0.56`
-  - `HF-87` | `DISCO DE FREIO DIANTEIRO VW NOVO GOL/VOYAGE 1.0 2008/ ARO 13 - VENTILADO 239MM 4 FUROS` | `score=0.56`
-  - `FLDI00126` | `DISCO DE FREIO DIANTEIRO VW GOL/VOYAGE/SAVEIRO/PASSAT - SANTANA /89 - SÓLIDO 239MM 4 FUROS` | `score=0.56`
-  - `RPDI00480` | `DISCO DE FREIO DIANTEIRO VW GOL/VOYAGE/SAVEIRO/PASSAT - SANTANA /89 - SÓLIDO 239MM 4 FUROS` | `score=0.56`
-  - `BD-3790` | `DISCO DE FREIO DIANTEIRO VW SANTANA 94/ GOL GTI 95/ POLO 97/ GOLF 1.8 GTI 93/98 - VENTILADO 256M` | `score=0.56`
+- actions: `[{'type': 'request_info', 'key': 'engine', 'prompt': 'Qual a motorizacao do veiculo?', 'options': ['1.6 L 8V SOHC L4', '1300 AR', '1600 AR', 'AP 1600', 'AP 1800', 'AP 2000', 'CHT', 'EA111', 'EA111 AT', 'EA111 TEC', 'EA111 VHT', 'EA211']}]`
+- criteria em `conversation_state`: `{'part_query': 'discos de freio', 'part_code': None, 'vehicle_brand': None, 'vehicle_model': 'Gol', 'vehicle_year': 2010, 'engine': None, 'side': None, 'position': None, 'axle': None, 'variant': None, 'quantity': None}`
 
 ### case_025 - partial
 
@@ -447,18 +429,12 @@ Relatorio gerado por chamadas reais ao `POST /respond`, sem `StubPreSearchValida
 - `conversation_id`: `conv-farol-gol-follow-001`
 - pergunta: `farol gol 2010`
 - status HTTP: `200`
-- latencia total observada: `31433.3 ms`
-- resposta: `Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca.`
-- ferramentas usadas: `['pre_search_validator', 'search_parts']`
+- latencia total observada: `46661.87 ms`
+- resposta: `Qual peca voce precisa?`
+- ferramentas usadas: `['pre_search_validator']`
 - handoff: `False`
-- actions: `[{'type': 'show_items', 'items': [{'item_id': 'PF37', 'title': 'PARAFUSO DO FAROL', 'score': 0.48}, {'item_id': 'AV-12253', 'title': 'LAMPADA FAROL H4 12V 3200K 60/55 WATTS', 'score': 0.48}, {'item_id': '64150', 'title': 'LAMPADA FAROL/AUXILIAR - 3200K H1 - 55 WATTS', 'score': 0.48}, {'item_id': 'AV-12248', 'title': 'LÂMPADA FAROL/AUXILIAR - 3200K H1 - 12V 55 WATTS', 'score': 0.48}, {'item_id': 'AV-12250', 'title': 'LAMPADA FAROL AUXILIAR - 3200K H3 - 12V 55 WATTS', 'score': 0.48}, {'item_id': 'PF39', 'title': 'PARAFUSO DO FAROL-PARACHOQUE - MOLDURAS EXTERNAS', 'score': 0.48}, {'item_id': 'PF50', 'title': 'PARAFUSO DO SUPORTE DO FILTRO DO AR-FAROL E PARACHOQUE', 'score': 0.48}, {'item_id': 'PF35', 'title': 'PARAFUSO DO FAROL-COLUNAS/MOLDURAS INTERNAS-PORTA MALAS E PARACHOQUE', 'score': 0.48}, {'item_id': '64210CBL', 'title': 'LAMPADA FAROL ALTO/BAIXO - 4200K LUZ BRANCA H7 - 55 WATTS - ATE 30 + LUZ - VALOR JOGOC/2', 'score': 0.48}]}]`
-- criteria em `conversation_state`: `{'part_query': 'farol', 'part_code': None, 'vehicle_brand': None, 'vehicle_model': 'Gol', 'vehicle_year': 2010, 'engine': None, 'side': None, 'position': None, 'axle': None, 'variant': None, 'quantity': None}`
-- top items:
-  - `PF37` | `PARAFUSO DO FAROL` | `score=0.48`
-  - `AV-12253` | `LAMPADA FAROL H4 12V 3200K 60/55 WATTS` | `score=0.48`
-  - `64150` | `LAMPADA FAROL/AUXILIAR - 3200K H1 - 55 WATTS` | `score=0.48`
-  - `AV-12248` | `LÂMPADA FAROL/AUXILIAR - 3200K H1 - 12V 55 WATTS` | `score=0.48`
-  - `AV-12250` | `LAMPADA FAROL AUXILIAR - 3200K H3 - 12V 55 WATTS` | `score=0.48`
+- actions: `[{'type': 'request_info', 'key': 'part_query', 'prompt': 'Qual peca voce precisa?'}]`
+- criteria em `conversation_state`: `{'part_query': None, 'part_code': None, 'vehicle_brand': None, 'vehicle_model': 'Gol', 'vehicle_year': 2010, 'engine': None, 'side': None, 'position': None, 'axle': None, 'variant': None, 'quantity': None}`
 
 ### case_026 - partial
 
@@ -466,11 +442,11 @@ Relatorio gerado por chamadas reais ao `POST /respond`, sem `StubPreSearchValida
 - `conversation_id`: `conv-radiador-focus-follow-001`
 - pergunta: `radiador focus 2010`
 - status HTTP: `200`
-- latencia total observada: `39940.01 ms`
-- resposta: `Por favor, informe o motor do seu Ford Focus de 2010.`
+- latencia total observada: `34223.0 ms`
+- resposta: `Qual a motorizacao do veiculo?`
 - ferramentas usadas: `['pre_search_validator']`
 - handoff: `False`
-- actions: `[{'type': 'request_info', 'key': 'engine', 'prompt': 'Por favor, informe o motor do seu Ford Focus de 2010.'}]`
+- actions: `[{'type': 'request_info', 'key': 'engine', 'prompt': 'Qual a motorizacao do veiculo?', 'options': ['DURATEC', 'DURATEC HE', 'SIGMA', 'ZETEC ROCAM', 'ZETEC-S']}]`
 - criteria em `conversation_state`: `{'part_query': 'radiador', 'part_code': None, 'vehicle_brand': None, 'vehicle_model': 'Focus', 'vehicle_year': 2010, 'engine': None, 'side': None, 'position': None, 'axle': None, 'variant': None, 'quantity': None}`
 
 ### case_027 - partial
@@ -479,11 +455,11 @@ Relatorio gerado por chamadas reais ao `POST /respond`, sem `StubPreSearchValida
 - `conversation_id`: `conv-coxim-ecosport-follow-text-001`
 - pergunta: `coxim amortecedor ecosport 2008`
 - status HTTP: `200`
-- latencia total observada: `41796.66 ms`
-- resposta: `Por favor, informe o motor do seu Ford EcoSport de 2008.`
+- latencia total observada: `41302.02 ms`
+- resposta: `Por favor, informe o motor do seu Ford EcoSport 2008.`
 - ferramentas usadas: `['pre_search_validator']`
 - handoff: `False`
-- actions: `[{'type': 'request_info', 'key': 'engine', 'prompt': 'Por favor, informe o motor do seu Ford EcoSport de 2008.'}]`
+- actions: `[{'type': 'request_info', 'key': 'engine', 'prompt': 'Por favor, informe o motor do seu Ford EcoSport 2008.'}]`
 - criteria em `conversation_state`: `{'part_query': 'coxim amortecedor', 'part_code': None, 'vehicle_brand': None, 'vehicle_model': 'Ecosport', 'vehicle_year': 2008, 'engine': None, 'side': None, 'position': None, 'axle': None, 'variant': None, 'quantity': None}`
 
 ### case_028 - partial
@@ -492,11 +468,11 @@ Relatorio gerado por chamadas reais ao `POST /respond`, sem `StubPreSearchValida
 - `conversation_id`: `conv-pastilha-ecosport-follow-001`
 - pergunta: `pastilha de freio ecosport 2008`
 - status HTTP: `200`
-- latencia total observada: `42191.23 ms`
-- resposta: `Por favor, informe o motor do seu Ford EcoSport 2008.`
+- latencia total observada: `35450.67 ms`
+- resposta: `Qual a motorizacao do veiculo?`
 - ferramentas usadas: `['pre_search_validator']`
 - handoff: `False`
-- actions: `[{'type': 'request_info', 'key': 'engine', 'prompt': 'Por favor, informe o motor do seu Ford EcoSport 2008.'}]`
+- actions: `[{'type': 'request_info', 'key': 'engine', 'prompt': 'Qual a motorizacao do veiculo?', 'options': ['DRAGON', 'DURATEC', 'DURATEC HE', 'SIGMA', 'ZETEC ROCAM']}]`
 - criteria em `conversation_state`: `{'part_query': 'pastilhas de freio', 'part_code': None, 'vehicle_brand': None, 'vehicle_model': 'Ecosport', 'vehicle_year': 2008, 'engine': None, 'side': None, 'position': None, 'axle': None, 'variant': None, 'quantity': None}`
 
 ### case_029 - partial_generic
@@ -505,11 +481,11 @@ Relatorio gerado por chamadas reais ao `POST /respond`, sem `StubPreSearchValida
 - `conversation_id`: `conv-generic-part-follow-001`
 - pergunta: `quero uma peca`
 - status HTTP: `200`
-- latencia total observada: `31306.23 ms`
-- resposta: `Por favor, informe qual peça você precisa.`
+- latencia total observada: `32400.67 ms`
+- resposta: `Poderia me informar qual peça você precisa?`
 - ferramentas usadas: `['pre_search_validator']`
 - handoff: `False`
-- actions: `[{'type': 'request_info', 'key': 'part_query', 'prompt': 'Por favor, informe qual peça você precisa.'}]`
+- actions: `[{'type': 'request_info', 'key': 'part_query', 'prompt': 'Poderia me informar qual peça você precisa?'}]`
 - criteria em `conversation_state`: `{'part_query': None, 'part_code': None, 'vehicle_brand': None, 'vehicle_model': None, 'vehicle_year': None, 'engine': None, 'side': None, 'position': None, 'axle': None, 'variant': None, 'quantity': None}`
 
 ### case_030 - partial_generic
@@ -518,12 +494,12 @@ Relatorio gerado por chamadas reais ao `POST /respond`, sem `StubPreSearchValida
 - `conversation_id`: `conv-generic-gol-follow-001`
 - pergunta: `preciso de ajuda com uma peca do gol`
 - status HTTP: `200`
-- latencia total observada: `30671.7 ms`
-- resposta: `Qual peça do Gol você precisa?`
+- latencia total observada: `35363.85 ms`
+- resposta: `Qual a família da peça que você precisa?`
 - ferramentas usadas: `['pre_search_validator']`
 - handoff: `False`
-- actions: `[{'type': 'request_info', 'key': 'part_query', 'prompt': 'Qual peça do Gol você precisa?'}]`
-- criteria em `conversation_state`: `{'part_query': None, 'part_code': None, 'vehicle_brand': None, 'vehicle_model': 'GOL', 'vehicle_year': None, 'engine': None, 'side': None, 'position': None, 'axle': None, 'variant': None, 'quantity': None}`
+- actions: `[{'type': 'request_info', 'key': 'part_query', 'prompt': 'Qual a família da peça que você precisa?'}]`
+- criteria em `conversation_state`: `{'part_query': None, 'part_code': None, 'vehicle_brand': None, 'vehicle_model': 'Gol', 'vehicle_year': None, 'engine': None, 'side': None, 'position': None, 'axle': None, 'variant': None, 'quantity': None}`
 
 ### case_031 - follow_up
 
@@ -532,11 +508,11 @@ Relatorio gerado por chamadas reais ao `POST /respond`, sem `StubPreSearchValida
 - `parent_case_id`: `case_016`
 - pergunta: `1.0`
 - status HTTP: `200`
-- latencia total observada: `43953.14 ms`
+- latencia total observada: `42153.78 ms`
 - resposta: `Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca.`
 - ferramentas usadas: `['pre_search_validator', 'search_parts']`
 - handoff: `False`
-- actions: `[{'type': 'show_items', 'items': [{'item_id': 'RV-12528', 'title': 'RADIADOR COM AR CONDICIONADO VW NOVO GOL/VOYAGE 08/ - GOL 1.0 12V - SAVEIRO 10/ - FOX/ 1.0/1.6 06/', 'score': 0.64}, {'item_id': 'IR48108', 'title': 'RADIADOR SEM AR CONDICIONADO VW NOVO GOL/VOYAGE 08/ - NOVA SAVEIRO 10/ - FOX/POLO 1.0/1.6 06/ - A/M', 'score': 0.64}, {'item_id': 'IR48109', 'title': 'RADIADOR COM AR CONDICIONADO VW NOVO GOL/VOYAGE 08/ - NOVA SAVEIRO 10/ - FOX/POLO 1.0/1.6 06/ - F.T', 'score': 0.64}, {'item_id': 'RV-12527', 'title': 'RADIADOR SEM AR CONDICIONADO VW NOVO GOL/VOYAGE 08/ - NOVA SAVEIRO 10/ - FOX/POLO 1.0/1.6 06/ - A/M', 'score': 0.64}, {'item_id': 'TRC0017', 'title': 'RADIADOR/RESFRIADOR DE ÓLEO MOTOR VW TIGUAN/UP!/POLO/VIRTUS/GOLF/JETTA MSI/MPI/TSI/TSFI 1.0/1.4/1.6', 'score': 0.64}, {'item_id': 'KT-40023', 'title': 'KIT COXIM RADIADOR VW PASSAT/GOL/VOYAGE GRANDE', 'score': 0.56}, {'item_id': 'MF-11', 'title': 'TAMPA RADIADOR VW PASSAT/GOL/VOYAGE/PARATI /86', 'score': 0.56}, {'item_id': 'KT-40028', 'title': 'KIT COXIM RADIADOR VW PASSAT/GOL/VOYAGE PEQUENO', 'score': 0.56}, {'item_id': '20434', 'title': 'MANGUEIRA VW GOL 1.0 II 95/96 - SUPERIOR RADIADOR', 'score': 0.56}, {'item_id': '20403', 'title': 'MANGUEIRA VW GOL/PARATI AP 95/ - INFERIOR RADIADOR', 'score': 0.56}]}]`
+- actions: `[{'type': 'show_items', 'items': [{'item_id': 'RV-12528', 'title': 'RADIADOR COM AR CONDICIONADO VW NOVO GOL/VOYAGE 08/ - GOL 1.0 12V - SAVEIRO 10/ - FOX/ 1.0/1.6 06/', 'score': 0.64}, {'item_id': 'IR48108', 'title': 'RADIADOR SEM AR CONDICIONADO VW NOVO GOL/VOYAGE 08/ - NOVA SAVEIRO 10/ - FOX/POLO 1.0/1.6 06/ - A/M', 'score': 0.64}, {'item_id': 'IR48109', 'title': 'RADIADOR COM AR CONDICIONADO VW NOVO GOL/VOYAGE 08/ - NOVA SAVEIRO 10/ - FOX/POLO 1.0/1.6 06/ - F.T', 'score': 0.64}, {'item_id': 'RV-12527', 'title': 'RADIADOR SEM AR CONDICIONADO VW NOVO GOL/VOYAGE 08/ - NOVA SAVEIRO 10/ - FOX/POLO 1.0/1.6 06/ - A/M', 'score': 0.64}, {'item_id': 'TRC0017', 'title': 'RADIADOR/RESFRIADOR DE ÓLEO MOTOR VW TIGUAN/UP!/POLO/VIRTUS/GOLF/JETTA MSI/MPI/TSI/TSFI 1.0/1.4/1.6', 'score': 0.64}, {'item_id': 'KT-40023', 'title': 'KIT COXIM RADIADOR VW PASSAT/GOL/VOYAGE GRANDE', 'score': 0.56}, {'item_id': 'KT-40028', 'title': 'KIT COXIM RADIADOR VW PASSAT/GOL/VOYAGE PEQUENO', 'score': 0.56}, {'item_id': '20434', 'title': 'MANGUEIRA VW GOL 1.0 II 95/96 - SUPERIOR RADIADOR', 'score': 0.56}, {'item_id': '20403', 'title': 'MANGUEIRA VW GOL/PARATI AP 95/ - INFERIOR RADIADOR', 'score': 0.56}, {'item_id': '20405', 'title': 'MANGUEIRA VW GOL/PARATI AP 95/ - SUPERIOR RADIADOR', 'score': 0.56}]}]`
 - criteria em `conversation_state`: `{'part_query': 'radiador', 'part_code': None, 'vehicle_brand': None, 'vehicle_model': 'Gol', 'vehicle_year': 2010, 'engine': '1.0', 'side': None, 'position': None, 'axle': None, 'variant': None, 'quantity': 1}`
 - top items:
   - `RV-12528` | `RADIADOR COM AR CONDICIONADO VW NOVO GOL/VOYAGE 08/ - GOL 1.0 12V - SAVEIRO 10/ - FOX/ 1.0/1.6 06/` | `score=0.64`
@@ -552,11 +528,11 @@ Relatorio gerado por chamadas reais ao `POST /respond`, sem `StubPreSearchValida
 - `parent_case_id`: `case_017`
 - pergunta: `1.6`
 - status HTTP: `200`
-- latencia total observada: `46176.15 ms`
+- latencia total observada: `42989.59 ms`
 - resposta: `Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca.`
 - ferramentas usadas: `['pre_search_validator', 'search_parts']`
 - handoff: `False`
-- actions: `[{'type': 'show_items', 'items': [{'item_id': 'IR48524', 'title': 'RADIADOR FORD NOVO FIESTA 1.0 SUPERCHARGER - 1.6 03/10 - ECOSPORT 1.0/1.6 8V - 2.0 16V 03/10  TODOS', 'score': 0.64}, {'item_id': 'RV-12733', 'title': 'RADIADOR FORD NOVO FIESTA 1.0 SUPERCHARGER - 1.6 03/10 - ECOSPORT 1.0/1.6 8V - 2.0 16V 03/10  TODOS', 'score': 0.64}, {'item_id': 'RV-12733*A', 'title': 'RADIADOR FORD NOVO FIESTA 1.0 SUPERCHARGER - 1.6 03/10 - ECOSPORT 1.0/1.6 8V - 2.0 16V 03/10  TODDOS', 'score': 0.64}, {'item_id': 'JAM-7555', 'title': 'MANGUEIRA SUPERIOR DO RADIADOR FORD ECOSPORT 2.0', 'score': 0.56}, {'item_id': 'JAM-7553', 'title': 'MANGUEIRA RADIADOR FORD ECOSPORT 1.6 2003/ - SUPERIOR', 'score': 0.56}, {'item_id': 'JAM-7554', 'title': 'MANGUEIRA RADIADOR FORD ECOSPORT 1.6 2003/ - INFERIOR', 'score': 0.56}, {'item_id': 'JAM-7556', 'title': 'MANGUEIRA RADIADOR FORD ECOSPORT 2.0 2004/ - INFERIOR', 'score': 0.56}, {'item_id': 'G-1114', 'title': 'RESERVATÓRIO ÁGUA DO RADIADOR 2 SAÍDAS FORD NOVO FIESTA/ECOSPORT 2002/', 'score': 0.56}, {'item_id': 'MF-12462', 'title': 'RESERVATÓRIO ÁGUA DO RADIADOR 2 SAÍDAS FORD NOVO FIESTA/ECOSPORT 2002/', 'score': 0.56}, {'item_id': 'MF-462', 'title': 'RESERVATÓRIO ÁGUA DO RADIADOR 2 SAÍDAS FORD NOVO FIESTA/ECOSPORT 2002/', 'score': 0.56}]}]`
+- actions: `[{'type': 'show_items', 'items': [{'item_id': 'IR48524', 'title': 'RADIADOR FORD NOVO FIESTA 1.0 SUPERCHARGER - 1.6 03/10 - ECOSPORT 1.0/1.6 8V - 2.0 16V 03/10  TODOS', 'score': 0.64}, {'item_id': 'RV-12733', 'title': 'RADIADOR FORD NOVO FIESTA 1.0 SUPERCHARGER - 1.6 03/10 - ECOSPORT 1.0/1.6 8V - 2.0 16V 03/10  TODOS', 'score': 0.64}, {'item_id': 'RV-12733*A', 'title': 'RADIADOR FORD NOVO FIESTA 1.0 SUPERCHARGER - 1.6 03/10 - ECOSPORT 1.0/1.6 8V - 2.0 16V 03/10  TODDOS', 'score': 0.64}, {'item_id': 'JAM-7555', 'title': 'MANGUEIRA SUPERIOR DO RADIADOR FORD ECOSPORT 2.0', 'score': 0.56}, {'item_id': 'JAM-7553', 'title': 'MANGUEIRA RADIADOR FORD ECOSPORT 1.6 2003/ - SUPERIOR', 'score': 0.56}, {'item_id': 'JAM-7554', 'title': 'MANGUEIRA RADIADOR FORD ECOSPORT 1.6 2003/ - INFERIOR', 'score': 0.56}, {'item_id': 'JAM-7556', 'title': 'MANGUEIRA RADIADOR FORD ECOSPORT 2.0 2004/ - INFERIOR', 'score': 0.56}, {'item_id': 'G-1114', 'title': 'RESERVATÓRIO ÁGUA DO RADIADOR 2 SAÍDAS FORD NOVO FIESTA/ECOSPORT 2002/', 'score': 0.56}, {'item_id': 'MF-12462', 'title': 'RESERVATÓRIO ÁGUA DO RADIADOR 2 SAÍDAS FORD NOVO FIESTA/ECOSPORT 2002/', 'score': 0.56}, {'item_id': 'MV-312', 'title': 'RESERVATÓRIO ÁGUA DO RADIADOR 2 SAÍDAS FORD NOVO FIESTA/ECOSPORT 2002/', 'score': 0.56}]}]`
 - criteria em `conversation_state`: `{'part_query': 'radiador', 'part_code': None, 'vehicle_brand': None, 'vehicle_model': 'Ecosport', 'vehicle_year': 2008, 'engine': '1.6', 'side': None, 'position': None, 'axle': None, 'variant': None, 'quantity': 1}`
 - top items:
   - `IR48524` | `RADIADOR FORD NOVO FIESTA 1.0 SUPERCHARGER - 1.6 03/10 - ECOSPORT 1.0/1.6 8V - 2.0 16V 03/10  TODOS` | `score=0.64`
@@ -572,7 +548,7 @@ Relatorio gerado por chamadas reais ao `POST /respond`, sem `StubPreSearchValida
 - `parent_case_id`: `case_018`
 - pergunta: `1.6`
 - status HTTP: `200`
-- latencia total observada: `45241.65 ms`
+- latencia total observada: `44286.65 ms`
 - resposta: `Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca.`
 - ferramentas usadas: `['pre_search_validator', 'search_parts']`
 - handoff: `False`
@@ -592,18 +568,12 @@ Relatorio gerado por chamadas reais ao `POST /respond`, sem `StubPreSearchValida
 - `parent_case_id`: `case_019`
 - pergunta: `1.0`
 - status HTTP: `200`
-- latencia total observada: `46635.96 ms`
-- resposta: `Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca.`
-- ferramentas usadas: `['pre_search_validator', 'search_parts']`
+- latencia total observada: `44716.57 ms`
+- resposta: `Em qual posicao a peca fica?`
+- ferramentas usadas: `['pre_search_validator']`
 - handoff: `False`
-- actions: `[{'type': 'show_items', 'items': [{'item_id': 'P-44-NA', 'title': 'PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 - 94/ TEVES', 'score': 0.48}, {'item_id': 'P-45-NA', 'title': 'PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 - 94/ VARGA', 'score': 0.48}, {'item_id': 'PD/45-NA', 'title': 'PASTILHA DE FREIO VW GOL/PARATI/QUANTUM/SANTANA/SAVEIRO 1995/', 'score': 0.48}, {'item_id': 'PD/44-B-NA', 'title': 'PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 94/ - C/ALARME TEVES', 'score': 0.48}, {'item_id': 'P-368-NA', 'title': 'PASTILHA DE FREIO VW NOVO GOL/VOYAGE 08/ - FOX 1.0 2003/ ARO 13 - TEVES', 'score': 0.48}, {'item_id': 'P-54-NA', 'title': 'PASTILHA DE FREIO DIANTEIRA VARGA VW GOL/PARATI 1.0/1.6/1.8 96/ - GM CORSA 96/', 'score': 0.48}, {'item_id': 'PD/54-NA', 'title': 'PASTILHA DE FREIO DIANTEIRA VARGA VW GOL/PARATI 1.0/1.6/1.8 96/ - GM CORSA 96/', 'score': 0.48}, {'item_id': 'P-367-NA', 'title': 'PASTILHA DE FREIO VW NOVO GOL/SAVEIRO 08/ BOSCH - GOLF 94/ 94/95 - POLO CLASSIC 97/', 'score': 0.48}, {'item_id': 'PD/367-NA', 'title': 'PASTILHA DE FREIO VW NOVO GOL/SAVEIRO 08/ BOSCH - GOLF 94/ 94/95 - POLO CLASSIC 97/', 'score': 0.48}, {'item_id': 'P-51-NA', 'title': 'PASTILHA DE FREIO DIANTEIRA VW GOL/PARATI/SAVEIRO 1.0/1.6/1.8 2000/ - SISTEMA ATE/TEVES', 'score': 0.48}]}]`
+- actions: `[{'type': 'request_info', 'key': 'position', 'prompt': 'Em qual posicao a peca fica?', 'options': ['Dianteiro', 'Traseiro', 'Nao sei']}]`
 - criteria em `conversation_state`: `{'part_query': 'pastilhas de freio', 'part_code': None, 'vehicle_brand': None, 'vehicle_model': 'Gol', 'vehicle_year': 2010, 'engine': '1.0', 'side': None, 'position': None, 'axle': None, 'variant': None, 'quantity': 1}`
-- top items:
-  - `P-44-NA` | `PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 - 94/ TEVES` | `score=0.48`
-  - `P-45-NA` | `PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 - 94/ VARGA` | `score=0.48`
-  - `PD/45-NA` | `PASTILHA DE FREIO VW GOL/PARATI/QUANTUM/SANTANA/SAVEIRO 1995/` | `score=0.48`
-  - `PD/44-B-NA` | `PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 94/ - C/ALARME TEVES` | `score=0.48`
-  - `P-368-NA` | `PASTILHA DE FREIO VW NOVO GOL/VOYAGE 08/ - FOX 1.0 2003/ ARO 13 - TEVES` | `score=0.48`
 
 ### case_035 - follow_up
 
@@ -612,7 +582,7 @@ Relatorio gerado por chamadas reais ao `POST /respond`, sem `StubPreSearchValida
 - `parent_case_id`: `case_020`
 - pergunta: `dianteiro`
 - status HTTP: `200`
-- latencia total observada: `42676.82 ms`
+- latencia total observada: `40893.31 ms`
 - resposta: `Nao encontrei a peca com esses dados. Me informe modelo, ano e motorizacao para tentar novamente. Se preferir, posso transferir para atendimento humano.`
 - ferramentas usadas: `['pre_search_validator', 'search_parts']`
 - handoff: `True`
@@ -627,11 +597,11 @@ Relatorio gerado por chamadas reais ao `POST /respond`, sem `StubPreSearchValida
 - `parent_case_id`: `case_021`
 - pergunta: `dianteiro`
 - status HTTP: `200`
-- latencia total observada: `54457.47 ms`
-- resposta: `Qual a motorizacao do veiculo?`
+- latencia total observada: `44080.41 ms`
+- resposta: `Qual lado da peça?`
 - ferramentas usadas: `['pre_search_validator']`
 - handoff: `False`
-- actions: `[{'type': 'request_info', 'key': 'engine', 'prompt': 'Qual a motorizacao do veiculo?', 'options': ['DRAGON', 'DURATEC', 'DURATEC HE', 'SIGMA', 'ZETEC ROCAM']}]`
+- actions: `[{'type': 'request_info', 'key': 'side', 'prompt': 'Qual lado da peça?'}]`
 - criteria em `conversation_state`: `{'part_query': 'bandejas', 'part_code': None, 'vehicle_brand': None, 'vehicle_model': 'Ecosport', 'vehicle_year': 2008, 'engine': None, 'side': None, 'position': 'front', 'axle': None, 'variant': None, 'quantity': None}`
 
 ### case_037 - follow_up
@@ -641,7 +611,7 @@ Relatorio gerado por chamadas reais ao `POST /respond`, sem `StubPreSearchValida
 - `parent_case_id`: `case_022`
 - pergunta: `esquerdo`
 - status HTTP: `200`
-- latencia total observada: `42614.53 ms`
+- latencia total observada: `43565.37 ms`
 - resposta: `Nao encontrei a peca com esses dados. Me informe modelo, ano e motorizacao para tentar novamente. Se preferir, posso transferir para atendimento humano.`
 - ferramentas usadas: `['pre_search_validator', 'search_parts']`
 - handoff: `True`
@@ -656,7 +626,7 @@ Relatorio gerado por chamadas reais ao `POST /respond`, sem `StubPreSearchValida
 - `parent_case_id`: `case_023`
 - pergunta: `dianteiro`
 - status HTTP: `200`
-- latencia total observada: `43459.73 ms`
+- latencia total observada: `47331.2 ms`
 - resposta: `Nao encontrei a peca com esses dados. Me informe modelo, ano e motorizacao para tentar novamente. Se preferir, posso transferir para atendimento humano.`
 - ferramentas usadas: `['pre_search_validator', 'search_parts']`
 - handoff: `True`
@@ -671,12 +641,12 @@ Relatorio gerado por chamadas reais ao `POST /respond`, sem `StubPreSearchValida
 - `parent_case_id`: `case_024`
 - pergunta: `dianteiro`
 - status HTTP: `200`
-- latencia total observada: `49335.51 ms`
-- resposta: `Por favor, informe o motor do seu veículo.`
+- latencia total observada: `47008.16 ms`
+- resposta: `Qual a motorização do veículo?`
 - ferramentas usadas: `['pre_search_validator']`
 - handoff: `False`
-- actions: `[{'type': 'request_info', 'key': 'engine', 'prompt': 'Por favor, informe o motor do seu veículo.'}]`
-- criteria em `conversation_state`: `{'part_query': 'disco de freio', 'part_code': None, 'vehicle_brand': None, 'vehicle_model': 'Gol', 'vehicle_year': 2010, 'engine': None, 'side': None, 'position': 'front', 'axle': None, 'variant': None, 'quantity': None}`
+- actions: `[{'type': 'request_info', 'key': 'engine', 'prompt': 'Qual a motorização do veículo?'}]`
+- criteria em `conversation_state`: `{'part_query': 'discos de freio', 'part_code': None, 'vehicle_brand': None, 'vehicle_model': 'Gol', 'vehicle_year': 2010, 'engine': None, 'side': None, 'position': 'front', 'axle': None, 'variant': None, 'quantity': None}`
 
 ### case_040 - follow_up
 
@@ -685,13 +655,12 @@ Relatorio gerado por chamadas reais ao `POST /respond`, sem `StubPreSearchValida
 - `parent_case_id`: `case_025`
 - pergunta: `esquerdo`
 - status HTTP: `200`
-- latencia total observada: `43765.53 ms`
-- resposta: `Nao encontrei a peca com esses dados. Me informe modelo, ano e motorizacao para tentar novamente. Se preferir, posso transferir para atendimento humano.`
-- ferramentas usadas: `['pre_search_validator', 'search_parts']`
-- handoff: `True`
-- handoff_reason: `no_match`
-- actions: `[]`
-- criteria em `conversation_state`: `{'part_query': 'farol', 'part_code': None, 'vehicle_brand': None, 'vehicle_model': 'Gol', 'vehicle_year': 2010, 'engine': None, 'side': 'left', 'position': None, 'axle': None, 'variant': None, 'quantity': None}`
+- latencia total observada: `44160.3 ms`
+- resposta: `Qual peça do farol você precisa?`
+- ferramentas usadas: `['pre_search_validator']`
+- handoff: `False`
+- actions: `[{'type': 'request_info', 'key': 'part_query', 'prompt': 'Qual peça do farol você precisa?'}]`
+- criteria em `conversation_state`: `{'part_query': None, 'part_code': None, 'vehicle_brand': None, 'vehicle_model': 'Gol', 'vehicle_year': 2010, 'engine': None, 'side': 'left', 'position': None, 'axle': None, 'variant': None, 'quantity': None}`
 
 ### case_041 - follow_up
 
@@ -700,7 +669,7 @@ Relatorio gerado por chamadas reais ao `POST /respond`, sem `StubPreSearchValida
 - `parent_case_id`: `case_026`
 - pergunta: `1.6`
 - status HTTP: `200`
-- latencia total observada: `45873.01 ms`
+- latencia total observada: `44692.75 ms`
 - resposta: `Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca.`
 - ferramentas usadas: `['pre_search_validator', 'search_parts']`
 - handoff: `False`
@@ -720,11 +689,11 @@ Relatorio gerado por chamadas reais ao `POST /respond`, sem `StubPreSearchValida
 - `parent_case_id`: `case_027`
 - pergunta: `zetec rocam`
 - status HTTP: `200`
-- latencia total observada: `51882.29 ms`
-- resposta: `Por favor, informe o motor do seu Ford EcoSport de 2008.`
+- latencia total observada: `50865.62 ms`
+- resposta: `Por favor, informe o motor do seu Ford EcoSport 2008.`
 - ferramentas usadas: `['pre_search_validator']`
 - handoff: `False`
-- actions: `[{'type': 'request_info', 'key': 'engine', 'prompt': 'Por favor, informe o motor do seu Ford EcoSport de 2008.'}]`
+- actions: `[{'type': 'request_info', 'key': 'engine', 'prompt': 'Por favor, informe o motor do seu Ford EcoSport 2008.'}]`
 - criteria em `conversation_state`: `{'part_query': 'coxim amortecedor', 'part_code': None, 'vehicle_brand': None, 'vehicle_model': 'Ecosport', 'vehicle_year': 2008, 'engine': None, 'side': None, 'position': None, 'axle': None, 'variant': None, 'quantity': None}`
 
 ### case_043 - follow_up
@@ -734,18 +703,12 @@ Relatorio gerado por chamadas reais ao `POST /respond`, sem `StubPreSearchValida
 - `parent_case_id`: `case_028`
 - pergunta: `1.6`
 - status HTTP: `200`
-- latencia total observada: `47587.94 ms`
-- resposta: `Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca.`
-- ferramentas usadas: `['pre_search_validator', 'search_parts']`
+- latencia total observada: `48040.29 ms`
+- resposta: `Em qual posicao a peca fica?`
+- ferramentas usadas: `['pre_search_validator']`
 - handoff: `False`
-- actions: `[{'type': 'show_items', 'items': [{'item_id': 'P-497-NA', 'title': 'PASTILHA DE FREIO FORD NOVO FIESTA 1.0/1.6 SUPER CHARGER C/ABS - ECOSPORT TODOS', 'score': 0.48}, {'item_id': 'PD/497-NA', 'title': 'PASTILHA DE FREIO FORD NOVO FIESTA 1.0/1.6 SUPER CHARGER C/ABS - ECOSPORT TODOS', 'score': 0.48}, {'item_id': 'P-767-NA', 'title': 'PASTILHA DE FREIO DIANTEIRA FORD ECOSPORT 09/ AUTOMATICO - NOVA ECOSPORT 13/ - FOCUS 09.2009/', 'score': 0.48}, {'item_id': 'PD/767-NA', 'title': 'PASTILHA DE FREIO DIANTEIRA FORD ECOSPORT 09/ AUTOMATICO - NOVA ECOSPORT 13/ - FOCUS 09.2009/', 'score': 0.48}, {'item_id': 'BF1082-00', 'title': 'PASTILHA DE FREIO DIANTEIRA ECOSPORT 09/ AUTOMATICO -NOVA ECOSPORT 13/ - FOCUS 09.2009/ - VOLVO', 'score': 0.48}, {'item_id': 'P-80-NA', 'title': 'PASTILHA DE FREIO DIANTEIRA FORD ECOSPORT 4X2 03/ - NOVO FIESTA COM ABS 1.0/1.4 09/ - 1.6 09/10', 'score': 0.48}, {'item_id': 'PD/767-CMAXX', 'title': 'PASTILHA DE FREIO DIANTEIRA ECOSPORT 09/ AUTOMATICO -NOVA ECOSPORT 13/ - FOCUS 09.2009/ - VOLVO', 'score': 0.48}, {'item_id': 'PD/80-NA', 'title': 'PASTILHA DE FREIO DIANTEIRA FORD ECOSPORT 4X2 03/ - NOVO FIESTA COM ABS 1.0/1.4 09/ - 1.6 09/10', 'score': 0.48}, {'item_id': 'P-1103-NA', 'title': 'PASTILHA DE FREIO DIANTEIRA FORD NOVO FOCUS 1.6/20 08/009 - ECOSPORT 2.0 4X2 2005/08.2009 AUTOMATICA', 'score': 0.48}, {'item_id': 'PD/1103-CMAXX', 'title': 'PASTILHA DE FREIO DIANTEIRA FORD NOVO FOCUS 1.6/20 08/009 - ECOSPORT 2.0 4X2 2005/08.2009 AUTOMATICA', 'score': 0.48}]}]`
+- actions: `[{'type': 'request_info', 'key': 'position', 'prompt': 'Em qual posicao a peca fica?', 'options': ['Dianteiro', 'Traseiro', 'Nao sei']}]`
 - criteria em `conversation_state`: `{'part_query': 'pastilhas de freio', 'part_code': None, 'vehicle_brand': None, 'vehicle_model': 'Ecosport', 'vehicle_year': 2008, 'engine': '1.6', 'side': None, 'position': None, 'axle': None, 'variant': None, 'quantity': 1}`
-- top items:
-  - `P-497-NA` | `PASTILHA DE FREIO FORD NOVO FIESTA 1.0/1.6 SUPER CHARGER C/ABS - ECOSPORT TODOS` | `score=0.48`
-  - `PD/497-NA` | `PASTILHA DE FREIO FORD NOVO FIESTA 1.0/1.6 SUPER CHARGER C/ABS - ECOSPORT TODOS` | `score=0.48`
-  - `P-767-NA` | `PASTILHA DE FREIO DIANTEIRA FORD ECOSPORT 09/ AUTOMATICO - NOVA ECOSPORT 13/ - FOCUS 09.2009/` | `score=0.48`
-  - `PD/767-NA` | `PASTILHA DE FREIO DIANTEIRA FORD ECOSPORT 09/ AUTOMATICO - NOVA ECOSPORT 13/ - FOCUS 09.2009/` | `score=0.48`
-  - `BF1082-00` | `PASTILHA DE FREIO DIANTEIRA ECOSPORT 09/ AUTOMATICO -NOVA ECOSPORT 13/ - FOCUS 09.2009/ - VOLVO` | `score=0.48`
 
 ### case_044 - follow_up
 
@@ -754,7 +717,7 @@ Relatorio gerado por chamadas reais ao `POST /respond`, sem `StubPreSearchValida
 - `parent_case_id`: `case_029`
 - pergunta: `radiador gol 2010`
 - status HTTP: `200`
-- latencia total observada: `36751.62 ms`
+- latencia total observada: `35412.15 ms`
 - resposta: `Qual a motorizacao do veiculo?`
 - ferramentas usadas: `['pre_search_validator']`
 - handoff: `False`
@@ -768,7 +731,7 @@ Relatorio gerado por chamadas reais ao `POST /respond`, sem `StubPreSearchValida
 - `parent_case_id`: `case_030`
 - pergunta: `pastilha de freio 2010 1.0`
 - status HTTP: `200`
-- latencia total observada: `48834.21 ms`
+- latencia total observada: `47034.32 ms`
 - resposta: `Nao encontrei a peca com esses dados. Me informe modelo, ano e motorizacao para tentar novamente. Se preferir, posso transferir para atendimento humano.`
 - ferramentas usadas: `['pre_search_validator', 'search_parts']`
 - handoff: `True`
@@ -782,7 +745,7 @@ Relatorio gerado por chamadas reais ao `POST /respond`, sem `StubPreSearchValida
 - `conversation_id`: `conv-invalid-empty-001`
 - pergunta: `   `
 - status HTTP: `400`
-- latencia total observada: `4.29 ms`
+- latencia total observada: `5.64 ms`
 - erro: `{"detail": "message.text nao pode ser vazio."}`
 
 ### case_047 - validation_error
@@ -791,7 +754,7 @@ Relatorio gerado por chamadas reais ao `POST /respond`, sem `StubPreSearchValida
 - `conversation_id`: `conv-invalid-schema-001`
 - pergunta: `Oi`
 - status HTTP: `400`
-- latencia total observada: `3.26 ms`
+- latencia total observada: `3.46 ms`
 - erro: `{"detail": "schema_version deve ser '1.0'."}`
 
 ### case_048 - typo_partial
@@ -800,11 +763,11 @@ Relatorio gerado por chamadas reais ao `POST /respond`, sem `StubPreSearchValida
 - `conversation_id`: `conv-radiador-typo-partial-001`
 - pergunta: `rdiador gol 2010`
 - status HTTP: `200`
-- latencia total observada: `32331.68 ms`
-- resposta: `Qual a motorizacao do veiculo?`
+- latencia total observada: `40872.38 ms`
+- resposta: `Por favor, informe o motor do seu Gol 2010.`
 - ferramentas usadas: `['pre_search_validator']`
 - handoff: `False`
-- actions: `[{'type': 'request_info', 'key': 'engine', 'prompt': 'Qual a motorizacao do veiculo?', 'options': ['1.6 L 8V SOHC L4', '1300 AR', '1600 AR', 'AP 1600', 'AP 1800', 'AP 2000', 'CHT', 'EA111', 'EA111 AT', 'EA111 TEC', 'EA111 VHT', 'EA211']}]`
+- actions: `[{'type': 'request_info', 'key': 'engine', 'prompt': 'Por favor, informe o motor do seu Gol 2010.'}]`
 - criteria em `conversation_state`: `{'part_query': 'radiador', 'part_code': None, 'vehicle_brand': None, 'vehicle_model': 'Gol', 'vehicle_year': 2010, 'engine': None, 'side': None, 'position': None, 'axle': None, 'variant': None, 'quantity': None}`
 
 ### case_049 - typo_partial
@@ -813,13 +776,12 @@ Relatorio gerado por chamadas reais ao `POST /respond`, sem `StubPreSearchValida
 - `conversation_id`: `conv-pastilha-typo-partial-001`
 - pergunta: `pstilhas gol 2010`
 - status HTTP: `200`
-- latencia total observada: `31639.51 ms`
-- resposta: `Nao encontrei a peca com esses dados. Me informe modelo, ano e motorizacao para tentar novamente. Se preferir, posso transferir para atendimento humano.`
-- ferramentas usadas: `['pre_search_validator', 'search_parts']`
-- handoff: `True`
-- handoff_reason: `no_match`
-- actions: `[]`
-- criteria em `conversation_state`: `{'part_query': 'pstilhas', 'part_code': None, 'vehicle_brand': None, 'vehicle_model': 'Gol', 'vehicle_year': 2010, 'engine': None, 'side': None, 'position': None, 'axle': None, 'variant': None, 'quantity': None}`
+- latencia total observada: `42759.74 ms`
+- resposta: `Qual o motor do seu Gol de 2010?`
+- ferramentas usadas: `['pre_search_validator']`
+- handoff: `False`
+- actions: `[{'type': 'request_info', 'key': 'engine', 'prompt': 'Qual o motor do seu Gol de 2010?'}]`
+- criteria em `conversation_state`: `{'part_query': 'pastilhas de freio', 'part_code': None, 'vehicle_brand': None, 'vehicle_model': 'Gol', 'vehicle_year': 2010, 'engine': None, 'side': None, 'position': None, 'axle': None, 'variant': None, 'quantity': None}`
 
 ### case_050 - typo_complete
 
@@ -827,11 +789,10 @@ Relatorio gerado por chamadas reais ao `POST /respond`, sem `StubPreSearchValida
 - `conversation_id`: `conv-bandeja-typo-direct-001`
 - pergunta: `bndejas ecosport 2008 eixo dianteiro`
 - status HTTP: `200`
-- latencia total observada: `37384.11 ms`
-- resposta: `Nao encontrei a peca com esses dados. Me informe modelo, ano e motorizacao para tentar novamente. Se preferir, posso transferir para atendimento humano.`
-- ferramentas usadas: `['pre_search_validator', 'search_parts']`
-- handoff: `True`
-- handoff_reason: `no_match`
-- actions: `[]`
+- latencia total observada: `42604.0 ms`
+- resposta: `Qual lado da peca?`
+- ferramentas usadas: `['pre_search_validator']`
+- handoff: `False`
+- actions: `[{'type': 'request_info', 'key': 'side', 'prompt': 'Qual lado da peca?', 'options': ['Esquerdo', 'Direito', 'Nao sei']}]`
 - criteria em `conversation_state`: `{'part_query': 'bandejas', 'part_code': None, 'vehicle_brand': None, 'vehicle_model': 'Ecosport', 'vehicle_year': 2008, 'engine': None, 'side': None, 'position': 'front', 'axle': 'front', 'variant': None, 'quantity': None}`
 

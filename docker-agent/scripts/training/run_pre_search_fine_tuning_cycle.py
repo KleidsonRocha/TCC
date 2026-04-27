@@ -17,17 +17,7 @@ from app.infra.pre_search_model_cycle import (
     generate_target_model_name,
     update_env_llm_model,
 )
-
-
-def _conninfo(settings: Settings) -> str:
-    return (
-        f"host={settings.catalog_db_host} "
-        f"port={settings.catalog_db_port} "
-        f"dbname={settings.catalog_db_name} "
-        f"user={settings.catalog_db_user} "
-        f"password={settings.catalog_db_password} "
-        f"connect_timeout={settings.catalog_db_connect_timeout_s}"
-    )
+from app.infra.postgres_conninfo import build_catalog_conninfo
 
 
 def _run_command(*, command: str, cwd: Path, env: dict[str, str]) -> None:
@@ -98,7 +88,7 @@ def _create_run_record(
     base_model: str,
     target_model_name: str,
 ) -> int:
-    with psycopg.connect(_conninfo(settings), row_factory=dict_row) as conn:
+    with psycopg.connect(build_catalog_conninfo(settings), row_factory=dict_row) as conn:
         with conn.cursor() as cur:
             cur.execute(
                 "SELECT id FROM pre_search_fine_tuning_dataset_header WHERE slug = %s",
@@ -148,7 +138,7 @@ def _update_run_record(
     promoted_env_file: str | None = None,
     set_finished: bool = False,
 ) -> None:
-    with psycopg.connect(_conninfo(settings)) as conn:
+    with psycopg.connect(build_catalog_conninfo(settings)) as conn:
         with conn.cursor() as cur:
             cur.execute(
                 """

@@ -47,6 +47,65 @@ SCORING_FIELD_PRIORITY: tuple[str, ...] = (
     "variant",
     "quantity",
 )
+RUNTIME_SEARCH_RULE_OVERRIDES: dict[str, dict[str, bool]] = {
+    "bandeja": {
+        "needs_side": True,
+        "needs_position": False,
+        "needs_axle": False,
+    },
+    "bandejas": {
+        "needs_side": True,
+        "needs_position": False,
+        "needs_axle": False,
+    },
+    "pastilha de freio": {
+        "needs_position": True,
+    },
+    "pastilhas de freio": {
+        "needs_position": True,
+    },
+    "disco de freio": {
+        "needs_position": True,
+    },
+    "discos de freio": {
+        "needs_position": True,
+    },
+    "filtro de oleo": {
+        "needs_side": False,
+        "needs_position": False,
+        "needs_axle": False,
+        "needs_engine": False,
+        "needs_variant": False,
+    },
+    "filtro de combustivel": {
+        "needs_side": False,
+        "needs_position": False,
+        "needs_axle": False,
+        "needs_engine": False,
+        "needs_variant": False,
+    },
+    "filtro combustivel": {
+        "needs_side": False,
+        "needs_position": False,
+        "needs_axle": False,
+        "needs_engine": False,
+        "needs_variant": False,
+    },
+    "filtro de ar": {
+        "needs_side": False,
+        "needs_position": False,
+        "needs_axle": False,
+        "needs_engine": False,
+        "needs_variant": False,
+    },
+    "filtro de ar do motor": {
+        "needs_side": False,
+        "needs_position": False,
+        "needs_axle": False,
+        "needs_engine": False,
+        "needs_variant": False,
+    },
+}
 
 
 class LLMPreSearchValidator(PreSearchValidatorPort):
@@ -81,13 +140,61 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         self._part_code_patterns = compile_part_code_patterns(catalog.part_code_patterns)
         self._criteria_weights = self._normalize_criteria_weights(catalog.criteria_weights)
         self._min_score_to_search = max(int(catalog.min_score_to_search), 0)
+        self._min_score_to_search_by_part = self._normalize_part_min_score_overrides(
+            catalog.min_score_to_search_by_part
+        )
         self._dictionary_extractor = DictionaryPreSearchExtractor(catalog=catalog)
+        self._apply_runtime_search_rule_overrides()
         self._last_audit_info: dict[str, Any] | None = None
 
     def get_last_audit(self) -> dict[str, Any] | None:
         if self._last_audit_info is None:
             return None
         return deepcopy(self._last_audit_info)
+
+    def runtime_diagnostics(self) -> dict[str, Any]:
+        return {
+            "base_url": self._base_url,
+            "model": self._model,
+            "timeout_s": self._timeout,
+        }
+
+    def _apply_runtime_search_rule_overrides(self) -> None:
+        for part_name, overrides in RUNTIME_SEARCH_RULE_OVERRIDES.items():
+            normalized_part = str(part_name or "").strip().lower()
+            if not normalized_part:
+                continue
+            self._set_rule_requirement(self._needs_side, normalized_part, overrides.get("needs_side"))
+            self._set_rule_requirement(self._needs_position, normalized_part, overrides.get("needs_position"))
+            self._set_rule_requirement(self._needs_axle, normalized_part, overrides.get("needs_axle"))
+            self._set_rule_requirement(self._needs_engine, normalized_part, overrides.get("needs_engine"))
+            self._set_rule_requirement(self._needs_variant, normalized_part, overrides.get("needs_variant"))
+
+    @staticmethod
+    def _set_rule_requirement(target: set[str], part_name: str, required: bool | None) -> None:
+        if required is None:
+            return
+        if required:
+            target.add(part_name)
+            return
+        target.discard(part_name)
+
+    def extract_dictionary_seed_criteria(
+        self,
+        *,
+        message_text: str,
+        last_messages: list[dict[str, Any]] | None = None,
+    ) -> SearchCriteria:
+        return self._dictionary_extractor.extract(
+            message_text,
+            last_messages=last_messages or [],
+        )
+
+    def build_score_policy(self, *, dictionary_seed_criteria: SearchCriteria) -> dict[str, Any]:
+        return self._build_llm_score_policy(dictionary_seed_criteria=dictionary_seed_criteria)
+
+    def build_system_prompt(self) -> str:
+        return self._build_system_instructions(categories_text=self._categories_text)
 
     def warmup(self) -> dict[str, Any]:
         payload = self._build_warmup_payload()
@@ -490,6 +597,11 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             if self._should_take_dictionary_value(llm_value=llm_value, dictionary_value=dictionary_value):
                 merged_criteria[key] = dictionary_value
 
+        merged_criteria["part_query"] = self._canonicalize_part_query(
+            merged_criteria.get("part_query"),
+            fallback=dictionary_criteria.part_query,
+        )
+
         criteria_model = SearchCriteria.model_validate(merged_criteria)
         score_explicit_fields = self._build_score_explicit_fields(
             dictionary_criteria=dictionary_criteria,
@@ -526,7 +638,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
                     criteria_model,
                     explicit_part_code=explicit_part_code,
                 )
-                and criteria_score < self._min_score_to_search
+                and criteria_score < self._min_score_to_search_for(criteria_model)
             ):
                 decision = "ask"
                 missing_fields = self._resolve_missing_fields(
@@ -612,7 +724,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             return False
         if (
             self._score_threshold_applies(criteria, explicit_part_code=explicit_part_code)
-            and criteria_score < self._min_score_to_search
+            and criteria_score < self._min_score_to_search_for(criteria)
         ):
             return False
         return True
@@ -746,7 +858,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
                     dictionary_criteria,
                     explicit_part_code=explicit_part_code,
                 )
-                and criteria_score < self._min_score_to_search
+                and criteria_score < self._min_score_to_search_for(dictionary_criteria)
             ):
                 ai_decision = "ask"
                 missing_fields = self._resolve_missing_fields(
@@ -895,8 +1007,12 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             missing.append("vehicle_model")
             return missing
 
-        if not criteria.vehicle_year and part_query in self._generic_ambiguous_parts:
+        if self._requires_vehicle_year_for_minimum_search_identity(criteria):
             missing.append("vehicle_year")
+
+        if not criteria.vehicle_year and part_query in self._generic_ambiguous_parts:
+            if "vehicle_year" not in missing:
+                missing.append("vehicle_year")
 
         if part_query in self._needs_engine and not criteria.engine:
             missing.append("engine")
@@ -942,7 +1058,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
     ) -> bool:
         if criteria.part_code and explicit_part_code:
             return False
-        return self._min_score_to_search > 0
+        return self._min_score_to_search_for(criteria) > 0
 
     def _calculate_criteria_score(
         self,
@@ -963,6 +1079,20 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
                 score += weight
         return score
 
+    @staticmethod
+    def _requires_vehicle_year_for_minimum_search_identity(criteria: SearchCriteria) -> bool:
+        if not criteria.part_query or not criteria.vehicle_model:
+            return False
+        if criteria.vehicle_year:
+            return False
+        if criteria.part_code:
+            return False
+        if criteria.engine or criteria.side or criteria.position or criteria.axle or criteria.variant:
+            return False
+        if criteria.quantity is not None:
+            return False
+        return True
+
     def _calculate_score_gap_missing_fields(
         self,
         *,
@@ -974,7 +1104,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         if not self._score_threshold_applies(criteria, explicit_part_code=explicit_part_code):
             return current_missing_fields
 
-        remaining_score = self._min_score_to_search - self._calculate_criteria_score(
+        remaining_score = self._min_score_to_search_for(criteria) - self._calculate_criteria_score(
             criteria,
             score_explicit_fields=score_explicit_fields,
         )
@@ -1040,6 +1170,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
 
     def _build_llm_score_policy(self, *, dictionary_seed_criteria: SearchCriteria) -> dict[str, Any]:
         explicit_part_code = bool(dictionary_seed_criteria.part_code)
+        effective_min_score = self._min_score_to_search_for(dictionary_seed_criteria)
         score_explicit_fields = self._build_score_explicit_fields(
             dictionary_criteria=dictionary_seed_criteria,
         )
@@ -1065,7 +1196,8 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         )
         return {
             "criteria_weights": dict(self._criteria_weights),
-            "min_score_to_search": self._min_score_to_search,
+            "min_score_to_search": effective_min_score,
+            "min_score_to_search_global": self._min_score_to_search,
             "seed_score": seed_score,
             "seed_missing_fields": seed_missing_fields,
             "score_gap_missing_fields_hint": score_gap_missing_fields_hint,
@@ -1092,10 +1224,33 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
                 criteria,
                 explicit_part_code=explicit_part_code,
             )
-            and seed_score < self._min_score_to_search
+            and seed_score < self._min_score_to_search_for(criteria)
         ):
             return "ask"
         return "search_or_ask"
+
+    @staticmethod
+    def _normalize_part_min_score_overrides(raw_overrides: dict[str, int] | None) -> dict[str, int]:
+        normalized: dict[str, int] = {}
+        if not raw_overrides:
+            return normalized
+
+        for raw_part_name, raw_score in raw_overrides.items():
+            part_name = str(raw_part_name or "").strip().lower()
+            if not part_name:
+                continue
+            try:
+                parsed_score = int(raw_score)
+            except (TypeError, ValueError):
+                continue
+            normalized[part_name] = max(parsed_score, 0)
+        return normalized
+
+    def _min_score_to_search_for(self, criteria: SearchCriteria) -> int:
+        part_query = str(criteria.part_query or "").strip().lower()
+        if part_query and part_query in self._min_score_to_search_by_part:
+            return self._min_score_to_search_by_part[part_query]
+        return self._min_score_to_search
 
     @staticmethod
     def _build_score_explicit_fields(*, dictionary_criteria: SearchCriteria) -> set[str]:
@@ -1258,7 +1413,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         criteria_raw = parsed.get("criteria")
         criteria = criteria_raw if isinstance(criteria_raw, dict) else {}
 
-        part_query = self._as_str(criteria.get("part_query"))
+        part_query = self._canonicalize_part_query(self._as_str(criteria.get("part_query")))
         vehicle_brand = self._clean_vehicle_brand(self._as_str(criteria.get("vehicle_brand")))
         vehicle_model = self._clean_vehicle_model(self._as_str(criteria.get("vehicle_model")))
         vehicle_year = self._parse_year(criteria.get("vehicle_year"))
@@ -1305,6 +1460,18 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         if criteria.get("part_query") or criteria.get("part_code"):
             return "search"
         return "ask"
+
+    def _canonicalize_part_query(self, value: Any, *, fallback: str | None = None) -> str | None:
+        text = self._as_str(value)
+        if text:
+            canonical = self._dictionary_extractor.canonicalize_part_query(text)
+            if canonical:
+                return canonical
+        if fallback:
+            canonical_fallback = self._dictionary_extractor.canonicalize_part_query(fallback)
+            if canonical_fallback:
+                return canonical_fallback
+        return None
 
     @staticmethod
     def _normalize_missing_fields(value: Any) -> list[str]:
@@ -1489,6 +1656,8 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             "Campos obrigatorios no JSON final: decision, criteria, missing_fields, next_question, confidence. "
             "decision deve ser: search, ask ou handoff. "
             "criteria usa apenas: part_query, part_code, vehicle_brand, vehicle_model, vehicle_year, engine, side, position, axle, variant, quantity. "
+            "part_query deve ser uma familia canonica do catalogo; nao use plural, sinonimo ou typo quando existir forma canonica. "
+            "Se nao conseguir mapear a peca para uma familia canonica do catalogo, retorne part_query como null. "
             "Regras: sem part_query e sem part_code -> ask; "
             "com part_code valido -> search; "
             "para termos ambiguos como filtro/correia/pastilha sem modelo ou ano -> ask; "

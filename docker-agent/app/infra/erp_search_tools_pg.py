@@ -7,6 +7,7 @@ from app.core.domain.errors import SearchPartsServiceUnavailableError
 from app.core.domain.models import PartItem
 from app.core.domain.pre_search import SearchCriteria
 from app.core.ports.tools import ToolsPort
+from app.infra.postgres_conninfo import build_erp_conninfo
 
 try:
     import psycopg
@@ -86,7 +87,7 @@ class PostgresErpSearchTools(ToolsPort):
         sql, params = self._build_search_sql(criteria=resolved_criteria, limit=self._result_limit)
 
         try:
-            with psycopg.connect(self._conninfo(), row_factory=dict_row) as conn:  # type: ignore[union-attr]
+            with psycopg.connect(build_erp_conninfo(self._settings), row_factory=dict_row) as conn:  # type: ignore[union-attr]
                 with conn.cursor() as cur:
                     cur.execute(sql, params)
                     rows = cur.fetchall()
@@ -122,16 +123,6 @@ class PostgresErpSearchTools(ToolsPort):
             },
         )
         return items
-
-    def _conninfo(self) -> str:
-        return (
-            f"host={self._settings.erp_db_host} "
-            f"port={self._settings.erp_db_port} "
-            f"dbname={self._settings.erp_db_name} "
-            f"user={self._settings.erp_db_user} "
-            f"password={self._settings.erp_db_password} "
-            f"connect_timeout={self._settings.erp_db_connect_timeout_s}"
-        )
 
     @staticmethod
     def _resolve_criteria(query: str, criteria: SearchCriteria | None) -> SearchCriteria:

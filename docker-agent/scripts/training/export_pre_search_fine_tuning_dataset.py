@@ -17,6 +17,7 @@ from app.infra.pre_search_fine_tuning_format import (
     dumps_json,
     normalize_context_messages,
 )
+from app.infra.postgres_conninfo import build_catalog_conninfo
 from app.infra.pre_search_validator_llm import LLMPreSearchValidator
 
 
@@ -51,19 +52,6 @@ def _build_settings(
         LLM_LOG_RAW_RESPONSE=False,
         LLM_CATEGORIES_FILE=base.llm_categories_file,
     )
-
-
-def _conninfo(settings: Settings) -> str:
-    return (
-        f"host={settings.catalog_db_host} "
-        f"port={settings.catalog_db_port} "
-        f"dbname={settings.catalog_db_name} "
-        f"user={settings.catalog_db_user} "
-        f"password={settings.catalog_db_password} "
-        f"connect_timeout={settings.catalog_db_connect_timeout_s}"
-    )
-
-
 def _load_dataset(cur: psycopg.Cursor[Any], dataset_slug: str) -> dict[str, Any]:
     cur.execute(
         """
@@ -134,7 +122,7 @@ def _pick_system_prompt(*, dataset_row: dict[str, Any], validator: LLMPreSearchV
     prompt_override = str(dataset_row.get("system_prompt_override") or "").strip()
     if prompt_override:
         return prompt_override
-    return validator._build_system_instructions(categories_text=validator._categories_text)
+    return validator.build_system_prompt()
 
 
 def _build_export_rows(
@@ -149,11 +137,11 @@ def _build_export_rows(
     for row in examples:
         last_messages = normalize_context_messages(row.get("input_last_messages"))
         message_text = str(row.get("input_message_text", "")).strip()
-        dictionary_seed = validator._dictionary_extractor.extract(
-            message_text,
+        dictionary_seed = validator.extract_dictionary_seed_criteria(
+            message_text=message_text,
             last_messages=last_messages,
         )
-        score_policy = validator._build_llm_score_policy(dictionary_seed_criteria=dictionary_seed)
+        score_policy = validator.build_score_policy(dictionary_seed_criteria=dictionary_seed)
         user_payload = build_fine_tuning_user_payload(
             message_text=message_text,
             last_messages=last_messages,
@@ -272,7 +260,7 @@ def main() -> None:
     )
     validator = _build_validator(settings)
 
-    with psycopg.connect(_conninfo(settings), row_factory=dict_row) as conn:
+    with psycopg.connect(build_catalog_conninfo(settings), row_factory=dict_row) as conn:
         with conn.cursor() as cur:
             dataset_row = _load_dataset(cur, args.dataset_slug)
             examples = _load_examples(cur, args.dataset_slug)

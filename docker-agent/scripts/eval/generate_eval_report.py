@@ -10,9 +10,14 @@ if str(ROOT_DIR) not in sys.path:
 
 from app.config import Settings
 from app.infra.logger import configure_logging, get_logger
-from app.infra.pre_search_benchmark import benchmark_model, load_dataset
-from app.infra.pre_search_validator_llm import LLMPreSearchValidator
-from app.infra.pre_search_catalog_pg import resolve_pre_search_catalog
+from app.infra.pre_search_benchmark import (
+    as_context,
+    benchmark_model,
+    load_dataset,
+    make_validator,
+    pick_recommendation,
+    values_match,
+)
 
 
 DEFAULT_MVP_DATASET = Path("docs/assets/datasets/pre_search_eval_dataset_mvp.json")
@@ -27,22 +32,6 @@ def _load_json(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8-sig"))
 
 
-def _as_context(raw_context: list[dict[str, Any]]) -> list[dict[str, str]]:
-    return [
-        {
-            "role": str(item.get("role", "user")),
-            "text": str(item.get("text", "")),
-        }
-        for item in raw_context
-    ]
-
-
-def _slot_match(predicted: Any, expected: Any) -> bool:
-    if isinstance(predicted, str) and isinstance(expected, str):
-        return predicted.strip().lower() == expected.strip().lower()
-    return predicted == expected
-
-
 def _percent(ok: int, total: int) -> float:
     if total <= 0:
         return 100.0
@@ -55,29 +44,8 @@ def _slice_rows(rows: list[T], limit: int | None) -> list[T]:
     return rows[:limit]
 
 
-def _pick_recommendation(results: list[dict[str, Any]]) -> dict[str, Any]:
-    return sorted(
-        results,
-        key=lambda item: (
-            -item["case_pass_pct"],
-            -item["decision_accuracy_pct"],
-            -item["criteria_accuracy_pct"],
-            -item["missing_fields_accuracy_pct"],
-            -item["next_question_key_accuracy_pct"],
-            item["latency_p50_ms"],
-            item["latency_avg_ms"],
-        ),
-    )[0]
-
-
-def _make_validator(settings: Settings) -> LLMPreSearchValidator:
-    logger = get_logger("eval-report")
-    catalog = resolve_pre_search_catalog(settings=settings, logger=logger)
-    return LLMPreSearchValidator(settings=settings, logger=logger, catalog=catalog)
-
-
 def run_mvp_eval(*, settings: Settings, dataset_path: Path, limit: int | None = None) -> dict[str, Any]:
-    validator = _make_validator(settings)
+    validator = make_validator(settings=settings, logger=get_logger("eval-report"))
     rows = _slice_rows(_load_json(dataset_path), limit)
 
     decision_ok = 0
@@ -101,7 +69,7 @@ def run_mvp_eval(*, settings: Settings, dataset_path: Path, limit: int | None = 
 
     for row in rows:
         message = str(row.get("message.text", ""))
-        context = _as_context(row.get("context.last_messages", []))
+        context = as_context(row.get("context.last_messages", []))
         expected = row.get("expected", {})
         result = validator.validate(message_text=message, last_messages=context)
 
@@ -132,7 +100,7 @@ def run_mvp_eval(*, settings: Settings, dataset_path: Path, limit: int | None = 
             slot_total += 1
             predicted_value = getattr(result.criteria, slot, None)
             expected_value = expected_criteria.get(slot)
-            if _slot_match(predicted_value, expected_value):
+            if values_match(predicted_value, expected_value):
                 slot_ok += 1
             else:
                 case_record["criteria_failures"].append(
@@ -186,7 +154,7 @@ def run_num_predict_sweep(
         benchmark_model(dataset=dataset, settings=settings, num_predict=value)
         for value in values
     ]
-    recommendation = _pick_recommendation(results)
+    recommendation = pick_recommendation(results)
     return {
         "dataset": str(dataset_path).replace("\\", "/"),
         "values": values,

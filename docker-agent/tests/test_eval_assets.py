@@ -6,6 +6,7 @@ from typing import Any
 import pytest
 
 from app.config import Settings
+from app.infra import pre_search_benchmark
 from app.infra.pre_search_benchmark import load_dataset
 from scripts.eval import benchmark_llm_num_predict, evaluate_pre_search
 
@@ -69,7 +70,7 @@ def test_evaluate_pre_search_main_uses_mvp_dataset_file(
         calls["path"] = path
         return []
 
-    monkeypatch.setattr(evaluate_pre_search, "_load_dataset", fake_load_dataset)
+    monkeypatch.setattr(evaluate_pre_search, "load_dataset", fake_load_dataset)
     monkeypatch.setattr(evaluate_pre_search, "_pick_validator", lambda settings: object())
     monkeypatch.setattr(evaluate_pre_search, "configure_logging", lambda level: None)
 
@@ -78,6 +79,26 @@ def test_evaluate_pre_search_main_uses_mvp_dataset_file(
     assert calls["path"] == MVP_DATASET_PATH
     payload = json.loads(capsys.readouterr().out)
     assert payload["dataset_size"] == 0
+
+
+def test_make_validator_passes_catalog_to_validator(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls: dict[str, Any] = {}
+
+    class _FakeValidator:
+        def __init__(self, *, settings: Settings, logger: Any, catalog: Any) -> None:
+            calls["settings"] = settings
+            calls["logger"] = logger
+            calls["catalog"] = catalog
+
+    monkeypatch.setattr(pre_search_benchmark, "resolve_pre_search_catalog", lambda **kwargs: {"catalog": True})
+    monkeypatch.setattr(pre_search_benchmark, "LLMPreSearchValidator", _FakeValidator)
+
+    settings = Settings(_env_file=None)
+    validator = pre_search_benchmark.make_validator(settings=settings)
+
+    assert isinstance(validator, _FakeValidator)
+    assert calls["settings"] is settings
+    assert calls["catalog"] == {"catalog": True}
 
 
 def test_benchmark_script_uses_golden_set_by_default(

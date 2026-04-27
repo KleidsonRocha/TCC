@@ -10,6 +10,7 @@ except Exception:  # pragma: no cover
 
 from app.config import Settings
 from app.core.ports.pre_search_review_recorder import PreSearchReviewRecorderPort
+from app.infra.postgres_conninfo import build_catalog_conninfo
 
 
 class NoOpPreSearchReviewRecorder(PreSearchReviewRecorderPort):
@@ -57,7 +58,7 @@ class PGPreSearchReviewRecorder(PreSearchReviewRecorderPort):
         if psycopg is None or Jsonb is None:
             raise RuntimeError("Driver psycopg indisponivel para gravar fila de revisao.")
 
-        with psycopg.connect(self._conninfo()) as conn:  # type: ignore[union-attr]
+        with psycopg.connect(build_catalog_conninfo(self._settings)) as conn:  # type: ignore[union-attr]
             with conn.cursor() as cur:
                 cur.execute(
                     """
@@ -134,16 +135,6 @@ class PGPreSearchReviewRecorder(PreSearchReviewRecorderPort):
                     ),
                 )
             conn.commit()
-
-    def _conninfo(self) -> str:
-        return (
-            f"host={self._settings.catalog_db_host} "
-            f"port={self._settings.catalog_db_port} "
-            f"dbname={self._settings.catalog_db_name} "
-            f"user={self._settings.catalog_db_user} "
-            f"password={self._settings.catalog_db_password} "
-            f"connect_timeout={self._settings.catalog_db_connect_timeout_s}"
-        )
 
     @staticmethod
     def _priority_score(

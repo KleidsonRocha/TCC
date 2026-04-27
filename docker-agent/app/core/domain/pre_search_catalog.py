@@ -16,4 +16,5 @@ class PreSearchCatalog:
     engine_by_model: dict[str, list[str]]
     criteria_weights: dict[str, int] = field(default_factory=dict)
     min_score_to_search: int = 0
+    min_score_to_search_by_part: dict[str, int] = field(default_factory=dict)
     part_code_patterns: tuple[str, ...] = field(default_factory=tuple)

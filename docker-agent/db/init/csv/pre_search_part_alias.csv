@@ -1009,6 +1009,7 @@ cd_grupo,cd_subgrupo,alias
 12,11,pastilha
 12,11,pastilhas
 12,11,pstilhas de freio
+12,11,pstilhas
 12,13,pinos
 12,13,pino
 12,13,pinos injecao
@@ -1438,6 +1439,8 @@ cd_grupo,cd_subgrupo,alias
 20,1,algema eixo
 20,2,bandejas
 20,2,bandeja
+20,2,bandenja
+20,2,bandeija
 20,2,bandeja balanca
 20,2,balanca
 20,2,balancas

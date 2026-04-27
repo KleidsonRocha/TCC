@@ -1,18 +1,11 @@
 import re
-import unicodedata
 from typing import Iterable
 
+from app.infra.pre_search_text import normalize_pre_search_text
 
 DEFAULT_PART_CODE_PATTERNS: tuple[str, ...] = (
     r"\b[A-Za-z]{2,5}[- ]?\d{3,8}\b",
 )
-
-
-def _normalize_text(value: str | None) -> str:
-    lowered = (value or "").strip().lower()
-    decomposed = unicodedata.normalize("NFD", lowered)
-    no_accents = "".join(char for char in decomposed if unicodedata.category(char) != "Mn")
-    return re.sub(r"\s+", " ", no_accents)
 
 
 def compile_part_code_patterns(raw_patterns: Iterable[str] | None) -> tuple[re.Pattern[str], ...]:
@@ -74,7 +67,7 @@ def is_valid_part_code_candidate(
 
     comparable_tokens: set[str] = set()
     for raw_value in (vehicle_brand, vehicle_model):
-        normalized_text = _normalize_text(raw_value)
+        normalized_text = normalize_pre_search_text(raw_value)
         if not normalized_text:
             continue
         comparable_tokens.update(re.findall(r"[a-z0-9]+", normalized_text))

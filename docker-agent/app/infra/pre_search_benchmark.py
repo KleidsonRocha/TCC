@@ -55,6 +55,21 @@ def percentile(values: list[float], pct: float) -> float:
     return round(sorted_values[index], 2)
 
 
+def pick_recommendation(results: list[dict[str, Any]]) -> dict[str, Any]:
+    return sorted(
+        results,
+        key=lambda item: (
+            -item["case_pass_pct"],
+            -item["decision_accuracy_pct"],
+            -item["criteria_accuracy_pct"],
+            -item["missing_fields_accuracy_pct"],
+            -item["next_question_key_accuracy_pct"],
+            item["latency_p50_ms"],
+            item["latency_avg_ms"],
+        ),
+    )[0]
+
+
 def evaluate_case(result: Any, expected: dict[str, Any]) -> dict[str, Any]:
     decision_ok = result.decision == expected.get("decision")
 
@@ -148,10 +163,10 @@ def build_settings(
     )
 
 
-def make_validator(*, settings: Settings) -> LLMPreSearchValidator:
-    logger = _NullLogger()
-    catalog = resolve_pre_search_catalog(settings=settings, logger=logger)
-    return LLMPreSearchValidator(settings=settings, logger=logger, catalog=catalog)
+def make_validator(*, settings: Settings, logger: Any | None = None) -> LLMPreSearchValidator:
+    resolved_logger = logger or _NullLogger()
+    catalog = resolve_pre_search_catalog(settings=settings, logger=resolved_logger)
+    return LLMPreSearchValidator(settings=settings, logger=resolved_logger, catalog=catalog)
 
 
 def benchmark_model(

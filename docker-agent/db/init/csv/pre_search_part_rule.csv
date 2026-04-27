@@ -114,14 +114,14 @@ cd_grupo;part_type_id;is_generic;needs_side;needs_position;needs_axle;needs_engi
 10;19;False;False;False;True;False;False
 10;20;True;False;False;False;True;True
 10;21;False;False;False;False;True;False
-11;1;False;True;False;False;False;False
-11;2;False;False;False;True;False;False
-11;3;False;True;False;False;False;False
+11;1;False;False;False;False;False;False
+11;2;False;False;False;False;False;False
+11;3;False;False;False;False;False;False
 11;6;False;False;False;False;True;False
 12;1;False;True;False;False;False;False
 12;3;False;True;False;False;False;False
 12;5;False;False;False;True;False;False
-12;4;False;True;False;False;False;False
+12;4;False;False;False;False;False;False
 10;5;False;False;False;True;False;False
 10;18;False;False;False;True;False;False
 12;6;False;False;False;False;True;False
@@ -248,7 +248,7 @@ cd_grupo;part_type_id;is_generic;needs_side;needs_position;needs_axle;needs_engi
 9;19;False;False;False;True;False;False
 10;11;False;False;False;False;True;False
 11;4;False;True;False;False;False;False
-11;5;False;False;False;True;False;False
+11;5;False;False;False;False;False;False
 12;2;False;False;False;True;False;False
 12;7;False;False;False;False;True;False
 12;12;False;False;False;False;True;False

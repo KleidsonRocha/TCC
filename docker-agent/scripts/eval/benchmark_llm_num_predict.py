@@ -1,25 +1,9 @@
 import argparse
 import json
 from pathlib import Path
-from typing import Any
 
 from app.config import Settings
-from app.infra.pre_search_benchmark import benchmark_model, load_dataset
-
-
-def _pick_recommendation(results: list[dict[str, Any]]) -> dict[str, Any]:
-    return sorted(
-        results,
-        key=lambda item: (
-            -item["case_pass_pct"],
-            -item["decision_accuracy_pct"],
-            -item["criteria_accuracy_pct"],
-            -item["missing_fields_accuracy_pct"],
-            -item["next_question_key_accuracy_pct"],
-            item["latency_p50_ms"],
-            item["latency_avg_ms"],
-        ),
-    )[0]
+from app.infra.pre_search_benchmark import benchmark_model, load_dataset, pick_recommendation
 
 
 def main() -> None:
@@ -57,7 +41,7 @@ def main() -> None:
             flush=True,
         )
 
-    recommendation = _pick_recommendation(results)
+    recommendation = pick_recommendation(results)
     print(
         json.dumps(
             {

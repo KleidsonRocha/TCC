@@ -26,7 +26,7 @@
       }
     },
     "status_code": 200,
-    "elapsed_ms": 93893.93,
+    "elapsed_ms": 67884.72,
     "response": {
       "schema_version": "1.0",
       "trace_id": "real-battery-20260325-case_001",
@@ -69,11 +69,6 @@
               "score": 0.56
             },
             {
-              "item_id": "MF-11",
-              "title": "TAMPA RADIADOR VW PASSAT/GOL/VOYAGE/PARATI /86",
-              "score": 0.56
-            },
-            {
               "item_id": "KT-40028",
               "title": "KIT COXIM RADIADOR VW PASSAT/GOL/VOYAGE PEQUENO",
               "score": 0.56
@@ -86,6 +81,11 @@
             {
               "item_id": "20403",
               "title": "MANGUEIRA VW GOL/PARATI AP 95/ - INFERIOR RADIADOR",
+              "score": 0.56
+            },
+            {
+              "item_id": "20405",
+              "title": "MANGUEIRA VW GOL/PARATI AP 95/ - SUPERIOR RADIADOR",
               "score": 0.56
             }
           ]
@@ -101,7 +101,7 @@
           "pre_search_validator",
           "search_parts"
         ],
-        "latency_ms": 93854.17
+        "latency_ms": 67785.98
       },
       "conversation_state": {
         "criteria": {
@@ -130,7 +130,7 @@
         "pre_search_validator",
         "search_parts"
       ],
-      "latency_ms": 93854.17,
+      "latency_ms": 67785.98,
       "actions_count": 1,
       "show_items_count": 10,
       "top_items": [
@@ -207,7 +207,7 @@
       }
     },
     "status_code": 200,
-    "elapsed_ms": 35429.19,
+    "elapsed_ms": 33998.06,
     "response": {
       "schema_version": "1.0",
       "trace_id": "real-battery-20260325-case_002",
@@ -265,7 +265,7 @@
               "score": 0.56
             },
             {
-              "item_id": "MF-462",
+              "item_id": "MV-312",
               "title": "RESERVATÓRIO ÁGUA DO RADIADOR 2 SAÍDAS FORD NOVO FIESTA/ECOSPORT 2002/",
               "score": 0.56
             }
@@ -282,7 +282,7 @@
           "pre_search_validator",
           "search_parts"
         ],
-        "latency_ms": 35410.65
+        "latency_ms": 33979.22
       },
       "conversation_state": {
         "criteria": {
@@ -311,7 +311,7 @@
         "pre_search_validator",
         "search_parts"
       ],
-      "latency_ms": 35410.65,
+      "latency_ms": 33979.22,
       "actions_count": 1,
       "show_items_count": 10,
       "top_items": [
@@ -388,7 +388,7 @@
       }
     },
     "status_code": 200,
-    "elapsed_ms": 36662.89,
+    "elapsed_ms": 35228.44,
     "response": {
       "schema_version": "1.0",
       "trace_id": "real-battery-20260325-case_003",
@@ -446,7 +446,7 @@
               "score": 0.56
             },
             {
-              "item_id": "MF-462",
+              "item_id": "MV-312",
               "title": "RESERVATÓRIO ÁGUA DO RADIADOR 2 SAÍDAS FORD NOVO FIESTA/ECOSPORT 2002/",
               "score": 0.56
             }
@@ -463,7 +463,7 @@
           "pre_search_validator",
           "search_parts"
         ],
-        "latency_ms": 36643.81
+        "latency_ms": 35199.06
       },
       "conversation_state": {
         "criteria": {
@@ -492,7 +492,7 @@
         "pre_search_validator",
         "search_parts"
       ],
-      "latency_ms": 36643.81,
+      "latency_ms": 35199.06,
       "actions_count": 1,
       "show_items_count": 10,
       "top_items": [
@@ -569,7 +569,7 @@
       }
     },
     "status_code": 200,
-    "elapsed_ms": 35341.28,
+    "elapsed_ms": 37129.42,
     "response": {
       "schema_version": "1.0",
       "trace_id": "real-battery-20260325-case_004",
@@ -612,11 +612,6 @@
               "score": 0.56
             },
             {
-              "item_id": "MF-11",
-              "title": "TAMPA RADIADOR VW PASSAT/GOL/VOYAGE/PARATI /86",
-              "score": 0.56
-            },
-            {
               "item_id": "KT-40028",
               "title": "KIT COXIM RADIADOR VW PASSAT/GOL/VOYAGE PEQUENO",
               "score": 0.56
@@ -629,6 +624,11 @@
             {
               "item_id": "20403",
               "title": "MANGUEIRA VW GOL/PARATI AP 95/ - INFERIOR RADIADOR",
+              "score": 0.56
+            },
+            {
+              "item_id": "20405",
+              "title": "MANGUEIRA VW GOL/PARATI AP 95/ - SUPERIOR RADIADOR",
               "score": 0.56
             }
           ]
@@ -644,7 +644,7 @@
           "pre_search_validator",
           "search_parts"
         ],
-        "latency_ms": 35325.32
+        "latency_ms": 37086.75
       },
       "conversation_state": {
         "criteria": {
@@ -673,7 +673,7 @@
         "pre_search_validator",
         "search_parts"
       ],
-      "latency_ms": 35325.32,
+      "latency_ms": 37086.75,
       "actions_count": 1,
       "show_items_count": 10,
       "top_items": [
@@ -750,7 +750,7 @@
       }
     },
     "status_code": 200,
-    "elapsed_ms": 35431.88,
+    "elapsed_ms": 41861.94,
     "response": {
       "schema_version": "1.0",
       "trace_id": "real-battery-20260325-case_005",
@@ -815,7 +815,7 @@
           "pre_search_validator",
           "search_parts"
         ],
-        "latency_ms": 35417.22
+        "latency_ms": 41836.65
       },
       "conversation_state": {
         "criteria": {
@@ -844,7 +844,7 @@
         "pre_search_validator",
         "search_parts"
       ],
-      "latency_ms": 35417.22,
+      "latency_ms": 41836.65,
       "actions_count": 1,
       "show_items_count": 8,
       "top_items": [
@@ -921,7 +921,7 @@
       }
     },
     "status_code": 200,
-    "elapsed_ms": 35343.26,
+    "elapsed_ms": 39918.42,
     "response": {
       "schema_version": "1.0",
       "trace_id": "real-battery-20260325-case_006",
@@ -986,7 +986,7 @@
           "pre_search_validator",
           "search_parts"
         ],
-        "latency_ms": 35326.79
+        "latency_ms": 39892.39
       },
       "conversation_state": {
         "criteria": {
@@ -1015,7 +1015,7 @@
         "pre_search_validator",
         "search_parts"
       ],
-      "latency_ms": 35326.79,
+      "latency_ms": 39892.39,
       "actions_count": 1,
       "show_items_count": 8,
       "top_items": [
@@ -1092,7 +1092,7 @@
       }
     },
     "status_code": 200,
-    "elapsed_ms": 35285.25,
+    "elapsed_ms": 38390.16,
     "response": {
       "schema_version": "1.0",
       "trace_id": "real-battery-20260325-case_007",
@@ -1157,7 +1157,7 @@
           "pre_search_validator",
           "search_parts"
         ],
-        "latency_ms": 35268.93
+        "latency_ms": 38363.45
       },
       "conversation_state": {
         "criteria": {
@@ -1186,7 +1186,7 @@
         "pre_search_validator",
         "search_parts"
       ],
-      "latency_ms": 35268.93,
+      "latency_ms": 38363.45,
       "actions_count": 1,
       "show_items_count": 8,
       "top_items": [
@@ -1263,7 +1263,7 @@
       }
     },
     "status_code": 200,
-    "elapsed_ms": 35600.51,
+    "elapsed_ms": 41674.62,
     "response": {
       "schema_version": "1.0",
       "trace_id": "real-battery-20260325-case_008",
@@ -1328,7 +1328,7 @@
           "pre_search_validator",
           "search_parts"
         ],
-        "latency_ms": 35585.07
+        "latency_ms": 41634.01
       },
       "conversation_state": {
         "criteria": {
@@ -1357,7 +1357,7 @@
         "pre_search_validator",
         "search_parts"
       ],
-      "latency_ms": 35585.07,
+      "latency_ms": 41634.01,
       "actions_count": 1,
       "show_items_count": 8,
       "top_items": [
@@ -1434,68 +1434,23 @@
       }
     },
     "status_code": 200,
-    "elapsed_ms": 36039.35,
+    "elapsed_ms": 41645.29,
     "response": {
       "schema_version": "1.0",
       "trace_id": "real-battery-20260325-case_009",
       "conversation_id": "conv-pastilha-gol-direct-001",
       "reply": {
-        "text": "Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca."
+        "text": "Em qual posicao a peca fica?"
       },
       "actions": [
         {
-          "type": "show_items",
-          "items": [
-            {
-              "item_id": "P-44-NA",
-              "title": "PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 - 94/ TEVES",
-              "score": 0.48
-            },
-            {
-              "item_id": "P-45-NA",
-              "title": "PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 - 94/ VARGA",
-              "score": 0.48
-            },
-            {
-              "item_id": "PD/45-NA",
-              "title": "PASTILHA DE FREIO VW GOL/PARATI/QUANTUM/SANTANA/SAVEIRO 1995/",
-              "score": 0.48
-            },
-            {
-              "item_id": "PD/44-B-NA",
-              "title": "PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 94/ - C/ALARME TEVES",
-              "score": 0.48
-            },
-            {
-              "item_id": "P-368-NA",
-              "title": "PASTILHA DE FREIO VW NOVO GOL/VOYAGE 08/ - FOX 1.0 2003/ ARO 13 - TEVES",
-              "score": 0.48
-            },
-            {
-              "item_id": "P-54-NA",
-              "title": "PASTILHA DE FREIO DIANTEIRA VARGA VW GOL/PARATI 1.0/1.6/1.8 96/ - GM CORSA 96/",
-              "score": 0.48
-            },
-            {
-              "item_id": "PD/54-NA",
-              "title": "PASTILHA DE FREIO DIANTEIRA VARGA VW GOL/PARATI 1.0/1.6/1.8 96/ - GM CORSA 96/",
-              "score": 0.48
-            },
-            {
-              "item_id": "P-367-NA",
-              "title": "PASTILHA DE FREIO VW NOVO GOL/SAVEIRO 08/ BOSCH - GOLF 94/ 94/95 - POLO CLASSIC 97/",
-              "score": 0.48
-            },
-            {
-              "item_id": "PD/367-NA",
-              "title": "PASTILHA DE FREIO VW NOVO GOL/SAVEIRO 08/ BOSCH - GOLF 94/ 94/95 - POLO CLASSIC 97/",
-              "score": 0.48
-            },
-            {
-              "item_id": "P-51-NA",
-              "title": "PASTILHA DE FREIO DIANTEIRA VW GOL/PARATI/SAVEIRO 1.0/1.6/1.8 2000/ - SISTEMA ATE/TEVES",
-              "score": 0.48
-            }
+          "type": "request_info",
+          "key": "position",
+          "prompt": "Em qual posicao a peca fica?",
+          "options": [
+            "Dianteiro",
+            "Traseiro",
+            "Nao sei"
           ]
         }
       ],
@@ -1503,13 +1458,12 @@
         "required": false,
         "reason": null
       },
-      "confidence": 0.82,
+      "confidence": 0.95,
       "tool_trace": {
         "used_tools": [
-          "pre_search_validator",
-          "search_parts"
+          "pre_search_validator"
         ],
-        "latency_ms": 36020.87
+        "latency_ms": 41629.16
       },
       "conversation_state": {
         "criteria": {
@@ -1525,49 +1479,22 @@
           "variant": null,
           "quantity": 1
         },
-        "pending_slot": "result_disambiguation",
-        "pending_question": "Refinar a selecao entre multiplos itens encontrados.",
-        "last_decision": "search"
+        "pending_slot": "position",
+        "pending_question": "Em qual posicao a peca fica?",
+        "last_decision": "ask"
       }
     },
     "summary": {
-      "reply_text": "Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca.",
+      "reply_text": "Em qual posicao a peca fica?",
       "handoff_required": false,
       "handoff_reason": null,
       "used_tools": [
-        "pre_search_validator",
-        "search_parts"
+        "pre_search_validator"
       ],
-      "latency_ms": 36020.87,
+      "latency_ms": 41629.16,
       "actions_count": 1,
-      "show_items_count": 10,
-      "top_items": [
-        {
-          "item_id": "P-44-NA",
-          "title": "PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 - 94/ TEVES",
-          "score": 0.48
-        },
-        {
-          "item_id": "P-45-NA",
-          "title": "PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 - 94/ VARGA",
-          "score": 0.48
-        },
-        {
-          "item_id": "PD/45-NA",
-          "title": "PASTILHA DE FREIO VW GOL/PARATI/QUANTUM/SANTANA/SAVEIRO 1995/",
-          "score": 0.48
-        },
-        {
-          "item_id": "PD/44-B-NA",
-          "title": "PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 94/ - C/ALARME TEVES",
-          "score": 0.48
-        },
-        {
-          "item_id": "P-368-NA",
-          "title": "PASTILHA DE FREIO VW NOVO GOL/VOYAGE 08/ - FOX 1.0 2003/ ARO 13 - TEVES",
-          "score": 0.48
-        }
-      ],
+      "show_items_count": 0,
+      "top_items": [],
       "conversation_state": {
         "criteria": {
           "part_query": "pastilhas de freio",
@@ -1582,9 +1509,9 @@
           "variant": null,
           "quantity": 1
         },
-        "pending_slot": "result_disambiguation",
-        "pending_question": "Refinar a selecao entre multiplos itens encontrados.",
-        "last_decision": "search"
+        "pending_slot": "position",
+        "pending_question": "Em qual posicao a peca fica?",
+        "last_decision": "ask"
       }
     }
   },
@@ -1615,68 +1542,23 @@
       }
     },
     "status_code": 200,
-    "elapsed_ms": 37496.79,
+    "elapsed_ms": 41964.87,
     "response": {
       "schema_version": "1.0",
       "trace_id": "real-battery-20260325-case_010",
       "conversation_id": "conv-pastilha-gol-typo-001",
       "reply": {
-        "text": "Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca."
+        "text": "Em qual posicao a peca fica?"
       },
       "actions": [
         {
-          "type": "show_items",
-          "items": [
-            {
-              "item_id": "P-44-NA",
-              "title": "PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 - 94/ TEVES",
-              "score": 0.48
-            },
-            {
-              "item_id": "P-45-NA",
-              "title": "PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 - 94/ VARGA",
-              "score": 0.48
-            },
-            {
-              "item_id": "PD/45-NA",
-              "title": "PASTILHA DE FREIO VW GOL/PARATI/QUANTUM/SANTANA/SAVEIRO 1995/",
-              "score": 0.48
-            },
-            {
-              "item_id": "PD/44-B-NA",
-              "title": "PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 94/ - C/ALARME TEVES",
-              "score": 0.48
-            },
-            {
-              "item_id": "P-368-NA",
-              "title": "PASTILHA DE FREIO VW NOVO GOL/VOYAGE 08/ - FOX 1.0 2003/ ARO 13 - TEVES",
-              "score": 0.48
-            },
-            {
-              "item_id": "P-54-NA",
-              "title": "PASTILHA DE FREIO DIANTEIRA VARGA VW GOL/PARATI 1.0/1.6/1.8 96/ - GM CORSA 96/",
-              "score": 0.48
-            },
-            {
-              "item_id": "PD/54-NA",
-              "title": "PASTILHA DE FREIO DIANTEIRA VARGA VW GOL/PARATI 1.0/1.6/1.8 96/ - GM CORSA 96/",
-              "score": 0.48
-            },
-            {
-              "item_id": "P-367-NA",
-              "title": "PASTILHA DE FREIO VW NOVO GOL/SAVEIRO 08/ BOSCH - GOLF 94/ 94/95 - POLO CLASSIC 97/",
-              "score": 0.48
-            },
-            {
-              "item_id": "PD/367-NA",
-              "title": "PASTILHA DE FREIO VW NOVO GOL/SAVEIRO 08/ BOSCH - GOLF 94/ 94/95 - POLO CLASSIC 97/",
-              "score": 0.48
-            },
-            {
-              "item_id": "P-51-NA",
-              "title": "PASTILHA DE FREIO DIANTEIRA VW GOL/PARATI/SAVEIRO 1.0/1.6/1.8 2000/ - SISTEMA ATE/TEVES",
-              "score": 0.48
-            }
+          "type": "request_info",
+          "key": "position",
+          "prompt": "Em qual posicao a peca fica?",
+          "options": [
+            "Dianteiro",
+            "Traseiro",
+            "Nao sei"
           ]
         }
       ],
@@ -1684,13 +1566,12 @@
         "required": false,
         "reason": null
       },
-      "confidence": 0.82,
+      "confidence": 0.95,
       "tool_trace": {
         "used_tools": [
-          "pre_search_validator",
-          "search_parts"
+          "pre_search_validator"
         ],
-        "latency_ms": 37477.39
+        "latency_ms": 41949.52
       },
       "conversation_state": {
         "criteria": {
@@ -1706,49 +1587,22 @@
           "variant": null,
           "quantity": 1
         },
-        "pending_slot": "result_disambiguation",
-        "pending_question": "Refinar a selecao entre multiplos itens encontrados.",
-        "last_decision": "search"
+        "pending_slot": "position",
+        "pending_question": "Em qual posicao a peca fica?",
+        "last_decision": "ask"
       }
     },
     "summary": {
-      "reply_text": "Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca.",
+      "reply_text": "Em qual posicao a peca fica?",
       "handoff_required": false,
       "handoff_reason": null,
       "used_tools": [
-        "pre_search_validator",
-        "search_parts"
+        "pre_search_validator"
       ],
-      "latency_ms": 37477.39,
+      "latency_ms": 41949.52,
       "actions_count": 1,
-      "show_items_count": 10,
-      "top_items": [
-        {
-          "item_id": "P-44-NA",
-          "title": "PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 - 94/ TEVES",
-          "score": 0.48
-        },
-        {
-          "item_id": "P-45-NA",
-          "title": "PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 - 94/ VARGA",
-          "score": 0.48
-        },
-        {
-          "item_id": "PD/45-NA",
-          "title": "PASTILHA DE FREIO VW GOL/PARATI/QUANTUM/SANTANA/SAVEIRO 1995/",
-          "score": 0.48
-        },
-        {
-          "item_id": "PD/44-B-NA",
-          "title": "PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 94/ - C/ALARME TEVES",
-          "score": 0.48
-        },
-        {
-          "item_id": "P-368-NA",
-          "title": "PASTILHA DE FREIO VW NOVO GOL/VOYAGE 08/ - FOX 1.0 2003/ ARO 13 - TEVES",
-          "score": 0.48
-        }
-      ],
+      "show_items_count": 0,
+      "top_items": [],
       "conversation_state": {
         "criteria": {
           "part_query": "pastilhas de freio",
@@ -1763,9 +1617,9 @@
           "variant": null,
           "quantity": 1
         },
-        "pending_slot": "result_disambiguation",
-        "pending_question": "Refinar a selecao entre multiplos itens encontrados.",
-        "last_decision": "search"
+        "pending_slot": "position",
+        "pending_question": "Em qual posicao a peca fica?",
+        "last_decision": "ask"
       }
     }
   },
@@ -1796,68 +1650,23 @@
       }
     },
     "status_code": 200,
-    "elapsed_ms": 37343.66,
+    "elapsed_ms": 38414.99,
     "response": {
       "schema_version": "1.0",
       "trace_id": "real-battery-20260325-case_011",
       "conversation_id": "conv-pastilha-gol-alias-001",
       "reply": {
-        "text": "Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca."
+        "text": "Em qual posicao a peca fica?"
       },
       "actions": [
         {
-          "type": "show_items",
-          "items": [
-            {
-              "item_id": "P-44-NA",
-              "title": "PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 - 94/ TEVES",
-              "score": 0.48
-            },
-            {
-              "item_id": "P-45-NA",
-              "title": "PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 - 94/ VARGA",
-              "score": 0.48
-            },
-            {
-              "item_id": "PD/45-NA",
-              "title": "PASTILHA DE FREIO VW GOL/PARATI/QUANTUM/SANTANA/SAVEIRO 1995/",
-              "score": 0.48
-            },
-            {
-              "item_id": "PD/44-B-NA",
-              "title": "PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 94/ - C/ALARME TEVES",
-              "score": 0.48
-            },
-            {
-              "item_id": "P-368-NA",
-              "title": "PASTILHA DE FREIO VW NOVO GOL/VOYAGE 08/ - FOX 1.0 2003/ ARO 13 - TEVES",
-              "score": 0.48
-            },
-            {
-              "item_id": "P-54-NA",
-              "title": "PASTILHA DE FREIO DIANTEIRA VARGA VW GOL/PARATI 1.0/1.6/1.8 96/ - GM CORSA 96/",
-              "score": 0.48
-            },
-            {
-              "item_id": "PD/54-NA",
-              "title": "PASTILHA DE FREIO DIANTEIRA VARGA VW GOL/PARATI 1.0/1.6/1.8 96/ - GM CORSA 96/",
-              "score": 0.48
-            },
-            {
-              "item_id": "P-367-NA",
-              "title": "PASTILHA DE FREIO VW NOVO GOL/SAVEIRO 08/ BOSCH - GOLF 94/ 94/95 - POLO CLASSIC 97/",
-              "score": 0.48
-            },
-            {
-              "item_id": "PD/367-NA",
-              "title": "PASTILHA DE FREIO VW NOVO GOL/SAVEIRO 08/ BOSCH - GOLF 94/ 94/95 - POLO CLASSIC 97/",
-              "score": 0.48
-            },
-            {
-              "item_id": "P-51-NA",
-              "title": "PASTILHA DE FREIO DIANTEIRA VW GOL/PARATI/SAVEIRO 1.0/1.6/1.8 2000/ - SISTEMA ATE/TEVES",
-              "score": 0.48
-            }
+          "type": "request_info",
+          "key": "position",
+          "prompt": "Em qual posicao a peca fica?",
+          "options": [
+            "Dianteiro",
+            "Traseiro",
+            "Nao sei"
           ]
         }
       ],
@@ -1865,13 +1674,12 @@
         "required": false,
         "reason": null
       },
-      "confidence": 0.82,
+      "confidence": 1.0,
       "tool_trace": {
         "used_tools": [
-          "pre_search_validator",
-          "search_parts"
+          "pre_search_validator"
         ],
-        "latency_ms": 37327.46
+        "latency_ms": 38400.19
       },
       "conversation_state": {
         "criteria": {
@@ -1887,49 +1695,22 @@
           "variant": null,
           "quantity": 1
         },
-        "pending_slot": "result_disambiguation",
-        "pending_question": "Refinar a selecao entre multiplos itens encontrados.",
-        "last_decision": "search"
+        "pending_slot": "position",
+        "pending_question": "Em qual posicao a peca fica?",
+        "last_decision": "ask"
       }
     },
     "summary": {
-      "reply_text": "Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca.",
+      "reply_text": "Em qual posicao a peca fica?",
       "handoff_required": false,
       "handoff_reason": null,
       "used_tools": [
-        "pre_search_validator",
-        "search_parts"
+        "pre_search_validator"
       ],
-      "latency_ms": 37327.46,
+      "latency_ms": 38400.19,
       "actions_count": 1,
-      "show_items_count": 10,
-      "top_items": [
-        {
-          "item_id": "P-44-NA",
-          "title": "PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 - 94/ TEVES",
-          "score": 0.48
-        },
-        {
-          "item_id": "P-45-NA",
-          "title": "PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 - 94/ VARGA",
-          "score": 0.48
-        },
-        {
-          "item_id": "PD/45-NA",
-          "title": "PASTILHA DE FREIO VW GOL/PARATI/QUANTUM/SANTANA/SAVEIRO 1995/",
-          "score": 0.48
-        },
-        {
-          "item_id": "PD/44-B-NA",
-          "title": "PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 94/ - C/ALARME TEVES",
-          "score": 0.48
-        },
-        {
-          "item_id": "P-368-NA",
-          "title": "PASTILHA DE FREIO VW NOVO GOL/VOYAGE 08/ - FOX 1.0 2003/ ARO 13 - TEVES",
-          "score": 0.48
-        }
-      ],
+      "show_items_count": 0,
+      "top_items": [],
       "conversation_state": {
         "criteria": {
           "part_query": "pastilhas de freio",
@@ -1944,9 +1725,9 @@
           "variant": null,
           "quantity": 1
         },
-        "pending_slot": "result_disambiguation",
-        "pending_question": "Refinar a selecao entre multiplos itens encontrados.",
-        "last_decision": "search"
+        "pending_slot": "position",
+        "pending_question": "Em qual posicao a peca fica?",
+        "last_decision": "ask"
       }
     }
   },
@@ -1977,68 +1758,23 @@
       }
     },
     "status_code": 200,
-    "elapsed_ms": 37134.62,
+    "elapsed_ms": 40736.51,
     "response": {
       "schema_version": "1.0",
       "trace_id": "real-battery-20260325-case_012",
       "conversation_id": "conv-pastilha-gol-short-001",
       "reply": {
-        "text": "Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca."
+        "text": "Em qual posicao a peca fica?"
       },
       "actions": [
         {
-          "type": "show_items",
-          "items": [
-            {
-              "item_id": "P-44-NA",
-              "title": "PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 - 94/ TEVES",
-              "score": 0.48
-            },
-            {
-              "item_id": "P-45-NA",
-              "title": "PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 - 94/ VARGA",
-              "score": 0.48
-            },
-            {
-              "item_id": "PD/45-NA",
-              "title": "PASTILHA DE FREIO VW GOL/PARATI/QUANTUM/SANTANA/SAVEIRO 1995/",
-              "score": 0.48
-            },
-            {
-              "item_id": "PD/44-B-NA",
-              "title": "PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 94/ - C/ALARME TEVES",
-              "score": 0.48
-            },
-            {
-              "item_id": "P-368-NA",
-              "title": "PASTILHA DE FREIO VW NOVO GOL/VOYAGE 08/ - FOX 1.0 2003/ ARO 13 - TEVES",
-              "score": 0.48
-            },
-            {
-              "item_id": "P-54-NA",
-              "title": "PASTILHA DE FREIO DIANTEIRA VARGA VW GOL/PARATI 1.0/1.6/1.8 96/ - GM CORSA 96/",
-              "score": 0.48
-            },
-            {
-              "item_id": "PD/54-NA",
-              "title": "PASTILHA DE FREIO DIANTEIRA VARGA VW GOL/PARATI 1.0/1.6/1.8 96/ - GM CORSA 96/",
-              "score": 0.48
-            },
-            {
-              "item_id": "P-367-NA",
-              "title": "PASTILHA DE FREIO VW NOVO GOL/SAVEIRO 08/ BOSCH - GOLF 94/ 94/95 - POLO CLASSIC 97/",
-              "score": 0.48
-            },
-            {
-              "item_id": "PD/367-NA",
-              "title": "PASTILHA DE FREIO VW NOVO GOL/SAVEIRO 08/ BOSCH - GOLF 94/ 94/95 - POLO CLASSIC 97/",
-              "score": 0.48
-            },
-            {
-              "item_id": "P-51-NA",
-              "title": "PASTILHA DE FREIO DIANTEIRA VW GOL/PARATI/SAVEIRO 1.0/1.6/1.8 2000/ - SISTEMA ATE/TEVES",
-              "score": 0.48
-            }
+          "type": "request_info",
+          "key": "position",
+          "prompt": "Em qual posicao a peca fica?",
+          "options": [
+            "Dianteiro",
+            "Traseiro",
+            "Nao sei"
           ]
         }
       ],
@@ -2046,13 +1782,12 @@
         "required": false,
         "reason": null
       },
-      "confidence": 0.82,
+      "confidence": 1.0,
       "tool_trace": {
         "used_tools": [
-          "pre_search_validator",
-          "search_parts"
+          "pre_search_validator"
         ],
-        "latency_ms": 37116.63
+        "latency_ms": 40721.82
       },
       "conversation_state": {
         "criteria": {
@@ -2068,49 +1803,22 @@
           "variant": null,
           "quantity": 1
         },
-        "pending_slot": "result_disambiguation",
-        "pending_question": "Refinar a selecao entre multiplos itens encontrados.",
-        "last_decision": "search"
+        "pending_slot": "position",
+        "pending_question": "Em qual posicao a peca fica?",
+        "last_decision": "ask"
       }
     },
     "summary": {
-      "reply_text": "Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca.",
+      "reply_text": "Em qual posicao a peca fica?",
       "handoff_required": false,
       "handoff_reason": null,
       "used_tools": [
-        "pre_search_validator",
-        "search_parts"
+        "pre_search_validator"
       ],
-      "latency_ms": 37116.63,
+      "latency_ms": 40721.82,
       "actions_count": 1,
-      "show_items_count": 10,
-      "top_items": [
-        {
-          "item_id": "P-44-NA",
-          "title": "PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 - 94/ TEVES",
-          "score": 0.48
-        },
-        {
-          "item_id": "P-45-NA",
-          "title": "PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 - 94/ VARGA",
-          "score": 0.48
-        },
-        {
-          "item_id": "PD/45-NA",
-          "title": "PASTILHA DE FREIO VW GOL/PARATI/QUANTUM/SANTANA/SAVEIRO 1995/",
-          "score": 0.48
-        },
-        {
-          "item_id": "PD/44-B-NA",
-          "title": "PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 94/ - C/ALARME TEVES",
-          "score": 0.48
-        },
-        {
-          "item_id": "P-368-NA",
-          "title": "PASTILHA DE FREIO VW NOVO GOL/VOYAGE 08/ - FOX 1.0 2003/ ARO 13 - TEVES",
-          "score": 0.48
-        }
-      ],
+      "show_items_count": 0,
+      "top_items": [],
       "conversation_state": {
         "criteria": {
           "part_query": "pastilhas de freio",
@@ -2125,9 +1833,9 @@
           "variant": null,
           "quantity": 1
         },
-        "pending_slot": "result_disambiguation",
-        "pending_question": "Refinar a selecao entre multiplos itens encontrados.",
-        "last_decision": "search"
+        "pending_slot": "position",
+        "pending_question": "Em qual posicao a peca fica?",
+        "last_decision": "ask"
       }
     }
   },
@@ -2158,68 +1866,32 @@
       }
     },
     "status_code": 200,
-    "elapsed_ms": 34720.57,
+    "elapsed_ms": 35521.02,
     "response": {
       "schema_version": "1.0",
       "trace_id": "real-battery-20260325-case_013",
       "conversation_id": "conv-disco-gol-direct-001",
       "reply": {
-        "text": "Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca."
+        "text": "Qual a motorizacao do veiculo?"
       },
       "actions": [
         {
-          "type": "show_items",
-          "items": [
-            {
-              "item_id": "BD-5298",
-              "title": "DISCO DE FREIO DIANTEIRO VW NOVO GOL/VOYAGE 1.0 2008/ ARO 13 - VENTILADO 239MM 4 FUROS",
-              "score": 0.6
-            },
-            {
-              "item_id": "HF-87",
-              "title": "DISCO DE FREIO DIANTEIRO VW NOVO GOL/VOYAGE 1.0 2008/ ARO 13 - VENTILADO 239MM 4 FUROS",
-              "score": 0.6
-            },
-            {
-              "item_id": "FLDI00126",
-              "title": "DISCO DE FREIO DIANTEIRO VW GOL/VOYAGE/SAVEIRO/PASSAT - SANTANA /89 - SÓLIDO 239MM 4 FUROS",
-              "score": 0.6
-            },
-            {
-              "item_id": "RPDI00480",
-              "title": "DISCO DE FREIO DIANTEIRO VW GOL/VOYAGE/SAVEIRO/PASSAT - SANTANA /89 - SÓLIDO 239MM 4 FUROS",
-              "score": 0.6
-            },
-            {
-              "item_id": "BD-3790",
-              "title": "DISCO DE FREIO DIANTEIRO VW SANTANA 94/ GOL GTI 95/ POLO 97/ GOLF 1.8 GTI 93/98 - VENTILADO 256M",
-              "score": 0.6
-            },
-            {
-              "item_id": "RCDI01030",
-              "title": "DISCO DE FREIO DIANTEIRO VW SANTANA 94/ GOL GTI 95/ POLO 97/ GOLF 1.8 GTI 93/98 - VENTILADO 256M",
-              "score": 0.6
-            },
-            {
-              "item_id": "BD-5297",
-              "title": "DISCO DE FREIO DIANTEIRO NOVO GOL/VOYAGE/SAVEIRO 1.6 08/ ARO 14 - VENTILADO 256MM - ESPESSURA 19MM",
-              "score": 0.6
-            },
-            {
-              "item_id": "HF-87A",
-              "title": "DISCO DE FREIO DIANTEIRO NOVO GOL/VOYAGE/SAVEIRO 1.6 08/ ARO 14 - VENTILADO 256MM - ESPESSURA 19MM",
-              "score": 0.6
-            },
-            {
-              "item_id": "MR005",
-              "title": "DISCO DE FREIO DIANTEIRO NOVO GOL/VOYAGE/SAVEIRO 1.6 08/ ARO 14 - VENTILADO 256MM - ESPESSURA 19MM",
-              "score": 0.6
-            },
-            {
-              "item_id": "BD-9614",
-              "title": "DISCO DE FREIO DIANTEIRO VW UP! TSI 14/ - NOVO GOL/VOYAGE/SAVEIRO 13/ VENTILADO 256M ESPESSURA 22MM",
-              "score": 0.6
-            }
+          "type": "request_info",
+          "key": "engine",
+          "prompt": "Qual a motorizacao do veiculo?",
+          "options": [
+            "1.6 L 8V SOHC L4",
+            "1300 AR",
+            "1600 AR",
+            "AP 1600",
+            "AP 1800",
+            "AP 2000",
+            "CHT",
+            "EA111",
+            "EA111 AT",
+            "EA111 TEC",
+            "EA111 VHT",
+            "EA211"
           ]
         }
       ],
@@ -2227,17 +1899,16 @@
         "required": false,
         "reason": null
       },
-      "confidence": 0.82,
+      "confidence": 1.0,
       "tool_trace": {
         "used_tools": [
-          "pre_search_validator",
-          "search_parts"
+          "pre_search_validator"
         ],
-        "latency_ms": 34705.07
+        "latency_ms": 35506.37
       },
       "conversation_state": {
         "criteria": {
-          "part_query": "disco de freio",
+          "part_query": "discos de freio",
           "part_code": null,
           "vehicle_brand": null,
           "vehicle_model": "Gol",
@@ -2249,52 +1920,25 @@
           "variant": null,
           "quantity": null
         },
-        "pending_slot": "result_disambiguation",
-        "pending_question": "Refinar a selecao entre multiplos itens encontrados.",
-        "last_decision": "search"
+        "pending_slot": "engine",
+        "pending_question": "Qual a motorizacao do veiculo?",
+        "last_decision": "ask"
       }
     },
     "summary": {
-      "reply_text": "Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca.",
+      "reply_text": "Qual a motorizacao do veiculo?",
       "handoff_required": false,
       "handoff_reason": null,
       "used_tools": [
-        "pre_search_validator",
-        "search_parts"
+        "pre_search_validator"
       ],
-      "latency_ms": 34705.07,
+      "latency_ms": 35506.37,
       "actions_count": 1,
-      "show_items_count": 10,
-      "top_items": [
-        {
-          "item_id": "BD-5298",
-          "title": "DISCO DE FREIO DIANTEIRO VW NOVO GOL/VOYAGE 1.0 2008/ ARO 13 - VENTILADO 239MM 4 FUROS",
-          "score": 0.6
-        },
-        {
-          "item_id": "HF-87",
-          "title": "DISCO DE FREIO DIANTEIRO VW NOVO GOL/VOYAGE 1.0 2008/ ARO 13 - VENTILADO 239MM 4 FUROS",
-          "score": 0.6
-        },
-        {
-          "item_id": "FLDI00126",
-          "title": "DISCO DE FREIO DIANTEIRO VW GOL/VOYAGE/SAVEIRO/PASSAT - SANTANA /89 - SÓLIDO 239MM 4 FUROS",
-          "score": 0.6
-        },
-        {
-          "item_id": "RPDI00480",
-          "title": "DISCO DE FREIO DIANTEIRO VW GOL/VOYAGE/SAVEIRO/PASSAT - SANTANA /89 - SÓLIDO 239MM 4 FUROS",
-          "score": 0.6
-        },
-        {
-          "item_id": "BD-3790",
-          "title": "DISCO DE FREIO DIANTEIRO VW SANTANA 94/ GOL GTI 95/ POLO 97/ GOLF 1.8 GTI 93/98 - VENTILADO 256M",
-          "score": 0.6
-        }
-      ],
+      "show_items_count": 0,
+      "top_items": [],
       "conversation_state": {
         "criteria": {
-          "part_query": "disco de freio",
+          "part_query": "discos de freio",
           "part_code": null,
           "vehicle_brand": null,
           "vehicle_model": "Gol",
@@ -2306,9 +1950,9 @@
           "variant": null,
           "quantity": null
         },
-        "pending_slot": "result_disambiguation",
-        "pending_question": "Refinar a selecao entre multiplos itens encontrados.",
-        "last_decision": "search"
+        "pending_slot": "engine",
+        "pending_question": "Qual a motorizacao do veiculo?",
+        "last_decision": "ask"
       }
     }
   },
@@ -2339,7 +1983,7 @@
       }
     },
     "status_code": 200,
-    "elapsed_ms": 37706.01,
+    "elapsed_ms": 37568.67,
     "response": {
       "schema_version": "1.0",
       "trace_id": "real-battery-20260325-case_014",
@@ -2397,7 +2041,7 @@
               "score": 0.56
             },
             {
-              "item_id": "MF-462",
+              "item_id": "MV-312",
               "title": "RESERVATÓRIO ÁGUA DO RADIADOR 2 SAÍDAS FORD NOVO FIESTA/ECOSPORT 2002/",
               "score": 0.56
             }
@@ -2414,7 +2058,7 @@
           "pre_search_validator",
           "search_parts"
         ],
-        "latency_ms": 37690.15
+        "latency_ms": 37547.7
       },
       "conversation_state": {
         "criteria": {
@@ -2443,7 +2087,7 @@
         "pre_search_validator",
         "search_parts"
       ],
-      "latency_ms": 37690.15,
+      "latency_ms": 37547.7,
       "actions_count": 1,
       "show_items_count": 10,
       "top_items": [
@@ -2520,7 +2164,7 @@
       }
     },
     "status_code": 200,
-    "elapsed_ms": 36919.39,
+    "elapsed_ms": 42977.5,
     "response": {
       "schema_version": "1.0",
       "trace_id": "real-battery-20260325-case_015",
@@ -2563,11 +2207,6 @@
               "score": 0.56
             },
             {
-              "item_id": "MF-11",
-              "title": "TAMPA RADIADOR VW PASSAT/GOL/VOYAGE/PARATI /86",
-              "score": 0.56
-            },
-            {
               "item_id": "KT-40028",
               "title": "KIT COXIM RADIADOR VW PASSAT/GOL/VOYAGE PEQUENO",
               "score": 0.56
@@ -2580,6 +2219,11 @@
             {
               "item_id": "20403",
               "title": "MANGUEIRA VW GOL/PARATI AP 95/ - INFERIOR RADIADOR",
+              "score": 0.56
+            },
+            {
+              "item_id": "20405",
+              "title": "MANGUEIRA VW GOL/PARATI AP 95/ - SUPERIOR RADIADOR",
               "score": 0.56
             }
           ]
@@ -2595,7 +2239,7 @@
           "pre_search_validator",
           "search_parts"
         ],
-        "latency_ms": 36904.53
+        "latency_ms": 42957.08
       },
       "conversation_state": {
         "criteria": {
@@ -2624,7 +2268,7 @@
         "pre_search_validator",
         "search_parts"
       ],
-      "latency_ms": 36904.53,
+      "latency_ms": 42957.08,
       "actions_count": 1,
       "show_items_count": 10,
       "top_items": [
@@ -2701,7 +2345,7 @@
       }
     },
     "status_code": 200,
-    "elapsed_ms": 31609.46,
+    "elapsed_ms": 32754.46,
     "response": {
       "schema_version": "1.0",
       "trace_id": "real-battery-20260325-case_016",
@@ -2739,7 +2383,7 @@
         "used_tools": [
           "pre_search_validator"
         ],
-        "latency_ms": 31592.56
+        "latency_ms": 32737.25
       },
       "conversation_state": {
         "criteria": {
@@ -2767,7 +2411,7 @@
       "used_tools": [
         "pre_search_validator"
       ],
-      "latency_ms": 31592.56,
+      "latency_ms": 32737.25,
       "actions_count": 1,
       "show_items_count": 0,
       "top_items": [],
@@ -2818,19 +2462,19 @@
       }
     },
     "status_code": 200,
-    "elapsed_ms": 41223.35,
+    "elapsed_ms": 44492.85,
     "response": {
       "schema_version": "1.0",
       "trace_id": "real-battery-20260325-case_017",
       "conversation_id": "conv-radiador-ecosport-follow-001",
       "reply": {
-        "text": "Por favor, informe o tipo do motor do seu Ford EcoSport de 2008."
+        "text": "Por favor, informe o motor do seu Ford EcoSport 2008."
       },
       "actions": [
         {
           "type": "request_info",
           "key": "engine",
-          "prompt": "Por favor, informe o tipo do motor do seu Ford EcoSport de 2008."
+          "prompt": "Por favor, informe o motor do seu Ford EcoSport 2008."
         }
       ],
       "handoff": {
@@ -2842,7 +2486,7 @@
         "used_tools": [
           "pre_search_validator"
         ],
-        "latency_ms": 41204.58
+        "latency_ms": 44469.61
       },
       "conversation_state": {
         "criteria": {
@@ -2859,18 +2503,18 @@
           "quantity": null
         },
         "pending_slot": "engine",
-        "pending_question": "Por favor, informe o tipo do motor do seu Ford EcoSport de 2008.",
+        "pending_question": "Por favor, informe o motor do seu Ford EcoSport 2008.",
         "last_decision": "ask"
       }
     },
     "summary": {
-      "reply_text": "Por favor, informe o tipo do motor do seu Ford EcoSport de 2008.",
+      "reply_text": "Por favor, informe o motor do seu Ford EcoSport 2008.",
       "handoff_required": false,
       "handoff_reason": null,
       "used_tools": [
         "pre_search_validator"
       ],
-      "latency_ms": 41204.58,
+      "latency_ms": 44469.61,
       "actions_count": 1,
       "show_items_count": 0,
       "top_items": [],
@@ -2889,7 +2533,7 @@
           "quantity": null
         },
         "pending_slot": "engine",
-        "pending_question": "Por favor, informe o tipo do motor do seu Ford EcoSport de 2008.",
+        "pending_question": "Por favor, informe o motor do seu Ford EcoSport 2008.",
         "last_decision": "ask"
       }
     }
@@ -2921,19 +2565,19 @@
       }
     },
     "status_code": 200,
-    "elapsed_ms": 42024.84,
+    "elapsed_ms": 45300.0,
     "response": {
       "schema_version": "1.0",
       "trace_id": "real-battery-20260325-case_018",
       "conversation_id": "conv-coxim-ecosport-follow-num-001",
       "reply": {
-        "text": "Por favor, informe o motor do seu Ford EcoSport de 2008."
+        "text": "Por favor, informe o motor do seu Ford EcoSport 2008."
       },
       "actions": [
         {
           "type": "request_info",
           "key": "engine",
-          "prompt": "Por favor, informe o motor do seu Ford EcoSport de 2008."
+          "prompt": "Por favor, informe o motor do seu Ford EcoSport 2008."
         }
       ],
       "handoff": {
@@ -2945,7 +2589,7 @@
         "used_tools": [
           "pre_search_validator"
         ],
-        "latency_ms": 42003.22
+        "latency_ms": 45285.11
       },
       "conversation_state": {
         "criteria": {
@@ -2962,18 +2606,18 @@
           "quantity": null
         },
         "pending_slot": "engine",
-        "pending_question": "Por favor, informe o motor do seu Ford EcoSport de 2008.",
+        "pending_question": "Por favor, informe o motor do seu Ford EcoSport 2008.",
         "last_decision": "ask"
       }
     },
     "summary": {
-      "reply_text": "Por favor, informe o motor do seu Ford EcoSport de 2008.",
+      "reply_text": "Por favor, informe o motor do seu Ford EcoSport 2008.",
       "handoff_required": false,
       "handoff_reason": null,
       "used_tools": [
         "pre_search_validator"
       ],
-      "latency_ms": 42003.22,
+      "latency_ms": 45285.11,
       "actions_count": 1,
       "show_items_count": 0,
       "top_items": [],
@@ -2992,7 +2636,7 @@
           "quantity": null
         },
         "pending_slot": "engine",
-        "pending_question": "Por favor, informe o motor do seu Ford EcoSport de 2008.",
+        "pending_question": "Por favor, informe o motor do seu Ford EcoSport 2008.",
         "last_decision": "ask"
       }
     }
@@ -3024,31 +2668,45 @@
       }
     },
     "status_code": 200,
-    "elapsed_ms": 41876.07,
+    "elapsed_ms": 33070.62,
     "response": {
       "schema_version": "1.0",
       "trace_id": "real-battery-20260325-case_019",
       "conversation_id": "conv-pastilha-gol-follow-001",
       "reply": {
-        "text": "Por favor, informe o motor do seu veículo GOL de 2010."
+        "text": "Qual a motorizacao do veiculo?"
       },
       "actions": [
         {
           "type": "request_info",
           "key": "engine",
-          "prompt": "Por favor, informe o motor do seu veículo GOL de 2010."
+          "prompt": "Qual a motorizacao do veiculo?",
+          "options": [
+            "1.6 L 8V SOHC L4",
+            "1300 AR",
+            "1600 AR",
+            "AP 1600",
+            "AP 1800",
+            "AP 2000",
+            "CHT",
+            "EA111",
+            "EA111 AT",
+            "EA111 TEC",
+            "EA111 VHT",
+            "EA211"
+          ]
         }
       ],
       "handoff": {
         "required": false,
         "reason": null
       },
-      "confidence": 0.85,
+      "confidence": 1.0,
       "tool_trace": {
         "used_tools": [
           "pre_search_validator"
         ],
-        "latency_ms": 41861.74
+        "latency_ms": 33056.39
       },
       "conversation_state": {
         "criteria": {
@@ -3065,18 +2723,18 @@
           "quantity": null
         },
         "pending_slot": "engine",
-        "pending_question": "Por favor, informe o motor do seu veículo GOL de 2010.",
+        "pending_question": "Qual a motorizacao do veiculo?",
         "last_decision": "ask"
       }
     },
     "summary": {
-      "reply_text": "Por favor, informe o motor do seu veículo GOL de 2010.",
+      "reply_text": "Qual a motorizacao do veiculo?",
       "handoff_required": false,
       "handoff_reason": null,
       "used_tools": [
         "pre_search_validator"
       ],
-      "latency_ms": 41861.74,
+      "latency_ms": 33056.39,
       "actions_count": 1,
       "show_items_count": 0,
       "top_items": [],
@@ -3095,7 +2753,7 @@
           "quantity": null
         },
         "pending_slot": "engine",
-        "pending_question": "Por favor, informe o motor do seu veículo GOL de 2010.",
+        "pending_question": "Qual a motorizacao do veiculo?",
         "last_decision": "ask"
       }
     }
@@ -3127,31 +2785,82 @@
       }
     },
     "status_code": 200,
-    "elapsed_ms": 41009.84,
+    "elapsed_ms": 34365.6,
     "response": {
       "schema_version": "1.0",
       "trace_id": "real-battery-20260325-case_020",
       "conversation_id": "conv-filtro-oleo-gol-follow-001",
       "reply": {
-        "text": "Qual eixo do seu carro (dianteiro ou traseiro)?"
+        "text": "Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca."
       },
       "actions": [
         {
-          "type": "request_info",
-          "key": "axle",
-          "prompt": "Qual eixo do seu carro (dianteiro ou traseiro)?"
+          "type": "show_items",
+          "items": [
+            {
+              "item_id": "LBM1",
+              "title": "MAXI FILTRO DE OLEO FIAT 147/UNO/TEMPRA - FORD/VW CHT TODOS - KA/",
+              "score": 0.48
+            },
+            {
+              "item_id": "LBM1*A",
+              "title": "MAXI FILTRO DE OLEO FIAT 147/UNO/TEMPRA - FORD/VW CHT TODOS - KA/",
+              "score": 0.48
+            },
+            {
+              "item_id": "W712/8",
+              "title": "FILTRO OLEO PEUGEOT 106/206/306/405/504/605",
+              "score": 0.4
+            },
+            {
+              "item_id": "W712/53",
+              "title": "FILTRO OLEO VW GOL/PARATI 1.0 MI 8/16V - TODOS",
+              "score": 0.4
+            },
+            {
+              "item_id": "W7125",
+              "title": "FILTRO OLEO VW GOL/PARATI 1.0 MI 8/16V - TODOS",
+              "score": 0.4
+            },
+            {
+              "item_id": "W7143",
+              "title": "FILTRO OLEO FORD FIESTA/COURIER 96/99 ENDURA - KA TODOS",
+              "score": 0.4
+            },
+            {
+              "item_id": "W7MULTI3/4-S",
+              "title": "FILTRO OLEO MULTI VW AE TODOS - FIESTA/ECOSPORT/KA/FOCUS",
+              "score": 0.4
+            },
+            {
+              "item_id": "W7MULTI3/4-S*A",
+              "title": "FILTRO OLEO MULTI VW AE TODOS - FIESTA/ECOSPORT/KA/FOCUS",
+              "score": 0.4
+            },
+            {
+              "item_id": "LBM2",
+              "title": "MAXI FILTRO OLEO FORD C/MOTOR AP TODOS - VW TODOS C/MOTOR AP/AT",
+              "score": 0.4
+            },
+            {
+              "item_id": "LBM2*A",
+              "title": "MAXI FILTRO OLEO FORD C/MOTOR AP TODOS - VW TODOS C/MOTOR AP/AT",
+              "score": 0.4
+            }
+          ]
         }
       ],
       "handoff": {
         "required": false,
         "reason": null
       },
-      "confidence": 0.85,
+      "confidence": 0.82,
       "tool_trace": {
         "used_tools": [
-          "pre_search_validator"
+          "pre_search_validator",
+          "search_parts"
         ],
-        "latency_ms": 40994.76
+        "latency_ms": 34339.43
       },
       "conversation_state": {
         "criteria": {
@@ -3167,22 +2876,49 @@
           "variant": null,
           "quantity": null
         },
-        "pending_slot": "axle",
-        "pending_question": "Qual eixo do seu carro (dianteiro ou traseiro)?",
-        "last_decision": "ask"
+        "pending_slot": "result_disambiguation",
+        "pending_question": "Refinar a selecao entre multiplos itens encontrados.",
+        "last_decision": "search"
       }
     },
     "summary": {
-      "reply_text": "Qual eixo do seu carro (dianteiro ou traseiro)?",
+      "reply_text": "Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca.",
       "handoff_required": false,
       "handoff_reason": null,
       "used_tools": [
-        "pre_search_validator"
+        "pre_search_validator",
+        "search_parts"
       ],
-      "latency_ms": 40994.76,
+      "latency_ms": 34339.43,
       "actions_count": 1,
-      "show_items_count": 0,
-      "top_items": [],
+      "show_items_count": 10,
+      "top_items": [
+        {
+          "item_id": "LBM1",
+          "title": "MAXI FILTRO DE OLEO FIAT 147/UNO/TEMPRA - FORD/VW CHT TODOS - KA/",
+          "score": 0.48
+        },
+        {
+          "item_id": "LBM1*A",
+          "title": "MAXI FILTRO DE OLEO FIAT 147/UNO/TEMPRA - FORD/VW CHT TODOS - KA/",
+          "score": 0.48
+        },
+        {
+          "item_id": "W712/8",
+          "title": "FILTRO OLEO PEUGEOT 106/206/306/405/504/605",
+          "score": 0.4
+        },
+        {
+          "item_id": "W712/53",
+          "title": "FILTRO OLEO VW GOL/PARATI 1.0 MI 8/16V - TODOS",
+          "score": 0.4
+        },
+        {
+          "item_id": "W7125",
+          "title": "FILTRO OLEO VW GOL/PARATI 1.0 MI 8/16V - TODOS",
+          "score": 0.4
+        }
+      ],
       "conversation_state": {
         "criteria": {
           "part_query": "filtro de oleo",
@@ -3197,9 +2933,9 @@
           "variant": null,
           "quantity": null
         },
-        "pending_slot": "axle",
-        "pending_question": "Qual eixo do seu carro (dianteiro ou traseiro)?",
-        "last_decision": "ask"
+        "pending_slot": "result_disambiguation",
+        "pending_question": "Refinar a selecao entre multiplos itens encontrados.",
+        "last_decision": "search"
       }
     }
   },
@@ -3230,31 +2966,36 @@
       }
     },
     "status_code": 200,
-    "elapsed_ms": 43887.53,
+    "elapsed_ms": 32677.08,
     "response": {
       "schema_version": "1.0",
       "trace_id": "real-battery-20260325-case_021",
       "conversation_id": "conv-bandeja-ecosport-follow-001",
       "reply": {
-        "text": "Qual eixo (dianteiro ou traseiro) você precisa da bandeja do Ecosport 2008?"
+        "text": "Qual lado da peca?"
       },
       "actions": [
         {
           "type": "request_info",
-          "key": "axle",
-          "prompt": "Qual eixo (dianteiro ou traseiro) você precisa da bandeja do Ecosport 2008?"
+          "key": "side",
+          "prompt": "Qual lado da peca?",
+          "options": [
+            "Esquerdo",
+            "Direito",
+            "Nao sei"
+          ]
         }
       ],
       "handoff": {
         "required": false,
         "reason": null
       },
-      "confidence": 0.5,
+      "confidence": 1.0,
       "tool_trace": {
         "used_tools": [
           "pre_search_validator"
         ],
-        "latency_ms": 43872.28
+        "latency_ms": 32659.95
       },
       "conversation_state": {
         "criteria": {
@@ -3270,19 +3011,19 @@
           "variant": null,
           "quantity": null
         },
-        "pending_slot": "axle",
-        "pending_question": "Qual eixo (dianteiro ou traseiro) você precisa da bandeja do Ecosport 2008?",
+        "pending_slot": "side",
+        "pending_question": "Qual lado da peca?",
         "last_decision": "ask"
       }
     },
     "summary": {
-      "reply_text": "Qual eixo (dianteiro ou traseiro) você precisa da bandeja do Ecosport 2008?",
+      "reply_text": "Qual lado da peca?",
       "handoff_required": false,
       "handoff_reason": null,
       "used_tools": [
         "pre_search_validator"
       ],
-      "latency_ms": 43872.28,
+      "latency_ms": 32659.95,
       "actions_count": 1,
       "show_items_count": 0,
       "top_items": [],
@@ -3300,8 +3041,8 @@
           "variant": null,
           "quantity": null
         },
-        "pending_slot": "axle",
-        "pending_question": "Qual eixo (dianteiro ou traseiro) você precisa da bandeja do Ecosport 2008?",
+        "pending_slot": "side",
+        "pending_question": "Qual lado da peca?",
         "last_decision": "ask"
       }
     }
@@ -3333,31 +3074,82 @@
       }
     },
     "status_code": 200,
-    "elapsed_ms": 39730.43,
+    "elapsed_ms": 34322.48,
     "response": {
       "schema_version": "1.0",
       "trace_id": "real-battery-20260325-case_022",
       "conversation_id": "conv-filtro-comb-gol-follow-001",
       "reply": {
-        "text": "Qual lado do veículo você precisa do filtro de combustível?"
+        "text": "Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca."
       },
       "actions": [
         {
-          "type": "request_info",
-          "key": "side",
-          "prompt": "Qual lado do veículo você precisa do filtro de combustível?"
+          "type": "show_items",
+          "items": [
+            {
+              "item_id": "WK58/3",
+              "title": "FILTRO DE COMBUSTIVEL RENAULT LOGAN/SANDERO/FLUENCE/DUSTER/MEGANE - VW NOVO GOL/VOYAGE/SAVEIRO 2008/",
+              "score": 0.56
+            },
+            {
+              "item_id": "WK730/4",
+              "title": "FILTRO COMBUSTIVEL VW GOL/SAVEIRO TOTALFLEX",
+              "score": 0.4
+            },
+            {
+              "item_id": "WK830/7*A",
+              "title": "FILTRO COMBUSTIVEL VW PASSAT ALEMAO 1.8/2.0/2.8 - 96/",
+              "score": 0.4
+            },
+            {
+              "item_id": "WK613/4",
+              "title": "FILTRO COMBUSTIVEL VW GOL/PARATI/SANTANA/QUANTUM /96 TODOS",
+              "score": 0.4
+            },
+            {
+              "item_id": "UN68",
+              "title": "FILTRO COMBUSTIVEL UNIVERSAL GRANDE 6/8 MM - P/VEICULOS CARBURADOS",
+              "score": 0.4
+            },
+            {
+              "item_id": "UN86",
+              "title": "FILTRO COMBUSTIVEL UNIVERSAL PEQUENO 6/8 MM - P/VEICULOS CARBURADOS",
+              "score": 0.4
+            },
+            {
+              "item_id": "FS07/1",
+              "title": "FILTRO COMBUSTIVEL VW GOL/PARATI/SANTANA/QUANTUM /96 TODOS - BICO FINO/GROSSO",
+              "score": 0.4
+            },
+            {
+              "item_id": "FS12/7",
+              "title": "FILTRO COMBUSTIVEL VW GOL/PARATI/SAVEIRO 2003/ FLEX - FOX/CROSSFOX/SPACEFOX 2003/ FLEX",
+              "score": 0.4
+            },
+            {
+              "item_id": "WK613/3",
+              "title": "FILTRO COMBUSTIVEL VW GOL/PARATI/SAVEIRO/KOMBI MI 97/ TODOS - FOX 1.6 - NOVO POLO 1.0/1.6",
+              "score": 0.4
+            },
+            {
+              "item_id": "FS50/7",
+              "title": "FILTRO COMBUSTÍVEL RENAULT DUSTER OROCH 15/ CHERY QQ 10/15 CITROEN AIR CROSS 10/ HYUNDAI CRETA",
+              "score": 0.4
+            }
+          ]
         }
       ],
       "handoff": {
         "required": false,
         "reason": null
       },
-      "confidence": 0.55,
+      "confidence": 0.82,
       "tool_trace": {
         "used_tools": [
-          "pre_search_validator"
+          "pre_search_validator",
+          "search_parts"
         ],
-        "latency_ms": 39714.11
+        "latency_ms": 34304.84
       },
       "conversation_state": {
         "criteria": {
@@ -3373,22 +3165,49 @@
           "variant": null,
           "quantity": null
         },
-        "pending_slot": "side",
-        "pending_question": "Qual lado do veículo você precisa do filtro de combustível?",
-        "last_decision": "ask"
+        "pending_slot": "result_disambiguation",
+        "pending_question": "Refinar a selecao entre multiplos itens encontrados.",
+        "last_decision": "search"
       }
     },
     "summary": {
-      "reply_text": "Qual lado do veículo você precisa do filtro de combustível?",
+      "reply_text": "Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca.",
       "handoff_required": false,
       "handoff_reason": null,
       "used_tools": [
-        "pre_search_validator"
+        "pre_search_validator",
+        "search_parts"
       ],
-      "latency_ms": 39714.11,
+      "latency_ms": 34304.84,
       "actions_count": 1,
-      "show_items_count": 0,
-      "top_items": [],
+      "show_items_count": 10,
+      "top_items": [
+        {
+          "item_id": "WK58/3",
+          "title": "FILTRO DE COMBUSTIVEL RENAULT LOGAN/SANDERO/FLUENCE/DUSTER/MEGANE - VW NOVO GOL/VOYAGE/SAVEIRO 2008/",
+          "score": 0.56
+        },
+        {
+          "item_id": "WK730/4",
+          "title": "FILTRO COMBUSTIVEL VW GOL/SAVEIRO TOTALFLEX",
+          "score": 0.4
+        },
+        {
+          "item_id": "WK830/7*A",
+          "title": "FILTRO COMBUSTIVEL VW PASSAT ALEMAO 1.8/2.0/2.8 - 96/",
+          "score": 0.4
+        },
+        {
+          "item_id": "WK613/4",
+          "title": "FILTRO COMBUSTIVEL VW GOL/PARATI/SANTANA/QUANTUM /96 TODOS",
+          "score": 0.4
+        },
+        {
+          "item_id": "UN68",
+          "title": "FILTRO COMBUSTIVEL UNIVERSAL GRANDE 6/8 MM - P/VEICULOS CARBURADOS",
+          "score": 0.4
+        }
+      ],
       "conversation_state": {
         "criteria": {
           "part_query": "filtro de combustivel",
@@ -3403,9 +3222,9 @@
           "variant": null,
           "quantity": null
         },
-        "pending_slot": "side",
-        "pending_question": "Qual lado do veículo você precisa do filtro de combustível?",
-        "last_decision": "ask"
+        "pending_slot": "result_disambiguation",
+        "pending_question": "Refinar a selecao entre multiplos itens encontrados.",
+        "last_decision": "search"
       }
     }
   },
@@ -3436,31 +3255,82 @@
       }
     },
     "status_code": 200,
-    "elapsed_ms": 40031.68,
+    "elapsed_ms": 37739.44,
     "response": {
       "schema_version": "1.0",
       "trace_id": "real-battery-20260325-case_023",
       "conversation_id": "conv-filtro-ar-gol-follow-001",
       "reply": {
-        "text": "Qual eixo do veículo você está procurando?"
+        "text": "Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca."
       },
       "actions": [
         {
-          "type": "request_info",
-          "key": "axle",
-          "prompt": "Qual eixo do veículo você está procurando?"
+          "type": "show_items",
+          "items": [
+            {
+              "item_id": "HLP6093",
+              "title": "FILTRO AR VW GOLF IV 1.6/1.8/2.0 98/ - BORA TODOS",
+              "score": 0.4
+            },
+            {
+              "item_id": "HLP6093*A",
+              "title": "FILTRO AR VW GOLF IV 1.6/1.8/2.0 98/ - BORA TODOS",
+              "score": 0.4
+            },
+            {
+              "item_id": "C2990",
+              "title": "FILTRO AR VW GOL/PARATI 1.0 MI 16V/POWER 01.01/ - GOLF 1.6 8V",
+              "score": 0.4
+            },
+            {
+              "item_id": "C29108",
+              "title": "FILTRO AR VW GOL 1.0 95/96 1.0 16V 97/ - GOL 2.0 EFI 95/ - GOL",
+              "score": 0.4
+            },
+            {
+              "item_id": "CU3162",
+              "title": "FILTRO AR CONDICIONADO VW GOL/PARATI/SAVEIRO 99/ - GERACAO III",
+              "score": 0.4
+            },
+            {
+              "item_id": "CU3162*A",
+              "title": "FILTRO AR CONDICIONADO VW GOL/PARATI/SAVEIRO 99/ - GERACAO III",
+              "score": 0.4
+            },
+            {
+              "item_id": "HLP6091",
+              "title": "FILTRO AR VW GOL 1.0 95/96 1.0 16V 97/ - GOL 2.0 EFI 95/ - GOL",
+              "score": 0.4
+            },
+            {
+              "item_id": "HLP6091*A",
+              "title": "FILTRO AR VW GOL 1.0 95/96 1.0 16V 97/ - GOL 2.0 EFI 95/ - GOL",
+              "score": 0.4
+            },
+            {
+              "item_id": "HLP6096",
+              "title": "FILTRO AR VW GOL/PARATI 1.0 8V/POWER 08.2001/ - FOX 1.0 2003/ - BAIXO",
+              "score": 0.4
+            },
+            {
+              "item_id": "HLP6096*A",
+              "title": "FILTRO AR VW GOL/PARATI 1.0 8V/POWER 08.2001/ - FOX 1.0 2003/ - BAIXO",
+              "score": 0.4
+            }
+          ]
         }
       ],
       "handoff": {
         "required": false,
         "reason": null
       },
-      "confidence": 0.85,
+      "confidence": 0.82,
       "tool_trace": {
         "used_tools": [
-          "pre_search_validator"
+          "pre_search_validator",
+          "search_parts"
         ],
-        "latency_ms": 40013.68
+        "latency_ms": 37719.95
       },
       "conversation_state": {
         "criteria": {
@@ -3476,22 +3346,49 @@
           "variant": null,
           "quantity": null
         },
-        "pending_slot": "axle",
-        "pending_question": "Qual eixo do veículo você está procurando?",
-        "last_decision": "ask"
+        "pending_slot": "result_disambiguation",
+        "pending_question": "Refinar a selecao entre multiplos itens encontrados.",
+        "last_decision": "search"
       }
     },
     "summary": {
-      "reply_text": "Qual eixo do veículo você está procurando?",
+      "reply_text": "Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca.",
       "handoff_required": false,
       "handoff_reason": null,
       "used_tools": [
-        "pre_search_validator"
+        "pre_search_validator",
+        "search_parts"
       ],
-      "latency_ms": 40013.68,
+      "latency_ms": 37719.95,
       "actions_count": 1,
-      "show_items_count": 0,
-      "top_items": [],
+      "show_items_count": 10,
+      "top_items": [
+        {
+          "item_id": "HLP6093",
+          "title": "FILTRO AR VW GOLF IV 1.6/1.8/2.0 98/ - BORA TODOS",
+          "score": 0.4
+        },
+        {
+          "item_id": "HLP6093*A",
+          "title": "FILTRO AR VW GOLF IV 1.6/1.8/2.0 98/ - BORA TODOS",
+          "score": 0.4
+        },
+        {
+          "item_id": "C2990",
+          "title": "FILTRO AR VW GOL/PARATI 1.0 MI 16V/POWER 01.01/ - GOLF 1.6 8V",
+          "score": 0.4
+        },
+        {
+          "item_id": "C29108",
+          "title": "FILTRO AR VW GOL 1.0 95/96 1.0 16V 97/ - GOL 2.0 EFI 95/ - GOL",
+          "score": 0.4
+        },
+        {
+          "item_id": "CU3162",
+          "title": "FILTRO AR CONDICIONADO VW GOL/PARATI/SAVEIRO 99/ - GERACAO III",
+          "score": 0.4
+        }
+      ],
       "conversation_state": {
         "criteria": {
           "part_query": "filtro de ar do motor",
@@ -3506,9 +3403,9 @@
           "variant": null,
           "quantity": null
         },
-        "pending_slot": "axle",
-        "pending_question": "Qual eixo do veículo você está procurando?",
-        "last_decision": "ask"
+        "pending_slot": "result_disambiguation",
+        "pending_question": "Refinar a selecao entre multiplos itens encontrados.",
+        "last_decision": "search"
       }
     }
   },
@@ -3539,68 +3436,32 @@
       }
     },
     "status_code": 200,
-    "elapsed_ms": 40251.51,
+    "elapsed_ms": 35470.19,
     "response": {
       "schema_version": "1.0",
       "trace_id": "real-battery-20260325-case_024",
       "conversation_id": "conv-disco-gol-follow-001",
       "reply": {
-        "text": "Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca."
+        "text": "Qual a motorizacao do veiculo?"
       },
       "actions": [
         {
-          "type": "show_items",
-          "items": [
-            {
-              "item_id": "BD-5298",
-              "title": "DISCO DE FREIO DIANTEIRO VW NOVO GOL/VOYAGE 1.0 2008/ ARO 13 - VENTILADO 239MM 4 FUROS",
-              "score": 0.56
-            },
-            {
-              "item_id": "HF-87",
-              "title": "DISCO DE FREIO DIANTEIRO VW NOVO GOL/VOYAGE 1.0 2008/ ARO 13 - VENTILADO 239MM 4 FUROS",
-              "score": 0.56
-            },
-            {
-              "item_id": "FLDI00126",
-              "title": "DISCO DE FREIO DIANTEIRO VW GOL/VOYAGE/SAVEIRO/PASSAT - SANTANA /89 - SÓLIDO 239MM 4 FUROS",
-              "score": 0.56
-            },
-            {
-              "item_id": "RPDI00480",
-              "title": "DISCO DE FREIO DIANTEIRO VW GOL/VOYAGE/SAVEIRO/PASSAT - SANTANA /89 - SÓLIDO 239MM 4 FUROS",
-              "score": 0.56
-            },
-            {
-              "item_id": "BD-3790",
-              "title": "DISCO DE FREIO DIANTEIRO VW SANTANA 94/ GOL GTI 95/ POLO 97/ GOLF 1.8 GTI 93/98 - VENTILADO 256M",
-              "score": 0.56
-            },
-            {
-              "item_id": "RCDI01030",
-              "title": "DISCO DE FREIO DIANTEIRO VW SANTANA 94/ GOL GTI 95/ POLO 97/ GOLF 1.8 GTI 93/98 - VENTILADO 256M",
-              "score": 0.56
-            },
-            {
-              "item_id": "BD-5297",
-              "title": "DISCO DE FREIO DIANTEIRO NOVO GOL/VOYAGE/SAVEIRO 1.6 08/ ARO 14 - VENTILADO 256MM - ESPESSURA 19MM",
-              "score": 0.56
-            },
-            {
-              "item_id": "HF-87A",
-              "title": "DISCO DE FREIO DIANTEIRO NOVO GOL/VOYAGE/SAVEIRO 1.6 08/ ARO 14 - VENTILADO 256MM - ESPESSURA 19MM",
-              "score": 0.56
-            },
-            {
-              "item_id": "MR005",
-              "title": "DISCO DE FREIO DIANTEIRO NOVO GOL/VOYAGE/SAVEIRO 1.6 08/ ARO 14 - VENTILADO 256MM - ESPESSURA 19MM",
-              "score": 0.56
-            },
-            {
-              "item_id": "BD-9614",
-              "title": "DISCO DE FREIO DIANTEIRO VW UP! TSI 14/ - NOVO GOL/VOYAGE/SAVEIRO 13/ VENTILADO 256M ESPESSURA 22MM",
-              "score": 0.56
-            }
+          "type": "request_info",
+          "key": "engine",
+          "prompt": "Qual a motorizacao do veiculo?",
+          "options": [
+            "1.6 L 8V SOHC L4",
+            "1300 AR",
+            "1600 AR",
+            "AP 1600",
+            "AP 1800",
+            "AP 2000",
+            "CHT",
+            "EA111",
+            "EA111 AT",
+            "EA111 TEC",
+            "EA111 VHT",
+            "EA211"
           ]
         }
       ],
@@ -3608,17 +3469,16 @@
         "required": false,
         "reason": null
       },
-      "confidence": 0.82,
+      "confidence": 1.0,
       "tool_trace": {
         "used_tools": [
-          "pre_search_validator",
-          "search_parts"
+          "pre_search_validator"
         ],
-        "latency_ms": 40231.37
+        "latency_ms": 35454.06
       },
       "conversation_state": {
         "criteria": {
-          "part_query": "disco de freio",
+          "part_query": "discos de freio",
           "part_code": null,
           "vehicle_brand": null,
           "vehicle_model": "Gol",
@@ -3630,52 +3490,25 @@
           "variant": null,
           "quantity": null
         },
-        "pending_slot": "result_disambiguation",
-        "pending_question": "Refinar a selecao entre multiplos itens encontrados.",
-        "last_decision": "search"
+        "pending_slot": "engine",
+        "pending_question": "Qual a motorizacao do veiculo?",
+        "last_decision": "ask"
       }
     },
     "summary": {
-      "reply_text": "Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca.",
+      "reply_text": "Qual a motorizacao do veiculo?",
       "handoff_required": false,
       "handoff_reason": null,
       "used_tools": [
-        "pre_search_validator",
-        "search_parts"
+        "pre_search_validator"
       ],
-      "latency_ms": 40231.37,
+      "latency_ms": 35454.06,
       "actions_count": 1,
-      "show_items_count": 10,
-      "top_items": [
-        {
-          "item_id": "BD-5298",
-          "title": "DISCO DE FREIO DIANTEIRO VW NOVO GOL/VOYAGE 1.0 2008/ ARO 13 - VENTILADO 239MM 4 FUROS",
-          "score": 0.56
-        },
-        {
-          "item_id": "HF-87",
-          "title": "DISCO DE FREIO DIANTEIRO VW NOVO GOL/VOYAGE 1.0 2008/ ARO 13 - VENTILADO 239MM 4 FUROS",
-          "score": 0.56
-        },
-        {
-          "item_id": "FLDI00126",
-          "title": "DISCO DE FREIO DIANTEIRO VW GOL/VOYAGE/SAVEIRO/PASSAT - SANTANA /89 - SÓLIDO 239MM 4 FUROS",
-          "score": 0.56
-        },
-        {
-          "item_id": "RPDI00480",
-          "title": "DISCO DE FREIO DIANTEIRO VW GOL/VOYAGE/SAVEIRO/PASSAT - SANTANA /89 - SÓLIDO 239MM 4 FUROS",
-          "score": 0.56
-        },
-        {
-          "item_id": "BD-3790",
-          "title": "DISCO DE FREIO DIANTEIRO VW SANTANA 94/ GOL GTI 95/ POLO 97/ GOLF 1.8 GTI 93/98 - VENTILADO 256M",
-          "score": 0.56
-        }
-      ],
+      "show_items_count": 0,
+      "top_items": [],
       "conversation_state": {
         "criteria": {
-          "part_query": "disco de freio",
+          "part_query": "discos de freio",
           "part_code": null,
           "vehicle_brand": null,
           "vehicle_model": "Gol",
@@ -3687,9 +3520,9 @@
           "variant": null,
           "quantity": null
         },
-        "pending_slot": "result_disambiguation",
-        "pending_question": "Refinar a selecao entre multiplos itens encontrados.",
-        "last_decision": "search"
+        "pending_slot": "engine",
+        "pending_question": "Qual a motorizacao do veiculo?",
+        "last_decision": "ask"
       }
     }
   },
@@ -3720,81 +3553,35 @@
       }
     },
     "status_code": 200,
-    "elapsed_ms": 31433.3,
+    "elapsed_ms": 46661.87,
     "response": {
       "schema_version": "1.0",
       "trace_id": "real-battery-20260325-case_025",
       "conversation_id": "conv-farol-gol-follow-001",
       "reply": {
-        "text": "Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca."
+        "text": "Qual peca voce precisa?"
       },
       "actions": [
         {
-          "type": "show_items",
-          "items": [
-            {
-              "item_id": "PF37",
-              "title": "PARAFUSO DO FAROL",
-              "score": 0.48
-            },
-            {
-              "item_id": "AV-12253",
-              "title": "LAMPADA FAROL H4 12V 3200K 60/55 WATTS",
-              "score": 0.48
-            },
-            {
-              "item_id": "64150",
-              "title": "LAMPADA FAROL/AUXILIAR - 3200K H1 - 55 WATTS",
-              "score": 0.48
-            },
-            {
-              "item_id": "AV-12248",
-              "title": "LÂMPADA FAROL/AUXILIAR - 3200K H1 - 12V 55 WATTS",
-              "score": 0.48
-            },
-            {
-              "item_id": "AV-12250",
-              "title": "LAMPADA FAROL AUXILIAR - 3200K H3 - 12V 55 WATTS",
-              "score": 0.48
-            },
-            {
-              "item_id": "PF39",
-              "title": "PARAFUSO DO FAROL-PARACHOQUE - MOLDURAS EXTERNAS",
-              "score": 0.48
-            },
-            {
-              "item_id": "PF50",
-              "title": "PARAFUSO DO SUPORTE DO FILTRO DO AR-FAROL E PARACHOQUE",
-              "score": 0.48
-            },
-            {
-              "item_id": "PF35",
-              "title": "PARAFUSO DO FAROL-COLUNAS/MOLDURAS INTERNAS-PORTA MALAS E PARACHOQUE",
-              "score": 0.48
-            },
-            {
-              "item_id": "64210CBL",
-              "title": "LAMPADA FAROL ALTO/BAIXO - 4200K LUZ BRANCA H7 - 55 WATTS - ATE 30 + LUZ - VALOR JOGOC/2",
-              "score": 0.48
-            }
-          ]
+          "type": "request_info",
+          "key": "part_query",
+          "prompt": "Qual peca voce precisa?"
         }
       ],
       "handoff": {
         "required": false,
         "reason": null
       },
-      "confidence": 0.82,
+      "confidence": 0.55,
       "tool_trace": {
         "used_tools": [
-          "pre_search_validator",
-          "search_parts"
+          "pre_search_validator"
         ],
-        "latency_ms": 31415.97
+        "latency_ms": 46646.71
       },
       "conversation_state": {
         "criteria": {
-          "part_query": "farol",
+          "part_query": null,
           "part_code": null,
           "vehicle_brand": null,
           "vehicle_model": "Gol",
@@ -3806,52 +3593,25 @@
           "variant": null,
           "quantity": null
         },
-        "pending_slot": "result_disambiguation",
-        "pending_question": "Refinar a selecao entre multiplos itens encontrados.",
-        "last_decision": "search"
+        "pending_slot": "part_query",
+        "pending_question": "Qual peca voce precisa?",
+        "last_decision": "ask"
       }
     },
     "summary": {
-      "reply_text": "Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca.",
+      "reply_text": "Qual peca voce precisa?",
       "handoff_required": false,
       "handoff_reason": null,
       "used_tools": [
-        "pre_search_validator",
-        "search_parts"
+        "pre_search_validator"
       ],
-      "latency_ms": 31415.97,
+      "latency_ms": 46646.71,
       "actions_count": 1,
-      "show_items_count": 9,
-      "top_items": [
-        {
-          "item_id": "PF37",
-          "title": "PARAFUSO DO FAROL",
-          "score": 0.48
-        },
-        {
-          "item_id": "AV-12253",
-          "title": "LAMPADA FAROL H4 12V 3200K 60/55 WATTS",
-          "score": 0.48
-        },
-        {
-          "item_id": "64150",
-          "title": "LAMPADA FAROL/AUXILIAR - 3200K H1 - 55 WATTS",
-          "score": 0.48
-        },
-        {
-          "item_id": "AV-12248",
-          "title": "LÂMPADA FAROL/AUXILIAR - 3200K H1 - 12V 55 WATTS",
-          "score": 0.48
-        },
-        {
-          "item_id": "AV-12250",
-          "title": "LAMPADA FAROL AUXILIAR - 3200K H3 - 12V 55 WATTS",
-          "score": 0.48
-        }
-      ],
+      "show_items_count": 0,
+      "top_items": [],
       "conversation_state": {
         "criteria": {
-          "part_query": "farol",
+          "part_query": null,
           "part_code": null,
           "vehicle_brand": null,
           "vehicle_model": "Gol",
@@ -3863,9 +3623,9 @@
           "variant": null,
           "quantity": null
         },
-        "pending_slot": "result_disambiguation",
-        "pending_question": "Refinar a selecao entre multiplos itens encontrados.",
-        "last_decision": "search"
+        "pending_slot": "part_query",
+        "pending_question": "Qual peca voce precisa?",
+        "last_decision": "ask"
       }
     }
   },
@@ -3896,31 +3656,38 @@
       }
     },
     "status_code": 200,
-    "elapsed_ms": 39940.01,
+    "elapsed_ms": 34223.0,
     "response": {
       "schema_version": "1.0",
       "trace_id": "real-battery-20260325-case_026",
       "conversation_id": "conv-radiador-focus-follow-001",
       "reply": {
-        "text": "Por favor, informe o motor do seu Ford Focus de 2010."
+        "text": "Qual a motorizacao do veiculo?"
       },
       "actions": [
         {
           "type": "request_info",
           "key": "engine",
-          "prompt": "Por favor, informe o motor do seu Ford Focus de 2010."
+          "prompt": "Qual a motorizacao do veiculo?",
+          "options": [
+            "DURATEC",
+            "DURATEC HE",
+            "SIGMA",
+            "ZETEC ROCAM",
+            "ZETEC-S"
+          ]
         }
       ],
       "handoff": {
         "required": false,
         "reason": null
       },
-      "confidence": 0.85,
+      "confidence": 1.0,
       "tool_trace": {
         "used_tools": [
           "pre_search_validator"
         ],
-        "latency_ms": 39900.87
+        "latency_ms": 34207.67
       },
       "conversation_state": {
         "criteria": {
@@ -3937,18 +3704,18 @@
           "quantity": null
         },
         "pending_slot": "engine",
-        "pending_question": "Por favor, informe o motor do seu Ford Focus de 2010.",
+        "pending_question": "Qual a motorizacao do veiculo?",
         "last_decision": "ask"
       }
     },
     "summary": {
-      "reply_text": "Por favor, informe o motor do seu Ford Focus de 2010.",
+      "reply_text": "Qual a motorizacao do veiculo?",
       "handoff_required": false,
       "handoff_reason": null,
       "used_tools": [
         "pre_search_validator"
       ],
-      "latency_ms": 39900.87,
+      "latency_ms": 34207.67,
       "actions_count": 1,
       "show_items_count": 0,
       "top_items": [],
@@ -3967,7 +3734,7 @@
           "quantity": null
         },
         "pending_slot": "engine",
-        "pending_question": "Por favor, informe o motor do seu Ford Focus de 2010.",
+        "pending_question": "Qual a motorizacao do veiculo?",
         "last_decision": "ask"
       }
     }
@@ -3999,19 +3766,19 @@
       }
     },
     "status_code": 200,
-    "elapsed_ms": 41796.66,
+    "elapsed_ms": 41302.02,
     "response": {
       "schema_version": "1.0",
       "trace_id": "real-battery-20260325-case_027",
       "conversation_id": "conv-coxim-ecosport-follow-text-001",
       "reply": {
-        "text": "Por favor, informe o motor do seu Ford EcoSport de 2008."
+        "text": "Por favor, informe o motor do seu Ford EcoSport 2008."
       },
       "actions": [
         {
           "type": "request_info",
           "key": "engine",
-          "prompt": "Por favor, informe o motor do seu Ford EcoSport de 2008."
+          "prompt": "Por favor, informe o motor do seu Ford EcoSport 2008."
         }
       ],
       "handoff": {
@@ -4023,7 +3790,7 @@
         "used_tools": [
           "pre_search_validator"
         ],
-        "latency_ms": 41767.68
+        "latency_ms": 41271.84
       },
       "conversation_state": {
         "criteria": {
@@ -4040,18 +3807,18 @@
           "quantity": null
         },
         "pending_slot": "engine",
-        "pending_question": "Por favor, informe o motor do seu Ford EcoSport de 2008.",
+        "pending_question": "Por favor, informe o motor do seu Ford EcoSport 2008.",
         "last_decision": "ask"
       }
     },
     "summary": {
-      "reply_text": "Por favor, informe o motor do seu Ford EcoSport de 2008.",
+      "reply_text": "Por favor, informe o motor do seu Ford EcoSport 2008.",
       "handoff_required": false,
       "handoff_reason": null,
       "used_tools": [
         "pre_search_validator"
       ],
-      "latency_ms": 41767.68,
+      "latency_ms": 41271.84,
       "actions_count": 1,
       "show_items_count": 0,
       "top_items": [],
@@ -4070,7 +3837,7 @@
           "quantity": null
         },
         "pending_slot": "engine",
-        "pending_question": "Por favor, informe o motor do seu Ford EcoSport de 2008.",
+        "pending_question": "Por favor, informe o motor do seu Ford EcoSport 2008.",
         "last_decision": "ask"
       }
     }
@@ -4102,31 +3869,38 @@
       }
     },
     "status_code": 200,
-    "elapsed_ms": 42191.23,
+    "elapsed_ms": 35450.67,
     "response": {
       "schema_version": "1.0",
       "trace_id": "real-battery-20260325-case_028",
       "conversation_id": "conv-pastilha-ecosport-follow-001",
       "reply": {
-        "text": "Por favor, informe o motor do seu Ford EcoSport 2008."
+        "text": "Qual a motorizacao do veiculo?"
       },
       "actions": [
         {
           "type": "request_info",
           "key": "engine",
-          "prompt": "Por favor, informe o motor do seu Ford EcoSport 2008."
+          "prompt": "Qual a motorizacao do veiculo?",
+          "options": [
+            "DRAGON",
+            "DURATEC",
+            "DURATEC HE",
+            "SIGMA",
+            "ZETEC ROCAM"
+          ]
         }
       ],
       "handoff": {
         "required": false,
         "reason": null
       },
-      "confidence": 0.85,
+      "confidence": 1.0,
       "tool_trace": {
         "used_tools": [
           "pre_search_validator"
         ],
-        "latency_ms": 42176.56
+        "latency_ms": 35435.88
       },
       "conversation_state": {
         "criteria": {
@@ -4143,18 +3917,18 @@
           "quantity": null
         },
         "pending_slot": "engine",
-        "pending_question": "Por favor, informe o motor do seu Ford EcoSport 2008.",
+        "pending_question": "Qual a motorizacao do veiculo?",
         "last_decision": "ask"
       }
     },
     "summary": {
-      "reply_text": "Por favor, informe o motor do seu Ford EcoSport 2008.",
+      "reply_text": "Qual a motorizacao do veiculo?",
       "handoff_required": false,
       "handoff_reason": null,
       "used_tools": [
         "pre_search_validator"
       ],
-      "latency_ms": 42176.56,
+      "latency_ms": 35435.88,
       "actions_count": 1,
       "show_items_count": 0,
       "top_items": [],
@@ -4173,7 +3947,7 @@
           "quantity": null
         },
         "pending_slot": "engine",
-        "pending_question": "Por favor, informe o motor do seu Ford EcoSport 2008.",
+        "pending_question": "Qual a motorizacao do veiculo?",
         "last_decision": "ask"
       }
     }
@@ -4205,19 +3979,19 @@
       }
     },
     "status_code": 200,
-    "elapsed_ms": 31306.23,
+    "elapsed_ms": 32400.67,
     "response": {
       "schema_version": "1.0",
       "trace_id": "real-battery-20260325-case_029",
       "conversation_id": "conv-generic-part-follow-001",
       "reply": {
-        "text": "Por favor, informe qual peça você precisa."
+        "text": "Poderia me informar qual peça você precisa?"
       },
       "actions": [
         {
           "type": "request_info",
           "key": "part_query",
-          "prompt": "Por favor, informe qual peça você precisa."
+          "prompt": "Poderia me informar qual peça você precisa?"
         }
       ],
       "handoff": {
@@ -4229,7 +4003,7 @@
         "used_tools": [
           "pre_search_validator"
         ],
-        "latency_ms": 31275.51
+        "latency_ms": 32373.16
       },
       "conversation_state": {
         "criteria": {
@@ -4246,18 +4020,18 @@
           "quantity": null
         },
         "pending_slot": "part_query",
-        "pending_question": "Por favor, informe qual peça você precisa.",
+        "pending_question": "Poderia me informar qual peça você precisa?",
         "last_decision": "ask"
       }
     },
     "summary": {
-      "reply_text": "Por favor, informe qual peça você precisa.",
+      "reply_text": "Poderia me informar qual peça você precisa?",
       "handoff_required": false,
       "handoff_reason": null,
       "used_tools": [
         "pre_search_validator"
       ],
-      "latency_ms": 31275.51,
+      "latency_ms": 32373.16,
       "actions_count": 1,
       "show_items_count": 0,
       "top_items": [],
@@ -4276,7 +4050,7 @@
           "quantity": null
         },
         "pending_slot": "part_query",
-        "pending_question": "Por favor, informe qual peça você precisa.",
+        "pending_question": "Poderia me informar qual peça você precisa?",
         "last_decision": "ask"
       }
     }
@@ -4308,19 +4082,19 @@
       }
     },
     "status_code": 200,
-    "elapsed_ms": 30671.7,
+    "elapsed_ms": 35363.85,
     "response": {
       "schema_version": "1.0",
       "trace_id": "real-battery-20260325-case_030",
       "conversation_id": "conv-generic-gol-follow-001",
       "reply": {
-        "text": "Qual peça do Gol você precisa?"
+        "text": "Qual a família da peça que você precisa?"
       },
       "actions": [
         {
           "type": "request_info",
           "key": "part_query",
-          "prompt": "Qual peça do Gol você precisa?"
+          "prompt": "Qual a família da peça que você precisa?"
         }
       ],
       "handoff": {
@@ -4332,14 +4106,14 @@
         "used_tools": [
           "pre_search_validator"
         ],
-        "latency_ms": 30648.1
+        "latency_ms": 35350.35
       },
       "conversation_state": {
         "criteria": {
           "part_query": null,
           "part_code": null,
           "vehicle_brand": null,
-          "vehicle_model": "GOL",
+          "vehicle_model": "Gol",
           "vehicle_year": null,
           "engine": null,
           "side": null,
@@ -4349,18 +4123,18 @@
           "quantity": null
         },
         "pending_slot": "part_query",
-        "pending_question": "Qual peça do Gol você precisa?",
+        "pending_question": "Qual a família da peça que você precisa?",
         "last_decision": "ask"
       }
     },
     "summary": {
-      "reply_text": "Qual peça do Gol você precisa?",
+      "reply_text": "Qual a família da peça que você precisa?",
       "handoff_required": false,
       "handoff_reason": null,
       "used_tools": [
         "pre_search_validator"
       ],
-      "latency_ms": 30648.1,
+      "latency_ms": 35350.35,
       "actions_count": 1,
       "show_items_count": 0,
       "top_items": [],
@@ -4369,7 +4143,7 @@
           "part_query": null,
           "part_code": null,
           "vehicle_brand": null,
-          "vehicle_model": "GOL",
+          "vehicle_model": "Gol",
           "vehicle_year": null,
           "engine": null,
           "side": null,
@@ -4379,7 +4153,7 @@
           "quantity": null
         },
         "pending_slot": "part_query",
-        "pending_question": "Qual peça do Gol você precisa?",
+        "pending_question": "Qual a família da peça que você precisa?",
         "last_decision": "ask"
       }
     }
@@ -4437,7 +4211,7 @@
       }
     },
     "status_code": 200,
-    "elapsed_ms": 43953.14,
+    "elapsed_ms": 42153.78,
     "response": {
       "schema_version": "1.0",
       "trace_id": "real-battery-20260325-case_031",
@@ -4480,11 +4254,6 @@
               "score": 0.56
             },
             {
-              "item_id": "MF-11",
-              "title": "TAMPA RADIADOR VW PASSAT/GOL/VOYAGE/PARATI /86",
-              "score": 0.56
-            },
-            {
               "item_id": "KT-40028",
               "title": "KIT COXIM RADIADOR VW PASSAT/GOL/VOYAGE PEQUENO",
               "score": 0.56
@@ -4497,6 +4266,11 @@
             {
               "item_id": "20403",
               "title": "MANGUEIRA VW GOL/PARATI AP 95/ - INFERIOR RADIADOR",
+              "score": 0.56
+            },
+            {
+              "item_id": "20405",
+              "title": "MANGUEIRA VW GOL/PARATI AP 95/ - SUPERIOR RADIADOR",
               "score": 0.56
             }
           ]
@@ -4512,7 +4286,7 @@
           "pre_search_validator",
           "search_parts"
         ],
-        "latency_ms": 43939.27
+        "latency_ms": 42132.36
       },
       "conversation_state": {
         "criteria": {
@@ -4541,7 +4315,7 @@
         "pre_search_validator",
         "search_parts"
       ],
-      "latency_ms": 43939.27,
+      "latency_ms": 42132.36,
       "actions_count": 1,
       "show_items_count": 10,
       "top_items": [
@@ -4613,7 +4387,7 @@
           },
           {
             "role": "assistant",
-            "text": "Por favor, informe o tipo do motor do seu Ford EcoSport de 2008."
+            "text": "Por favor, informe o motor do seu Ford EcoSport 2008."
           }
         ],
         "conversation_state": {
@@ -4631,7 +4405,7 @@
             "quantity": null
           },
           "pending_slot": "engine",
-          "pending_question": "Por favor, informe o tipo do motor do seu Ford EcoSport de 2008.",
+          "pending_question": "Por favor, informe o motor do seu Ford EcoSport 2008.",
           "last_decision": "ask"
         }
       },
@@ -4644,7 +4418,7 @@
       }
     },
     "status_code": 200,
-    "elapsed_ms": 46176.15,
+    "elapsed_ms": 42989.59,
     "response": {
       "schema_version": "1.0",
       "trace_id": "real-battery-20260325-case_032",
@@ -4702,7 +4476,7 @@
               "score": 0.56
             },
             {
-              "item_id": "MF-462",
+              "item_id": "MV-312",
               "title": "RESERVATÓRIO ÁGUA DO RADIADOR 2 SAÍDAS FORD NOVO FIESTA/ECOSPORT 2002/",
               "score": 0.56
             }
@@ -4719,7 +4493,7 @@
           "pre_search_validator",
           "search_parts"
         ],
-        "latency_ms": 46147.36
+        "latency_ms": 42969.44
       },
       "conversation_state": {
         "criteria": {
@@ -4748,7 +4522,7 @@
         "pre_search_validator",
         "search_parts"
       ],
-      "latency_ms": 46147.36,
+      "latency_ms": 42969.44,
       "actions_count": 1,
       "show_items_count": 10,
       "top_items": [
@@ -4820,7 +4594,7 @@
           },
           {
             "role": "assistant",
-            "text": "Por favor, informe o motor do seu Ford EcoSport de 2008."
+            "text": "Por favor, informe o motor do seu Ford EcoSport 2008."
           }
         ],
         "conversation_state": {
@@ -4838,7 +4612,7 @@
             "quantity": null
           },
           "pending_slot": "engine",
-          "pending_question": "Por favor, informe o motor do seu Ford EcoSport de 2008.",
+          "pending_question": "Por favor, informe o motor do seu Ford EcoSport 2008.",
           "last_decision": "ask"
         }
       },
@@ -4851,7 +4625,7 @@
       }
     },
     "status_code": 200,
-    "elapsed_ms": 45241.65,
+    "elapsed_ms": 44286.65,
     "response": {
       "schema_version": "1.0",
       "trace_id": "real-battery-20260325-case_033",
@@ -4916,7 +4690,7 @@
           "pre_search_validator",
           "search_parts"
         ],
-        "latency_ms": 45227.59
+        "latency_ms": 44265.95
       },
       "conversation_state": {
         "criteria": {
@@ -4945,7 +4719,7 @@
         "pre_search_validator",
         "search_parts"
       ],
-      "latency_ms": 45227.59,
+      "latency_ms": 44265.95,
       "actions_count": 1,
       "show_items_count": 8,
       "top_items": [
@@ -5017,7 +4791,7 @@
           },
           {
             "role": "assistant",
-            "text": "Por favor, informe o motor do seu veículo GOL de 2010."
+            "text": "Qual a motorizacao do veiculo?"
           }
         ],
         "conversation_state": {
@@ -5035,7 +4809,7 @@
             "quantity": null
           },
           "pending_slot": "engine",
-          "pending_question": "Por favor, informe o motor do seu veículo GOL de 2010.",
+          "pending_question": "Qual a motorizacao do veiculo?",
           "last_decision": "ask"
         }
       },
@@ -5048,68 +4822,23 @@
       }
     },
     "status_code": 200,
-    "elapsed_ms": 46635.96,
+    "elapsed_ms": 44716.57,
     "response": {
       "schema_version": "1.0",
       "trace_id": "real-battery-20260325-case_034",
       "conversation_id": "conv-pastilha-gol-follow-001",
       "reply": {
-        "text": "Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca."
+        "text": "Em qual posicao a peca fica?"
       },
       "actions": [
         {
-          "type": "show_items",
-          "items": [
-            {
-              "item_id": "P-44-NA",
-              "title": "PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 - 94/ TEVES",
-              "score": 0.48
-            },
-            {
-              "item_id": "P-45-NA",
-              "title": "PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 - 94/ VARGA",
-              "score": 0.48
-            },
-            {
-              "item_id": "PD/45-NA",
-              "title": "PASTILHA DE FREIO VW GOL/PARATI/QUANTUM/SANTANA/SAVEIRO 1995/",
-              "score": 0.48
-            },
-            {
-              "item_id": "PD/44-B-NA",
-              "title": "PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 94/ - C/ALARME TEVES",
-              "score": 0.48
-            },
-            {
-              "item_id": "P-368-NA",
-              "title": "PASTILHA DE FREIO VW NOVO GOL/VOYAGE 08/ - FOX 1.0 2003/ ARO 13 - TEVES",
-              "score": 0.48
-            },
-            {
-              "item_id": "P-54-NA",
-              "title": "PASTILHA DE FREIO DIANTEIRA VARGA VW GOL/PARATI 1.0/1.6/1.8 96/ - GM CORSA 96/",
-              "score": 0.48
-            },
-            {
-              "item_id": "PD/54-NA",
-              "title": "PASTILHA DE FREIO DIANTEIRA VARGA VW GOL/PARATI 1.0/1.6/1.8 96/ - GM CORSA 96/",
-              "score": 0.48
-            },
-            {
-              "item_id": "P-367-NA",
-              "title": "PASTILHA DE FREIO VW NOVO GOL/SAVEIRO 08/ BOSCH - GOLF 94/ 94/95 - POLO CLASSIC 97/",
-              "score": 0.48
-            },
-            {
-              "item_id": "PD/367-NA",
-              "title": "PASTILHA DE FREIO VW NOVO GOL/SAVEIRO 08/ BOSCH - GOLF 94/ 94/95 - POLO CLASSIC 97/",
-              "score": 0.48
-            },
-            {
-              "item_id": "P-51-NA",
-              "title": "PASTILHA DE FREIO DIANTEIRA VW GOL/PARATI/SAVEIRO 1.0/1.6/1.8 2000/ - SISTEMA ATE/TEVES",
-              "score": 0.48
-            }
+          "type": "request_info",
+          "key": "position",
+          "prompt": "Em qual posicao a peca fica?",
+          "options": [
+            "Dianteiro",
+            "Traseiro",
+            "Nao sei"
           ]
         }
       ],
@@ -5117,13 +4846,12 @@
         "required": false,
         "reason": null
       },
-      "confidence": 0.82,
+      "confidence": 0.95,
       "tool_trace": {
         "used_tools": [
-          "pre_search_validator",
-          "search_parts"
+          "pre_search_validator"
         ],
-        "latency_ms": 46620.41
+        "latency_ms": 44699.63
       },
       "conversation_state": {
         "criteria": {
@@ -5139,49 +4867,22 @@
           "variant": null,
           "quantity": 1
         },
-        "pending_slot": "result_disambiguation",
-        "pending_question": "Refinar a selecao entre multiplos itens encontrados.",
-        "last_decision": "search"
+        "pending_slot": "position",
+        "pending_question": "Em qual posicao a peca fica?",
+        "last_decision": "ask"
       }
     },
     "summary": {
-      "reply_text": "Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca.",
+      "reply_text": "Em qual posicao a peca fica?",
       "handoff_required": false,
       "handoff_reason": null,
       "used_tools": [
-        "pre_search_validator",
-        "search_parts"
+        "pre_search_validator"
       ],
-      "latency_ms": 46620.41,
+      "latency_ms": 44699.63,
       "actions_count": 1,
-      "show_items_count": 10,
-      "top_items": [
-        {
-          "item_id": "P-44-NA",
-          "title": "PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 - 94/ TEVES",
-          "score": 0.48
-        },
-        {
-          "item_id": "P-45-NA",
-          "title": "PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 - 94/ VARGA",
-          "score": 0.48
-        },
-        {
-          "item_id": "PD/45-NA",
-          "title": "PASTILHA DE FREIO VW GOL/PARATI/QUANTUM/SANTANA/SAVEIRO 1995/",
-          "score": 0.48
-        },
-        {
-          "item_id": "PD/44-B-NA",
-          "title": "PASTILHA DE FREIO VW SANTANA/QUANTUM 1.8/2.0 94/ - C/ALARME TEVES",
-          "score": 0.48
-        },
-        {
-          "item_id": "P-368-NA",
-          "title": "PASTILHA DE FREIO VW NOVO GOL/VOYAGE 08/ - FOX 1.0 2003/ ARO 13 - TEVES",
-          "score": 0.48
-        }
-      ],
+      "show_items_count": 0,
+      "top_items": [],
       "conversation_state": {
         "criteria": {
           "part_query": "pastilhas de freio",
@@ -5196,9 +4897,9 @@
           "variant": null,
           "quantity": 1
         },
-        "pending_slot": "result_disambiguation",
-        "pending_question": "Refinar a selecao entre multiplos itens encontrados.",
-        "last_decision": "search"
+        "pending_slot": "position",
+        "pending_question": "Em qual posicao a peca fica?",
+        "last_decision": "ask"
       }
     }
   },
@@ -5224,7 +4925,7 @@
           },
           {
             "role": "assistant",
-            "text": "Qual eixo do seu carro (dianteiro ou traseiro)?"
+            "text": "Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca."
           }
         ],
         "conversation_state": {
@@ -5241,9 +4942,9 @@
             "variant": null,
             "quantity": null
           },
-          "pending_slot": "axle",
-          "pending_question": "Qual eixo do seu carro (dianteiro ou traseiro)?",
-          "last_decision": "ask"
+          "pending_slot": "result_disambiguation",
+          "pending_question": "Refinar a selecao entre multiplos itens encontrados.",
+          "last_decision": "search"
         }
       },
       "runtime": {
@@ -5255,7 +4956,7 @@
       }
     },
     "status_code": 200,
-    "elapsed_ms": 42676.82,
+    "elapsed_ms": 40893.31,
     "response": {
       "schema_version": "1.0",
       "trace_id": "real-battery-20260325-case_035",
@@ -5274,7 +4975,7 @@
           "pre_search_validator",
           "search_parts"
         ],
-        "latency_ms": 42661.37
+        "latency_ms": 40872.25
       },
       "conversation_state": {
         "criteria": {
@@ -5303,7 +5004,7 @@
         "pre_search_validator",
         "search_parts"
       ],
-      "latency_ms": 42661.37,
+      "latency_ms": 40872.25,
       "actions_count": 0,
       "show_items_count": 0,
       "top_items": [],
@@ -5349,7 +5050,7 @@
           },
           {
             "role": "assistant",
-            "text": "Qual eixo (dianteiro ou traseiro) você precisa da bandeja do Ecosport 2008?"
+            "text": "Qual lado da peca?"
           }
         ],
         "conversation_state": {
@@ -5366,8 +5067,8 @@
             "variant": null,
             "quantity": null
           },
-          "pending_slot": "axle",
-          "pending_question": "Qual eixo (dianteiro ou traseiro) você precisa da bandeja do Ecosport 2008?",
+          "pending_slot": "side",
+          "pending_question": "Qual lado da peca?",
           "last_decision": "ask"
         }
       },
@@ -5380,26 +5081,19 @@
       }
     },
     "status_code": 200,
-    "elapsed_ms": 54457.47,
+    "elapsed_ms": 44080.41,
     "response": {
       "schema_version": "1.0",
       "trace_id": "real-battery-20260325-case_036",
       "conversation_id": "conv-bandeja-ecosport-follow-001",
       "reply": {
-        "text": "Qual a motorizacao do veiculo?"
+        "text": "Qual lado da peça?"
       },
       "actions": [
         {
           "type": "request_info",
-          "key": "engine",
-          "prompt": "Qual a motorizacao do veiculo?",
-          "options": [
-            "DRAGON",
-            "DURATEC",
-            "DURATEC HE",
-            "SIGMA",
-            "ZETEC ROCAM"
-          ]
+          "key": "side",
+          "prompt": "Qual lado da peça?"
         }
       ],
       "handoff": {
@@ -5411,7 +5105,7 @@
         "used_tools": [
           "pre_search_validator"
         ],
-        "latency_ms": 54442.72
+        "latency_ms": 44062.2
       },
       "conversation_state": {
         "criteria": {
@@ -5427,19 +5121,19 @@
           "variant": null,
           "quantity": null
         },
-        "pending_slot": "engine",
-        "pending_question": "Qual a motorizacao do veiculo?",
+        "pending_slot": "side",
+        "pending_question": "Qual lado da peça?",
         "last_decision": "ask"
       }
     },
     "summary": {
-      "reply_text": "Qual a motorizacao do veiculo?",
+      "reply_text": "Qual lado da peça?",
       "handoff_required": false,
       "handoff_reason": null,
       "used_tools": [
         "pre_search_validator"
       ],
-      "latency_ms": 54442.72,
+      "latency_ms": 44062.2,
       "actions_count": 1,
       "show_items_count": 0,
       "top_items": [],
@@ -5457,8 +5151,8 @@
           "variant": null,
           "quantity": null
         },
-        "pending_slot": "engine",
-        "pending_question": "Qual a motorizacao do veiculo?",
+        "pending_slot": "side",
+        "pending_question": "Qual lado da peça?",
         "last_decision": "ask"
       }
     }
@@ -5485,7 +5179,7 @@
           },
           {
             "role": "assistant",
-            "text": "Qual lado do veículo você precisa do filtro de combustível?"
+            "text": "Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca."
           }
         ],
         "conversation_state": {
@@ -5502,9 +5196,9 @@
             "variant": null,
             "quantity": null
           },
-          "pending_slot": "side",
-          "pending_question": "Qual lado do veículo você precisa do filtro de combustível?",
-          "last_decision": "ask"
+          "pending_slot": "result_disambiguation",
+          "pending_question": "Refinar a selecao entre multiplos itens encontrados.",
+          "last_decision": "search"
         }
       },
       "runtime": {
@@ -5516,7 +5210,7 @@
       }
     },
     "status_code": 200,
-    "elapsed_ms": 42614.53,
+    "elapsed_ms": 43565.37,
     "response": {
       "schema_version": "1.0",
       "trace_id": "real-battery-20260325-case_037",
@@ -5535,7 +5229,7 @@
           "pre_search_validator",
           "search_parts"
         ],
-        "latency_ms": 42591.29
+        "latency_ms": 43548.75
       },
       "conversation_state": {
         "criteria": {
@@ -5564,7 +5258,7 @@
         "pre_search_validator",
         "search_parts"
       ],
-      "latency_ms": 42591.29,
+      "latency_ms": 43548.75,
       "actions_count": 0,
       "show_items_count": 0,
       "top_items": [],
@@ -5610,7 +5304,7 @@
           },
           {
             "role": "assistant",
-            "text": "Qual eixo do veículo você está procurando?"
+            "text": "Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca."
           }
         ],
         "conversation_state": {
@@ -5627,9 +5321,9 @@
             "variant": null,
             "quantity": null
           },
-          "pending_slot": "axle",
-          "pending_question": "Qual eixo do veículo você está procurando?",
-          "last_decision": "ask"
+          "pending_slot": "result_disambiguation",
+          "pending_question": "Refinar a selecao entre multiplos itens encontrados.",
+          "last_decision": "search"
         }
       },
       "runtime": {
@@ -5641,7 +5335,7 @@
       }
     },
     "status_code": 200,
-    "elapsed_ms": 43459.73,
+    "elapsed_ms": 47331.2,
     "response": {
       "schema_version": "1.0",
       "trace_id": "real-battery-20260325-case_038",
@@ -5660,7 +5354,7 @@
           "pre_search_validator",
           "search_parts"
         ],
-        "latency_ms": 43444.44
+        "latency_ms": 47302.94
       },
       "conversation_state": {
         "criteria": {
@@ -5689,7 +5383,7 @@
         "pre_search_validator",
         "search_parts"
       ],
-      "latency_ms": 43444.44,
+      "latency_ms": 47302.94,
       "actions_count": 0,
       "show_items_count": 0,
       "top_items": [],
@@ -5735,12 +5429,12 @@
           },
           {
             "role": "assistant",
-            "text": "Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca."
+            "text": "Qual a motorizacao do veiculo?"
           }
         ],
         "conversation_state": {
           "criteria": {
-            "part_query": "disco de freio",
+            "part_query": "discos de freio",
             "part_code": null,
             "vehicle_brand": null,
             "vehicle_model": "Gol",
@@ -5752,9 +5446,9 @@
             "variant": null,
             "quantity": null
           },
-          "pending_slot": "result_disambiguation",
-          "pending_question": "Refinar a selecao entre multiplos itens encontrados.",
-          "last_decision": "search"
+          "pending_slot": "engine",
+          "pending_question": "Qual a motorizacao do veiculo?",
+          "last_decision": "ask"
         }
       },
       "runtime": {
@@ -5766,19 +5460,19 @@
       }
     },
     "status_code": 200,
-    "elapsed_ms": 49335.51,
+    "elapsed_ms": 47008.16,
     "response": {
       "schema_version": "1.0",
       "trace_id": "real-battery-20260325-case_039",
       "conversation_id": "conv-disco-gol-follow-001",
       "reply": {
-        "text": "Por favor, informe o motor do seu veículo."
+        "text": "Qual a motorização do veículo?"
       },
       "actions": [
         {
           "type": "request_info",
           "key": "engine",
-          "prompt": "Por favor, informe o motor do seu veículo."
+          "prompt": "Qual a motorização do veículo?"
         }
       ],
       "handoff": {
@@ -5790,11 +5484,11 @@
         "used_tools": [
           "pre_search_validator"
         ],
-        "latency_ms": 49302.01
+        "latency_ms": 46994.13
       },
       "conversation_state": {
         "criteria": {
-          "part_query": "disco de freio",
+          "part_query": "discos de freio",
           "part_code": null,
           "vehicle_brand": null,
           "vehicle_model": "Gol",
@@ -5807,24 +5501,24 @@
           "quantity": null
         },
         "pending_slot": "engine",
-        "pending_question": "Por favor, informe o motor do seu veículo.",
+        "pending_question": "Qual a motorização do veículo?",
         "last_decision": "ask"
       }
     },
     "summary": {
-      "reply_text": "Por favor, informe o motor do seu veículo.",
+      "reply_text": "Qual a motorização do veículo?",
       "handoff_required": false,
       "handoff_reason": null,
       "used_tools": [
         "pre_search_validator"
       ],
-      "latency_ms": 49302.01,
+      "latency_ms": 46994.13,
       "actions_count": 1,
       "show_items_count": 0,
       "top_items": [],
       "conversation_state": {
         "criteria": {
-          "part_query": "disco de freio",
+          "part_query": "discos de freio",
           "part_code": null,
           "vehicle_brand": null,
           "vehicle_model": "Gol",
@@ -5837,7 +5531,7 @@
           "quantity": null
         },
         "pending_slot": "engine",
-        "pending_question": "Por favor, informe o motor do seu veículo.",
+        "pending_question": "Qual a motorização do veículo?",
         "last_decision": "ask"
       }
     }
@@ -5864,12 +5558,12 @@
           },
           {
             "role": "assistant",
-            "text": "Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca."
+            "text": "Qual peca voce precisa?"
           }
         ],
         "conversation_state": {
           "criteria": {
-            "part_query": "farol",
+            "part_query": null,
             "part_code": null,
             "vehicle_brand": null,
             "vehicle_model": "Gol",
@@ -5881,9 +5575,9 @@
             "variant": null,
             "quantity": null
           },
-          "pending_slot": "result_disambiguation",
-          "pending_question": "Refinar a selecao entre multiplos itens encontrados.",
-          "last_decision": "search"
+          "pending_slot": "part_query",
+          "pending_question": "Qual peca voce precisa?",
+          "last_decision": "ask"
         }
       },
       "runtime": {
@@ -5895,30 +5589,35 @@
       }
     },
     "status_code": 200,
-    "elapsed_ms": 43765.53,
+    "elapsed_ms": 44160.3,
     "response": {
       "schema_version": "1.0",
       "trace_id": "real-battery-20260325-case_040",
       "conversation_id": "conv-farol-gol-follow-001",
       "reply": {
-        "text": "Nao encontrei a peca com esses dados. Me informe modelo, ano e motorizacao para tentar novamente. Se preferir, posso transferir para atendimento humano."
+        "text": "Qual peça do farol você precisa?"
       },
-      "actions": [],
+      "actions": [
+        {
+          "type": "request_info",
+          "key": "part_query",
+          "prompt": "Qual peça do farol você precisa?"
+        }
+      ],
       "handoff": {
-        "required": true,
-        "reason": "no_match"
+        "required": false,
+        "reason": null
       },
-      "confidence": 0.35,
+      "confidence": 0.65,
       "tool_trace": {
         "used_tools": [
-          "pre_search_validator",
-          "search_parts"
+          "pre_search_validator"
         ],
-        "latency_ms": 43750.71
+        "latency_ms": 44143.15
       },
       "conversation_state": {
         "criteria": {
-          "part_query": "farol",
+          "part_query": null,
           "part_code": null,
           "vehicle_brand": null,
           "vehicle_model": "Gol",
@@ -5930,26 +5629,25 @@
           "variant": null,
           "quantity": null
         },
-        "pending_slot": null,
-        "pending_question": null,
-        "last_decision": "search"
+        "pending_slot": "part_query",
+        "pending_question": "Qual peça do farol você precisa?",
+        "last_decision": "ask"
       }
     },
     "summary": {
-      "reply_text": "Nao encontrei a peca com esses dados. Me informe modelo, ano e motorizacao para tentar novamente. Se preferir, posso transferir para atendimento humano.",
-      "handoff_required": true,
-      "handoff_reason": "no_match",
+      "reply_text": "Qual peça do farol você precisa?",
+      "handoff_required": false,
+      "handoff_reason": null,
       "used_tools": [
-        "pre_search_validator",
-        "search_parts"
+        "pre_search_validator"
       ],
-      "latency_ms": 43750.71,
-      "actions_count": 0,
+      "latency_ms": 44143.15,
+      "actions_count": 1,
       "show_items_count": 0,
       "top_items": [],
       "conversation_state": {
         "criteria": {
-          "part_query": "farol",
+          "part_query": null,
           "part_code": null,
           "vehicle_brand": null,
           "vehicle_model": "Gol",
@@ -5961,9 +5659,9 @@
           "variant": null,
           "quantity": null
         },
-        "pending_slot": null,
-        "pending_question": null,
-        "last_decision": "search"
+        "pending_slot": "part_query",
+        "pending_question": "Qual peça do farol você precisa?",
+        "last_decision": "ask"
       }
     }
   },
@@ -5989,7 +5687,7 @@
           },
           {
             "role": "assistant",
-            "text": "Por favor, informe o motor do seu Ford Focus de 2010."
+            "text": "Qual a motorizacao do veiculo?"
           }
         ],
         "conversation_state": {
@@ -6007,7 +5705,7 @@
             "quantity": null
           },
           "pending_slot": "engine",
-          "pending_question": "Por favor, informe o motor do seu Ford Focus de 2010.",
+          "pending_question": "Qual a motorizacao do veiculo?",
           "last_decision": "ask"
         }
       },
@@ -6020,7 +5718,7 @@
       }
     },
     "status_code": 200,
-    "elapsed_ms": 45873.01,
+    "elapsed_ms": 44692.75,
     "response": {
       "schema_version": "1.0",
       "trace_id": "real-battery-20260325-case_041",
@@ -6095,7 +5793,7 @@
           "pre_search_validator",
           "search_parts"
         ],
-        "latency_ms": 45858.71
+        "latency_ms": 44665.62
       },
       "conversation_state": {
         "criteria": {
@@ -6124,7 +5822,7 @@
         "pre_search_validator",
         "search_parts"
       ],
-      "latency_ms": 45858.71,
+      "latency_ms": 44665.62,
       "actions_count": 1,
       "show_items_count": 10,
       "top_items": [
@@ -6196,7 +5894,7 @@
           },
           {
             "role": "assistant",
-            "text": "Por favor, informe o motor do seu Ford EcoSport de 2008."
+            "text": "Por favor, informe o motor do seu Ford EcoSport 2008."
           }
         ],
         "conversation_state": {
@@ -6214,7 +5912,7 @@
             "quantity": null
           },
           "pending_slot": "engine",
-          "pending_question": "Por favor, informe o motor do seu Ford EcoSport de 2008.",
+          "pending_question": "Por favor, informe o motor do seu Ford EcoSport 2008.",
           "last_decision": "ask"
         }
       },
@@ -6227,19 +5925,19 @@
       }
     },
     "status_code": 200,
-    "elapsed_ms": 51882.29,
+    "elapsed_ms": 50865.62,
     "response": {
       "schema_version": "1.0",
       "trace_id": "real-battery-20260325-case_042",
       "conversation_id": "conv-coxim-ecosport-follow-text-001",
       "reply": {
-        "text": "Por favor, informe o motor do seu Ford EcoSport de 2008."
+        "text": "Por favor, informe o motor do seu Ford EcoSport 2008."
       },
       "actions": [
         {
           "type": "request_info",
           "key": "engine",
-          "prompt": "Por favor, informe o motor do seu Ford EcoSport de 2008."
+          "prompt": "Por favor, informe o motor do seu Ford EcoSport 2008."
         }
       ],
       "handoff": {
@@ -6251,7 +5949,7 @@
         "used_tools": [
           "pre_search_validator"
         ],
-        "latency_ms": 51857.28
+        "latency_ms": 50848.19
       },
       "conversation_state": {
         "criteria": {
@@ -6268,18 +5966,18 @@
           "quantity": null
         },
         "pending_slot": "engine",
-        "pending_question": "Por favor, informe o motor do seu Ford EcoSport de 2008.",
+        "pending_question": "Por favor, informe o motor do seu Ford EcoSport 2008.",
         "last_decision": "ask"
       }
     },
     "summary": {
-      "reply_text": "Por favor, informe o motor do seu Ford EcoSport de 2008.",
+      "reply_text": "Por favor, informe o motor do seu Ford EcoSport 2008.",
       "handoff_required": false,
       "handoff_reason": null,
       "used_tools": [
         "pre_search_validator"
       ],
-      "latency_ms": 51857.28,
+      "latency_ms": 50848.19,
       "actions_count": 1,
       "show_items_count": 0,
       "top_items": [],
@@ -6298,7 +5996,7 @@
           "quantity": null
         },
         "pending_slot": "engine",
-        "pending_question": "Por favor, informe o motor do seu Ford EcoSport de 2008.",
+        "pending_question": "Por favor, informe o motor do seu Ford EcoSport 2008.",
         "last_decision": "ask"
       }
     }
@@ -6325,7 +6023,7 @@
           },
           {
             "role": "assistant",
-            "text": "Por favor, informe o motor do seu Ford EcoSport 2008."
+            "text": "Qual a motorizacao do veiculo?"
           }
         ],
         "conversation_state": {
@@ -6343,7 +6041,7 @@
             "quantity": null
           },
           "pending_slot": "engine",
-          "pending_question": "Por favor, informe o motor do seu Ford EcoSport 2008.",
+          "pending_question": "Qual a motorizacao do veiculo?",
           "last_decision": "ask"
         }
       },
@@ -6356,68 +6054,23 @@
       }
     },
     "status_code": 200,
-    "elapsed_ms": 47587.94,
+    "elapsed_ms": 48040.29,
     "response": {
       "schema_version": "1.0",
       "trace_id": "real-battery-20260325-case_043",
       "conversation_id": "conv-pastilha-ecosport-follow-001",
       "reply": {
-        "text": "Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca."
+        "text": "Em qual posicao a peca fica?"
       },
       "actions": [
         {
-          "type": "show_items",
-          "items": [
-            {
-              "item_id": "P-497-NA",
-              "title": "PASTILHA DE FREIO FORD NOVO FIESTA 1.0/1.6 SUPER CHARGER C/ABS - ECOSPORT TODOS",
-              "score": 0.48
-            },
-            {
-              "item_id": "PD/497-NA",
-              "title": "PASTILHA DE FREIO FORD NOVO FIESTA 1.0/1.6 SUPER CHARGER C/ABS - ECOSPORT TODOS",
-              "score": 0.48
-            },
-            {
-              "item_id": "P-767-NA",
-              "title": "PASTILHA DE FREIO DIANTEIRA FORD ECOSPORT 09/ AUTOMATICO - NOVA ECOSPORT 13/ - FOCUS 09.2009/",
-              "score": 0.48
-            },
-            {
-              "item_id": "PD/767-NA",
-              "title": "PASTILHA DE FREIO DIANTEIRA FORD ECOSPORT 09/ AUTOMATICO - NOVA ECOSPORT 13/ - FOCUS 09.2009/",
-              "score": 0.48
-            },
-            {
-              "item_id": "BF1082-00",
-              "title": "PASTILHA DE FREIO DIANTEIRA ECOSPORT 09/ AUTOMATICO -NOVA ECOSPORT 13/ - FOCUS 09.2009/ - VOLVO",
-              "score": 0.48
-            },
-            {
-              "item_id": "P-80-NA",
-              "title": "PASTILHA DE FREIO DIANTEIRA FORD ECOSPORT 4X2 03/ - NOVO FIESTA COM ABS 1.0/1.4 09/ - 1.6 09/10",
-              "score": 0.48
-            },
-            {
-              "item_id": "PD/767-CMAXX",
-              "title": "PASTILHA DE FREIO DIANTEIRA ECOSPORT 09/ AUTOMATICO -NOVA ECOSPORT 13/ - FOCUS 09.2009/ - VOLVO",
-              "score": 0.48
-            },
-            {
-              "item_id": "PD/80-NA",
-              "title": "PASTILHA DE FREIO DIANTEIRA FORD ECOSPORT 4X2 03/ - NOVO FIESTA COM ABS 1.0/1.4 09/ - 1.6 09/10",
-              "score": 0.48
-            },
-            {
-              "item_id": "P-1103-NA",
-              "title": "PASTILHA DE FREIO DIANTEIRA FORD NOVO FOCUS 1.6/20 08/009 - ECOSPORT 2.0 4X2 2005/08.2009 AUTOMATICA",
-              "score": 0.48
-            },
-            {
-              "item_id": "PD/1103-CMAXX",
-              "title": "PASTILHA DE FREIO DIANTEIRA FORD NOVO FOCUS 1.6/20 08/009 - ECOSPORT 2.0 4X2 2005/08.2009 AUTOMATICA",
-              "score": 0.48
-            }
+          "type": "request_info",
+          "key": "position",
+          "prompt": "Em qual posicao a peca fica?",
+          "options": [
+            "Dianteiro",
+            "Traseiro",
+            "Nao sei"
           ]
         }
       ],
@@ -6425,13 +6078,12 @@
         "required": false,
         "reason": null
       },
-      "confidence": 0.82,
+      "confidence": 0.85,
       "tool_trace": {
         "used_tools": [
-          "pre_search_validator",
-          "search_parts"
+          "pre_search_validator"
         ],
-        "latency_ms": 47557.78
+        "latency_ms": 48019.52
       },
       "conversation_state": {
         "criteria": {
@@ -6447,49 +6099,22 @@
           "variant": null,
           "quantity": 1
         },
-        "pending_slot": "result_disambiguation",
-        "pending_question": "Refinar a selecao entre multiplos itens encontrados.",
-        "last_decision": "search"
+        "pending_slot": "position",
+        "pending_question": "Em qual posicao a peca fica?",
+        "last_decision": "ask"
       }
     },
     "summary": {
-      "reply_text": "Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca.",
+      "reply_text": "Em qual posicao a peca fica?",
       "handoff_required": false,
       "handoff_reason": null,
       "used_tools": [
-        "pre_search_validator",
-        "search_parts"
+        "pre_search_validator"
       ],
-      "latency_ms": 47557.78,
+      "latency_ms": 48019.52,
       "actions_count": 1,
-      "show_items_count": 10,
-      "top_items": [
-        {
-          "item_id": "P-497-NA",
-          "title": "PASTILHA DE FREIO FORD NOVO FIESTA 1.0/1.6 SUPER CHARGER C/ABS - ECOSPORT TODOS",
-          "score": 0.48
-        },
-        {
-          "item_id": "PD/497-NA",
-          "title": "PASTILHA DE FREIO FORD NOVO FIESTA 1.0/1.6 SUPER CHARGER C/ABS - ECOSPORT TODOS",
-          "score": 0.48
-        },
-        {
-          "item_id": "P-767-NA",
-          "title": "PASTILHA DE FREIO DIANTEIRA FORD ECOSPORT 09/ AUTOMATICO - NOVA ECOSPORT 13/ - FOCUS 09.2009/",
-          "score": 0.48
-        },
-        {
-          "item_id": "PD/767-NA",
-          "title": "PASTILHA DE FREIO DIANTEIRA FORD ECOSPORT 09/ AUTOMATICO - NOVA ECOSPORT 13/ - FOCUS 09.2009/",
-          "score": 0.48
-        },
-        {
-          "item_id": "BF1082-00",
-          "title": "PASTILHA DE FREIO DIANTEIRA ECOSPORT 09/ AUTOMATICO -NOVA ECOSPORT 13/ - FOCUS 09.2009/ - VOLVO",
-          "score": 0.48
-        }
-      ],
+      "show_items_count": 0,
+      "top_items": [],
       "conversation_state": {
         "criteria": {
           "part_query": "pastilhas de freio",
@@ -6504,9 +6129,9 @@
           "variant": null,
           "quantity": 1
         },
-        "pending_slot": "result_disambiguation",
-        "pending_question": "Refinar a selecao entre multiplos itens encontrados.",
-        "last_decision": "search"
+        "pending_slot": "position",
+        "pending_question": "Em qual posicao a peca fica?",
+        "last_decision": "ask"
       }
     }
   },
@@ -6532,7 +6157,7 @@
           },
           {
             "role": "assistant",
-            "text": "Por favor, informe qual peça você precisa."
+            "text": "Poderia me informar qual peça você precisa?"
           }
         ],
         "conversation_state": {
@@ -6550,7 +6175,7 @@
             "quantity": null
           },
           "pending_slot": "part_query",
-          "pending_question": "Por favor, informe qual peça você precisa.",
+          "pending_question": "Poderia me informar qual peça você precisa?",
           "last_decision": "ask"
         }
       },
@@ -6563,7 +6188,7 @@
       }
     },
     "status_code": 200,
-    "elapsed_ms": 36751.62,
+    "elapsed_ms": 35412.15,
     "response": {
       "schema_version": "1.0",
       "trace_id": "real-battery-20260325-case_044",
@@ -6596,12 +6221,12 @@
         "required": false,
         "reason": null
       },
-      "confidence": 0.95,
+      "confidence": 1.0,
       "tool_trace": {
         "used_tools": [
           "pre_search_validator"
         ],
-        "latency_ms": 36737.14
+        "latency_ms": 35396.7
       },
       "conversation_state": {
         "criteria": {
@@ -6629,7 +6254,7 @@
       "used_tools": [
         "pre_search_validator"
       ],
-      "latency_ms": 36737.14,
+      "latency_ms": 35396.7,
       "actions_count": 1,
       "show_items_count": 0,
       "top_items": [],
@@ -6675,7 +6300,7 @@
           },
           {
             "role": "assistant",
-            "text": "Qual peça do Gol você precisa?"
+            "text": "Qual a família da peça que você precisa?"
           }
         ],
         "conversation_state": {
@@ -6683,7 +6308,7 @@
             "part_query": null,
             "part_code": null,
             "vehicle_brand": null,
-            "vehicle_model": "GOL",
+            "vehicle_model": "Gol",
             "vehicle_year": null,
             "engine": null,
             "side": null,
@@ -6693,7 +6318,7 @@
             "quantity": null
           },
           "pending_slot": "part_query",
-          "pending_question": "Qual peça do Gol você precisa?",
+          "pending_question": "Qual a família da peça que você precisa?",
           "last_decision": "ask"
         }
       },
@@ -6706,7 +6331,7 @@
       }
     },
     "status_code": 200,
-    "elapsed_ms": 48834.21,
+    "elapsed_ms": 47034.32,
     "response": {
       "schema_version": "1.0",
       "trace_id": "real-battery-20260325-case_045",
@@ -6725,7 +6350,7 @@
           "pre_search_validator",
           "search_parts"
         ],
-        "latency_ms": 48820.38
+        "latency_ms": 47018.97
       },
       "conversation_state": {
         "criteria": {
@@ -6754,7 +6379,7 @@
         "pre_search_validator",
         "search_parts"
       ],
-      "latency_ms": 48820.38,
+      "latency_ms": 47018.97,
       "actions_count": 0,
       "show_items_count": 0,
       "top_items": [],
@@ -6805,7 +6430,7 @@
       }
     },
     "status_code": 400,
-    "elapsed_ms": 4.29,
+    "elapsed_ms": 5.64,
     "response": {
       "detail": "message.text nao pode ser vazio."
     },
@@ -6848,7 +6473,7 @@
       }
     },
     "status_code": 400,
-    "elapsed_ms": 3.26,
+    "elapsed_ms": 3.46,
     "response": {
       "detail": "schema_version deve ser '1.0'."
     },
@@ -6891,45 +6516,31 @@
       }
     },
     "status_code": 200,
-    "elapsed_ms": 32331.68,
+    "elapsed_ms": 40872.38,
     "response": {
       "schema_version": "1.0",
       "trace_id": "real-battery-20260325-case_048",
       "conversation_id": "conv-radiador-typo-partial-001",
       "reply": {
-        "text": "Qual a motorizacao do veiculo?"
+        "text": "Por favor, informe o motor do seu Gol 2010."
       },
       "actions": [
         {
           "type": "request_info",
           "key": "engine",
-          "prompt": "Qual a motorizacao do veiculo?",
-          "options": [
-            "1.6 L 8V SOHC L4",
-            "1300 AR",
-            "1600 AR",
-            "AP 1600",
-            "AP 1800",
-            "AP 2000",
-            "CHT",
-            "EA111",
-            "EA111 AT",
-            "EA111 TEC",
-            "EA111 VHT",
-            "EA211"
-          ]
+          "prompt": "Por favor, informe o motor do seu Gol 2010."
         }
       ],
       "handoff": {
         "required": false,
         "reason": null
       },
-      "confidence": 1.0,
+      "confidence": 0.85,
       "tool_trace": {
         "used_tools": [
           "pre_search_validator"
         ],
-        "latency_ms": 32317.19
+        "latency_ms": 40857.88
       },
       "conversation_state": {
         "criteria": {
@@ -6946,18 +6557,18 @@
           "quantity": null
         },
         "pending_slot": "engine",
-        "pending_question": "Qual a motorizacao do veiculo?",
+        "pending_question": "Por favor, informe o motor do seu Gol 2010.",
         "last_decision": "ask"
       }
     },
     "summary": {
-      "reply_text": "Qual a motorizacao do veiculo?",
+      "reply_text": "Por favor, informe o motor do seu Gol 2010.",
       "handoff_required": false,
       "handoff_reason": null,
       "used_tools": [
         "pre_search_validator"
       ],
-      "latency_ms": 32317.19,
+      "latency_ms": 40857.88,
       "actions_count": 1,
       "show_items_count": 0,
       "top_items": [],
@@ -6976,7 +6587,7 @@
           "quantity": null
         },
         "pending_slot": "engine",
-        "pending_question": "Qual a motorizacao do veiculo?",
+        "pending_question": "Por favor, informe o motor do seu Gol 2010.",
         "last_decision": "ask"
       }
     }
@@ -7008,30 +6619,35 @@
       }
     },
     "status_code": 200,
-    "elapsed_ms": 31639.51,
+    "elapsed_ms": 42759.74,
     "response": {
       "schema_version": "1.0",
       "trace_id": "real-battery-20260325-case_049",
       "conversation_id": "conv-pastilha-typo-partial-001",
       "reply": {
-        "text": "Nao encontrei a peca com esses dados. Me informe modelo, ano e motorizacao para tentar novamente. Se preferir, posso transferir para atendimento humano."
+        "text": "Qual o motor do seu Gol de 2010?"
       },
-      "actions": [],
+      "actions": [
+        {
+          "type": "request_info",
+          "key": "engine",
+          "prompt": "Qual o motor do seu Gol de 2010?"
+        }
+      ],
       "handoff": {
-        "required": true,
-        "reason": "no_match"
+        "required": false,
+        "reason": null
       },
-      "confidence": 0.35,
+      "confidence": 0.85,
       "tool_trace": {
         "used_tools": [
-          "pre_search_validator",
-          "search_parts"
+          "pre_search_validator"
         ],
-        "latency_ms": 31624.74
+        "latency_ms": 42743.8
       },
       "conversation_state": {
         "criteria": {
-          "part_query": "pstilhas",
+          "part_query": "pastilhas de freio",
           "part_code": null,
           "vehicle_brand": null,
           "vehicle_model": "Gol",
@@ -7043,26 +6659,25 @@
           "variant": null,
           "quantity": null
         },
-        "pending_slot": null,
-        "pending_question": null,
-        "last_decision": "search"
+        "pending_slot": "engine",
+        "pending_question": "Qual o motor do seu Gol de 2010?",
+        "last_decision": "ask"
       }
     },
     "summary": {
-      "reply_text": "Nao encontrei a peca com esses dados. Me informe modelo, ano e motorizacao para tentar novamente. Se preferir, posso transferir para atendimento humano.",
-      "handoff_required": true,
-      "handoff_reason": "no_match",
+      "reply_text": "Qual o motor do seu Gol de 2010?",
+      "handoff_required": false,
+      "handoff_reason": null,
       "used_tools": [
-        "pre_search_validator",
-        "search_parts"
+        "pre_search_validator"
       ],
-      "latency_ms": 31624.74,
-      "actions_count": 0,
+      "latency_ms": 42743.8,
+      "actions_count": 1,
       "show_items_count": 0,
       "top_items": [],
       "conversation_state": {
         "criteria": {
-          "part_query": "pstilhas",
+          "part_query": "pastilhas de freio",
           "part_code": null,
           "vehicle_brand": null,
           "vehicle_model": "Gol",
@@ -7074,9 +6689,9 @@
           "variant": null,
           "quantity": null
         },
-        "pending_slot": null,
-        "pending_question": null,
-        "last_decision": "search"
+        "pending_slot": "engine",
+        "pending_question": "Qual o motor do seu Gol de 2010?",
+        "last_decision": "ask"
       }
     }
   },
@@ -7107,26 +6722,36 @@
       }
     },
     "status_code": 200,
-    "elapsed_ms": 37384.11,
+    "elapsed_ms": 42604.0,
     "response": {
       "schema_version": "1.0",
       "trace_id": "real-battery-20260325-case_050",
       "conversation_id": "conv-bandeja-typo-direct-001",
       "reply": {
-        "text": "Nao encontrei a peca com esses dados. Me informe modelo, ano e motorizacao para tentar novamente. Se preferir, posso transferir para atendimento humano."
+        "text": "Qual lado da peca?"
       },
-      "actions": [],
+      "actions": [
+        {
+          "type": "request_info",
+          "key": "side",
+          "prompt": "Qual lado da peca?",
+          "options": [
+            "Esquerdo",
+            "Direito",
+            "Nao sei"
+          ]
+        }
+      ],
       "handoff": {
-        "required": true,
-        "reason": "no_match"
+        "required": false,
+        "reason": null
       },
-      "confidence": 0.35,
+      "confidence": 0.95,
       "tool_trace": {
         "used_tools": [
-          "pre_search_validator",
-          "search_parts"
+          "pre_search_validator"
         ],
-        "latency_ms": 37370.62
+        "latency_ms": 42589.16
       },
       "conversation_state": {
         "criteria": {
@@ -7142,21 +6767,20 @@
           "variant": null,
           "quantity": null
         },
-        "pending_slot": null,
-        "pending_question": null,
-        "last_decision": "search"
+        "pending_slot": "side",
+        "pending_question": "Qual lado da peca?",
+        "last_decision": "ask"
       }
     },
     "summary": {
-      "reply_text": "Nao encontrei a peca com esses dados. Me informe modelo, ano e motorizacao para tentar novamente. Se preferir, posso transferir para atendimento humano.",
-      "handoff_required": true,
-      "handoff_reason": "no_match",
+      "reply_text": "Qual lado da peca?",
+      "handoff_required": false,
+      "handoff_reason": null,
       "used_tools": [
-        "pre_search_validator",
-        "search_parts"
+        "pre_search_validator"
       ],
-      "latency_ms": 37370.62,
-      "actions_count": 0,
+      "latency_ms": 42589.16,
+      "actions_count": 1,
       "show_items_count": 0,
       "top_items": [],
       "conversation_state": {
@@ -7173,9 +6797,9 @@
           "variant": null,
           "quantity": null
         },
-        "pending_slot": null,
-        "pending_question": null,
-        "last_decision": "search"
+        "pending_slot": "side",
+        "pending_question": "Qual lado da peca?",
+        "last_decision": "ask"
       }
     }
   }

@@ -3,27 +3,12 @@ from pathlib import Path
 from typing import Any
 
 from app.config import Settings
-from app.infra.logger import configure_logging, get_logger
-from app.infra.pre_search_validator_llm import LLMPreSearchValidator
-
-
-def _load_dataset(path: Path) -> list[dict[str, Any]]:
-    return json.loads(path.read_text(encoding="utf-8"))
+from app.infra.logger import configure_logging
+from app.infra.pre_search_benchmark import as_context, load_dataset, make_validator, values_match
 
 
 def _pick_validator(settings: Settings):
-    logger = get_logger("pre-search-eval")
-    return LLMPreSearchValidator(settings=settings, logger=logger)
-
-
-def _as_context(raw_context: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    return [{"role": str(item.get("role", "user")), "text": str(item.get("text", ""))} for item in raw_context]
-
-
-def _slot_match(predicted: Any, expected: Any) -> bool:
-    if isinstance(predicted, str) and isinstance(expected, str):
-        return predicted.strip().lower() == expected.strip().lower()
-    return predicted == expected
+    return make_validator(settings=settings)
 
 
 def main() -> None:
@@ -31,7 +16,7 @@ def main() -> None:
     configure_logging(settings.log_level)
     validator = _pick_validator(settings)
     dataset_path = Path("docs/assets/datasets/pre_search_eval_dataset_mvp.json")
-    rows = _load_dataset(dataset_path)
+    rows = load_dataset(dataset_path)
 
     decision_ok = 0
     next_question_ok = 0
@@ -42,7 +27,7 @@ def main() -> None:
 
     for row in rows:
         message = str(row.get("message.text", ""))
-        context = _as_context(row.get("context.last_messages", []))
+        context = as_context(row.get("context.last_messages", []))
         expected = row.get("expected", {})
         result = validator.validate(message_text=message, last_messages=context)
 
@@ -63,7 +48,7 @@ def main() -> None:
             slot_total += 1
             predicted_value = getattr(result.criteria, slot, None)
             expected_value = expected_criteria.get(slot)
-            if _slot_match(predicted_value, expected_value):
+            if values_match(predicted_value, expected_value):
                 slot_ok += 1
 
     total = max(len(rows), 1)

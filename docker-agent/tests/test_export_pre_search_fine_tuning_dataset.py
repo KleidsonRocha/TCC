@@ -27,11 +27,7 @@ class _Extractor:
 
 
 class _Validator:
-    def __init__(self) -> None:
-        self._dictionary_extractor = _Extractor()
-        self._categories_text = "categorias"
-
-    def _build_llm_score_policy(self, dictionary_seed_criteria):
+    def build_score_policy(self, *, dictionary_seed_criteria):
         if hasattr(dictionary_seed_criteria, "model_dump"):
             serialized_seed = dictionary_seed_criteria.model_dump(exclude_none=True)
         else:
@@ -42,8 +38,11 @@ class _Validator:
             "seed": serialized_seed,
         }
 
-    def _build_system_instructions(self, categories_text: str) -> str:
-        return f"prompt::{categories_text}"
+    def build_system_prompt(self) -> str:
+        return "prompt::categorias"
+
+    def extract_dictionary_seed_criteria(self, *, message_text: str, last_messages=None):
+        return _Extractor().extract(message_text, last_messages=last_messages)
 
 
 def test_pick_system_prompt_prefers_override() -> None:

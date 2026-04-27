@@ -120,15 +120,16 @@ def _measure_single_call(
     scenario: Scenario,
     phase: str,
 ) -> dict[str, Any]:
+    runtime = validator.runtime_diagnostics()
     ps_before = _fetch_ollama_ps(
-        base_url=validator._base_url,  # type: ignore[attr-defined]
-        timeout_s=validator._timeout,  # type: ignore[attr-defined]
-        target_model=validator._model,  # type: ignore[attr-defined]
+        base_url=str(runtime["base_url"]),
+        timeout_s=float(runtime["timeout_s"]),
+        target_model=str(runtime["model"]),
     )
 
     extractor_started_at = time.perf_counter()
-    extracted = validator._dictionary_extractor.extract(  # type: ignore[attr-defined]
-        scenario.message_text,
+    extracted = validator.extract_dictionary_seed_criteria(
+        message_text=scenario.message_text,
         last_messages=scenario.context_last_messages,
     )
     extractor_ms = round((time.perf_counter() - extractor_started_at) * 1000, 2)
@@ -141,9 +142,9 @@ def _measure_single_call(
     total_ms = round((time.perf_counter() - started_at) * 1000, 2)
 
     ps_after = _fetch_ollama_ps(
-        base_url=validator._base_url,  # type: ignore[attr-defined]
-        timeout_s=validator._timeout,  # type: ignore[attr-defined]
-        target_model=validator._model,  # type: ignore[attr-defined]
+        base_url=str(runtime["base_url"]),
+        timeout_s=float(runtime["timeout_s"]),
+        target_model=str(runtime["model"]),
     )
     audit = validator.get_last_audit() or {}
 
@@ -247,16 +248,17 @@ def _run_idle_battery(
         scenario_rows.append(baseline)
 
         for idle_s in idle_seconds:
+            runtime = validator.runtime_diagnostics()
             before_sleep_ps = _fetch_ollama_ps(
-                base_url=validator._base_url,  # type: ignore[attr-defined]
-                timeout_s=validator._timeout,  # type: ignore[attr-defined]
-                target_model=validator._model,  # type: ignore[attr-defined]
+                base_url=str(runtime["base_url"]),
+                timeout_s=float(runtime["timeout_s"]),
+                target_model=str(runtime["model"]),
             )
             time.sleep(max(idle_s, 0))
             after_sleep_ps = _fetch_ollama_ps(
-                base_url=validator._base_url,  # type: ignore[attr-defined]
-                timeout_s=validator._timeout,  # type: ignore[attr-defined]
-                target_model=validator._model,  # type: ignore[attr-defined]
+                base_url=str(runtime["base_url"]),
+                timeout_s=float(runtime["timeout_s"]),
+                target_model=str(runtime["model"]),
             )
             measurement = _measure_single_call(
                 validator=validator,

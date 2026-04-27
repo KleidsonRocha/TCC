@@ -1,22 +1,15 @@
 import re
-import unicodedata
 from dataclasses import dataclass
 from typing import Any
 
 from app.core.domain.pre_search_catalog import PreSearchCatalog
 from app.core.domain.pre_search import SearchCriteria
+from app.infra.pre_search_text import normalize_pre_search_text
 from app.infra.pre_search_part_code import (
     compile_part_code_patterns,
     is_valid_part_code_candidate,
     normalize_part_code_candidate,
 )
-
-
-def _normalize_text(text: str) -> str:
-    lowered = (text or "").lower().strip()
-    decomposed = unicodedata.normalize("NFD", lowered)
-    no_accents = "".join(char for char in decomposed if unicodedata.category(char) != "Mn")
-    return re.sub(r"\s+", " ", no_accents)
 
 
 @dataclass(frozen=True)
@@ -56,12 +49,18 @@ class DictionaryPreSearchExtractor:
         *,
         last_messages: list[dict[str, Any]] | None = None,
     ) -> SearchCriteria:
-        normalized_message = _normalize_text(message_text)
+        normalized_message = normalize_pre_search_text(message_text)
         normalized_context = self._build_context_text(last_messages)
 
         primary = self._extract_from(normalized_message, raw_text=message_text)
         fallback = self._extract_from(normalized_context, raw_text=normalized_context)
         return self._merge(primary=primary, fallback=fallback)
+
+    def canonicalize_part_query(self, value: str | None) -> str | None:
+        normalized_value = normalize_pre_search_text(value)
+        if not normalized_value:
+            return None
+        return self._extract_part_query(normalized_value)
 
     def _extract_from(self, normalized_text: str, *, raw_text: str) -> SearchCriteria:
         vehicle_brand = self._extract_vehicle_brand(normalized_text)
@@ -319,7 +318,7 @@ class DictionaryPreSearchExtractor:
             text = str(message.get("text", "")).strip()
             if text:
                 merged_text.append(text)
-        return _normalize_text(" ".join(merged_text))
+        return normalize_pre_search_text(" ".join(merged_text))
 
     @staticmethod
     def _build_alias_candidates(
