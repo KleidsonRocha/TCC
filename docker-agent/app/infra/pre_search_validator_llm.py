@@ -19,6 +19,7 @@ from app.infra.pre_search_part_code import (
     compile_part_code_patterns,
     is_valid_part_code_candidate,
 )
+from app.infra.pre_search_text import normalize_pre_search_text
 
 DEFAULT_CRITERIA_WEIGHTS: dict[str, int] = {
     "part_code": 100,
@@ -106,6 +107,55 @@ RUNTIME_SEARCH_RULE_OVERRIDES: dict[str, dict[str, bool]] = {
         "needs_variant": False,
     },
 }
+UNSUPPORTED_PART_HANDOFF_PROMPT = (
+    "Essa familia de peca nao esta no catalogo para pesquisa automatica. "
+    "Vou encaminhar para atendimento humano."
+)
+UNSUPPORTED_PART_STOPWORDS: set[str] = {
+    "a",
+    "agora",
+    "ajuda",
+    "bom",
+    "boa",
+    "carro",
+    "cotacao",
+    "da",
+    "de",
+    "dia",
+    "do",
+    "e",
+    "favor",
+    "me",
+    "meu",
+    "minha",
+    "no",
+    "noite",
+    "o",
+    "ola",
+    "orcamento",
+    "parte",
+    "para",
+    "peca",
+    "pode",
+    "por",
+    "preco",
+    "preciso",
+    "procuro",
+    "pro",
+    "qual",
+    "quero",
+    "tarde",
+    "tem",
+    "tenho",
+    "um",
+    "uma",
+    "valor",
+    "veiculo",
+    "vc",
+    "vcs",
+    "voce",
+    "voces",
+}
 
 
 class LLMPreSearchValidator(PreSearchValidatorPort):
@@ -128,6 +178,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         self._categories_text = self._load_categories_text(settings.llm_categories_file)
         self._invalid_slot_tokens = set(catalog.invalid_slot_tokens)
         self._generic_ambiguous_parts = set(catalog.generic_ambiguous_parts)
+        self._known_group_terms = set(catalog.known_group_terms)
         self._needs_side = set(catalog.needs_side)
         self._needs_position = set(catalog.needs_position)
         self._needs_axle = set(catalog.needs_axle)
@@ -191,10 +242,18 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         )
 
     def build_score_policy(self, *, dictionary_seed_criteria: SearchCriteria) -> dict[str, Any]:
-        return self._build_llm_score_policy(dictionary_seed_criteria=dictionary_seed_criteria)
+        canonical_seed_criteria = self._canonicalize_criteria_part_query(
+            dictionary_seed_criteria
+        )
+        return self._build_llm_score_policy(
+            dictionary_seed_criteria=canonical_seed_criteria
+        )
 
     def build_system_prompt(self) -> str:
         return self._build_system_instructions(categories_text=self._categories_text)
+
+    def canonicalize_part_query(self, value: str | None) -> str | None:
+        return self._canonicalize_part_query(value)
 
     def warmup(self) -> dict[str, Any]:
         payload = self._build_warmup_payload()
@@ -560,14 +619,14 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             return value
         return f"{value[:max_len]}...[truncated]"
 
-    @staticmethod
     def _merge_dictionary_with_conversation_state(
+        self,
         *,
         dictionary_criteria: SearchCriteria,
         conversation_state: ConversationState | None,
     ) -> SearchCriteria:
         if not conversation_state or not conversation_state.pending_slot:
-            return dictionary_criteria
+            return self._canonicalize_criteria_part_query(dictionary_criteria)
 
         state_values = conversation_state.criteria.model_dump(exclude_none=False)
         merged_values = dictionary_criteria.model_dump(exclude_none=False)
@@ -577,7 +636,8 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             if current_value is None or current_value == "" or current_value == []:
                 merged_values[key] = state_value
 
-        return SearchCriteria.model_validate(merged_values)
+        merged_criteria = SearchCriteria.model_validate(merged_values)
+        return self._canonicalize_criteria_part_query(merged_criteria)
 
     def _merge_validation_with_dictionary_seed(
         self,
@@ -668,6 +728,17 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
                 llm_missing_fields=self._infer_ask_missing_fields(criteria_model),
                 include_rule_fields=True,
                 explicit_part_code=explicit_part_code,
+            )
+
+        if decision == "ask" and self._should_handoff_non_catalog_part(
+            criteria=criteria_model,
+            missing_fields=missing_fields,
+            message_text=message_text,
+            last_messages=last_messages,
+        ):
+            return self._build_non_catalog_part_handoff(
+                criteria=criteria_model,
+                confidence=llm_validation.confidence,
             )
 
         next_question: NextQuestion | None = None
@@ -879,6 +950,17 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             missing_fields=missing_fields,
         )
 
+        if decision == "ask" and self._should_handoff_non_catalog_part(
+            criteria=dictionary_criteria,
+            missing_fields=missing_fields,
+            message_text=message_text,
+            last_messages=last_messages,
+        ):
+            return self._build_non_catalog_part_handoff(
+                criteria=dictionary_criteria,
+                confidence=0.6,
+            )
+
         next_question: NextQuestion | None = None
         if decision == "ask":
             next_question = self._resolve_next_question(
@@ -974,6 +1056,89 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             ),
             confidence=max(0.0, min(confidence, 0.3)),
         )
+
+    @staticmethod
+    def _build_non_catalog_part_handoff(
+        *,
+        criteria: SearchCriteria,
+        confidence: float,
+    ) -> PreSearchValidation:
+        return PreSearchValidation(
+            decision="handoff",
+            criteria=criteria,
+            missing_fields=[],
+            next_question=NextQuestion(
+                key="handoff",
+                prompt=UNSUPPORTED_PART_HANDOFF_PROMPT,
+                options=None,
+            ),
+            confidence=max(0.0, min(confidence, 0.6)),
+        )
+
+    def _should_handoff_non_catalog_part(
+        self,
+        *,
+        criteria: SearchCriteria,
+        missing_fields: list[str],
+        message_text: str,
+        last_messages: list[dict[str, Any]],
+    ) -> bool:
+        if criteria.part_query or criteria.part_code:
+            return False
+        if "part_query" not in missing_fields:
+            return False
+        if not (criteria.vehicle_model or criteria.vehicle_year or criteria.vehicle_brand):
+            return False
+        return bool(
+            self._non_catalog_part_candidate_tokens(
+                criteria=criteria,
+                message_text=message_text,
+                last_messages=last_messages,
+            )
+        )
+
+    def _non_catalog_part_candidate_tokens(
+        self,
+        *,
+        criteria: SearchCriteria,
+        message_text: str,
+        last_messages: list[dict[str, Any]],
+    ) -> list[str]:
+        texts = [message_text]
+        texts.extend(
+            str(message.get("text", ""))
+            for message in last_messages
+            if str(message.get("role", "")).strip().lower() in {"", "user"}
+        )
+        normalized_text = normalize_pre_search_text(" ".join(texts))
+        tokens = [
+            token
+            for token in re.findall(r"[a-z0-9]+", normalized_text)
+            if token and not token.isdigit()
+        ]
+        ignored_tokens = self._non_catalog_part_ignored_tokens(criteria)
+        return [
+            token
+            for token in tokens
+            if len(token) >= 3
+            and token not in ignored_tokens
+            and not self._is_invalid_slot_text(token)
+        ]
+
+    def _non_catalog_part_ignored_tokens(self, criteria: SearchCriteria) -> set[str]:
+        ignored = set(UNSUPPORTED_PART_STOPWORDS)
+        if criteria.vehicle_brand:
+            ignored.update(normalize_pre_search_text(criteria.vehicle_brand).split())
+        if criteria.vehicle_model:
+            ignored.update(normalize_pre_search_text(criteria.vehicle_model).split())
+        if criteria.vehicle_year:
+            ignored.add(str(criteria.vehicle_year))
+        if criteria.engine:
+            ignored.update(re.findall(r"[a-z0-9]+", normalize_pre_search_text(criteria.engine)))
+        ignored.update(self._known_group_terms)
+        ignored.update({"left", "right", "front", "rear"})
+        ignored.update({"esq", "dir", "esquerdo", "direito", "dianteiro", "traseiro"})
+        return {token for token in ignored if token}
 
     @staticmethod
     def _extract_decision_from_raw_content(raw_content: str) -> str:
@@ -1472,6 +1637,15 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             if canonical_fallback:
                 return canonical_fallback
         return None
+
+    def _canonicalize_criteria_part_query(self, criteria: SearchCriteria) -> SearchCriteria:
+        canonical_part_query = self._canonicalize_part_query(criteria.part_query)
+        if canonical_part_query == criteria.part_query:
+            return criteria
+
+        values = criteria.model_dump(exclude_none=False)
+        values["part_query"] = canonical_part_query
+        return SearchCriteria.model_validate(values)
 
     @staticmethod
     def _normalize_missing_fields(value: Any) -> list[str]:

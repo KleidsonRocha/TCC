@@ -37,7 +37,7 @@
     }
   },
   {
-    "id": "ask_bandejas_axle",
+    "id": "ask_bandejas_side",
     "message.text": "bandejas ecosport 2008",
     "context.last_messages": [],
     "expected": {
@@ -47,13 +47,13 @@
         "vehicle_model": "Ecosport",
         "vehicle_year": 2008
       },
-      "missing_fields_contains": ["axle"],
-      "next_question_key": "axle"
+      "missing_fields_contains": ["side"],
+      "next_question_key": "side"
     }
   },
   {
-    "id": "search_bandejas_axle",
-    "message.text": "bandejas ecosport 2008 eixo dianteiro",
+    "id": "search_bandejas_side",
+    "message.text": "bandejas ecosport 2008 lado esquerdo",
     "context.last_messages": [],
     "expected": {
       "decision": "search",
@@ -61,7 +61,7 @@
         "part_query": "bandejas",
         "vehicle_model": "Ecosport",
         "vehicle_year": 2008,
-        "axle": "front"
+        "side": "left"
       },
       "missing_fields_contains": [],
       "next_question_key": null
@@ -186,8 +186,8 @@
     }
   },
   {
-    "id": "search_context_axle",
-    "message.text": "eixo dianteiro",
+    "id": "search_context_side",
+    "message.text": "lado esquerdo",
     "context.last_messages": [
       {
         "role": "user",
@@ -195,7 +195,7 @@
       },
       {
         "role": "assistant",
-        "text": "qual eixo?"
+        "text": "qual lado?"
       }
     ],
     "expected": {
@@ -204,7 +204,7 @@
         "part_query": "bandejas",
         "vehicle_model": "Ecosport",
         "vehicle_year": 2008,
-        "axle": "front"
+        "side": "left"
       },
       "missing_fields_contains": [],
       "next_question_key": null

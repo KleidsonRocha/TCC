@@ -73,6 +73,8 @@ Os arquivos abaixo permanecem como utilitarios pontuais e nao devem ser tratados
 
 - `run_mutation_tests.py`
   Executa perfis curados de mutation testing nos modulos mais sensiveis sem tentar mutar o projeto inteiro de uma vez.
+- `run_quality_checks.ps1`
+  Wrapper Windows para buildar a imagem `docker-agent`, rodar `pytest` no container e, opcionalmente, executar mutation testing curado.
 
 ## Leitura
 

@@ -120,6 +120,18 @@ docker compose up -d --build
 
 ## Rodar Testes
 
+No Windows, o caminho mais direto e usar o wrapper de qualidade. Ele builda a imagem `docker-agent` e roda a suite dentro do container:
+
+```powershell
+.\scripts\testing\run_quality_checks.ps1
+```
+
+Rodar apenas um subconjunto de testes:
+
+```powershell
+.\scripts\testing\run_quality_checks.ps1 -PytestArgs "-q tests/test_rules.py"
+```
+
 Rodar a suite completa no container:
 
 ```bash
@@ -141,6 +153,18 @@ docker compose run --rm -v d:\TCC\docker-agent:/app docker-agent pytest -q tests
 ## Mutation Testing
 
 `mutmut` exige ambiente com `fork`. No contexto deste projeto, a forma mais segura de usar isso em Windows e via container Linux do `docker-agent`.
+
+Rodar testes normais e, em seguida, o pacote curado de mutacao:
+
+```powershell
+.\scripts\testing\run_quality_checks.ps1 -Mutation -CleanMutation -MutationResults
+```
+
+Rodar somente um perfil de mutacao, sem repetir `pytest`:
+
+```powershell
+.\scripts\testing\run_quality_checks.ps1 -SkipPytest -Mutation -MutationProfile review_queue -CleanMutation -MutationResults
+```
 
 Listar os perfis curados:
 

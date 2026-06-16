@@ -11,6 +11,11 @@ from app.core.ports.pre_search_review_recorder import PreSearchReviewRecorderPor
 from app.core.ports.pre_search_validator import PreSearchValidatorPort
 from app.core.ports.tools import ToolsPort
 
+UNSUPPORTED_PART_HANDOFF_PROMPT = (
+    "Essa familia de peca nao esta no catalogo para pesquisa automatica. "
+    "Vou encaminhar para atendimento humano."
+)
+
 
 class ProcessAgentRequestUseCase:
     def __init__(
@@ -47,6 +52,7 @@ class ProcessAgentRequestUseCase:
             last_messages=last_messages,
             conversation_state=incoming_state,
         )
+        pre_search = self._canonicalize_validated_part_query(pre_search)
         current_state = self._build_conversation_state(
             criteria=pre_search.criteria,
             last_decision=pre_search.decision,
@@ -247,6 +253,52 @@ class ProcessAgentRequestUseCase:
             criteria.variant,
         ]
         return " ".join(token for token in tokens if token)
+
+    def _canonicalize_validated_part_query(
+        self,
+        pre_search: PreSearchValidation,
+    ) -> PreSearchValidation:
+        part_query = pre_search.criteria.part_query
+        if not part_query:
+            return pre_search
+
+        canonicalizer = getattr(
+            self._pre_search_validator,
+            "canonicalize_part_query",
+            None,
+        )
+        if not callable(canonicalizer):
+            return pre_search
+
+        canonical_part_query = canonicalizer(part_query)
+        if canonical_part_query == part_query:
+            return pre_search
+
+        criteria_values = pre_search.criteria.model_dump(exclude_none=False)
+        criteria_values["part_query"] = canonical_part_query
+        criteria = SearchCriteria.model_validate(criteria_values)
+
+        decision = pre_search.decision
+        missing_fields = [
+            field for field in pre_search.missing_fields if field != "part_query"
+        ]
+        next_question = pre_search.next_question
+
+        if canonical_part_query is None and not criteria.part_code:
+            decision = "handoff"
+            missing_fields = []
+            next_question = NextQuestion(
+                key="handoff",
+                prompt=UNSUPPORTED_PART_HANDOFF_PROMPT,
+            )
+
+        return PreSearchValidation(
+            decision=decision,
+            criteria=criteria,
+            missing_fields=missing_fields,
+            next_question=next_question,
+            confidence=pre_search.confidence,
+        )
 
     def _record_review_case(
         self,

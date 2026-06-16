@@ -18,3 +18,4 @@ class PreSearchCatalog:
     min_score_to_search: int = 0
     min_score_to_search_by_part: dict[str, int] = field(default_factory=dict)
     part_code_patterns: tuple[str, ...] = field(default_factory=tuple)
+    known_group_terms: set[str] = field(default_factory=set)

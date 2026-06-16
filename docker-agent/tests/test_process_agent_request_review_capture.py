@@ -261,6 +261,134 @@ def test_process_agent_request_passes_structured_criteria_to_search_tools() -> N
     }
 
 
+def test_process_agent_request_canonicalizes_part_query_before_search_tools() -> None:
+    class _SearchValidator:
+        def validate(self, message_text: str, *, last_messages=None, conversation_state=None) -> PreSearchValidation:
+            return PreSearchValidation(
+                decision="search",
+                criteria=SearchCriteria(
+                    part_query="disco de freio",
+                    vehicle_model="Gol",
+                    vehicle_year=2010,
+                    position="front",
+                ),
+                missing_fields=[],
+                next_question=None,
+                confidence=0.95,
+            )
+
+        def canonicalize_part_query(self, value: str | None) -> str | None:
+            if value == "disco de freio":
+                return "discos de freio"
+            return value
+
+        def get_last_audit(self) -> dict:
+            return {}
+
+    tools = _SpyTools()
+    recorder = _SpyRecorder()
+    use_case = ProcessAgentRequestUseCase(
+        tools=tools,
+        pre_search_validator=_SearchValidator(),
+        settings=Settings(
+            LOG_LEVEL="INFO",
+            APP_ENV="test",
+            AGENT_PORT=8001,
+            DEFAULT_LOCALE="pt-BR",
+            DEFAULT_TIMEZONE="America/Sao_Paulo",
+        ),
+        logger=logging.getLogger("test"),
+        review_recorder=recorder,
+    )
+
+    payload = AgentRequestV1.model_validate(
+        {
+            "schema_version": "1.0",
+            "trace_id": "trace-canonical",
+            "conversation_id": "conv-canonical",
+            "message": {"text": "disco de freio gol 2010 dianteiro"},
+            "business": {"branch_id": 1},
+            "channel": {"name": "whatsapp"},
+            "context": {"last_messages": []},
+        }
+    )
+
+    result = asyncio.run(use_case.execute(payload))
+
+    assert len(tools.calls) == 1
+    assert tools.calls[0]["query"] == "discos de freio Gol 2010 dianteiro"
+    assert tools.calls[0]["criteria"].part_query == "discos de freio"
+    assert result.conversation_state is not None
+    assert result.conversation_state.criteria.part_query == "discos de freio"
+    assert recorder.calls[0]["predicted_criteria"]["part_query"] == "discos de freio"
+
+
+def test_process_agent_request_handoffs_when_part_query_is_not_cataloged() -> None:
+    class _SearchValidator:
+        def validate(self, message_text: str, *, last_messages=None, conversation_state=None) -> PreSearchValidation:
+            return PreSearchValidation(
+                decision="search",
+                criteria=SearchCriteria(
+                    part_query="farol",
+                    vehicle_model="Gol",
+                    vehicle_year=2010,
+                ),
+                missing_fields=[],
+                next_question=None,
+                confidence=0.95,
+            )
+
+        def canonicalize_part_query(self, value: str | None) -> str | None:
+            if value == "farol":
+                return None
+            return value
+
+        def get_last_audit(self) -> dict:
+            return {}
+
+    tools = _SpyTools()
+    recorder = _SpyRecorder()
+    use_case = ProcessAgentRequestUseCase(
+        tools=tools,
+        pre_search_validator=_SearchValidator(),
+        settings=Settings(
+            LOG_LEVEL="INFO",
+            APP_ENV="test",
+            AGENT_PORT=8001,
+            DEFAULT_LOCALE="pt-BR",
+            DEFAULT_TIMEZONE="America/Sao_Paulo",
+        ),
+        logger=logging.getLogger("test"),
+        review_recorder=recorder,
+    )
+
+    payload = AgentRequestV1.model_validate(
+        {
+            "schema_version": "1.0",
+            "trace_id": "trace-farol",
+            "conversation_id": "conv-farol",
+            "message": {"text": "farol gol 2010"},
+            "business": {"branch_id": 1},
+            "channel": {"name": "whatsapp"},
+            "context": {"last_messages": []},
+        }
+    )
+
+    result = asyncio.run(use_case.execute(payload))
+
+    assert tools.calls == []
+    assert result.tool_trace.used_tools == ["pre_search_validator"]
+    assert result.actions == []
+    assert result.handoff.required is True
+    assert result.handoff.reason == "pre_search_handoff"
+    assert "catalogo" in result.reply_text
+    assert result.conversation_state is not None
+    assert result.conversation_state.criteria.part_query is None
+    assert recorder.calls[0]["predicted_decision"] == "handoff"
+    assert recorder.calls[0]["predicted_missing_fields"] == []
+    assert recorder.calls[0]["final_handoff_reason"] == "pre_search_handoff"
+
+
 def test_process_agent_request_passes_conversation_state_to_validator() -> None:
     class _StateAwareValidator:
         def __init__(self) -> None:

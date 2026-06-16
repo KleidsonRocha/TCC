@@ -60,6 +60,23 @@ def test_golden_set_has_unique_ids_and_required_shape() -> None:
         assert "next_question_key" in expected
 
 
+def test_golden_set_bandejas_uses_side_not_axle() -> None:
+    rows = load_dataset(GOLDEN_SET_PATH)
+    bandejas_rows = [
+        row
+        for row in rows
+        if str(row.get("expected", {}).get("criteria", {}).get("part_query", "")).lower() == "bandejas"
+    ]
+
+    assert bandejas_rows
+    for row in bandejas_rows:
+        expected = row["expected"]
+        criteria = expected.get("criteria", {})
+        assert "axle" not in criteria
+        assert "axle" not in expected.get("missing_fields_contains", [])
+        assert expected.get("next_question_key") != "axle"
+
+
 def test_evaluate_pre_search_main_uses_mvp_dataset_file(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],

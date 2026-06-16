@@ -1,5 +1,6 @@
 from collections import defaultdict
 import logging
+import re
 
 from app.config import Settings
 from app.core.domain.pre_search_catalog import PreSearchCatalog
@@ -60,6 +61,7 @@ class PostgresPreSearchCatalogProvider:
                 engine_by_model = self._load_engine_options(cur)
                 criteria_weights, min_score_to_search = self._load_search_scoring(cur)
                 part_code_patterns = self._load_part_code_patterns(cur)
+                known_group_terms = self._load_known_group_terms(cur)
 
         self._assert_not_empty(part_patterns, "pre_search_part_alias/pre_search_part_type")
         self._assert_not_empty(brand_aliases, "pre_search_brand_alias/pre_search_brand")
@@ -84,6 +86,7 @@ class PostgresPreSearchCatalogProvider:
                 "criteria_weights_count": len(criteria_weights),
                 "min_score_to_search": min_score_to_search,
                 "part_code_patterns_count": len(part_code_patterns),
+                "known_group_terms_count": len(known_group_terms),
             },
         )
         return PreSearchCatalog(
@@ -101,6 +104,7 @@ class PostgresPreSearchCatalogProvider:
             criteria_weights=criteria_weights,
             min_score_to_search=min_score_to_search,
             part_code_patterns=part_code_patterns,
+            known_group_terms=known_group_terms,
         )
 
     @staticmethod
@@ -157,6 +161,50 @@ class PostgresPreSearchCatalogProvider:
             brand: tuple(sorted(set(aliases)))
             for brand, aliases in sorted(alias_by_brand.items())
         }
+
+    @classmethod
+    def _load_known_group_terms(cls, cur: "psycopg.Cursor") -> set[str]:
+        cur.execute(
+            """
+            SELECT name_normalized
+            FROM pre_search_part_group
+            WHERE is_active = TRUE
+            ORDER BY name_normalized
+            """
+        )
+        terms: set[str] = set()
+        for (raw_group_name,) in cur.fetchall():
+            group_name = str(raw_group_name or "").strip().lower()
+            if not group_name:
+                continue
+            terms.update(cls._expand_group_terms(group_name))
+        terms.difference_update({"e", "de", "do", "da", "para", "uso", "geral"})
+        terms.discard("")
+        return terms
+
+    @staticmethod
+    def _expand_group_terms(group_name: str) -> set[str]:
+        terms = {group_name}
+        tokens = [
+            token
+            for token in re.findall(r"[a-z0-9]+", group_name or "")
+            if len(token) >= 3
+        ]
+        for token in tokens:
+            terms.add(token)
+            if token.endswith("oes") and len(token) > 4:
+                terms.add(f"{token[:-3]}ao")
+            elif token.endswith("ais") and len(token) > 4:
+                terms.add(f"{token[:-3]}al")
+            elif token.endswith("res") and len(token) > 5:
+                terms.add(token[:-2])
+            elif token.endswith("as") and len(token) > 4:
+                terms.add(token[:-1])
+            elif token.endswith("es") and len(token) > 4:
+                terms.add(token[:-2])
+            elif token.endswith("s") and len(token) > 4:
+                terms.add(token[:-1])
+        return terms
 
     @staticmethod
     def _load_model_aliases(cur: "psycopg.Cursor") -> dict[str, tuple[str, ...]]:

@@ -8,6 +8,7 @@ from app.core.domain.pre_search_catalog import PreSearchCatalog
 from app.core.domain.rules import validate_message_text, validate_schema_version
 from app.core.domain.pre_search import SearchCriteria
 from app.infra.erp_search_tools_pg import resolve_search_tools
+from app.infra.pre_search_catalog_pg import PostgresPreSearchCatalogProvider
 from app.infra.pre_search_dictionary_extractor import DictionaryPreSearchExtractor
 from app.infra.pre_search_validator_llm import LLMPreSearchValidator
 from app.config import Settings
@@ -22,19 +23,21 @@ def _catalog_fixture() -> PreSearchCatalog:
             ("coxim", ("coxim",)),
             ("radiador", ("radiador",)),
             ("bandejas", ("bandeja", "bandejas", "bandenja", "bandeija")),
-            ("pastilha de freio", ("pastilha de freio", "pastilha freio", "pastilha", "pastilhas", "pastilhas de freio", "pstilhas")),
-            ("disco de freio", ("disco de freio", "disco freio", "discos de freio")),
+            ("amortecedores suspensao", ("amortecedores suspensao", "amortecedor suspensao", "suspensao", "suspencao")),
+            ("pastilhas de freio", ("pastilha de freio", "pastilha freio", "pastilha", "pastilhas", "pastilhas de freio", "pstilhas")),
+            ("discos de freio", ("disco de freio", "disco freio", "discos de freio")),
         ],
         brand_aliases={"Ford": ("ford",)},
         model_aliases={"EcoSport": ("ecosport",), "Gol": ("gol",), "2008": ("2008",)},
         invalid_slot_tokens={"nao"},
         generic_ambiguous_parts={"filtro"},
         needs_side={"bandejas"},
-        needs_position={"pastilha de freio", "disco de freio"},
+        needs_position={"amortecedores suspensao", "pastilhas de freio", "discos de freio"},
         needs_axle=set(),
         needs_engine={"radiador"},
         needs_variant=set(),
         engine_by_model={"ecosport": ["1.6", "2.0", "Nao sei"]},
+        known_group_terms={"freio", "freios", "motor", "suspensao"},
     )
 
 
@@ -87,6 +90,12 @@ def test_resolve_search_tools_requires_real_backend() -> None:
 
     with pytest.raises(RuntimeError):
         resolve_search_tools(settings=settings, logger=logging.getLogger("test"))
+
+
+def test_catalog_provider_expands_group_terms() -> None:
+    assert "freio" in PostgresPreSearchCatalogProvider._expand_group_terms("freios")
+    assert "suspensao" in PostgresPreSearchCatalogProvider._expand_group_terms("suspensao")
+    assert "motor" in PostgresPreSearchCatalogProvider._expand_group_terms("arrefecimento motor")
 
 
 def test_dictionary_extractor_extracts_part_model_and_year() -> None:
@@ -197,7 +206,7 @@ def test_dictionary_extractor_canonicalizes_plural_part_alias() -> None:
         "preciso das pastilhas do gol 2010"
     )
 
-    assert result.part_query == "pastilha de freio"
+    assert result.part_query == "pastilhas de freio"
     assert result.vehicle_model == "Gol"
     assert result.vehicle_year == 2010
 
@@ -207,9 +216,40 @@ def test_dictionary_extractor_canonicalizes_typo_plural_part_alias() -> None:
         "preciso de pstilhas do gol 2010"
     )
 
-    assert result.part_query == "pastilha de freio"
+    assert result.part_query == "pastilhas de freio"
     assert result.vehicle_model == "Gol"
     assert result.vehicle_year == 2010
+
+
+def test_dictionary_extractor_canonicalizes_singular_brake_disc_alias() -> None:
+    result = DictionaryPreSearchExtractor(catalog=_catalog_fixture()).extract(
+        "preciso de disco de freio do gol 2010"
+    )
+
+    assert result.part_query == "discos de freio"
+    assert result.vehicle_model == "Gol"
+    assert result.vehicle_year == 2010
+
+
+def test_dictionary_extractor_does_not_accept_non_catalog_part_family() -> None:
+    result = DictionaryPreSearchExtractor(catalog=_catalog_fixture()).extract(
+        "preciso de farol do gol 2010"
+    )
+
+    assert result.part_query is None
+    assert result.vehicle_model == "Gol"
+    assert result.vehicle_year == 2010
+
+
+def test_dictionary_extractor_canonicalizes_suspension_typo_alias() -> None:
+    result = DictionaryPreSearchExtractor(catalog=_catalog_fixture()).extract(
+        "voces tem a suspencao da ecosport 2008 1.6?"
+    )
+
+    assert result.part_query == "amortecedores suspensao"
+    assert result.vehicle_model == "EcoSport"
+    assert result.vehicle_year == 2008
+    assert result.engine == "1.6"
 
 
 def test_dictionary_extractor_does_not_fuzzy_match_too_short_token() -> None:
@@ -353,7 +393,7 @@ def test_llm_validator_merges_conversation_state_when_pending_slot_exists() -> N
 
     assert result.decision == "search"
     assert result.criteria.part_query == "batentes"
-    assert result.criteria.vehicle_model == "EcoSport"
+    assert str(result.criteria.vehicle_model).lower() == "ecosport"
     assert result.criteria.engine == "1.6"
 
 
@@ -691,7 +731,7 @@ def test_llm_validator_promotes_answered_follow_up_to_search_when_requirements_a
     assert result.missing_fields == []
     assert result.next_question is None
     assert result.criteria.part_query == "coxim"
-    assert result.criteria.vehicle_model == "EcoSport"
+    assert str(result.criteria.vehicle_model).lower() == "ecosport"
     assert result.criteria.vehicle_year == 2008
     assert result.criteria.position == "front"
 
@@ -807,11 +847,60 @@ def test_llm_validator_canonicalizes_llm_part_query_before_applying_rules() -> N
     result = validator.validate("pastilha gol 2010 dianteira")
 
     assert result.decision == "search"
-    assert result.criteria.part_query == "pastilha de freio"
+    assert result.criteria.part_query == "pastilhas de freio"
     assert result.criteria.position == "front"
 
 
-def test_llm_validator_rejects_non_catalog_part_query_and_asks_again() -> None:
+def test_llm_validator_canonicalizes_singular_brake_disc_before_applying_rules() -> None:
+    validator = _validator()
+    validator._post_chat_or_generate = lambda **kwargs: (
+        {
+            "message": {
+                "content": (
+                    '{"decision":"search","criteria":{"part_query":"disco de freio","vehicle_model":"Gol","vehicle_year":2010},'
+                    '"missing_fields":[],"next_question":null,"confidence":0.9}'
+                )
+            }
+        },
+        "/api/chat",
+    )
+
+    result = validator.validate("disco de freio gol 2010")
+
+    assert result.decision == "ask"
+    assert result.criteria.part_query == "discos de freio"
+    assert result.next_question is not None
+    assert result.next_question.key == "position"
+    assert result.missing_fields == ["position"]
+
+
+def test_llm_validator_asks_position_for_suspension_typo_alias() -> None:
+    validator = _validator()
+    validator._post_chat_or_generate = lambda **kwargs: (
+        {
+            "message": {
+                "content": (
+                    '{"decision":"search","criteria":{"part_query":null,"vehicle_model":"EcoSport","vehicle_year":2008,"engine":"1.6"},'
+                    '"missing_fields":[],"next_question":null,"confidence":0.9}'
+                )
+            }
+        },
+        "/api/chat",
+    )
+
+    result = validator.validate("voces tem a suspencao da ecosport 2008 1.6?")
+
+    assert result.decision == "ask"
+    assert result.criteria.part_query == "amortecedores suspensao"
+    assert str(result.criteria.vehicle_model).lower() == "ecosport"
+    assert result.criteria.vehicle_year == 2008
+    assert result.criteria.engine == "1.6"
+    assert result.next_question is not None
+    assert result.next_question.key == "position"
+    assert result.missing_fields == ["position"]
+
+
+def test_llm_validator_handoffs_non_catalog_part_query() -> None:
     validator = _validator()
     validator._post_chat_or_generate = lambda **kwargs: (
         {
@@ -827,11 +916,176 @@ def test_llm_validator_rejects_non_catalog_part_query_and_asks_again() -> None:
 
     result = validator.validate("parafuso magico gol 2010")
 
+    assert result.decision == "handoff"
+    assert result.criteria.part_query is None
+    assert result.next_question is not None
+    assert result.next_question.key == "handoff"
+    assert "catalogo" in result.next_question.prompt
+    assert result.missing_fields == []
+
+
+def test_llm_validator_handoffs_when_user_informed_non_catalog_part_but_llm_returns_null() -> None:
+    validator = _validator()
+    validator._post_chat_or_generate = lambda **kwargs: (
+        {
+            "message": {
+                "content": (
+                    '{"decision":"ask","criteria":{"part_query":null,"vehicle_model":"Gol","vehicle_year":2010},'
+                    '"missing_fields":["part_query"],'
+                    '"next_question":{"type":"request_info","key":"part_query","prompt":"Qual peca voce precisa?"},'
+                    '"confidence":0.7}'
+                )
+            }
+        },
+        "/api/chat",
+    )
+
+    result = validator.validate("farol gol 2010")
+
+    assert result.decision == "handoff"
+    assert result.criteria.part_query is None
+    assert result.next_question is not None
+    assert result.next_question.key == "handoff"
+    assert result.missing_fields == []
+
+
+def test_llm_validator_handoffs_farol_as_non_catalog_part_query() -> None:
+    validator = _validator()
+    validator._post_chat_or_generate = lambda **kwargs: (
+        {
+            "message": {
+                "content": (
+                    '{"decision":"search","criteria":{"part_query":"farol","vehicle_model":"Gol","vehicle_year":2010},'
+                    '"missing_fields":[],"next_question":null,"confidence":0.9}'
+                )
+            }
+        },
+        "/api/chat",
+    )
+
+    result = validator.validate("farol gol 2010")
+
+    assert result.decision == "handoff"
+    assert result.criteria.part_query is None
+    assert result.next_question is not None
+    assert result.next_question.key == "handoff"
+    assert result.missing_fields == []
+
+
+def test_llm_validator_asks_for_specific_part_when_user_informs_known_group() -> None:
+    validator = _validator()
+    validator._post_chat_or_generate = lambda **kwargs: (
+        {
+            "message": {
+                "content": (
+                    '{"decision":"ask","criteria":{"part_query":null,"vehicle_model":"Gol","vehicle_year":2010},'
+                    '"missing_fields":["part_query"],'
+                    '"next_question":{"type":"request_info","key":"part_query","prompt":"Qual item de freio voce precisa?"},'
+                    '"confidence":0.7}'
+                )
+            }
+        },
+        "/api/chat",
+    )
+
+    result = validator.validate("voces tem freio do gol 2010?")
+
     assert result.decision == "ask"
     assert result.criteria.part_query is None
     assert result.next_question is not None
     assert result.next_question.key == "part_query"
     assert result.missing_fields == ["part_query"]
+
+
+def test_llm_validator_does_not_handoff_when_llm_returns_known_group_as_part_query() -> None:
+    validator = _validator()
+    validator._post_chat_or_generate = lambda **kwargs: (
+        {
+            "message": {
+                "content": (
+                    '{"decision":"search","criteria":{"part_query":"freio","vehicle_model":"Gol","vehicle_year":2010},'
+                    '"missing_fields":[],"next_question":null,"confidence":0.9}'
+                )
+            }
+        },
+        "/api/chat",
+    )
+
+    result = validator.validate("freio gol 2010")
+
+    assert result.decision == "ask"
+    assert result.criteria.part_query is None
+    assert result.next_question is not None
+    assert result.next_question.key == "part_query"
+    assert result.missing_fields == ["part_query"]
+
+
+def test_llm_validator_still_asks_for_part_when_user_did_not_inform_one() -> None:
+    validator = _validator()
+    validator._post_chat_or_generate = lambda **kwargs: (
+        {
+            "message": {
+                "content": (
+                    '{"decision":"ask","criteria":{"vehicle_model":"Gol","vehicle_year":2010},'
+                    '"missing_fields":["part_query"],'
+                    '"next_question":{"type":"request_info","key":"part_query","prompt":"Qual peca voce precisa?"},'
+                    '"confidence":0.7}'
+                )
+            }
+        },
+        "/api/chat",
+    )
+
+    result = validator.validate("bom dia tenho um gol 2010")
+
+    assert result.decision == "ask"
+    assert result.criteria.part_query is None
+    assert result.next_question is not None
+    assert result.next_question.key == "part_query"
+    assert result.missing_fields == ["part_query"]
+
+
+def test_llm_validator_canonicalizes_conversation_state_part_query_before_score_policy() -> None:
+    validator = _validator()
+    captured: dict[str, object] = {}
+
+    def _fake_post_chat_or_generate(**kwargs):
+        captured["dictionary_seed_criteria"] = kwargs["dictionary_seed_criteria"]
+        captured["payload"] = kwargs["payload"]
+        return (
+            {
+                "message": {
+                    "content": (
+                        '{"decision":"search","criteria":{"position":"dianteira"},'
+                        '"missing_fields":[],"next_question":null,"confidence":0.9}'
+                    )
+                }
+            },
+            "/api/chat",
+        )
+
+    validator._post_chat_or_generate = _fake_post_chat_or_generate
+
+    result = validator.validate(
+        "dianteira",
+        conversation_state=ConversationState(
+            criteria=SearchCriteria(
+                part_query="disco de freio",
+                vehicle_model="Gol",
+                vehicle_year=2010,
+            ),
+            pending_slot="position",
+            pending_question="Em qual posicao a peca fica?",
+            last_decision="ask",
+        ),
+    )
+
+    dictionary_seed = captured["dictionary_seed_criteria"]
+    assert isinstance(dictionary_seed, SearchCriteria)
+    assert dictionary_seed.part_query == "discos de freio"
+    assert result.decision == "search"
+    assert result.criteria.part_query == "discos de freio"
+    assert result.criteria.position == "front"
 
 
 def test_llm_validator_chat_payload_includes_keep_alive() -> None:
