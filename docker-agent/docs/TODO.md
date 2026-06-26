@@ -151,7 +151,7 @@ Entregavel:
 - lista curta do que foi auditado alem dos tres casos obrigatorios
 ```
 
-## Prioridade 1 - Trazer a latencia para nivel operacional
+## Prioridade 1 - Trazer a latencia para nivel operacional  
 
 - [ ] Criar caminho deterministico para casos obvios
   - Bypass da LLM quando extractor + catalogo + regras ja forem suficientes
@@ -213,6 +213,14 @@ Entregavel:
   - Exemplos: `com ou sem ar`, `aro`, `lado`, `dianteiro ou traseiro`
   - Tratar `result_disambiguation` como etapa funcional, nao so estado salvo
 
+- [ ] Reestruturar o prompt inicial da LLM como contrato operacional
+  - Organizar `_build_system_instructions` em secoes claras: papel, contrato JSON, fontes de contexto, regras de decisao e exemplos
+  - Definir precedencia entre `message_text`, mensagens `user` recentes, `conversation_state`, `dictionary_seed_criteria` e `last_messages`
+  - Tratar mensagens `assistant` como contexto conversacional, nao como fonte factual para preencher slots
+  - Incluir exemplos minimos de saida para `ask`, `search` e `handoff`
+  - Deixar explicito que o backend continua sendo a autoridade final para score, campos obrigatorios e bloqueios defensivos
+  - Cobrir com regressao casos de `part_code` inventado, contaminacao por mensagem do `assistant` e conflito entre LLM e extractor deterministico
+
 - [ ] Revisar consistencia dos prompts
   - `side` deve significar `esquerdo/direito`
   - `position` deve significar `dianteiro/traseiro`
@@ -230,11 +238,13 @@ Escopo:
 - Corrigir follow-up com motor textual (`zetec rocam`, `duratec`, `sigma`)
 - Melhorar resposta de `no_match`
 - Criar desambiguacao real
+- Reestruturar o prompt inicial da LLM como contrato operacional
 - Revisar consistencia dos prompts de `side`, `position` e `axle`
 
 Arquivos provaveis:
 - app/core/usecases/process_agent_request.py
 - app/infra/pre_search_validator_llm.py
+- app/infra/pre_search_fine_tuning_format.py se houver reflexo no dataset de treino
 - app/infra/pre_search_catalog_pg.py
 - tests/test_respond.py
 - tests/test_rules.py
@@ -242,11 +252,14 @@ Arquivos provaveis:
 Restricoes:
 - Nao introduzir camada nova de ML
 - Preservar coerencia multi-turno
+- Nao resolver falha deterministica apenas com prompt
+- Manter backend como autoridade final para score, regras obrigatorias e bloqueios defensivos
 - Transformar erros reais em regressao quando possivel
 
 Entregavel:
 - follow-up coerente
 - `no_match` menos repetitivo
+- prompt inicial mais estruturado, com precedencia de fontes e exemplos de saida
 - testes cobrindo fluxo conversacional real
 ```
 
@@ -346,3 +359,4 @@ Entregavel:
 - artefatos de avaliacao atualizados
 - resumo objetivo do antes/depois
 ```
+ 

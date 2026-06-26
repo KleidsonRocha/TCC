@@ -166,11 +166,6 @@ INSERT INTO pre_search_invalid_slot_token (token, token_normalized) VALUES
 ('-', '-')
 ON CONFLICT (token) DO NOTHING;
 
-INSERT INTO pre_search_part_code_pattern (brand_id, pattern_regex, description)
-VALUES
-(NULL, '\y[A-Za-z]{2,5}[- ]?\d{3,8}\y', 'Padrao generico de codigo de peca')
-ON CONFLICT DO NOTHING;
-
 INSERT INTO pre_search_criteria_weight (criterion_key, weight, is_active, updated_by) VALUES
 ('part_code', 100, TRUE, 'seed'),
 ('part_query', 45, TRUE, 'seed'),
@@ -309,8 +304,8 @@ BEGIN
         base_path || '/subgrupo.csv'
     );
     EXECUTE format(
-        'COPY stg_part_rule FROM %L WITH (FORMAT csv, HEADER true, DELIMITER '';'', ENCODING ''UTF8'')',
-        base_path || '/pre_search_part_rule.csv'
+        'COPY stg_part_rule FROM PROGRAM %L WITH (FORMAT text, DELIMITER '';'', NULL '''', ENCODING ''UTF8'')',
+        'tail -n +2 ' || base_path || '/pre_search_part_rule.csv'
     );
     EXECUTE format(
         'COPY stg_brand FROM %L WITH (FORMAT csv, HEADER true, ENCODING ''UTF8'')',
@@ -343,6 +338,7 @@ BEGIN
     END IF;
 
     TRUNCATE TABLE
+        pre_search_part_code_pattern,
         pre_search_engine_option,
         pre_search_model_alias,
         pre_search_model,
@@ -427,6 +423,30 @@ BEGIN
         updated_by = EXCLUDED.updated_by;
 
     IF has_part_alias THEN
+        WITH alias_rows AS (
+            SELECT
+                pt.id AS part_type_id,
+                BTRIM(spa.alias) AS alias,
+                pre_search_normalize_text(spa.alias) AS alias_normalized
+            FROM stg_part_alias spa
+            JOIN pre_search_part_group pg
+              ON pg.source_group_code = spa.cd_grupo
+            JOIN pre_search_part_type pt
+              ON pt.part_group_id = pg.id
+             AND pt.source_subgroup_code = spa.cd_subgrupo
+            WHERE spa.alias IS NOT NULL
+              AND BTRIM(spa.alias) <> ''
+        ),
+        deduplicated_alias_rows AS (
+            SELECT DISTINCT ON (part_type_id, alias_normalized)
+                part_type_id,
+                alias,
+                alias_normalized
+            FROM alias_rows
+            WHERE alias_normalized IS NOT NULL
+              AND alias_normalized <> ''
+            ORDER BY part_type_id, alias_normalized, alias
+        )
         INSERT INTO pre_search_part_alias (
             part_type_id,
             alias,
@@ -434,20 +454,13 @@ BEGIN
             is_active,
             updated_by
         )
-        SELECT DISTINCT
-            pt.id,
-            BTRIM(spa.alias),
-            pre_search_normalize_text(spa.alias),
+        SELECT
+            part_type_id,
+            alias,
+            alias_normalized,
             TRUE,
             'seed_csv'
-        FROM stg_part_alias spa
-        JOIN pre_search_part_group pg
-          ON pg.source_group_code = spa.cd_grupo
-        JOIN pre_search_part_type pt
-          ON pt.part_group_id = pg.id
-         AND pt.source_subgroup_code = spa.cd_subgrupo
-        WHERE spa.alias IS NOT NULL
-          AND BTRIM(spa.alias) <> ''
+        FROM deduplicated_alias_rows
         ON CONFLICT (part_type_id, alias_normalized) DO UPDATE
         SET alias = EXCLUDED.alias,
             is_active = TRUE,
@@ -742,6 +755,11 @@ $$ LANGUAGE plpgsql;
 SELECT pre_search_load_catalog_from_csv();
 DROP FUNCTION pre_search_load_catalog_from_csv(TEXT);
 DROP FUNCTION pre_search_normalize_text(TEXT);
+
+INSERT INTO pre_search_part_code_pattern (brand_id, pattern_regex, description)
+VALUES
+(NULL, '\y[A-Za-z]{2,5}[- ]?\d{3,8}\y', 'Padrao generico de codigo de peca')
+ON CONFLICT DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS pre_search_fine_tuning_dataset_header (
     id BIGSERIAL PRIMARY KEY,

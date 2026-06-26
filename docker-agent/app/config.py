@@ -44,6 +44,7 @@ class Settings(BaseSettings):
     erp_db_user: str = Field("postgres", alias="ERP_DB_USER")
     erp_db_password: str = Field("", alias="ERP_DB_PASSWORD")
     erp_db_connect_timeout_s: int = Field(2, alias="ERP_DB_CONNECT_TIMEOUT_S")
+    erp_fallback_db_enabled: bool = Field(True, alias="ERP_FALLBACK_DB_ENABLED")
     pre_search_review_capture_enabled: bool = Field(True, alias="PRE_SEARCH_REVIEW_CAPTURE_ENABLED")
     ft_dataset_slug: str = Field("pre-search-ft-v1", alias="FT_DATASET_SLUG")
     ft_target_model_prefix: str = Field("pre-search-qwen2.5-ft", alias="FT_TARGET_MODEL_PREFIX")

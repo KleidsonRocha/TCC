@@ -1334,7 +1334,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         return []
 
     def _build_llm_score_policy(self, *, dictionary_seed_criteria: SearchCriteria) -> dict[str, Any]:
-        explicit_part_code = bool(dictionary_seed_criteria.part_code)
+        explicit_part_code = bool(dictionary_seed_criteria.part_code) 
         effective_min_score = self._min_score_to_search_for(dictionary_seed_criteria)
         score_explicit_fields = self._build_score_explicit_fields(
             dictionary_criteria=dictionary_seed_criteria,

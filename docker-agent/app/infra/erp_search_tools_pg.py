@@ -7,7 +7,7 @@ from app.core.domain.errors import SearchPartsServiceUnavailableError
 from app.core.domain.models import PartItem
 from app.core.domain.pre_search import SearchCriteria
 from app.core.ports.tools import ToolsPort
-from app.infra.postgres_conninfo import build_erp_conninfo
+from app.infra.postgres_conninfo import build_catalog_conninfo, build_erp_conninfo
 
 try:
     import psycopg
@@ -66,11 +66,62 @@ def _search_tokens(value: str | None) -> list[str]:
     return list(dict.fromkeys(tokens))
 
 
+class FallbackErpSearchTools(ToolsPort):
+    def __init__(
+        self,
+        *,
+        primary: ToolsPort,
+        fallback: ToolsPort,
+        logger: logging.Logger,
+    ) -> None:
+        self._primary = primary
+        self._fallback = fallback
+        self._logger = logger
+
+    def search_parts(
+        self,
+        query: str,
+        branch_id: int,
+        criteria: SearchCriteria | None = None,
+    ) -> list[PartItem]:
+        try:
+            return self._primary.search_parts(
+                query=query,
+                branch_id=branch_id,
+                criteria=criteria,
+            )
+        except SearchPartsServiceUnavailableError:
+            self._logger.warning(
+                "erp_search_primary_failed_using_fallback",
+                extra={
+                    "branch_id": branch_id,
+                    "query": query,
+                    "criteria": criteria.model_dump(exclude_none=True) if criteria else None,
+                },
+                exc_info=True,
+            )
+            return self._fallback.search_parts(
+                query=query,
+                branch_id=branch_id,
+                criteria=criteria,
+            )
+
+
 class PostgresErpSearchTools(ToolsPort):
-    def __init__(self, *, settings: Settings, logger: logging.Logger, result_limit: int = 10) -> None:
+    def __init__(
+        self,
+        *,
+        settings: Settings,
+        logger: logging.Logger,
+        result_limit: int = 10,
+        conninfo: str | None = None,
+        backend_name: str = "erp_postgres",
+    ) -> None:
         self._settings = settings
         self._logger = logger
         self._result_limit = result_limit
+        self._conninfo = conninfo
+        self._backend_name = backend_name
 
     def search_parts(
         self,
@@ -87,7 +138,8 @@ class PostgresErpSearchTools(ToolsPort):
         sql, params = self._build_search_sql(criteria=resolved_criteria, limit=self._result_limit)
 
         try:
-            with psycopg.connect(build_erp_conninfo(self._settings), row_factory=dict_row) as conn:  # type: ignore[union-attr]
+            conninfo = self._conninfo or build_erp_conninfo(self._settings)
+            with psycopg.connect(conninfo, row_factory=dict_row) as conn:  # type: ignore[union-attr]
                 with conn.cursor() as cur:
                     cur.execute(sql, params)
                     rows = cur.fetchall()
@@ -95,6 +147,7 @@ class PostgresErpSearchTools(ToolsPort):
             self._logger.exception(
                 "erp_search_query_failed",
                 extra={
+                    "search_tools_backend": self._backend_name,
                     "branch_id": branch_id,
                     "query": query,
                     "criteria": resolved_criteria.model_dump(exclude_none=True),
@@ -116,6 +169,7 @@ class PostgresErpSearchTools(ToolsPort):
         self._logger.info(
             "erp_search_query_finished",
             extra={
+                "search_tools_backend": self._backend_name,
                 "branch_id": branch_id,
                 "query": query,
                 "criteria": resolved_criteria.model_dump(exclude_none=True),
@@ -310,25 +364,64 @@ class PostgresErpSearchTools(ToolsPort):
 
 
 def resolve_search_tools(*, settings: Settings, logger: logging.Logger) -> ToolsPort:
+    fallback_tools: PostgresErpSearchTools | None = None
+    if settings.erp_fallback_db_enabled:
+        fallback_tools = PostgresErpSearchTools(
+            settings=settings,
+            logger=logger,
+            conninfo=build_catalog_conninfo(settings),
+            backend_name="local_fallback_postgres",
+        )
+
     if settings.erp_db_enabled:
         logger.info(
             "search_tools_resolved",
             extra={
-                "search_tools_backend": "erp_postgres",
+                "search_tools_backend": (
+                    "erp_postgres_with_local_fallback"
+                    if fallback_tools is not None
+                    else "erp_postgres"
+                ),
                 "erp_db_host": settings.erp_db_host,
                 "erp_db_port": settings.erp_db_port,
                 "erp_db_name": settings.erp_db_name,
+                "fallback_db_enabled": fallback_tools is not None,
             },
         )
-        return PostgresErpSearchTools(settings=settings, logger=logger)
+        postgres_tools = PostgresErpSearchTools(
+            settings=settings,
+            logger=logger,
+            backend_name="erp_postgres",
+        )
+        if fallback_tools is not None:
+            return FallbackErpSearchTools(
+                primary=postgres_tools,
+                fallback=fallback_tools,
+                logger=logger,
+            )
+        return postgres_tools
+
+    if fallback_tools is not None:
+        logger.info(
+            "search_tools_resolved",
+            extra={
+                "search_tools_backend": "local_fallback_postgres",
+                "fallback_db_host": settings.catalog_db_host,
+                "fallback_db_port": settings.catalog_db_port,
+                "fallback_db_name": settings.catalog_db_name,
+            },
+        )
+        return fallback_tools
 
     logger.error(
         "search_tools_unconfigured",
         extra={
             "search_tools_backend": "none",
             "erp_db_enabled": settings.erp_db_enabled,
+            "erp_fallback_db_enabled": settings.erp_fallback_db_enabled,
         },
     )
     raise RuntimeError(
-        "Busca real de pecas nao configurada: defina ERP_DB_ENABLED=true para iniciar o docker-agent."
+        "Busca de pecas nao configurada: defina ERP_DB_ENABLED=true ou "
+        "ERP_FALLBACK_DB_ENABLED=true."
     )

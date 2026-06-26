@@ -86,6 +86,7 @@ def test_resolve_search_tools_requires_real_backend() -> None:
         DEFAULT_LOCALE="pt-BR",
         DEFAULT_TIMEZONE="America/Sao_Paulo",
         ERP_DB_ENABLED=False,
+        ERP_FALLBACK_DB_ENABLED=False,
     )
 
     with pytest.raises(RuntimeError):

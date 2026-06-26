@@ -5,7 +5,11 @@ import pytest
 from app.config import Settings
 from app.core.domain.errors import SearchPartsServiceUnavailableError
 from app.core.domain.pre_search import SearchCriteria
-from app.infra.erp_search_tools_pg import PostgresErpSearchTools, resolve_search_tools
+from app.infra.erp_search_tools_pg import (
+    FallbackErpSearchTools,
+    PostgresErpSearchTools,
+    resolve_search_tools,
+)
 from app.infra import erp_search_tools_pg
 
 
@@ -116,6 +120,42 @@ def test_postgres_erp_tools_raises_service_unavailable_on_connection_error(
         )
 
 
+def test_fallback_erp_tools_uses_fallback_when_primary_is_unavailable() -> None:
+    class _FailingTools:
+        def search_parts(self, query, branch_id, criteria=None):
+            raise SearchPartsServiceUnavailableError("offline")
+
+    class _FallbackTools:
+        def search_parts(self, query, branch_id, criteria=None):
+            return ["fallback-result"]
+
+    tools = FallbackErpSearchTools(
+        primary=_FailingTools(),
+        fallback=_FallbackTools(),
+        logger=logging.getLogger("test"),
+    )
+
+    items = tools.search_parts(query="coxim ecosport 2008 1.6", branch_id=1)
+
+    assert items == ["fallback-result"]
+
+
+def test_resolve_search_tools_returns_local_fallback_backend_when_erp_disabled() -> None:
+    settings = Settings(
+        APP_ENV="test",
+        LOG_LEVEL="INFO",
+        AGENT_PORT=8001,
+        DEFAULT_LOCALE="pt-BR",
+        DEFAULT_TIMEZONE="America/Sao_Paulo",
+        ERP_DB_ENABLED=False,
+        ERP_FALLBACK_DB_ENABLED=True,
+    )
+
+    tools = resolve_search_tools(settings=settings, logger=logging.getLogger("test"))
+
+    assert isinstance(tools, PostgresErpSearchTools)
+
+
 def test_postgres_erp_tools_sql_uses_exact_code_match_without_part_query() -> None:
     sql, params = PostgresErpSearchTools._build_search_sql(
         criteria=SearchCriteria(part_code="C.178"),
@@ -128,6 +168,15 @@ def test_postgres_erp_tools_sql_uses_exact_code_match_without_part_query() -> No
 
 
 def test_resolve_search_tools_returns_postgres_backend_when_enabled() -> None:
-    tools = resolve_search_tools(settings=_settings(), logger=logging.getLogger("test"))
+    settings = Settings(
+        APP_ENV="test",
+        LOG_LEVEL="INFO",
+        AGENT_PORT=8001,
+        DEFAULT_LOCALE="pt-BR",
+        DEFAULT_TIMEZONE="America/Sao_Paulo",
+        ERP_DB_ENABLED=True,
+        ERP_FALLBACK_DB_ENABLED=False,
+    )
+    tools = resolve_search_tools(settings=settings, logger=logging.getLogger("test"))
 
     assert isinstance(tools, PostgresErpSearchTools)
