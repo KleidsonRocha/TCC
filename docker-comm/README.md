@@ -56,6 +56,7 @@ docker compose up --build
 ```
 
 API exposta em `http://localhost:8000`.
+Interface Streamlit exposta em `http://localhost:8501`.
 
 ## Endpoints
 
@@ -96,6 +97,38 @@ Response:
   "confidence": 0.82
 }
 ```
+
+## Interface Streamlit
+
+O compose sobe o servico `docker-comm-ui`, que chama o `docker-comm` em vez de
+chamar o `docker-agent` diretamente.
+
+```bash
+docker compose up --build
+```
+
+Acesse:
+
+```text
+http://localhost:8501
+```
+
+A UI possui:
+
+- aba `Conversa` para abrir uma conversa, enviar mensagens e receber respostas;
+- aba `Uso` com requisicoes da sessao, latencia, confianca, handoff, acoes e ultima resposta bruta;
+- painel lateral para ajustar `Comm API`, origem, filial e `conversation_id`.
+
+Variaveis relevantes:
+
+```env
+COMM_API_URL=http://docker-comm:8000
+STREAMLIT_PORT=8501
+STREAMLIT_SOURCE=webchat
+```
+
+Quando `API_KEY` estiver definido no `docker-comm`, a UI usa esse mesmo valor
+como `COMM_API_KEY` no container.
 
 ## Controle de conversa por origem
 

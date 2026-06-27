@@ -22,6 +22,30 @@ services:
       - default
       - tcc-integration
 
+  docker-comm-ui:
+    build: .
+    container_name: docker-comm-ui
+    env_file:
+      - .env
+    environment:
+      COMM_API_URL: ${COMM_API_URL:-http://docker-comm:8000}
+      COMM_API_KEY: ${API_KEY:-}
+      STREAMLIT_SOURCE: ${STREAMLIT_SOURCE:-webchat}
+      DEFAULT_BRANCH_ID: ${DEFAULT_BRANCH_ID:-1}
+    command:
+      - streamlit
+      - run
+      - ui/streamlit_app.py
+      - --server.address=0.0.0.0
+      - --server.port=8501
+      - --server.headless=true
+      - --browser.gatherUsageStats=false
+    ports:
+      - "${STREAMLIT_PORT:-8501}:8501"
+    depends_on:
+      - docker-comm
+    restart: unless-stopped
+
   redis:
     image: redis:7-alpine
     container_name: docker-comm-redis
