@@ -1,6 +1,10 @@
 import re
 from typing import Iterable
 
+from app.core.domain.part_code import (
+    has_literal_part_code_evidence,
+    normalize_part_code_candidate,
+)
 from app.infra.pre_search_text import normalize_pre_search_text
 
 DEFAULT_PART_CODE_PATTERNS: tuple[str, ...] = (
@@ -26,16 +30,6 @@ def compile_part_code_patterns(raw_patterns: Iterable[str] | None) -> tuple[re.P
     if compiled:
         return tuple(compiled)
     return tuple(re.compile(pattern, re.IGNORECASE) for pattern in DEFAULT_PART_CODE_PATTERNS)
-
-
-def normalize_part_code_candidate(value: str | None) -> str | None:
-    text = str(value or "").strip()
-    if not text:
-        return None
-    normalized = re.sub(r"\s+", "-", text).strip("-").upper()
-    if not normalized:
-        return None
-    return normalized
 
 
 def matches_part_code_patterns(value: str, compiled_patterns: tuple[re.Pattern[str], ...]) -> bool:

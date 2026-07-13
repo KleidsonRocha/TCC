@@ -261,6 +261,113 @@ def test_process_agent_request_passes_structured_criteria_to_search_tools() -> N
     }
 
 
+def test_process_agent_request_removes_part_code_without_literal_provenance() -> None:
+    class _SearchValidator:
+        def validate(self, message_text: str, *, last_messages=None, conversation_state=None) -> PreSearchValidation:
+            return PreSearchValidation(
+                decision="search",
+                criteria=SearchCriteria(
+                    part_query="pastilhas de freio",
+                    part_code="FREIO-2010",
+                    vehicle_model="Gol",
+                    vehicle_year=2010,
+                    engine="1.0",
+                ),
+                missing_fields=[],
+                next_question=None,
+                confidence=0.95,
+            )
+
+        def get_last_audit(self) -> dict:
+            return {}
+
+    tools = _SpyTools()
+    recorder = _SpyRecorder()
+    use_case = ProcessAgentRequestUseCase(
+        tools=tools,
+        pre_search_validator=_SearchValidator(),
+        settings=Settings(
+            LOG_LEVEL="INFO",
+            APP_ENV="test",
+            AGENT_PORT=8001,
+            DEFAULT_LOCALE="pt-BR",
+            DEFAULT_TIMEZONE="America/Sao_Paulo",
+        ),
+        logger=logging.getLogger("test"),
+        review_recorder=recorder,
+    )
+    payload = AgentRequestV1.model_validate(
+        {
+            "schema_version": "1.0",
+            "trace_id": "trace-part-code-provenance",
+            "conversation_id": "conv-part-code-provenance",
+            "message": {"text": "pastilha de freio 2010 1.0"},
+            "business": {"branch_id": 1},
+            "channel": {"name": "whatsapp"},
+            "context": {"last_messages": []},
+        }
+    )
+
+    result = asyncio.run(use_case.execute(payload))
+
+    assert len(tools.calls) == 1
+    assert tools.calls[0]["criteria"].part_code is None
+    assert "FREIO-2010" not in tools.calls[0]["query"]
+    assert result.conversation_state is not None
+    assert result.conversation_state.criteria.part_code is None
+    assert recorder.calls[0]["predicted_criteria"].get("part_code") is None
+
+
+def test_process_agent_request_preserves_literal_part_code() -> None:
+    class _SearchValidator:
+        def validate(self, message_text: str, *, last_messages=None, conversation_state=None) -> PreSearchValidation:
+            return PreSearchValidation(
+                decision="search",
+                criteria=SearchCriteria(part_code="AB-1234"),
+                missing_fields=[],
+                next_question=None,
+                confidence=0.99,
+            )
+
+        def get_last_audit(self) -> dict:
+            return {}
+
+    tools = _SpyTools()
+    recorder = _SpyRecorder()
+    use_case = ProcessAgentRequestUseCase(
+        tools=tools,
+        pre_search_validator=_SearchValidator(),
+        settings=Settings(
+            LOG_LEVEL="INFO",
+            APP_ENV="test",
+            AGENT_PORT=8001,
+            DEFAULT_LOCALE="pt-BR",
+            DEFAULT_TIMEZONE="America/Sao_Paulo",
+        ),
+        logger=logging.getLogger("test"),
+        review_recorder=recorder,
+    )
+    payload = AgentRequestV1.model_validate(
+        {
+            "schema_version": "1.0",
+            "trace_id": "trace-literal-part-code",
+            "conversation_id": "conv-literal-part-code",
+            "message": {"text": "quero consultar o codigo AB-1234"},
+            "business": {"branch_id": 1},
+            "channel": {"name": "whatsapp"},
+            "context": {"last_messages": []},
+        }
+    )
+
+    result = asyncio.run(use_case.execute(payload))
+
+    assert len(tools.calls) == 1
+    assert tools.calls[0]["criteria"].part_code == "AB-1234"
+    assert tools.calls[0]["query"] == "AB-1234"
+    assert result.conversation_state is not None
+    assert result.conversation_state.criteria.part_code == "AB-1234"
+
+
 def test_process_agent_request_canonicalizes_part_query_before_search_tools() -> None:
     class _SearchValidator:
         def validate(self, message_text: str, *, last_messages=None, conversation_state=None) -> PreSearchValidation:

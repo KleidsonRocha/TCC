@@ -138,3 +138,39 @@ Motivo:
 
 - o ganho potencial ainda nao compensa o custo adicional de arquitetura, dados e testes
 - a prioridade atual continua sendo estabilizar as regras deterministicas e o fluxo principal
+
+## 11. Recuperacao semantica por embeddings como evolucao candidata para pedidos genericos
+
+Status:
+
+- opcao levantada e considerada promissora para avaliacao futura
+- implementacao condicionada ao fechamento das prioridades estruturais e a ganho comprovado em benchmark
+
+Decisao:
+
+- avaliar uma camada de recuperacao semantica sobre as familias reais de `pre_search_part_type`
+- acionar essa camada somente quando alias exato e fuzzy nao identificarem `part_query` com seguranca
+- usar os scores apenas para selecionar candidatos e apoiar uma pergunta de confirmacao
+- passar candidatos controlados para a LLM redigir a mensagem, aguardar a resposta do usuario e somente entao consolidar a familia canonica
+- reutilizar o historico e o `ConversationState` que o `docker-comm` ja persiste no Redis
+- manter a primeira fase restrita a familias do catalogo, sem vetorizar todos os itens do ERP
+
+Motivo:
+
+- pedidos genericos como `aquilo que segura o carro` expressam funcao ou sintoma e nao sao bem resolvidos apenas por igualdade lexical ou distancia de edicao
+- embeddings podem aproximar esse texto de familias como suspensao, amortecedor ou mola e oferecer opcoes reais do catalogo
+- a confirmacao pelo usuario reduz o risco de transformar proximidade semantica em identificacao incorreta
+- o encaixe preserva a arquitetura atual: banco como fonte estrutural, backend como autoridade, LLM como camada conversacional e Redis como estado multi-turno
+
+Limites da decisao:
+
+- similaridade vetorial nao valida compatibilidade veicular
+- embedding nao libera `search` sozinho
+- alias exato, fuzzy matching, regras de catalogo, gate backend e filtros do ERP continuam prioritarios
+- falha ou timeout da recuperacao semantica deve seguir pelo fluxo atual
+- a adocao definitiva depende de medir acerto `top-1`, cobertura `top-3`, falsos positivos, confirmacao do usuario e latencia
+
+Consequencia:
+
+- o backlog passa a prever dataset semantico curado, prova de conceito, extensao opcional do `ConversationState`, testes multi-turno e rollout por feature flag
+- se a prova de conceito nao superar o baseline atual, a camada nao deve ser promovida para o runtime

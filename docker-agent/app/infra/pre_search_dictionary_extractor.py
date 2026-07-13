@@ -7,6 +7,7 @@ from app.core.domain.pre_search import SearchCriteria
 from app.infra.pre_search_text import normalize_pre_search_text
 from app.infra.pre_search_part_code import (
     compile_part_code_patterns,
+    has_literal_part_code_evidence,
     is_valid_part_code_candidate,
     normalize_part_code_candidate,
 )
@@ -295,6 +296,11 @@ class DictionaryPreSearchExtractor:
         for pattern in self._part_code_patterns:
             for match in pattern.finditer(text or ""):
                 candidate = normalize_part_code_candidate(match.group(0))
+                if not has_literal_part_code_evidence(
+                    candidate,
+                    message_text=text,
+                ):
+                    continue
                 if not is_valid_part_code_candidate(
                     candidate,
                     compiled_patterns=self._part_code_patterns,

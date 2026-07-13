@@ -4,6 +4,10 @@ from typing import Any
 
 from app.api.schemas.contract_v1 import AgentRequestV1
 from app.config import Settings
+from app.core.domain.part_code import (
+    has_literal_part_code_evidence,
+    normalize_part_code_candidate,
+)
 from app.core.domain.models import ConversationState, HandoffInfo, ProcessResult, ToolTrace
 from app.core.domain.pre_search import NextQuestion, PreSearchValidation, SearchCriteria
 from app.core.domain.rules import validate_message_text, validate_schema_version
@@ -51,6 +55,11 @@ class ProcessAgentRequestUseCase:
             query,
             last_messages=last_messages,
             conversation_state=incoming_state,
+        )
+        pre_search = self._enforce_part_code_provenance(
+            pre_search,
+            message_text=query,
+            last_messages=last_messages,
         )
         pre_search = self._canonicalize_validated_part_query(pre_search)
         current_state = self._build_conversation_state(
@@ -299,6 +308,98 @@ class ProcessAgentRequestUseCase:
             next_question=next_question,
             confidence=pre_search.confidence,
         )
+
+    def _enforce_part_code_provenance(
+        self,
+        pre_search: PreSearchValidation,
+        *,
+        message_text: str,
+        last_messages: list[dict[str, str]],
+    ) -> PreSearchValidation:
+        part_code = normalize_part_code_candidate(pre_search.criteria.part_code)
+        if not part_code:
+            return pre_search
+
+        literal_evidence = has_literal_part_code_evidence(
+            part_code,
+            message_text=message_text,
+            last_messages=last_messages,
+        )
+        extractor_evidence = self._part_code_validated_by_extractor(
+            part_code=part_code,
+            message_text=message_text,
+            last_messages=last_messages,
+        )
+        if literal_evidence or extractor_evidence:
+            if part_code == pre_search.criteria.part_code:
+                return pre_search
+            criteria_values = pre_search.criteria.model_dump(exclude_none=False)
+            criteria_values["part_code"] = part_code
+            return PreSearchValidation(
+                decision=pre_search.decision,
+                criteria=SearchCriteria.model_validate(criteria_values),
+                missing_fields=list(pre_search.missing_fields),
+                next_question=pre_search.next_question,
+                confidence=pre_search.confidence,
+            )
+
+        self._logger.warning(
+            "part_code_rejected_without_provenance",
+            extra={"part_code": part_code},
+        )
+        criteria_values = pre_search.criteria.model_dump(exclude_none=False)
+        criteria_values["part_code"] = None
+        criteria = SearchCriteria.model_validate(criteria_values)
+        decision = pre_search.decision
+        missing_fields = [
+            field for field in pre_search.missing_fields if field != "part_code"
+        ]
+        next_question = pre_search.next_question
+        if next_question is not None and next_question.key == "part_code":
+            next_question = None
+
+        if decision == "search" and not criteria.part_query:
+            decision = "ask"
+            if "part_query" not in missing_fields:
+                missing_fields.insert(0, "part_query")
+            next_question = NextQuestion(
+                key="part_query",
+                prompt="Qual peca voce precisa?",
+            )
+
+        return PreSearchValidation(
+            decision=decision,
+            criteria=criteria,
+            missing_fields=missing_fields,
+            next_question=next_question,
+            confidence=pre_search.confidence,
+        )
+
+    def _part_code_validated_by_extractor(
+        self,
+        *,
+        part_code: str,
+        message_text: str,
+        last_messages: list[dict[str, str]],
+    ) -> bool:
+        extractor = getattr(
+            self._pre_search_validator,
+            "extract_dictionary_seed_criteria",
+            None,
+        )
+        if not callable(extractor):
+            return False
+        try:
+            criteria = extractor(
+                message_text=message_text,
+                last_messages=last_messages,
+            )
+        except Exception:
+            return False
+        extracted_part_code = normalize_part_code_candidate(
+            getattr(criteria, "part_code", None)
+        )
+        return extracted_part_code == part_code
 
     def _record_review_case(
         self,

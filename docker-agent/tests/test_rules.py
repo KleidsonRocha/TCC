@@ -175,6 +175,45 @@ def test_dictionary_extractor_rejects_model_year_as_part_code() -> None:
     assert result.part_code is None
 
 
+def test_dictionary_extractor_rejects_part_name_followed_by_year_as_part_code() -> None:
+    result = DictionaryPreSearchExtractor(catalog=_catalog_fixture()).extract(
+        "pastilha de freio 2010 1.0"
+    )
+
+    assert result.part_query == "pastilhas de freio"
+    assert result.part_code is None
+    assert result.vehicle_year == 2010
+    assert result.engine == "1.0"
+
+
+def test_dictionary_extractor_accepts_space_separated_code_with_explicit_marker() -> None:
+    result = DictionaryPreSearchExtractor(catalog=_catalog_fixture()).extract(
+        "quero consultar o codigo AB 1234"
+    )
+
+    assert result.part_code == "AB-1234"
+
+
+def test_dictionary_extractor_accepts_space_separated_code_with_abbreviated_marker() -> None:
+    result = DictionaryPreSearchExtractor(catalog=_catalog_fixture()).extract(
+        "quero consultar o cod. AB 1234"
+    )
+
+    assert result.part_code == "AB-1234"
+
+
+def test_dictionary_extractor_accepts_explicit_part_code_from_user_history() -> None:
+    result = DictionaryPreSearchExtractor(catalog=_catalog_fixture()).extract(
+        "pode consultar",
+        last_messages=[
+            {"role": "user", "text": "o codigo e AB-1234"},
+            {"role": "assistant", "text": "Vou verificar."},
+        ],
+    )
+
+    assert result.part_code == "AB-1234"
+
+
 def test_dictionary_extractor_fuzzy_matches_single_token_part_typo() -> None:
     result = DictionaryPreSearchExtractor(catalog=_catalog_fixture()).extract(
         "quero cuxim da ecosport 2008"
@@ -296,6 +335,81 @@ def test_llm_validator_ignores_hallucinated_part_code_from_llm() -> None:
     assert result.decision == "ask"
     assert result.criteria.part_code is None
     assert "engine" in result.missing_fields
+
+
+def test_llm_validator_blocks_freio_2010_from_real_follow_up_case() -> None:
+    validator = _validator()
+    validator._post_chat_or_generate = lambda **kwargs: (
+        {
+            "message": {
+                "content": (
+                    '{"decision":"search","criteria":{"part_query":"pastilhas de freio",'
+                    '"part_code":"FREIO-2010","vehicle_model":"Gol","vehicle_year":2010,'
+                    '"engine":"1.0","quantity":1},"missing_fields":[],"next_question":null,'
+                    '"confidence":0.94}'
+                )
+            }
+        },
+        "/api/chat",
+    )
+
+    result = validator.validate(
+        "pastilha de freio 2010 1.0",
+        last_messages=[
+            {"role": "user", "text": "preciso de ajuda com uma peca do gol"},
+            {"role": "assistant", "text": "Qual a familia da peca que voce precisa?"},
+        ],
+        conversation_state=ConversationState(
+            criteria=SearchCriteria(vehicle_model="Gol"),
+            pending_slot="part_query",
+            pending_question="Qual a familia da peca que voce precisa?",
+            last_decision="ask",
+        ),
+    )
+
+    assert result.criteria.part_code is None
+    assert result.criteria.part_query == "pastilhas de freio"
+    assert result.decision == "ask"
+    assert "position" in result.missing_fields
+
+
+def test_llm_validator_does_not_restore_unproven_part_code_from_conversation_state() -> None:
+    validator = _validator()
+    validator._post_chat_or_generate = lambda **kwargs: (
+        {
+            "message": {
+                "content": (
+                    '{"decision":"search","criteria":{"part_query":"pastilhas de freio",'
+                    '"vehicle_model":"Gol","vehicle_year":2010,"engine":"1.0"},'
+                    '"missing_fields":[],"next_question":null,"confidence":0.9}'
+                )
+            }
+        },
+        "/api/chat",
+    )
+
+    result = validator.validate(
+        "1.0",
+        last_messages=[
+            {"role": "user", "text": "pastilha de freio gol 2010"},
+            {"role": "assistant", "text": "Qual a motorizacao?"},
+        ],
+        conversation_state=ConversationState(
+            criteria=SearchCriteria(
+                part_query="pastilhas de freio",
+                part_code="FREIO-2010",
+                vehicle_model="Gol",
+                vehicle_year=2010,
+            ),
+            pending_slot="engine",
+            pending_question="Qual a motorizacao?",
+            last_decision="ask",
+        ),
+    )
+
+    assert result.criteria.part_code is None
+    assert result.decision == "ask"
+    assert "position" in result.missing_fields
 
 
 def test_llm_validator_promotes_explicit_part_code_to_search() -> None:
@@ -559,7 +673,7 @@ def test_llm_validator_requires_side_for_bandejas_even_when_catalog_axle_rule_is
     assert result.missing_fields == ["side"]
 
 
-def test_llm_validator_specific_filter_ignores_stale_direction_rules() -> None:
+def test_llm_validator_uses_catalog_rule_for_specific_filter() -> None:
     catalog = PreSearchCatalog(
         part_patterns=_catalog_fixture().part_patterns + [
             ("filtro de combustivel", ("filtro de combustivel", "filtro combustivel")),
@@ -589,6 +703,69 @@ def test_llm_validator_specific_filter_ignores_stale_direction_rules() -> None:
     )
 
     result = validator.validate("filtro de combustivel gol 2010")
+
+    assert result.decision == "ask"
+    assert result.missing_fields == ["side", "position", "axle"]
+    assert result.next_question is not None
+    assert result.next_question.key == "side"
+
+
+@pytest.mark.parametrize(
+    ("part_query", "aliases", "message"),
+    [
+        ("filtro de oleo", ("filtro de oleo", "filtro oleo"), "filtro de oleo gol 2010"),
+        (
+            "filtro de ar do motor",
+            ("filtro de ar do motor", "filtro ar motor"),
+            "filtro de ar do motor gol 2010",
+        ),
+        (
+            "filtro de combustivel",
+            ("filtro de combustivel", "filtro combustivel"),
+            "filtro de combustivel gol 2010",
+        ),
+    ],
+)
+def test_llm_validator_does_not_request_directional_slots_for_corrected_filter_catalog(
+    part_query: str,
+    aliases: tuple[str, ...],
+    message: str,
+) -> None:
+    base_catalog = _catalog_fixture()
+    part_patterns = [
+        pattern
+        for pattern in base_catalog.part_patterns
+        if pattern[0] != part_query
+    ]
+    part_patterns.append((part_query, aliases))
+    catalog = PreSearchCatalog(
+        part_patterns=part_patterns,
+        brand_aliases=base_catalog.brand_aliases,
+        model_aliases=base_catalog.model_aliases,
+        invalid_slot_tokens=base_catalog.invalid_slot_tokens,
+        generic_ambiguous_parts=base_catalog.generic_ambiguous_parts,
+        needs_side=base_catalog.needs_side,
+        needs_position=base_catalog.needs_position,
+        needs_axle=base_catalog.needs_axle,
+        needs_engine=base_catalog.needs_engine,
+        needs_variant=base_catalog.needs_variant,
+        engine_by_model=base_catalog.engine_by_model,
+    )
+    validator = _validator(catalog=catalog)
+    validator._post_chat_or_generate = lambda **kwargs: (
+        {
+            "message": {
+                "content": (
+                    f'{{"decision":"search","criteria":{{"part_query":"{part_query}",'
+                    '"vehicle_model":"Gol","vehicle_year":2010},"missing_fields":[],'
+                    '"next_question":null,"confidence":0.9}'
+                )
+            }
+        },
+        "/api/chat",
+    )
+
+    result = validator.validate(message)
 
     assert result.decision == "search"
     assert result.missing_fields == []

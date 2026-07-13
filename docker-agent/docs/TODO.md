@@ -81,76 +81,6 @@ Entregaveis esperados no retorno:
 
 ## Prioridade 0 - Parar erros com conviccao
 
-- [ ] Bloquear qualquer `part_code` inventado
-  - Encontrar a origem do caso real `FREIO-2010`
-  - So aceitar `part_code` literal da mensagem, do contexto ou validado pelo extractor
-  - Criar regressao especifica para `pastilha de freio 2010 1.0`
-  - Prompt sugerido para agent:
-
-```text
-Leia obrigatoriamente: AGENTS.md, README.md, docs/TODO.md.
-
-Objetivo:
-Bloquear qualquer `part_code` inventado.
-
-Escopo:
-- Encontrar a origem do caso real `FREIO-2010`
-- Aceitar `part_code` apenas quando for literal da mensagem, do contexto ou validado pelo extractor
-- Criar regressao especifica para `pastilha de freio 2010 1.0`
-
-Arquivos provaveis:
-- app/core/usecases/process_agent_request.py
-- app/infra/pre_search_validator_llm.py
-- app/infra/pre_search_fine_tuning_format.py se houver reflexo no payload
-- tests/test_rules.py
-- tests/test_respond.py
-- testes adicionais necessarios
-
-Restricoes:
-- Nao relaxar validacao para "fazer passar"
-- Nao mexer em ranking ERP nesta tarefa
-
-Entregavel:
-- bloqueio defensivo de `part_code` inventado
-- teste cobrindo o caso real e variacoes proximas
-- explicacao objetiva da origem corrigida
-```
-
-- [ ] Revisar regras de catalogo que geram perguntas sem sentido
-  - Corrigir `filtro de  oleo -> needs_axle`
-  - Corrigir `filtro de ar do motor -> needs_axle`
-  - Corrigir `filtro de combustivel -> needs_side`
-  - Auditar familias similares antes da proxima bateria real
-  - Prompt sugerido para agent:
-
-```text
-Leia obrigatoriamente: AGENTS.md, README.md, docs/TODO.md, db/init/pre_search_init.sql.
-
-Objetivo:
-Revisar regras de catalogo que geram perguntas sem sentido.
-
-Escopo:
-- Corrigir `filtro de oleo -> needs_axle`
-- Corrigir `filtro de ar do motor -> needs_axle`
-- Corrigir `filtro de combustivel -> needs_side`
-- Auditar familias similares antes da proxima bateria real
-
-Arquivos provaveis:
-- db/init/pre_search_init.sql
-- possiveis CSVs em db/init/csv/
-- testes de regra/catalogo
-
-Restricoes:
-- Ajustar fonte de verdade no bootstrap
-- Nao criar seed paralelo em docs
-- Atualizar testes se naming/contrato mudar
-
-Entregavel:
-- regras corrigidas no bootstrap consolidado
-- testes cobrindo filtros e familias similares
-- lista curta do que foi auditado alem dos tres casos obrigatorios
-```
-
 ## Prioridade 1 - Trazer a latencia para nivel operacional  
 
 - [ ] Criar caminho deterministico para casos obvios
@@ -201,7 +131,7 @@ Entregavel:
 
 - [ ] Corrigir follow-up com motor textual
   - Aceitar `zetec rocam`, `duratec`, `sigma` e equivalentes textuais como `engine`
-  - Revalidar explicitamente o fluxo `co  xim amortecedor ecosport 2008 -> zetec rocam`
+  - Revalidar explicitamente o fluxo `coxim amortecedor ecosport 2008 -> zetec rocam`
 
 - [ ] Melhorar a resposta de `no_match`
   - Usar `conversation_state` para dizer o que realmente falta ou conflitou
@@ -359,4 +289,216 @@ Entregavel:
 - artefatos de avaliacao atualizados
 - resumo objetivo do antes/depois
 ```
- 
+
+## Prioridade 5 - Avaliar recuperacao semantica para pedidos genericos
+
+Objetivo:
+
+- Complementar aliases e fuzzy matching quando o usuario descreve a funcao, o sintoma ou uma expressao popular sem citar o nome da peca.
+- Recuperar familias reais do catalogo com embeddings, passar candidatos controlados para a LLM montar uma pergunta e aguardar confirmacao do usuario antes de consolidar `part_query`.
+- Preservar o Redis do `docker-comm` como unica persistencia de historico e estado conversacional.
+
+Ordem obrigatoria desta prioridade:
+
+- iniciar somente depois de estabilizar as Prioridades 0 a 4 e registrar o baseline atual
+- executar primeiro uma prova de conceito sobre as familias de `pre_search_part_type`
+- nao vetorizar os itens do ERP na primeira fase
+- nao promover para o runtime sem ganho mensuravel e regressao automatizada
+
+### 5.1 Definir baseline e criterios de sucesso
+
+- [ ] Montar dataset de avaliacao semantica separado do dataset de fine-tuning
+  - incluir pedidos explicitos que o extractor atual ja resolve
+  - incluir typos que devem continuar sendo resolvidos pelo fuzzy
+  - incluir descricoes funcionais, sintomas e expressoes populares
+  - incluir frases ambiguas com duas ou mais familias plausiveis
+  - incluir mensagens fora do dominio para medir falsos positivos
+  - incluir exemplos multi-turno com confirmacao, negacao, numero da opcao e `nenhuma dessas`
+
+- [ ] Registrar o baseline antes da prova de conceito
+  - medir extractor atual isolado
+  - medir extractor atual + LLM atual
+  - registrar acerto `top-1`, cobertura `top-3`, falso positivo, taxa de confirmacao e latencia
+  - definir limites minimos de ganho para justificar a nova camada
+
+### 5.2 Criar fonte semantica curada no catalogo
+
+- [ ] Definir documentos semanticos vinculados a `pre_search_part_type`
+  - manter `part_type_id` como identidade canonica da familia
+  - manter tambem grupo, subgrupo e nome canonico para auditoria
+  - separar tipos de documento como `description`, `customer_phrase`, `symptom` e `usage`
+  - incluir limites negativos quando uma expressao puder confundir familias relacionadas
+
+- [ ] Versionar o conteudo humano em CSV de bootstrap
+  - criar `db/init/csv/pre_search_part_semantic_document.csv`
+  - usar a chave de origem `cd_grupo + cd_subgrupo`
+  - nao salvar vetores manualmente no CSV
+  - revisar as descricoes com conhecimento de dominio antes de gerar embeddings
+  - atualizar `db/init/pre_search_init.sql` sem criar seed paralelo em `docs/`
+
+### 5.3 Escolher modelo e estrategia de persistencia
+
+- [ ] Comparar modelos de embedding adequados para portugues
+  - registrar nome, versao, dimensao, licenca, tamanho e latencia
+  - validar expressoes reais de autopecas, nao apenas benchmark generico
+  - garantir que consulta e documentos usem exatamente o mesmo modelo e versao
+
+- [ ] Fazer a primeira prova de conceito com as familias em memoria
+  - trabalhar inicialmente sobre as cerca de 338 familias, evitando infraestrutura prematura
+  - pre-gerar os embeddings dos documentos no bootstrap ou em comando operacional explicito
+  - medir tempo de inicializacao, memoria e latencia por consulta
+
+- [ ] Avaliar PostgreSQL + `pgvector` apenas depois da prova de conceito
+  - substituir a imagem `postgres:16-alpine` somente se a persistencia vetorial for aprovada
+  - criar extensao, tabela, indice e rotina de reindexacao de forma reproduzivel
+  - armazenar `embedding_model`, `embedding_version`, dimensao e data de geracao
+  - definir invalidacao e reindexacao quando documento ou modelo mudar
+  - nao adicionar banco vetorial separado enquanto o volume das familias nao justificar
+
+### 5.4 Criar o recuperador semantico no `docker-agent`
+
+- [ ] Definir uma porta de recuperacao semantica desacoplada do provedor
+  - entrada: mensagem atual e contexto de desambiguacao permitido
+  - saida: `part_type_id`, nome canonico, grupo, score e origem do documento
+  - limitar o resultado a `top-k` pequeno e ordenado
+  - permitir implementacao em memoria e futura implementacao com `pgvector`
+
+- [ ] Encaixar a recuperacao depois de alias/fuzzy e antes da decisao conversacional
+  - executar somente quando `part_query` continuar ausente ou insegura
+  - nao substituir resultado exato ou fuzzy seguro
+  - nao usar mensagem do `assistant` como evidencia factual de peca
+  - em follow-up, restringir a busca aos candidatos pendentes quando aplicavel
+  - se o recuperador falhar ou exceder timeout, continuar pelo fluxo atual sem derrubar `/respond`
+
+- [ ] Definir politica deterministica de confianca
+  - calibrar score minimo usando o dataset real
+  - exigir margem minima entre primeiro e segundo candidato
+  - distinguir `sem candidato`, `candidato forte` e `candidatos ambiguos`
+  - na primeira versao, toda familia originada somente de embedding deve pedir confirmacao
+  - impedir que score vetorial libere `search` ou valide aplicacao veicular sozinho
+
+### 5.5 Integrar a desambiguacao ao contrato e ao Redis existente
+
+- [ ] Estender `ConversationState` de forma retrocompativel nos dois servicos
+  - adicionar campo opcional `semantic_disambiguation`
+  - manter `criteria`, `pending_slot`, `pending_question` e `last_decision`
+  - representar texto original, candidatos, tentativa atual, modelo e versao do embedding
+  - atualizar `docker-agent/app/core/domain/models.py`
+  - atualizar `docker-comm/app/core/domain/models.py`
+  - revisar os schemas e o cliente HTTP do contrato `v1.0`
+
+- [ ] Reutilizar exclusivamente a persistencia atual do `docker-comm`
+  - continuar usando `conv:{conversation_id}:history`
+  - continuar usando `conv:{conversation_id}:state`
+  - deixar o `docker-agent` produzir o estado atualizado e o `docker-comm` persisti-lo
+  - respeitar `HISTORY_LIMIT` e `SESSION_TTL_SECONDS`
+  - nao criar Redis, chave de sessao ou store paralelo no `docker-agent`
+
+- [ ] Definir ciclo de vida do estado semantico
+  - criar estado ao retornar pergunta de confirmacao
+  - incrementar tentativa em resposta ainda ambigua
+  - limpar ao confirmar uma familia canonica
+  - limpar ao negar todas as opcoes, reiniciar o pedido ou realizar handoff
+  - limitar tentativas para evitar loop conversacional
+
+### 5.6 Integrar candidatos a LLM sem transferir autoridade
+
+- [ ] Adicionar candidatos semanticos ao payload do validador
+  - informar somente familias existentes e seus identificadores
+  - permitir que a LLM redija uma pergunta curta e natural
+  - gerar `options` a partir dos candidatos aprovados pelo backend
+  - impedir a LLM de introduzir opcao fora do conjunto recuperado
+  - manter backend como autoridade sobre score, margem, campos obrigatorios e gate
+
+- [ ] Tratar todos os caminhos de confirmacao
+  - selecao pelo nome da familia
+  - selecao pelo numero ou opcao da interface
+  - resposta descritiva que refine os candidatos anteriores
+  - negacao de uma opcao
+  - `nenhuma dessas` ou mudanca de assunto
+  - ambiguidade repetida com nova pergunta ou handoff apos o limite
+
+### 5.7 Auditoria, revisao e aprendizado operacional
+
+- [ ] Registrar evidencia semantica na fila de revisao
+  - guardar modelo, versao, candidatos, scores, margens e familia confirmada
+  - distinguir sugestao vetorial de criterio confirmado pelo usuario
+  - nao promover automaticamente a primeira sugestao para o dataset formal
+  - permitir transformar expressoes recorrentes confirmadas em alias ou documento curado
+
+- [ ] Revisar impacto no fine-tuning
+  - decidir se candidatos semanticos entram no payload dos novos exemplos
+  - versionar o contrato do dataset se a forma de entrada mudar
+  - nao misturar avaliacao do embedding com avaliacao do adapter da LLM
+
+### 5.8 Testes, observabilidade e rollout
+
+- [ ] Criar testes unitarios
+  - ranking `top-k`, score minimo e margem
+  - preferencia de alias/fuzzy sobre recuperacao semantica
+  - fallback quando o provedor de embedding estiver indisponivel
+  - limpeza e limite de tentativas do estado
+
+- [ ] Criar testes de contrato e Redis no `docker-comm`
+  - serializar e desserializar `semantic_disambiguation`
+  - encaminhar o estado para o `docker-agent`
+  - persistir o estado retornado usando as chaves existentes
+  - aceitar respostas antigas sem o novo campo opcional
+
+- [ ] Criar testes integrados multi-turno
+  - `aquilo que evita o carro de pular -> amortecedor -> confirmar -> continuar criterios`
+  - `algo que segura o carro -> opcoes ambiguas -> segunda opcao`
+  - `nenhuma dessas -> pedir nova descricao`
+  - confirmacao da familia seguida de pergunta por modelo, ano ou motor
+  - falha de embedding mantendo o fluxo atual operacional
+
+- [ ] Adicionar feature flags e metricas
+  - iniciar com recuperacao desativada por padrao
+  - oferecer modo `shadow`, calculando candidatos sem alterar a resposta
+  - medir uso, acerto confirmado, rejeicao, handoff, latencia e falso positivo
+  - promover gradualmente somente depois do comparativo com o baseline
+
+### 5.9 Criterio de conclusao
+
+- [ ] Considerar a recuperacao semantica pronta somente quando
+  - melhorar de forma mensuravel pedidos genericos sem regredir pedidos explicitos
+  - mantiver aliases, fuzzy, regras e gate como autoridades deterministicas
+  - nao liberar pesquisa ERP a partir de similaridade vetorial sem confirmacao
+  - reutilizar o Redis atual sem persistencia conversacional duplicada
+  - tiver fallback seguro, testes multi-turno e observabilidade
+  - tiver documentacao de bootstrap, operacao, modelo e reindexacao atualizada
+
+Fora do escopo da primeira fase:
+
+- embeddings para todos os itens de `soccol.item_search_candidates`
+- substituicao do ranking lexical do ERP
+- validacao semantica de compatibilidade entre peca e veiculo
+- preenchimento automatico de `part_query` sem confirmacao do usuario
+- novo banco vetorial ou nova camada de sessao
+
+Prompt sugerido para agent:
+
+```text
+Leia obrigatoriamente: AGENTS.md, README.md, docs/DECISIONS.md, docs/PROGRESS.md,
+docs/TODO.md, docs/guide/pre_search_runtime_flow.md,
+docs/guide/runtime_and_bootstrap.md, docs/guide/erp_search_integration.md e
+docs/training/pre_search_fine_tuning.md.
+
+Objetivo:
+Prioridade 5 - executar uma prova de conceito de recuperacao semantica para
+pedidos genericos, com confirmacao multi-turno pelo Redis existente.
+
+Restricoes:
+- Nao substituir alias, fuzzy, regras, gate ou busca ERP
+- Nao criar persistencia conversacional paralela
+- Nao vetorizar itens do ERP na primeira fase
+- Nao promover para runtime sem baseline, benchmark e regressao
+- Falha do recuperador semantico deve manter o fluxo atual operacional
+
+Entregavel:
+- dataset e baseline semanticos
+- documentos curados por familia
+- recuperador top-k desacoplado
+- desambiguacao multi-turno persistida pelo docker-comm
+- testes, metricas e decisao de promover ou descartar a hipotese
+```

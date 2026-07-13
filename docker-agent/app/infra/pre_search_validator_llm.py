@@ -71,41 +71,6 @@ RUNTIME_SEARCH_RULE_OVERRIDES: dict[str, dict[str, bool]] = {
     "discos de freio": {
         "needs_position": True,
     },
-    "filtro de oleo": {
-        "needs_side": False,
-        "needs_position": False,
-        "needs_axle": False,
-        "needs_engine": False,
-        "needs_variant": False,
-    },
-    "filtro de combustivel": {
-        "needs_side": False,
-        "needs_position": False,
-        "needs_axle": False,
-        "needs_engine": False,
-        "needs_variant": False,
-    },
-    "filtro combustivel": {
-        "needs_side": False,
-        "needs_position": False,
-        "needs_axle": False,
-        "needs_engine": False,
-        "needs_variant": False,
-    },
-    "filtro de ar": {
-        "needs_side": False,
-        "needs_position": False,
-        "needs_axle": False,
-        "needs_engine": False,
-        "needs_variant": False,
-    },
-    "filtro de ar do motor": {
-        "needs_side": False,
-        "needs_position": False,
-        "needs_axle": False,
-        "needs_engine": False,
-        "needs_variant": False,
-    },
 }
 UNSUPPORTED_PART_HANDOFF_PROMPT = (
     "Essa familia de peca nao esta no catalogo para pesquisa automatica. "
@@ -632,6 +597,8 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         merged_values = dictionary_criteria.model_dump(exclude_none=False)
 
         for key, state_value in state_values.items():
+            if key == "part_code":
+                continue
             current_value = merged_values.get(key)
             if current_value is None or current_value == "" or current_value == []:
                 merged_values[key] = state_value
@@ -661,6 +628,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             merged_criteria.get("part_query"),
             fallback=dictionary_criteria.part_query,
         )
+        merged_criteria["part_code"] = dictionary_criteria.part_code
 
         criteria_model = SearchCriteria.model_validate(merged_criteria)
         score_explicit_fields = self._build_score_explicit_fields(
