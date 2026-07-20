@@ -56,7 +56,7 @@ Os arquivos abaixo permanecem como utilitarios pontuais e nao devem ser tratados
 - `benchmark_llm_num_predict.py`
   Benchmark isolado apenas para tuning de `LLM_NUM_PREDICT`.
 - `benchmark_pre_search_latency.py`
-  Diagnostico de latencia, warmup, idle e `LLM_KEEP_ALIVE`.
+  Compara LLM e bypass deterministico, alem de diagnosticar warmup, idle e `LLM_KEEP_ALIVE`.
 
 ## `training/`
 

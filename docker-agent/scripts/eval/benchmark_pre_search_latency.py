@@ -9,6 +9,8 @@ from typing import Any
 import httpx
 
 from app.config import get_settings
+from app.core.domain.models import ConversationState
+from app.core.domain.pre_search import SearchCriteria
 from app.infra.logger import configure_logging, get_logger
 from app.infra.pre_search_catalog_pg import resolve_pre_search_catalog
 from app.infra.pre_search_validator_llm import LLMPreSearchValidator
@@ -20,6 +22,7 @@ class Scenario:
     message_text: str
     context_last_messages: list[dict[str, str]]
     notes: str
+    conversation_state: ConversationState | None = None
 
 
 DEFAULT_SCENARIOS: tuple[Scenario, ...] = (
@@ -43,6 +46,16 @@ DEFAULT_SCENARIOS: tuple[Scenario, ...] = (
             {"role": "assistant", "text": "Qual a motorizacao do veiculo?"},
         ],
         notes="Caso de follow-up com historico curto.",
+        conversation_state=ConversationState(
+            criteria=SearchCriteria(
+                part_query="correia dentada",
+                vehicle_model="Gol",
+                vehicle_year=2010,
+            ),
+            pending_slot="engine",
+            pending_question="Qual a motorizacao do veiculo?",
+            last_decision="ask",
+        ),
     ),
     Scenario(
         name="handoff_request",
@@ -119,6 +132,7 @@ def _measure_single_call(
     validator: LLMPreSearchValidator,
     scenario: Scenario,
     phase: str,
+    bypass_enabled: bool = False,
 ) -> dict[str, Any]:
     runtime = validator.runtime_diagnostics()
     ps_before = _fetch_ollama_ps(
@@ -135,10 +149,22 @@ def _measure_single_call(
     extractor_ms = round((time.perf_counter() - extractor_started_at) * 1000, 2)
 
     started_at = time.perf_counter()
-    validation = validator.validate(
-        scenario.message_text,
-        last_messages=scenario.context_last_messages,
-    )
+    validation = None
+    pre_search_path = "llm"
+    if bypass_enabled:
+        validation = validator.try_validate_deterministically(
+            scenario.message_text,
+            last_messages=scenario.context_last_messages,
+            conversation_state=scenario.conversation_state,
+        )
+        if validation is not None:
+            pre_search_path = "deterministic_bypass"
+    if validation is None:
+        validation = validator.validate(
+            scenario.message_text,
+            last_messages=scenario.context_last_messages,
+            conversation_state=scenario.conversation_state,
+        )
     total_ms = round((time.perf_counter() - started_at) * 1000, 2)
 
     ps_after = _fetch_ollama_ps(
@@ -153,7 +179,15 @@ def _measure_single_call(
         "scenario": scenario.name,
         "message_text": scenario.message_text,
         "context_last_messages": scenario.context_last_messages,
+        "conversation_state": (
+            scenario.conversation_state.model_dump(exclude_none=True)
+            if scenario.conversation_state
+            else None
+        ),
         "notes": scenario.notes,
+        "bypass_enabled": bypass_enabled,
+        "pre_search_path": pre_search_path,
+        "llm_called": pre_search_path == "llm",
         "dictionary_seed_criteria": extracted.model_dump(exclude_none=True),
         "extractor_ms": extractor_ms,
         "validate_total_ms": total_ms,
@@ -176,6 +210,7 @@ def _summarize_measurements(measurements: list[dict[str, Any]]) -> dict[str, Any
     latencies = [float(item["validate_total_ms"]) for item in measurements]
     extractor_latencies = [float(item["extractor_ms"]) for item in measurements]
     decisions = [str(item["decision"]) for item in measurements]
+    paths = [str(item.get("pre_search_path") or "llm") for item in measurements]
     target_loaded_before = [
         bool(item["ollama_ps_before"].get("target_loaded"))
         for item in measurements
@@ -195,6 +230,11 @@ def _summarize_measurements(measurements: list[dict[str, Any]]) -> dict[str, Any
         "latency_p95_ms": _safe_percentile(latencies, 0.95),
         "extractor_avg_ms": round(statistics.mean(extractor_latencies), 2) if extractor_latencies else 0.0,
         "decisions": decisions,
+        "pre_search_paths": paths,
+        "deterministic_bypass_count": sum(
+            1 for path in paths if path == "deterministic_bypass"
+        ),
+        "llm_call_count": sum(1 for path in paths if path == "llm"),
         "target_loaded_before_all": all(target_loaded_before) if target_loaded_before else False,
         "target_loaded_after_all": all(target_loaded_after) if target_loaded_after else False,
     }
@@ -205,27 +245,69 @@ def _run_sequence_battery(
     validator: LLMPreSearchValidator,
     scenarios: list[Scenario],
     trials: int,
+    modes: list[str],
 ) -> dict[str, Any]:
     rows: list[dict[str, Any]] = []
-    by_scenario: dict[str, list[dict[str, Any]]] = {scenario.name: [] for scenario in scenarios}
+    by_mode_and_scenario: dict[str, dict[str, list[dict[str, Any]]]] = {
+        mode: {scenario.name: [] for scenario in scenarios}
+        for mode in modes
+    }
 
-    for scenario in scenarios:
-        for index in range(max(trials, 1)):
-            measurement = _measure_single_call(
-                validator=validator,
-                scenario=scenario,
-                phase=f"sequence_{index + 1}",
-            )
-            rows.append(measurement)
-            by_scenario[scenario.name].append(measurement)
+    for mode in modes:
+        for scenario in scenarios:
+            for index in range(max(trials, 1)):
+                measurement = _measure_single_call(
+                    validator=validator,
+                    scenario=scenario,
+                    phase=f"{mode}_sequence_{index + 1}",
+                    bypass_enabled=mode == "bypass",
+                )
+                rows.append(measurement)
+                by_mode_and_scenario[mode][scenario.name].append(measurement)
 
     return {
         "measurements": rows,
-        "summary_by_scenario": {
-            name: _summarize_measurements(items)
-            for name, items in by_scenario.items()
+        "summary_by_mode": {
+            mode: {
+                name: _summarize_measurements(items)
+                for name, items in by_scenario.items()
+            }
+            for mode, by_scenario in by_mode_and_scenario.items()
         },
+        "bypass_comparison": _build_bypass_comparison(by_mode_and_scenario),
     }
+
+
+def _build_bypass_comparison(
+    by_mode_and_scenario: dict[str, dict[str, list[dict[str, Any]]]],
+) -> dict[str, dict[str, float | str]]:
+    if "llm" not in by_mode_and_scenario or "bypass" not in by_mode_and_scenario:
+        return {}
+
+    comparison: dict[str, dict[str, float | str]] = {}
+    for scenario_name, baseline_rows in by_mode_and_scenario["llm"].items():
+        bypass_rows = by_mode_and_scenario["bypass"].get(scenario_name, [])
+        baseline = _summarize_measurements(baseline_rows)
+        optimized = _summarize_measurements(bypass_rows)
+        baseline_ms = float(baseline["latency_avg_ms"])
+        bypass_ms = float(optimized["latency_avg_ms"])
+        saved_ms = max(baseline_ms - bypass_ms, 0.0)
+        comparison[scenario_name] = {
+            "llm_avg_ms": round(baseline_ms, 2),
+            "bypass_avg_ms": round(bypass_ms, 2),
+            "saved_ms": round(saved_ms, 2),
+            "reduction_pct": (
+                round((saved_ms / baseline_ms) * 100, 2)
+                if baseline_ms > 0
+                else 0.0
+            ),
+            "optimized_path": (
+                str(bypass_rows[0].get("pre_search_path") or "llm")
+                if bypass_rows
+                else "not_measured"
+            ),
+        }
+    return comparison
 
 
 def _run_idle_battery(
@@ -243,6 +325,7 @@ def _run_idle_battery(
             validator=validator,
             scenario=scenario,
             phase="idle_baseline",
+            bypass_enabled=False,
         )
         rows.append(baseline)
         scenario_rows.append(baseline)
@@ -264,6 +347,7 @@ def _run_idle_battery(
                 validator=validator,
                 scenario=scenario,
                 phase=f"idle_after_{idle_s}s",
+                bypass_enabled=False,
             )
             measurement["idle_seconds"] = idle_s
             measurement["ollama_ps_before_sleep"] = before_sleep_ps
@@ -292,7 +376,8 @@ def _build_stdout_summary(report: dict[str, Any]) -> dict[str, Any]:
     return {
         "settings": report.get("settings"),
         "initial_target_loaded": report.get("initial_ollama_ps", {}).get("target_loaded"),
-        "sequence_summary": report.get("sequence_battery", {}).get("summary_by_scenario"),
+        "sequence_summary": report.get("sequence_battery", {}).get("summary_by_mode"),
+        "bypass_comparison": report.get("sequence_battery", {}).get("bypass_comparison"),
         "idle_summary": report.get("idle_battery", {}).get("summary_by_scenario"),
         "total_runtime_s": report.get("total_runtime_s"),
     }
@@ -300,9 +385,19 @@ def _build_stdout_summary(report: dict[str, Any]) -> dict[str, Any]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Mede latencia do pre_search_validator em sequencia e apos periodos de idle."
+        description=(
+            "Compara o caminho LLM com o bypass deterministico e mede latencia "
+            "apos periodos de idle."
+        )
     )
     parser.add_argument("--sequence-trials", type=int, default=3)
+    parser.add_argument(
+        "--modes",
+        nargs="+",
+        choices=["llm", "bypass"],
+        default=["llm", "bypass"],
+        help="Caminhos executados na bateria sequencial.",
+    )
     parser.add_argument("--idle-seconds", type=int, nargs="*", default=[30, 330])
     parser.add_argument(
         "--idle-scenarios",
@@ -355,6 +450,7 @@ def main() -> None:
             validator=validator,
             scenarios=sequence_scenarios,
             trials=args.sequence_trials,
+            modes=list(dict.fromkeys(args.modes)),
         ),
         "idle_battery": _run_idle_battery(
             validator=validator,

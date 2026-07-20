@@ -72,6 +72,7 @@ services:
       LLM_THINK: ${LLM_THINK:-false}
       LLM_LOG_RAW_RESPONSE: ${LLM_LOG_RAW_RESPONSE:-false}
       LLM_CATEGORIES_FILE: ${LLM_CATEGORIES_FILE:-}
+      PRE_SEARCH_DETERMINISTIC_BYPASS_ENABLED: ${PRE_SEARCH_DETERMINISTIC_BYPASS_ENABLED:-true}
     ports:
       - "8001:8001"
     restart: unless-stopped

@@ -25,10 +25,14 @@ async def respond(
     started_at = time.perf_counter()
     response_status = status.HTTP_200_OK
     used_tools: list[str] = []
+    stage_latency_ms: dict[str, float] = {}
+    pre_search_path: str | None = None
 
     try:
         result = await use_case.execute(payload)
         used_tools = result.tool_trace.used_tools
+        stage_latency_ms = dict(result.tool_trace.stage_latency_ms)
+        pre_search_path = result.tool_trace.pre_search_path
         return AgentResponseV1(
             schema_version="1.0",
             trace_id=payload.trace_id,
@@ -40,6 +44,8 @@ async def respond(
             tool_trace=ToolTracePayload(
                 used_tools=result.tool_trace.used_tools,
                 latency_ms=result.tool_trace.latency_ms,
+                stage_latency_ms=result.tool_trace.stage_latency_ms,
+                pre_search_path=result.tool_trace.pre_search_path,
             ),
             conversation_state=result.conversation_state,
         )
@@ -84,5 +90,7 @@ async def respond(
                 "latency_ms": elapsed_ms,
                 "status_code": response_status,
                 "used_tools": used_tools,
+                "stage_latency_ms": stage_latency_ms,
+                "pre_search_path": pre_search_path,
             },
         )

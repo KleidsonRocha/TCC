@@ -261,6 +261,230 @@ def test_process_agent_request_passes_structured_criteria_to_search_tools() -> N
     }
 
 
+def test_process_agent_request_uses_deterministic_bypass_and_stage_timings() -> None:
+    class _DeterministicValidator:
+        def __init__(self) -> None:
+            self.llm_calls = 0
+
+        def try_validate_deterministically(
+            self,
+            message_text: str,
+            *,
+            last_messages=None,
+            conversation_state=None,
+        ) -> PreSearchValidation:
+            return PreSearchValidation(
+                decision="search",
+                criteria=SearchCriteria(
+                    part_query="radiador",
+                    vehicle_model="Gol",
+                    vehicle_year=2010,
+                    engine="1.0",
+                ),
+                missing_fields=[],
+                next_question=None,
+                confidence=0.99,
+            )
+
+        def validate(self, message_text: str, *, last_messages=None, conversation_state=None) -> PreSearchValidation:
+            self.llm_calls += 1
+            raise AssertionError("a LLM nao deveria ser chamada")
+
+        def get_last_audit(self) -> dict:
+            return {}
+
+    validator = _DeterministicValidator()
+    tools = _SpyTools()
+    recorder = _SpyRecorder()
+    use_case = ProcessAgentRequestUseCase(
+        tools=tools,
+        pre_search_validator=validator,
+        settings=Settings(
+            LOG_LEVEL="INFO",
+            APP_ENV="test",
+            AGENT_PORT=8001,
+            DEFAULT_LOCALE="pt-BR",
+            DEFAULT_TIMEZONE="America/Sao_Paulo",
+            PRE_SEARCH_DETERMINISTIC_BYPASS_ENABLED=True,
+        ),
+        logger=logging.getLogger("test"),
+        review_recorder=recorder,
+    )
+    payload = AgentRequestV1.model_validate(
+        {
+            "schema_version": "1.0",
+            "trace_id": "trace-deterministic-bypass",
+            "conversation_id": "conv-deterministic-bypass",
+            "message": {"text": "radiador gol 2010 1.0"},
+            "business": {"branch_id": 1},
+            "channel": {"name": "whatsapp"},
+            "context": {"last_messages": []},
+        }
+    )
+
+    result = asyncio.run(use_case.execute(payload))
+
+    assert validator.llm_calls == 0
+    assert len(tools.calls) == 1
+    assert result.tool_trace.used_tools == [
+        "pre_search_deterministic",
+        "search_parts",
+    ]
+    assert result.tool_trace.pre_search_path == "deterministic_bypass"
+    assert set(result.tool_trace.stage_latency_ms) == {
+        "pre_search_validator",
+        "search_parts",
+        "response_assembly",
+    }
+    assert all(
+        value >= 0 for value in result.tool_trace.stage_latency_ms.values()
+    )
+    assert recorder.calls[0]["final_used_tools"] == [
+        "pre_search_deterministic",
+        "search_parts",
+    ]
+
+
+def test_process_agent_request_falls_back_to_llm_when_bypass_is_not_eligible() -> None:
+    class _FallbackValidator:
+        def __init__(self) -> None:
+            self.deterministic_calls = 0
+            self.llm_calls = 0
+
+        def try_validate_deterministically(
+            self,
+            message_text: str,
+            *,
+            last_messages=None,
+            conversation_state=None,
+        ) -> None:
+            self.deterministic_calls += 1
+            return None
+
+        def validate(self, message_text: str, *, last_messages=None, conversation_state=None) -> PreSearchValidation:
+            self.llm_calls += 1
+            return PreSearchValidation(
+                decision="ask",
+                criteria=SearchCriteria(part_query="radiador", vehicle_model="Gol", vehicle_year=2010),
+                missing_fields=["engine"],
+                next_question=NextQuestion(
+                    key="engine",
+                    prompt="Qual a motorizacao do veiculo?",
+                ),
+                confidence=0.9,
+            )
+
+        def get_last_audit(self) -> dict:
+            return {}
+
+    validator = _FallbackValidator()
+    recorder = _SpyRecorder()
+    use_case = ProcessAgentRequestUseCase(
+        tools=_FakeTools(),
+        pre_search_validator=validator,
+        settings=Settings(
+            LOG_LEVEL="INFO",
+            APP_ENV="test",
+            AGENT_PORT=8001,
+            DEFAULT_LOCALE="pt-BR",
+            DEFAULT_TIMEZONE="America/Sao_Paulo",
+            PRE_SEARCH_DETERMINISTIC_BYPASS_ENABLED=True,
+        ),
+        logger=logging.getLogger("test"),
+        review_recorder=recorder,
+    )
+    payload = AgentRequestV1.model_validate(
+        {
+            "schema_version": "1.0",
+            "trace_id": "trace-llm-fallback",
+            "conversation_id": "conv-llm-fallback",
+            "message": {"text": "radiador gol 2010"},
+            "business": {"branch_id": 1},
+            "context": {"last_messages": []},
+        }
+    )
+
+    result = asyncio.run(use_case.execute(payload))
+
+    assert validator.deterministic_calls == 1
+    assert validator.llm_calls == 1
+    assert result.tool_trace.used_tools == ["pre_search_validator"]
+    assert result.tool_trace.pre_search_path == "llm"
+    assert "search_parts" not in result.tool_trace.stage_latency_ms
+
+
+def test_process_agent_request_can_disable_deterministic_bypass() -> None:
+    class _FlagAwareValidator:
+        def __init__(self) -> None:
+            self.deterministic_calls = 0
+            self.llm_calls = 0
+
+        def try_validate_deterministically(
+            self,
+            message_text: str,
+            *,
+            last_messages=None,
+            conversation_state=None,
+        ) -> PreSearchValidation:
+            self.deterministic_calls += 1
+            raise AssertionError("o bypass desabilitado nao deve ser consultado")
+
+        def validate(
+            self,
+            message_text: str,
+            *,
+            last_messages=None,
+            conversation_state=None,
+        ) -> PreSearchValidation:
+            self.llm_calls += 1
+            return PreSearchValidation(
+                decision="ask",
+                criteria=SearchCriteria(part_query="radiador", vehicle_model="Gol"),
+                missing_fields=["vehicle_year"],
+                next_question=NextQuestion(
+                    key="vehicle_year",
+                    prompt="Qual o ano do veiculo?",
+                ),
+                confidence=0.9,
+            )
+
+        def get_last_audit(self) -> dict:
+            return {}
+
+    validator = _FlagAwareValidator()
+    use_case = ProcessAgentRequestUseCase(
+        tools=_FakeTools(),
+        pre_search_validator=validator,
+        settings=Settings(
+            LOG_LEVEL="INFO",
+            APP_ENV="test",
+            AGENT_PORT=8001,
+            DEFAULT_LOCALE="pt-BR",
+            DEFAULT_TIMEZONE="America/Sao_Paulo",
+            PRE_SEARCH_DETERMINISTIC_BYPASS_ENABLED=False,
+        ),
+        logger=logging.getLogger("test"),
+        review_recorder=_SpyRecorder(),
+    )
+    payload = AgentRequestV1.model_validate(
+        {
+            "schema_version": "1.0",
+            "trace_id": "trace-bypass-disabled",
+            "conversation_id": "conv-bypass-disabled",
+            "message": {"text": "radiador gol"},
+            "business": {"branch_id": 1},
+            "context": {"last_messages": []},
+        }
+    )
+
+    result = asyncio.run(use_case.execute(payload))
+
+    assert validator.deterministic_calls == 0
+    assert validator.llm_calls == 1
+    assert result.tool_trace.pre_search_path == "llm"
+    assert result.tool_trace.used_tools == ["pre_search_validator"]
+
+
 def test_process_agent_request_removes_part_code_without_literal_provenance() -> None:
     class _SearchValidator:
         def validate(self, message_text: str, *, last_messages=None, conversation_state=None) -> PreSearchValidation:

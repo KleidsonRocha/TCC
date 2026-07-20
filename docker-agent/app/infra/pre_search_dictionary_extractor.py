@@ -63,6 +63,19 @@ class DictionaryPreSearchExtractor:
             return None
         return self._extract_part_query(normalized_value)
 
+    def has_exact_part_query_match(
+        self,
+        *,
+        message_text: str,
+        canonical_part_query: str | None,
+    ) -> bool:
+        normalized_text = normalize_pre_search_text(message_text)
+        normalized_canonical = normalize_pre_search_text(canonical_part_query)
+        if not normalized_text or not normalized_canonical:
+            return False
+        match = self._extract_exact_part_query_match(normalized_text)
+        return bool(match and match.canonical == normalized_canonical)
+
     def _extract_from(self, normalized_text: str, *, raw_text: str) -> SearchCriteria:
         vehicle_brand = self._extract_vehicle_brand(normalized_text)
         vehicle_model = self._extract_vehicle_model(normalized_text)

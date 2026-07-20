@@ -8,7 +8,11 @@ import pytest
 from app.config import Settings
 from app.infra import pre_search_benchmark
 from app.infra.pre_search_benchmark import load_dataset
-from scripts.eval import benchmark_llm_num_predict, evaluate_pre_search
+from scripts.eval import (
+    benchmark_llm_num_predict,
+    benchmark_pre_search_latency,
+    evaluate_pre_search,
+)
 
 
 DATASET_DIR = Path("docs/assets/datasets")
@@ -163,3 +167,34 @@ def test_settings_default_golden_set_points_to_versioned_dataset(monkeypatch: py
     monkeypatch.delenv("FT_GOLDEN_SET_FILE", raising=False)
     settings = Settings(_env_file=None)
     assert settings.ft_golden_set_file == str(GOLDEN_SET_PATH).replace("\\", "/")
+
+
+def test_latency_benchmark_compares_llm_and_deterministic_paths() -> None:
+    def row(*, latency_ms: float, path: str) -> dict[str, Any]:
+        return {
+            "validate_total_ms": latency_ms,
+            "extractor_ms": 0.5,
+            "decision": "search",
+            "pre_search_path": path,
+            "ollama_ps_before": {"target_loaded": True},
+            "ollama_ps_after": {"target_loaded": True},
+        }
+
+    comparison = benchmark_pre_search_latency._build_bypass_comparison(
+        {
+            "llm": {"search_complete": [row(latency_ms=100.0, path="llm")]},
+            "bypass": {
+                "search_complete": [
+                    row(latency_ms=10.0, path="deterministic_bypass")
+                ]
+            },
+        }
+    )
+
+    assert comparison["search_complete"] == {
+        "llm_avg_ms": 100.0,
+        "bypass_avg_ms": 10.0,
+        "saved_ms": 90.0,
+        "reduction_pct": 90.0,
+        "optimized_path": "deterministic_bypass",
+    }

@@ -1,504 +1,321 @@
-# TODO - Prioridades Reais Do Produto (docker-agent)
+# TODO - Backlog Priorizado Do Produto (docker-agent)
 
-## Plano operacional - Home office para fine-tuning
+Este arquivo contem somente trabalho ainda pendente. Entregas concluidas, evidencias e decisoes historicas ficam em `PROGRESS.md` e `DECISIONS.md`.
 
-Objetivo:
+## Ordem Atual
 
-- Viabilizar `1-2` dias de trabalho em home office para executar o treino do modelo em uma maquina com `RTX 5060 16 GB`, preservando os dados curados do banco e garantindo retorno controlado do artefato treinado para o ambiente da empresa.
+1. reduzir novas chamadas obvias a LLM sem perder seguranca
+2. corrigir coerencia multi-turno e respostas finais
+3. melhorar a qualidade da busca e da apresentacao dos itens do ERP
+4. tratar descricoes funcionais e sintomas com recuperacao semantica controlada
+5. otimizar a infraestrutura apenas para os casos que ainda precisarem de LLM
+6. executar o ciclo de fine-tuning na janela operacional com GPU
 
-Antes do home office:
+Regra para buscas genericas ou incertas:
 
-- [ ] Validar que os dados de bootstrap de regras de negocio sobem pelo repositorio e entram na criacao do banco
-  - conferir no `db/init/pre_search_init.sql` a carga de `engine`, `grupo`, `subgrupo`, `brand` e `model`
-  - recriar o banco em ambiente descartavel e validar se essas tabelas ficam populadas sem carga manual adicional
-  - registrar quais dados sao seed do repositorio e quais dados dependem de dump/import posterior
+- falta obvia de um criterio conhecido: responder com `ask` deterministico
+- descricao funcional, sintoma ou expressao popular: avaliar recuperacao semantica com confirmacao
+- ambiguidade contextual real ou caso fora das regras: manter a LLM
+- GPU, modelo menor e tuning de inferencia entram somente para o volume residual de LLM
 
-- [ ] Fazer backup das tabelas dinamicas de fine-tuning e revisao
-  - exportar `pre_search_review_interaction`
-  - exportar `pre_search_fine_tuning_dataset_header`
-  - exportar `pre_search_fine_tuning_dataset_record`
-  - exportar `pre_search_fine_tuning_run`
-  - definir e testar o procedimento de restore no banco do PC de casa
+## Criterio Obrigatorio Para Cada Bloco
 
-- [ ] Validar reproducao minima da stack antes de sair da empresa
-  - garantir que o repositorio atualizado sobe `ollama`, `presearch-db`, `docker-agent` e `trainer`
-  - garantir que o modelo base `qwen2.5:7b` pode ser puxado no `ollama`
-  - garantir que o dataset revisado/exportado esta consistente para treino
+Toda prioridade implementada deve:
 
-- [ ] Preparar acesso remoto entre os dois PCs
-  - criar acesso remoto do PC da empresa para o PC de casa
-  - criar acesso remoto do PC de casa para o PC da empresa
-  - testar acesso a arquivos, banco, logs e artefatos necessarios para contingencia
+- transformar casos reais afetados em regressao automatizada
+- executar testes focados e a suite completa
+- medir `pre_search_path` e `stage_latency_ms` quando tocar runtime
+- reexecutar os casos correspondentes da bateria real
+- comparar qualidade e latencia antes/depois
+- atualizar `PROGRESS.md`, `DECISIONS.md` e o fluxo runtime quando houver mudanca arquitetural
+- evitar relatorio duplicado quando um artefato consolidado puder ser atualizado
 
-Em casa:
-
-- [ ] Restaurar o banco e validar a stack no PC com GPU
-  - importar o dump das tabelas dinamicas no banco local
-  - subir os containers do projeto
-  - validar conectividade entre `docker-agent`, `presearch-db`, `ollama` e `trainer`
-
-- [ ] Executar o fine-tuning com `LoRA/QLoRA`
-  - buildar o `trainer`
-  - exportar o dataset de treino se necessario
-  - rodar o treino com base em `Qwen/Qwen2.5-7B-Instruct`
-  - acompanhar consumo de VRAM, tempo de treino e artefatos gerados
-
-- [ ] Validar o artefato treinado antes de trazer de volta
-  - confirmar geracao do diretorio `adapter`
-  - registrar `training_summary.json`
-  - empacotar o modelo no `ollama`, se necessario, para teste local
-  - comparar candidato vs modelo base no benchmark/golden set
-
-- [ ] Preparar retorno do artefato para a empresa
-  - salvar o `adapter` treinado e os arquivos de apoio necessarios
-  - copiar o artefato para um meio de transporte seguro ou sincronizacao controlada
-  - documentar o comando de import/publicacao no PC da empresa
-
-Entregaveis esperados no retorno:
-
-- [ ] Dump/restauracao das tabelas dinamicas validado
-- [ ] Evidencia de que o bootstrap do banco sobe os dados estruturais do dominio
-- [ ] `adapter` do fine-tuning exportado
-- [ ] Resumo de treino e benchmark do candidato
-- [ ] Passo a passo de restauracao/publicacao do modelo no ambiente da empresa
-
-## Fora do topo agora
-
-- [ ] Fine-tuning da LLM
-  - Nao usar treino como solucao primaria para erro de catalogo, ranking ou orquestracao
-
-- [ ] Avaliar classificador auxiliar em portugues para slot filling
-  - Considerar `BERTimbau` ou modelo equivalente apenas como apoio ao extractor deterministico
-  - Usar para classificar campos como `part_query`, `brand`, `model`, `vehicle_year`, `engine`, `side` e `position` quando houver baixa confianca lexical
-  - Nao substituir a LLM principal nem introduzir essa camada antes de estabilizar a `Prioridade 0`
-  - So seguir se a bateria real mostrar ganho claro em extracao/normalizacao que nao compense com regra ou heuristica simples
-
-- [ ] Seed incremental e rotinas de carga
-  - Importante, mas nao antes de corrigir as falhas que ja apareceram na bateria real
-
-- [ ] Benchmarks isolados que nao mudem decisao de produto
-  - Manter como diagnostico, nao como foco principal
-
-## Prioridade 0 - Parar erros com conviccao
-
-## Prioridade 1 - Trazer a latencia para nivel operacional  
-
-- [ ] Criar caminho deterministico para casos obvios
-  - Bypass da LLM quando extractor + catalogo + regras ja forem suficientes
-  - Priorizar pedidos completos e follow-ups simples
-  - Priorizar reducao de latencia nos fluxos mais comuns da bateria real
-
-- [ ] Medir latencia por etapa
-  - Separar `pre_search_validator`, `search_parts` e montagem de resposta
-  - Identificar claramente onde esta o maior custo real
-  - Manter comparacao antes e depois dos bypasses
-
-- [ ] Reavaliar infraestrutura somente depois do bypass
-  - GPU no Ollama
-  - ajustes de `LLM_KEEP_ALIVE`
-  - revisao de prompt somente se trouxer ganho real de tempo ou qualidade
-  - Prompt sugerido para agent:
-
-```text
-Leia obrigatoriamente: AGENTS.md, README.md, docs/TODO.md.
+## Prioridade 0 - Criar `ask` deterministico para incompletude obvia
 
 Objetivo:
-Prioridade 1 - trazer a latencia para nivel operacional.
 
-Escopo:
-- Criar caminho deterministico para casos obvios
-- Medir latencia por etapa
-- So depois reavaliar infraestrutura
+- evitar uma chamada de dezenas de segundos a LLM quando extractor, catalogo e regras ja sabem exatamente qual informacao falta
+- complementar o bypass de `search` existente sem relaxar o gate de seguranca
 
-Arquivos provaveis:
-- app/core/usecases/process_agent_request.py
-- app/infra/pre_search_validator_llm.py
-- scripts/eval/benchmark_pre_search_latency.py
-- testes de fluxo e benchmark
+- [ ] Definir criterios conservadores do bypass de `ask`
+  - liberar somente quando a pergunta seguinte puder ser determinada pelas regras do backend
+  - cobrir familia exata com campo obrigatorio ausente, como `radiador gol 2010 -> engine`
+  - cobrir pedido explicitamente automotivo sem familia, como `quero uma peca -> part_query`
+  - usar prioridade deterministica quando mais de um campo estiver ausente
+  - nao aplicar a descricao funcional, sintoma, mudanca de assunto ou intencao de handoff
+  - nao transformar fuzzy inseguro em familia confirmada
 
-Restricoes:
-- Nao quebrar comportamento funcional
-- Priorizar bypass seguro para casos obvios
-- Nao mexer em fine-tuning
+- [ ] Implementar o caminho `deterministic_ask`
+  - reutilizar catalogo, `missing_fields`, `NextQuestion` e opcoes ja governadas pelo backend
+  - manter o mesmo `ConversationState` enviado ao `docker-comm` e persistido no Redis
+  - preservar proveniencia de `part_code`, canonizacao e regras especificas da familia
+  - manter fallback imediato para a LLM quando qualquer criterio de elegibilidade falhar
+  - disponibilizar feature flag independente para rollback
 
-Entregavel:
-- bypass deterministico seguro
-- medicao antes/depois
-- regressao automatizada dos casos otimizados
-```
+- [ ] Medir cobertura e ganho do novo caminho
+  - distinguir o `deterministic_bypass` atual de `deterministic_ask` e `llm` na telemetria
+  - medir quantas perguntas obvias deixam de chamar a LLM
+  - comparar latencia de pedidos incompletos e follow-ups antes/depois
+  - garantir que a taxa de perguntas incorretas nao aumente
 
-## Prioridade 2 - Fazer a conversa ficar coerente ate o fim
+- [ ] Criar regressoes minimas
+  - `radiador gol 2010 -> perguntar engine`
+  - `bandeja ecosport 2008 -> perguntar side`
+  - `quero uma peca -> perguntar part_query`
+  - typo inseguro -> continuar na LLM
+  - descricao por sintoma -> nao usar `ask` deterministico de familia
+  - pedido fora do dominio -> continuar elegivel a handoff pela LLM
+
+## Prioridade 1 - Fazer a conversa ficar coerente ate o fim
 
 - [ ] Corrigir follow-up com motor textual
-  - Aceitar `zetec rocam`, `duratec`, `sigma` e equivalentes textuais como `engine`
-  - Revalidar explicitamente o fluxo `coxim amortecedor ecosport 2008 -> zetec rocam`
+  - reconhecer `zetec rocam`, `duratec`, `duratec he`, `sigma`, `ea111`, `ea211` e equivalentes catalogados como `engine`
+  - validar o valor contra as opcoes do modelo quando houver lista conhecida
+  - permitir que um motor textual complete o `pending_slot` e seja elegivel ao caminho deterministico quando seguro
+  - revalidar `coxim amortecedor ecosport 2008 -> zetec rocam`
 
 - [ ] Melhorar a resposta de `no_match`
-  - Usar `conversation_state` para dizer o que realmente falta ou conflitou
-  - Nao pedir novamente dados que o usuario ja informou
-  - Separar `nao encontrei nada` de `sua informacao ainda esta insuficiente`
+  - separar ausencia real no ERP de criterio ainda insuficiente ou conflitante
+  - usar `conversation_state` para nao pedir novamente modelo, ano ou motor ja informados
+  - informar quais criterios foram pesquisados
+  - oferecer nova tentativa ou handoff sem afirmar incompatibilidade que o ERP nao comprovou
 
 - [ ] Criar desambiguacao real quando houver muitos itens
-  - Em vez de apenas listar itens, perguntar o melhor discriminador seguinte
-  - Exemplos: `com ou sem ar`, `aro`, `lado`, `dianteiro ou traseiro`
-  - Tratar `result_disambiguation` como etapa funcional, nao so estado salvo
+  - escolher o melhor discriminador seguinte entre aplicacao, versao, motor, lado, posicao e outros dados disponiveis
+  - perguntar em vez de apenas devolver uma lista extensa
+  - tratar `result_disambiguation` como etapa funcional multi-turno
+  - resolver selecao, negacao, mudanca de assunto e limite de tentativas
+  - reutilizar o Redis atual, sem store paralelo
 
-- [ ] Reestruturar o prompt inicial da LLM como contrato operacional
-  - Organizar `_build_system_instructions` em secoes claras: papel, contrato JSON, fontes de contexto, regras de decisao e exemplos
-  - Definir precedencia entre `message_text`, mensagens `user` recentes, `conversation_state`, `dictionary_seed_criteria` e `last_messages`
-  - Tratar mensagens `assistant` como contexto conversacional, nao como fonte factual para preencher slots
-  - Incluir exemplos minimos de saida para `ask`, `search` e `handoff`
-  - Deixar explicito que o backend continua sendo a autoridade final para score, campos obrigatorios e bloqueios defensivos
-  - Cobrir com regressao casos de `part_code` inventado, contaminacao por mensagem do `assistant` e conflito entre LLM e extractor deterministico
+- [ ] Reestruturar o prompt residual da LLM como contrato operacional
+  - aplicar somente aos casos que nao foram resolvidos deterministicamente
+  - definir precedencia entre mensagem atual, mensagens `user`, `ConversationState`, seed e historico
+  - tratar mensagens `assistant` apenas como contexto, nunca como fonte factual de slot
+  - incluir exemplos minimos de `ask`, `search` e `handoff`
+  - manter backend como autoridade final para score, campos obrigatorios, canonizacao e `part_code`
 
-- [ ] Revisar consistencia dos prompts
-  - `side` deve significar `esquerdo/direito`
-  - `position` deve significar `dianteiro/traseiro`
-  - `axle` so deve ser usado quando fizer sentido no dominio
-  - Manter perguntas curtas, diretas e especificas
-  - Prompt sugerido para agent:
+- [ ] Padronizar perguntas e respostas publicas
+  - `side` significa esquerdo/direito
+  - `position` significa dianteiro/traseiro
+  - `axle` so aparece quando fizer sentido para a familia
+  - manter perguntas curtas, especificas e coerentes com o campo pendente
 
-```text
-Leia obrigatoriamente: AGENTS.md, README.md, docs/TODO.md.
-
-Objetivo:
-Prioridade 2 - fazer a conversa ficar coerente ate o fim.
-
-Escopo:
-- Corrigir follow-up com motor textual (`zetec rocam`, `duratec`, `sigma`)
-- Melhorar resposta de `no_match`
-- Criar desambiguacao real
-- Reestruturar o prompt inicial da LLM como contrato operacional
-- Revisar consistencia dos prompts de `side`, `position` e `axle`
-
-Arquivos provaveis:
-- app/core/usecases/process_agent_request.py
-- app/infra/pre_search_validator_llm.py
-- app/infra/pre_search_fine_tuning_format.py se houver reflexo no dataset de treino
-- app/infra/pre_search_catalog_pg.py
-- tests/test_respond.py
-- tests/test_rules.py
-
-Restricoes:
-- Nao introduzir camada nova de ML
-- Preservar coerencia multi-turno
-- Nao resolver falha deterministica apenas com prompt
-- Manter backend como autoridade final para score, regras obrigatorias e bloqueios defensivos
-- Transformar erros reais em regressao quando possivel
-
-Entregavel:
-- follow-up coerente
-- `no_match` menos repetitivo
-- prompt inicial mais estruturado, com precedencia de fontes e exemplos de saida
-- testes cobrindo fluxo conversacional real
-```
-
-## Prioridade 3 - Melhorar a qualidade da busca
+## Prioridade 2 - Melhorar a qualidade da busca no ERP
 
 - [ ] Refinar ranking do ERP
-  - Penalizar itens correlatos quando o usuario pediu a peca principal
-  - Reduzir ruido de `tampa`, `mangueira`, `kit`, `parafuso`, `lampada` e similares
-  - Reduzir empates de score
-  - Priorizar aplicacao exata sobre familia apenas relacionada
+  - penalizar itens correlatos quando o usuario pediu a peca principal
+  - reduzir ruido de `tampa`, `mangueira`, `kit`, `parafuso`, `lampada` e similares
+  - reduzir empates de score
+  - priorizar aplicacao exata sobre familia apenas relacionada
+  - definir pesos de complemento, injecao, motor e transmissao expostos por `soccol.item_search_candidates`
 
-- [ ] Corrigir normalizacao de texto e encoding
-  - Eliminar saidas quebradas como `veiculo`, `oleo` e `automatico` com encoding ruim
-  - Garantir titulos legiveis nas listas retornadas
+- [ ] Corrigir apresentacao de texto e encoding
+  - manter normalizacao interna sem acento separada do texto exibido ao usuario
+  - garantir UTF-8 valido nos titulos e mensagens publicas
+  - eliminar mojibake e revisar o uso intencional de textos sem acentuacao
+  - nao alterar a identidade ou o ranking do item apenas para corrigir apresentacao
 
-- [ ] Expandir a pre-validacao lexical com seguranca
-  - Melhorar cobertura de typos e abreviacoes sem aumentar falso positivo
-  - Priorizar `part_query`, `vehicle_model` e motor textual
-  - Prompt sugerido para agent:
+- [ ] Expandir pre-validacao lexical com seguranca
+  - melhorar typos e abreviacoes de `part_query` e `vehicle_model`
+  - manter alias exato prioritario e fuzzy incapaz de liberar `search` sozinho
+  - medir falso positivo e margem para o segundo candidato
+  - promover expressoes recorrentes confirmadas para alias curado quando isso for mais simples que ML
 
-```text
-Leia obrigatoriamente: AGENTS.md, README.md, docs/TODO.md, docs/guide/erp_search_integration.md.
+- [ ] Reexecutar bateria real focada em ranking
+  - comparar item principal contra correlatos
+  - registrar `top-1`, qualidade do `top-3`, empates e `no_match`
+  - revisar os pesos somente com evidencia do ERP real
 
-Objetivo:
-Prioridade 3 - melhorar a qualidade da busca.
-
-Escopo:
-- Refinar ranking do ERP
-- Corrigir normalizacao de texto e encoding
-- Expandir pre-validacao lexical com seguranca
-
-Arquivos provaveis:
-- app/infra/erp_search_tools_pg.py
-- app/infra/pre_search_catalog_pg.py
-- docs/assets/sql/erp_search_integration_candidates_runtime.sql se houver reflexo documental
-- tests/test_erp_search_tools_pg.py
-- tests/test_rules.py
-
-Restricoes:
-- Nao mover SQL de integracao ERP para db/init/
-- Nao piorar ruido de correlatos
-- Manter foco em precisao, nao volume
-
-Entregavel:
-- ranking mais aderente
-- strings/titulos sem encoding quebrado
-- testes cobrindo ruido e aplicacao exata
-```
-
-## Prioridade 4 - Fechar o ciclo de qualidade com evidencias reais
-
-- [ ] Reexecutar a bateria real apos cada bloco critico
-  - bloco 1: canonizacao + `part_code` + regras de catalogo
-  - bloco 2: motor textual + `no_match` + desambiguacao
-  - bloco 3: ranking + latencia
-
-- [ ] Transformar erros reais em regressao automatizada
-  - Destacar pelo menos:
-  - `filtro de oleo gol 2010`
-  - `filtro ar motor gol 2010`
-  - `filtro de combustivel gol 2010`
-  - `coxim amortecedor ecosport 2008 -> zetec rocam`
-  - `pastilha de freio 2010 1.0`
-  - `pstilhas gol 2010`
-  - `farol gol 2010`
-
-- [ ] Consolidar os artefatos finais de avaliacao
-  - manter bateria real como evidencia principal
-  - manter relatorio consolidado como leitura executiva
-  - manter este backlog alinhado com os achados reais
-  - Prompt sugerido para agent:
-
-```text
-Leia obrigatoriamente: AGENTS.md, README.md, docs/TODO.md, scripts/README.md.
-
-Objetivo:
-Prioridade 4 - fechar o ciclo de qualidade com evidencias reais.
-
-Escopo:
-- Reexecutar a bateria real apos cada bloco critico
-- Transformar erros reais em regressao automatizada
-- Consolidar artefatos finais de avaliacao
-
-Arquivos provaveis:
-- scripts/eval/run_real_respond_battery.py
-- scripts/eval/generate_eval_report.py
-- tests/
-- docs/assets/reports/
-- docs/PROGRESS.md se necessario
-
-Restricoes:
-- Nao criar relatorio duplicado sem necessidade
-- Evidencia principal deve continuar sendo bateria real + regressao automatizada
-
-Entregavel:
-- regressao dos casos reais listados no TODO
-- artefatos de avaliacao atualizados
-- resumo objetivo do antes/depois
-```
-
-## Prioridade 5 - Avaliar recuperacao semantica para pedidos genericos
+## Prioridade 3 - Recuperacao semantica para descricoes genericas
 
 Objetivo:
 
-- Complementar aliases e fuzzy matching quando o usuario descreve a funcao, o sintoma ou uma expressao popular sem citar o nome da peca.
-- Recuperar familias reais do catalogo com embeddings, passar candidatos controlados para a LLM montar uma pergunta e aguardar confirmacao do usuario antes de consolidar `part_query`.
-- Preservar o Redis do `docker-comm` como unica persistencia de historico e estado conversacional.
+- tratar funcao, sintoma e expressao popular quando alias e fuzzy nao identificarem a familia
+- recuperar somente familias reais de `pre_search_part_type`
+- confirmar com o usuario antes de consolidar `part_query`
+- reduzir, quando seguro, a necessidade de LLM tambem nesse fluxo
 
-Ordem obrigatoria desta prioridade:
+### 3.1 Baseline e prova de conceito
 
-- iniciar somente depois de estabilizar as Prioridades 0 a 4 e registrar o baseline atual
-- executar primeiro uma prova de conceito sobre as familias de `pre_search_part_type`
-- nao vetorizar os itens do ERP na primeira fase
-- nao promover para o runtime sem ganho mensuravel e regressao automatizada
+- [ ] Montar dataset semantico separado do fine-tuning
+  - incluir pedidos explicitos, typos, descricoes funcionais, sintomas, ambiguidades e mensagens fora do dominio
+  - incluir confirmacao pelo nome, numero da opcao, negacao e `nenhuma dessas`
+  - registrar familia esperada e alternativas aceitaveis
 
-### 5.1 Definir baseline e criterios de sucesso
+- [ ] Registrar baseline atual
+  - medir extractor isolado e extractor + LLM
+  - medir acerto `top-1`, cobertura `top-3`, falso positivo, handoff e latencia
+  - definir ganho minimo para promover a hipotese
 
-- [ ] Montar dataset de avaliacao semantica separado do dataset de fine-tuning
-  - incluir pedidos explicitos que o extractor atual ja resolve
-  - incluir typos que devem continuar sendo resolvidos pelo fuzzy
-  - incluir descricoes funcionais, sintomas e expressoes populares
-  - incluir frases ambiguas com duas ou mais familias plausiveis
-  - incluir mensagens fora do dominio para medir falsos positivos
-  - incluir exemplos multi-turno com confirmacao, negacao, numero da opcao e `nenhuma dessas`
+- [ ] Criar documentos semanticos curados por familia
+  - vincular cada documento ao `part_type_id`, grupo e subgrupo
+  - separar `description`, `customer_phrase`, `symptom` e `usage`
+  - incluir exemplos negativos para familias facilmente confundidas
+  - versionar o conteudo humano em CSV real de `db/init/csv/`
+  - nao armazenar vetores manualmente no CSV
 
-- [ ] Registrar o baseline antes da prova de conceito
-  - medir extractor atual isolado
-  - medir extractor atual + LLM atual
-  - registrar acerto `top-1`, cobertura `top-3`, falso positivo, taxa de confirmacao e latencia
-  - definir limites minimos de ganho para justificar a nova camada
-
-### 5.2 Criar fonte semantica curada no catalogo
-
-- [ ] Definir documentos semanticos vinculados a `pre_search_part_type`
-  - manter `part_type_id` como identidade canonica da familia
-  - manter tambem grupo, subgrupo e nome canonico para auditoria
-  - separar tipos de documento como `description`, `customer_phrase`, `symptom` e `usage`
-  - incluir limites negativos quando uma expressao puder confundir familias relacionadas
-
-- [ ] Versionar o conteudo humano em CSV de bootstrap
-  - criar `db/init/csv/pre_search_part_semantic_document.csv`
-  - usar a chave de origem `cd_grupo + cd_subgrupo`
-  - nao salvar vetores manualmente no CSV
-  - revisar as descricoes com conhecimento de dominio antes de gerar embeddings
-  - atualizar `db/init/pre_search_init.sql` sem criar seed paralelo em `docs/`
-
-### 5.3 Escolher modelo e estrategia de persistencia
+### 3.2 Modelo e recuperador
 
 - [ ] Comparar modelos de embedding adequados para portugues
   - registrar nome, versao, dimensao, licenca, tamanho e latencia
-  - validar expressoes reais de autopecas, nao apenas benchmark generico
-  - garantir que consulta e documentos usem exatamente o mesmo modelo e versao
+  - avaliar expressoes reais de autopecas
+  - usar a mesma versao para documentos e consultas
 
-- [ ] Fazer a primeira prova de conceito com as familias em memoria
-  - trabalhar inicialmente sobre as cerca de 338 familias, evitando infraestrutura prematura
-  - pre-gerar os embeddings dos documentos no bootstrap ou em comando operacional explicito
-  - medir tempo de inicializacao, memoria e latencia por consulta
+- [ ] Fazer a primeira prova em memoria
+  - trabalhar sobre as cerca de 338 familias antes de adicionar `pgvector`
+  - pre-gerar embeddings por comando operacional reproduzivel
+  - medir inicializacao, memoria e latencia por consulta
 
-- [ ] Avaliar PostgreSQL + `pgvector` apenas depois da prova de conceito
-  - substituir a imagem `postgres:16-alpine` somente se a persistencia vetorial for aprovada
-  - criar extensao, tabela, indice e rotina de reindexacao de forma reproduzivel
-  - armazenar `embedding_model`, `embedding_version`, dimensao e data de geracao
-  - definir invalidacao e reindexacao quando documento ou modelo mudar
-  - nao adicionar banco vetorial separado enquanto o volume das familias nao justificar
+- [ ] Criar porta de recuperacao desacoplada
+  - entrada: mensagem atual e contexto permitido
+  - saida: familia canonica, identificador, score, margem e origem do documento
+  - limitar a `top-k` pequeno
+  - permitir trocar a implementacao em memoria no futuro
 
-### 5.4 Criar o recuperador semantico no `docker-agent`
+- [ ] Aplicar politica deterministica de confianca
+  - executar somente depois de alias exato e fuzzy
+  - calibrar score minimo e margem entre primeiro e segundo candidato
+  - distinguir sem candidato, candidato forte e candidatos ambiguos
+  - nunca liberar busca ERP ou compatibilidade veicular apenas pelo embedding
 
-- [ ] Definir uma porta de recuperacao semantica desacoplada do provedor
-  - entrada: mensagem atual e contexto de desambiguacao permitido
-  - saida: `part_type_id`, nome canonico, grupo, score e origem do documento
-  - limitar o resultado a `top-k` pequeno e ordenado
-  - permitir implementacao em memoria e futura implementacao com `pgvector`
+### 3.3 Confirmacao sem depender obrigatoriamente da LLM
 
-- [ ] Encaixar a recuperacao depois de alias/fuzzy e antes da decisao conversacional
-  - executar somente quando `part_query` continuar ausente ou insegura
-  - nao substituir resultado exato ou fuzzy seguro
-  - nao usar mensagem do `assistant` como evidencia factual de peca
-  - em follow-up, restringir a busca aos candidatos pendentes quando aplicavel
-  - se o recuperador falhar ou exceder timeout, continuar pelo fluxo atual sem derrubar `/respond`
-
-- [ ] Definir politica deterministica de confianca
-  - calibrar score minimo usando o dataset real
-  - exigir margem minima entre primeiro e segundo candidato
-  - distinguir `sem candidato`, `candidato forte` e `candidatos ambiguos`
-  - na primeira versao, toda familia originada somente de embedding deve pedir confirmacao
-  - impedir que score vetorial libere `search` ou valide aplicacao veicular sozinho
-
-### 5.5 Integrar a desambiguacao ao contrato e ao Redis existente
+- [ ] Gerar pergunta de confirmacao por template do backend
+  - exemplo: `Voce procura amortecedor, mola ou outra peca?`
+  - gerar `options` somente a partir dos candidatos aprovados
+  - impedir qualquer familia fora do conjunto recuperado
+  - usar LLM para redacao apenas se um benchmark provar ganho de qualidade que justifique a latencia
 
 - [ ] Estender `ConversationState` de forma retrocompativel nos dois servicos
-  - adicionar campo opcional `semantic_disambiguation`
-  - manter `criteria`, `pending_slot`, `pending_question` e `last_decision`
-  - representar texto original, candidatos, tentativa atual, modelo e versao do embedding
-  - atualizar `docker-agent/app/core/domain/models.py`
-  - atualizar `docker-comm/app/core/domain/models.py`
-  - revisar os schemas e o cliente HTTP do contrato `v1.0`
+  - adicionar `semantic_disambiguation` opcional
+  - guardar texto original, candidatos, tentativa, modelo e versao do embedding
+  - atualizar schemas do `docker-agent` e `docker-comm`
+  - aceitar respostas antigas sem o novo campo
 
-- [ ] Reutilizar exclusivamente a persistencia atual do `docker-comm`
-  - continuar usando `conv:{conversation_id}:history`
-  - continuar usando `conv:{conversation_id}:state`
-  - deixar o `docker-agent` produzir o estado atualizado e o `docker-comm` persisti-lo
-  - respeitar `HISTORY_LIMIT` e `SESSION_TTL_SECONDS`
-  - nao criar Redis, chave de sessao ou store paralelo no `docker-agent`
+- [ ] Reutilizar exclusivamente o Redis existente
+  - continuar usando `conv:{conversation_id}:history` e `conv:{conversation_id}:state`
+  - deixar o agent produzir o estado e o comm persisti-lo
+  - respeitar TTL e limite de historico atuais
+  - nao criar nova instancia, chave paralela ou store no agent
 
-- [ ] Definir ciclo de vida do estado semantico
-  - criar estado ao retornar pergunta de confirmacao
-  - incrementar tentativa em resposta ainda ambigua
-  - limpar ao confirmar uma familia canonica
-  - limpar ao negar todas as opcoes, reiniciar o pedido ou realizar handoff
-  - limitar tentativas para evitar loop conversacional
+- [ ] Tratar o ciclo multi-turno completo
+  - confirmar por nome ou numero
+  - refinar uma resposta descritiva
+  - tratar negacao, `nenhuma dessas` e mudanca de assunto
+  - limpar o estado ao confirmar, reiniciar ou realizar handoff
+  - limitar tentativas para evitar loop
 
-### 5.6 Integrar candidatos a LLM sem transferir autoridade
-
-- [ ] Adicionar candidatos semanticos ao payload do validador
-  - informar somente familias existentes e seus identificadores
-  - permitir que a LLM redija uma pergunta curta e natural
-  - gerar `options` a partir dos candidatos aprovados pelo backend
-  - impedir a LLM de introduzir opcao fora do conjunto recuperado
-  - manter backend como autoridade sobre score, margem, campos obrigatorios e gate
-
-- [ ] Tratar todos os caminhos de confirmacao
-  - selecao pelo nome da familia
-  - selecao pelo numero ou opcao da interface
-  - resposta descritiva que refine os candidatos anteriores
-  - negacao de uma opcao
-  - `nenhuma dessas` ou mudanca de assunto
-  - ambiguidade repetida com nova pergunta ou handoff apos o limite
-
-### 5.7 Auditoria, revisao e aprendizado operacional
+### 3.4 Observabilidade e rollout
 
 - [ ] Registrar evidencia semantica na fila de revisao
-  - guardar modelo, versao, candidatos, scores, margens e familia confirmada
-  - distinguir sugestao vetorial de criterio confirmado pelo usuario
-  - nao promover automaticamente a primeira sugestao para o dataset formal
-  - permitir transformar expressoes recorrentes confirmadas em alias ou documento curado
+  - guardar modelo, candidatos, scores, margens e familia confirmada
+  - distinguir sugestao vetorial de confirmacao do usuario
+  - nao promover automaticamente a primeira sugestao ao dataset formal
 
-- [ ] Revisar impacto no fine-tuning
-  - decidir se candidatos semanticos entram no payload dos novos exemplos
-  - versionar o contrato do dataset se a forma de entrada mudar
-  - nao misturar avaliacao do embedding com avaliacao do adapter da LLM
+- [ ] Criar testes unitarios, de contrato e multi-turno
+  - preferencia de alias/fuzzy sobre embedding
+  - timeout ou indisponibilidade mantendo o fluxo atual
+  - serializacao no Redis pelos contratos existentes
+  - confirmacao seguida de modelo, ano e motor
+  - `nenhuma dessas` pedindo nova descricao
 
-### 5.8 Testes, observabilidade e rollout
+- [ ] Fazer rollout por feature flag
+  - iniciar desativado
+  - executar primeiro em modo `shadow`
+  - medir confirmacao, rejeicao, falso positivo, handoff e latencia
+  - promover somente se melhorar pedidos genericos sem regredir pedidos explicitos
 
-- [ ] Criar testes unitarios
-  - ranking `top-k`, score minimo e margem
-  - preferencia de alias/fuzzy sobre recuperacao semantica
-  - fallback quando o provedor de embedding estiver indisponivel
-  - limpeza e limite de tentativas do estado
+Deixar fora da primeira fase:
 
-- [ ] Criar testes de contrato e Redis no `docker-comm`
-  - serializar e desserializar `semantic_disambiguation`
-  - encaminhar o estado para o `docker-agent`
-  - persistir o estado retornado usando as chaves existentes
-  - aceitar respostas antigas sem o novo campo opcional
-
-- [ ] Criar testes integrados multi-turno
-  - `aquilo que evita o carro de pular -> amortecedor -> confirmar -> continuar criterios`
-  - `algo que segura o carro -> opcoes ambiguas -> segunda opcao`
-  - `nenhuma dessas -> pedir nova descricao`
-  - confirmacao da familia seguida de pergunta por modelo, ano ou motor
-  - falha de embedding mantendo o fluxo atual operacional
-
-- [ ] Adicionar feature flags e metricas
-  - iniciar com recuperacao desativada por padrao
-  - oferecer modo `shadow`, calculando candidatos sem alterar a resposta
-  - medir uso, acerto confirmado, rejeicao, handoff, latencia e falso positivo
-  - promover gradualmente somente depois do comparativo com o baseline
-
-### 5.9 Criterio de conclusao
-
-- [ ] Considerar a recuperacao semantica pronta somente quando
-  - melhorar de forma mensuravel pedidos genericos sem regredir pedidos explicitos
-  - mantiver aliases, fuzzy, regras e gate como autoridades deterministicas
-  - nao liberar pesquisa ERP a partir de similaridade vetorial sem confirmacao
-  - reutilizar o Redis atual sem persistencia conversacional duplicada
-  - tiver fallback seguro, testes multi-turno e observabilidade
-  - tiver documentacao de bootstrap, operacao, modelo e reindexacao atualizada
-
-Fora do escopo da primeira fase:
-
-- embeddings para todos os itens de `soccol.item_search_candidates`
+- embeddings para todos os itens do ERP
 - substituicao do ranking lexical do ERP
-- validacao semantica de compatibilidade entre peca e veiculo
-- preenchimento automatico de `part_query` sem confirmacao do usuario
-- novo banco vetorial ou nova camada de sessao
+- compatibilidade semantica entre peca e veiculo
+- preenchimento de `part_query` sem confirmacao
+- banco vetorial separado
+- `pgvector` antes de a prova em memoria justificar persistencia
 
-Prompt sugerido para agent:
+## Prioridade 4 - Otimizar somente o volume residual de LLM
 
-```text
-Leia obrigatoriamente: AGENTS.md, README.md, docs/DECISIONS.md, docs/PROGRESS.md,
-docs/TODO.md, docs/guide/pre_search_runtime_flow.md,
-docs/guide/runtime_and_bootstrap.md, docs/guide/erp_search_integration.md e
-docs/training/pre_search_fine_tuning.md.
+Esta prioridade comeca depois de medir os efeitos do `deterministic_ask` e da recuperacao semantica.
 
-Objetivo:
-Prioridade 5 - executar uma prova de conceito de recuperacao semantica para
-pedidos genericos, com confirmacao multi-turno pelo Redis existente.
+- [ ] Medir o volume residual
+  - contar chamadas, p50, p95 e erros por `pre_search_path`
+  - separar casos contextuais, fora do dominio e ambiguidades reais
+  - identificar quais casos ainda justificam uma LLM de 7B
 
-Restricoes:
-- Nao substituir alias, fuzzy, regras, gate ou busca ERP
-- Nao criar persistencia conversacional paralela
-- Nao vetorizar itens do ERP na primeira fase
-- Nao promover para runtime sem baseline, benchmark e regressao
-- Falha do recuperador semantico deve manter o fluxo atual operacional
+- [ ] Benchmarkar GPU no Ollama
+  - repetir os mesmos casos e modelo usados no baseline em CPU
+  - confirmar uso real de VRAM em `/api/ps`
+  - medir ganho com modelo carregado e apos cold start
+  - comparar custo operacional com a quantidade residual de chamadas
 
-Entregavel:
-- dataset e baseline semanticos
-- documentos curados por familia
-- recuperador top-k desacoplado
-- desambiguacao multi-turno persistida pelo docker-comm
-- testes, metricas e decisao de promover ou descartar a hipotese
-```
+- [ ] Comparar alternativas de inferencia
+  - modelo menor ou mais rapido
+  - quantizacao mais agressiva
+  - tamanho do prompt e `LLM_NUM_PREDICT`
+  - configuracao de threads/CPU quando GPU nao estiver disponivel
+  - manter `LLM_KEEP_ALIVE=1h` enquanto nao houver evidencia de cold start relevante
+  - preservar contrato JSON, qualidade conversacional e regras backend
+
+- [ ] Avaliar cache somente onde houver chave e invalidacao seguras
+  - priorizar embeddings de documentos e interpretacoes sem contexto conversacional
+  - nao reutilizar resposta de LLM usando apenas o texto quando historico ou estado puderem mudar a decisao
+  - medir taxa de acerto, economia real e risco de resposta obsoleta
+
+- [ ] Decidir com benchmark de produto
+  - nao promover configuracao que apenas reduza tempo e piore decisao, criterios ou pergunta
+  - registrar a configuracao vencedora e manter rollback simples
+
+## Prioridade 5 - Executar o ciclo de fine-tuning na maquina com GPU
+
+O fine-tuning permanece posterior as correcoes estruturais e nao deve ser usado para corrigir catalogo, ranking ou orquestracao.
+
+### 5.1 Preparacao antes do home office
+
+- [ ] Validar o bootstrap completo em banco descartavel
+  - conferir carga de `engine`, grupo, subgrupo, marca, modelo, aliases e regras
+  - registrar o que nasce do repositorio e o que depende de dump externo
+
+- [ ] Fazer backup e testar restore das tabelas dinamicas
+  - `pre_search_review_interaction`
+  - `pre_search_fine_tuning_dataset_header`
+  - `pre_search_fine_tuning_dataset_record`
+  - `pre_search_fine_tuning_run`
+
+- [ ] Validar reproducao da stack
+  - subir `ollama`, `presearch-db`, `docker-agent` e perfil `trainer`
+  - validar modelo base, dataset exportado e acesso a GPU
+
+- [ ] Preparar contingencia e transferencia
+  - testar acesso remoto entre os PCs
+  - definir transporte seguro de dump, dataset e adapter
+  - manter copia recuperavel antes de qualquer mudanca de ambiente
+
+### 5.2 Execucao na maquina com GPU
+
+- [ ] Restaurar banco e validar conectividade dos containers
+- [ ] Exportar e validar o dataset revisado
+- [ ] Executar LoRA/QLoRA com `Qwen/Qwen2.5-7B-Instruct`
+- [ ] Monitorar VRAM, tempo, perda de treino e artefatos
+- [ ] Gerar `adapter` e `training_summary.json`
+- [ ] Comparar candidato contra baseline no golden set e na bateria real
+
+### 5.3 Retorno e promocao controlada
+
+- [ ] Transportar adapter, resumo e manifestos para a empresa
+- [ ] Testar importacao/publicacao no Ollama da empresa
+- [ ] Promover somente se o candidato superar o baseline sem regressao critica
+- [ ] Documentar rollback, restauracao e modelo final escolhido
+- [ ] Registrar a run em `pre_search_fine_tuning_run`
+
+## Hipoteses Adiadas
+
+- [ ] Avaliar classificador auxiliar em portugues para slot filling
+  - considerar `BERTimbau` ou equivalente somente se regras, fuzzy e embeddings deixarem uma lacuna mensuravel
+  - nao adicionar nova camada apenas para substituir uma heuristica simples
+
+- [ ] Avaliar `pgvector`
+  - somente depois de a prova semantica em memoria comprovar ganho e necessidade de persistencia
+
+- [ ] Criar seed incremental e rotinas de carga
+  - executar quando houver necessidade operacional clara alem do bootstrap consolidado

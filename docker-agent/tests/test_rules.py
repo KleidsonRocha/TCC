@@ -772,6 +772,102 @@ def test_llm_validator_does_not_request_directional_slots_for_corrected_filter_c
     assert result.next_question is None
 
 
+def test_deterministic_validator_bypasses_complete_exact_request() -> None:
+    validator = _validator()
+
+    result = validator.try_validate_deterministically(
+        "radiador gol 2010 1.0"
+    )
+
+    assert result is not None
+    assert result.decision == "search"
+    assert result.criteria.part_query == "radiador"
+    assert result.criteria.vehicle_model == "Gol"
+    assert result.criteria.vehicle_year == 2010
+    assert result.criteria.engine == "1.0"
+    assert result.missing_fields == []
+    audit = validator.get_last_audit()
+    assert audit is not None
+    assert audit["pre_search_path"] == "deterministic_bypass"
+    assert audit["deterministic_reason"] == "complete_request"
+    assert audit["llm_endpoint_used"] is None
+
+
+def test_deterministic_validator_bypasses_literal_part_code() -> None:
+    validator = _validator()
+
+    result = validator.try_validate_deterministically("codigo AB-1234")
+
+    assert result is not None
+    assert result.decision == "search"
+    assert result.criteria.part_code == "AB-1234"
+
+
+def test_deterministic_validator_bypasses_simple_follow_up() -> None:
+    validator = _validator()
+
+    result = validator.try_validate_deterministically(
+        "1.0",
+        last_messages=[
+            {"role": "user", "text": "radiador gol 2010"},
+            {"role": "assistant", "text": "Qual a motorizacao do veiculo?"},
+        ],
+        conversation_state=ConversationState(
+            criteria=SearchCriteria(
+                part_query="radiador",
+                vehicle_model="Gol",
+                vehicle_year=2010,
+            ),
+            pending_slot="engine",
+            pending_question="Qual a motorizacao do veiculo?",
+            last_decision="ask",
+        ),
+    )
+
+    assert result is not None
+    assert result.decision == "search"
+    assert result.criteria.engine == "1.0"
+    audit = validator.get_last_audit()
+    assert audit is not None
+    assert audit["deterministic_reason"] == "complete_follow_up"
+
+
+@pytest.mark.parametrize(
+    ("message", "conversation_state"),
+    [
+        ("radiador gol 2010", None),
+        ("rdiador gol 2010 1.0", None),
+        ("filtro gol 2010", None),
+        (
+            "zetec rocam",
+            ConversationState(
+                criteria=SearchCriteria(
+                    part_query="radiador",
+                    vehicle_model="Gol",
+                    vehicle_year=2010,
+                ),
+                pending_slot="engine",
+                pending_question="Qual a motorizacao do veiculo?",
+                last_decision="ask",
+            ),
+        ),
+    ],
+)
+def test_deterministic_validator_keeps_uncertain_cases_on_llm_path(
+    message: str,
+    conversation_state: ConversationState | None,
+) -> None:
+    validator = _validator()
+
+    result = validator.try_validate_deterministically(
+        message,
+        conversation_state=conversation_state,
+    )
+
+    assert result is None
+    assert validator.get_last_audit() is None
+
+
 def test_llm_validator_position_satisfies_axle_requirement() -> None:
     validator = _validator()
     validator._post_chat_or_generate = lambda **kwargs: (

@@ -156,6 +156,8 @@ def summarize_case(case: Case, payload: dict[str, Any], status_code: int, body: 
             "handoff_reason": handoff.get("reason"),
             "used_tools": tool_trace.get("used_tools", []),
             "latency_ms": tool_trace.get("latency_ms"),
+            "stage_latency_ms": tool_trace.get("stage_latency_ms", {}),
+            "pre_search_path": tool_trace.get("pre_search_path"),
             "actions_count": len(actions),
             "show_items_count": len(show_items),
             "top_items": show_items[:5],
@@ -267,6 +269,8 @@ def render_md(results: list[dict[str, Any]]) -> str:
             continue
         lines.append(f"- resposta: `{reply_text}`")
         lines.append(f"- ferramentas usadas: `{summary.get('used_tools', [])}`")
+        lines.append(f"- caminho de pre-busca: `{summary.get('pre_search_path')}`")
+        lines.append(f"- latencia por etapa: `{summary.get('stage_latency_ms', {})}`")
         lines.append(f"- handoff: `{summary.get('handoff_required')}`")
         if summary.get("handoff_reason") is not None:
             lines.append(f"- handoff_reason: `{summary.get('handoff_reason')}`")
@@ -306,6 +310,8 @@ def main() -> None:
                     "reply_text": row["summary"].get("reply_text"),
                     "handoff_required": row["summary"].get("handoff_required"),
                     "used_tools": row["summary"].get("used_tools"),
+                    "pre_search_path": row["summary"].get("pre_search_path"),
+                    "stage_latency_ms": row["summary"].get("stage_latency_ms"),
                     "show_items_count": row["summary"].get("show_items_count"),
                 },
                 ensure_ascii=False,

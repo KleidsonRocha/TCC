@@ -29,6 +29,10 @@ class Settings(BaseSettings):
     llm_think: bool = Field(False, alias="LLM_THINK")
     llm_log_raw_response: bool = Field(False, alias="LLM_LOG_RAW_RESPONSE")
     llm_categories_file: str | None = Field(None, alias="LLM_CATEGORIES_FILE")
+    pre_search_deterministic_bypass_enabled: bool = Field(
+        True,
+        alias="PRE_SEARCH_DETERMINISTIC_BYPASS_ENABLED",
+    )
 
     catalog_db_enabled: bool = Field(True, alias="CATALOG_DB_ENABLED")
     catalog_db_host: str = Field("presearch-db", alias="CATALOG_DB_HOST")

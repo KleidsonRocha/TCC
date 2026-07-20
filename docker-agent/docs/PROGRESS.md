@@ -10,6 +10,8 @@ Este documento consolida o estado atual do projeto sem depender de leitura fragm
 - gate backend para decidir entre `ask`, `search` e `handoff`
 - bloqueio defensivo de `part_code` sem proveniencia literal ou validada pelo extractor
 - regras direcionais de filtros corrigidas no catalogo bootstrapado
+- bypass deterministico seguro para pedidos completos e follow-ups simples
+- telemetria de latencia por etapa e identificacao do caminho de pre-busca
 - busca real no ERP
 - captura de interacoes reais para revisao
 - dataset curado para fine-tuning
@@ -39,6 +41,33 @@ As perguntas direcionais sem sentido para filtros foram corrigidas na fonte de v
 - os overrides de filtros foram retirados do runtime para o CSV bootstrapado voltar a governar essas regras
 - um Postgres descartavel confirmou os oito registros carregados pelo bootstrap
 - a suite completa no ambiente Docker oficial encerrou com `148 passed`
+
+## Prioridade 1 Concluida Em 14/07/2026
+
+### Bypass deterministico e latencia por etapa
+
+- pedidos com alias exato ou `part_code` literal, criterios completos, requisitos do catalogo e score suficiente podem seguir direto para `search`
+- follow-ups simples so usam o bypass quando respondem exatamente ao `pending_slot` de um estado anterior com `last_decision = ask`
+- casos incompletos, fuzzy-only, genericos, motor textual ou estado incerto continuam usando a LLM
+- o caminho e reversivel por `PRE_SEARCH_DETERMINISTIC_BYPASS_ENABLED=false`
+- `tool_trace.stage_latency_ms` separa `pre_search_validator`, `search_parts` e `response_assembly`
+- `tool_trace.pre_search_path` diferencia `deterministic_bypass` de `llm`
+- o benchmark de latencia agora executa e compara explicitamente os dois caminhos
+
+Medicao real antes/depois no mesmo ambiente:
+
+- `radiador gol 2010 1.0`: `71668.38 ms -> 1313.73 ms`, reducao de `98.2%`
+- follow-up `1.0` para motor pendente: `46730.79 ms -> 926.96 ms`, reducao de `98.0%`
+- no pedido completo otimizado, as etapas internas foram `362.70 ms` de pre-busca, `860.38 ms` de ERP e `0.11 ms` de montagem
+- no follow-up otimizado, foram `589.55 ms` de pre-busca, `284.44 ms` de ERP e `0.09 ms` de montagem
+
+Reavaliacao de infraestrutura:
+
+- o Ollama esta inferindo em CPU (`size_vram = 0`)
+- `LLM_KEEP_ALIVE=1h` ja estava ativo e o modelo permanecia carregado, portanto nao era o gargalo principal
+- GPU permanece recomendada para reduzir a latencia dos casos complexos que ainda exigem LLM
+- keep-alive e prompt foram preservados ate existir benchmark que demonstre ganho adicional de tempo ou qualidade
+- a suite completa no ambiente Docker oficial encerrou com `159 passed`
 
 ## O Que Ja Esta Organizado No Banco
 
@@ -93,15 +122,18 @@ Esse comparativo foi registrado para deixar explicito que a escolha do modelo ba
 
 As pendencias mais importantes continuam no backlog em `TODO.md`, principalmente:
 
-- canonizacao de `part_query`
-- consolidacao de regressao automatizada para casos reais
+- criar `ask` deterministico para incompletude obvia
+- corrigir motor textual, `no_match` e desambiguacao multi-turno
+- refinar ranking e apresentacao dos resultados do ERP
+- avaliar recuperacao semantica controlada para descricoes genericas
 
 ## Proxima Fase Recomendada
 
-1. Reexecutar bateria real e transformar falhas em teste
-2. Revisar e promover novas interacoes reais
-3. Executar o primeiro ciclo de fine-tuning em maquina com GPU adequada
-4. Benchmarkar baseline vs candidato e decidir promocao
+1. Implementar e medir o bypass de `ask` deterministico
+2. Corrigir os fluxos conversacionais pendentes e transformar casos reais em regressao
+3. Refinar ranking do ERP e reexecutar a bateria correspondente
+4. Fazer prova de conceito semantica em memoria com confirmacao por template
+5. Medir o volume residual de LLM antes de decidir GPU, modelo menor ou fine-tuning
 
 ## Como Manter Este Documento Util
 

@@ -1,6 +1,7 @@
 import logging
 import time
-from typing import Any
+from contextlib import contextmanager
+from typing import Any, Iterator
 
 from app.api.schemas.contract_v1 import AgentRequestV1
 from app.config import Settings
@@ -19,6 +20,39 @@ UNSUPPORTED_PART_HANDOFF_PROMPT = (
     "Essa familia de peca nao esta no catalogo para pesquisa automatica. "
     "Vou encaminhar para atendimento humano."
 )
+
+
+class _StageTimer:
+    def __init__(self) -> None:
+        self._started_at = time.perf_counter()
+        self._stage_latency_ms: dict[str, float] = {}
+
+    @contextmanager
+    def measure(self, stage_name: str) -> Iterator[None]:
+        started_at = time.perf_counter()
+        try:
+            yield
+        finally:
+            elapsed_ms = (time.perf_counter() - started_at) * 1000
+            self._stage_latency_ms[stage_name] = (
+                self._stage_latency_ms.get(stage_name, 0.0) + elapsed_ms
+            )
+
+    def build_tool_trace(
+        self,
+        *,
+        used_tools: list[str],
+        pre_search_path: str,
+    ) -> ToolTrace:
+        return ToolTrace(
+            used_tools=list(used_tools),
+            latency_ms=round((time.perf_counter() - self._started_at) * 1000, 2),
+            stage_latency_ms={
+                key: round(value, 2)
+                for key, value in self._stage_latency_ms.items()
+            },
+            pre_search_path=pre_search_path,
+        )
 
 
 class ProcessAgentRequestUseCase:
@@ -49,40 +83,44 @@ class ProcessAgentRequestUseCase:
             ]
             incoming_state = payload.context.conversation_state
 
-        started_at = time.perf_counter()
-        used_tools = ["pre_search_validator"]
-        pre_search = self._pre_search_validator.validate(
-            query,
-            last_messages=last_messages,
-            conversation_state=incoming_state,
-        )
-        pre_search = self._enforce_part_code_provenance(
-            pre_search,
-            message_text=query,
-            last_messages=last_messages,
-        )
-        pre_search = self._canonicalize_validated_part_query(pre_search)
-        current_state = self._build_conversation_state(
-            criteria=pre_search.criteria,
-            last_decision=pre_search.decision,
-            next_question=pre_search.next_question,
-        )
+        timing = _StageTimer()
+        with timing.measure("pre_search_validator"):
+            pre_search, pre_search_path, used_tools = self._validate_pre_search(
+                query=query,
+                last_messages=last_messages,
+                incoming_state=incoming_state,
+            )
+            pre_search = self._enforce_part_code_provenance(
+                pre_search,
+                message_text=query,
+                last_messages=last_messages,
+            )
+            pre_search = self._canonicalize_validated_part_query(pre_search)
 
-        actions: list[dict[str, object]] = []
-        handoff = HandoffInfo(required=False, reason=None)
-        confidence = 0.0
-
-        if pre_search.decision == "ask" and pre_search.next_question:
-            actions.append(pre_search.next_question.model_dump(exclude_none=True))
+        with timing.measure("response_assembly"):
+            current_state = self._build_conversation_state(
+                criteria=pre_search.criteria,
+                last_decision=pre_search.decision,
+                next_question=pre_search.next_question,
+            )
+            actions: list[dict[str, object]] = []
+            handoff = HandoffInfo(required=False, reason=None)
+            confidence = 0.0
+            if pre_search.decision == "ask" and pre_search.next_question:
+                actions.append(pre_search.next_question.model_dump(exclude_none=True))
 
         if pre_search.decision == "ask":
-            reply_text = (
-                pre_search.next_question.prompt
-                if pre_search.next_question
-                else "Preciso de mais detalhes para pesquisar."
+            with timing.measure("response_assembly"):
+                reply_text = (
+                    pre_search.next_question.prompt
+                    if pre_search.next_question
+                    else "Preciso de mais detalhes para pesquisar."
+                )
+                confidence = pre_search.confidence
+            tool_trace = timing.build_tool_trace(
+                used_tools=used_tools,
+                pre_search_path=pre_search_path,
             )
-            confidence = pre_search.confidence
-            latency_ms = round((time.perf_counter() - started_at) * 1000, 2)
 
             self._logger.info(
                 "pre_search_validation_pending",
@@ -92,7 +130,9 @@ class ProcessAgentRequestUseCase:
                     "branch_id": payload.business.branch_id,
                     "missing_fields": pre_search.missing_fields,
                     "used_tools": used_tools,
-                    "latency_ms": latency_ms,
+                    "latency_ms": tool_trace.latency_ms,
+                    "stage_latency_ms": tool_trace.stage_latency_ms,
+                    "pre_search_path": pre_search_path,
                 },
             )
             result = ProcessResult(
@@ -100,7 +140,7 @@ class ProcessAgentRequestUseCase:
                 actions=actions,
                 handoff=handoff,
                 confidence=confidence,
-                tool_trace=ToolTrace(used_tools=used_tools, latency_ms=latency_ms),
+                tool_trace=tool_trace,
                 conversation_state=current_state,
             )
             self._record_review_case(
@@ -113,20 +153,24 @@ class ProcessAgentRequestUseCase:
             return result
 
         if pre_search.decision == "handoff":
-            reply_text = (
-                pre_search.next_question.prompt
-                if pre_search.next_question
-                else "Nao consegui validar os dados para pesquisa automatica."
+            with timing.measure("response_assembly"):
+                reply_text = (
+                    pre_search.next_question.prompt
+                    if pre_search.next_question
+                    else "Nao consegui validar os dados para pesquisa automatica."
+                )
+                handoff = HandoffInfo(required=True, reason="pre_search_handoff")
+                confidence = pre_search.confidence
+            tool_trace = timing.build_tool_trace(
+                used_tools=used_tools,
+                pre_search_path=pre_search_path,
             )
-            handoff = HandoffInfo(required=True, reason="pre_search_handoff")
-            confidence = pre_search.confidence
-            latency_ms = round((time.perf_counter() - started_at) * 1000, 2)
             result = ProcessResult(
                 reply_text=reply_text,
                 actions=actions,
                 handoff=handoff,
                 confidence=confidence,
-                tool_trace=ToolTrace(used_tools=used_tools, latency_ms=latency_ms),
+                tool_trace=tool_trace,
                 conversation_state=current_state,
             )
             self._record_review_case(
@@ -138,19 +182,21 @@ class ProcessAgentRequestUseCase:
             )
             return result
 
-        used_tools.append("search_parts")
-        search_query = self._build_search_query(pre_search.criteria)
+        with timing.measure("response_assembly"):
+            search_query = self._build_search_query(pre_search.criteria)
         if not search_query.strip():
-            reply_text = "Preciso de mais detalhes para iniciar a pesquisa."
+            with timing.measure("response_assembly"):
+                reply_text = "Preciso de mais detalhes para iniciar a pesquisa."
+            tool_trace = timing.build_tool_trace(
+                used_tools=used_tools,
+                pre_search_path=pre_search_path,
+            )
             result = ProcessResult(
                 reply_text=reply_text,
                 actions=actions,
                 handoff=HandoffInfo(required=False, reason=None),
                 confidence=max(pre_search.confidence, 0.4),
-                tool_trace=ToolTrace(
-                    used_tools=used_tools,
-                    latency_ms=round((time.perf_counter() - started_at) * 1000, 2),
-                ),
+                tool_trace=tool_trace,
                 conversation_state=current_state,
             )
             self._record_review_case(
@@ -162,59 +208,65 @@ class ProcessAgentRequestUseCase:
             )
             return result
 
-        items = self._tools.search_parts(
-            query=search_query,
-            branch_id=payload.business.branch_id,
-            criteria=pre_search.criteria,
-        )
-
-        if len(items) == 0:
-            reply_text = (
-                "Nao encontrei a peca com esses dados. "
-                "Me informe modelo, ano e motorizacao para tentar novamente. "
-                "Se preferir, posso transferir para atendimento humano."
-            )
-            handoff = HandoffInfo(required=True, reason="no_match")
-            confidence = 0.35
-        elif len(items) == 1:
-            item = items[0]
-            reply_text = (
-                f"Encontrei {item.title} (codigo {item.item_id}). "
-                "Para garantir o encaixe, confirme motorizacao, lado e versao do veiculo."
-            )
-            confidence = 0.93
-        else:
-            item_options = [
-                {
-                    "item_id": item.item_id,
-                    "title": item.title,
-                    "score": item.score,
-                }
-                for item in items
-            ]
-            reply_text = "Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca."
-            actions = actions + [
-                {
-                    "type": "show_items",
-                    "items": item_options,
-                },
-            ]
-            current_state = self._build_conversation_state(
+        used_tools.append("search_parts")
+        with timing.measure("search_parts"):
+            items = self._tools.search_parts(
+                query=search_query,
+                branch_id=payload.business.branch_id,
                 criteria=pre_search.criteria,
-                last_decision="search",
-                pending_slot="result_disambiguation",
-                pending_question="Refinar a selecao entre multiplos itens encontrados.",
             )
-            confidence = 0.82
 
-        latency_ms = round((time.perf_counter() - started_at) * 1000, 2)
+        with timing.measure("response_assembly"):
+            if len(items) == 0:
+                reply_text = (
+                    "Nao encontrei a peca com esses dados. "
+                    "Me informe modelo, ano e motorizacao para tentar novamente. "
+                    "Se preferir, posso transferir para atendimento humano."
+                )
+                handoff = HandoffInfo(required=True, reason="no_match")
+                confidence = 0.35
+            elif len(items) == 1:
+                item = items[0]
+                reply_text = (
+                    f"Encontrei {item.title} (codigo {item.item_id}). "
+                    "Para garantir o encaixe, confirme motorizacao, lado e versao do veiculo."
+                )
+                confidence = 0.93
+            else:
+                item_options = [
+                    {
+                        "item_id": item.item_id,
+                        "title": item.title,
+                        "score": item.score,
+                    }
+                    for item in items
+                ]
+                reply_text = "Encontrei mais de uma opcao. Seguem os itens encontrados para refinar a busca."
+                actions = actions + [
+                    {
+                        "type": "show_items",
+                        "items": item_options,
+                    },
+                ]
+                current_state = self._build_conversation_state(
+                    criteria=pre_search.criteria,
+                    last_decision="search",
+                    pending_slot="result_disambiguation",
+                    pending_question="Refinar a selecao entre multiplos itens encontrados.",
+                )
+                confidence = 0.82
 
-        locale = self._settings.default_locale
-        timezone = self._settings.default_timezone
-        if payload.runtime and payload.runtime.locale:
-            locale = payload.runtime.locale
-        if payload.runtime and payload.runtime.timezone:
-            timezone = payload.runtime.timezone
+            locale = self._settings.default_locale
+            timezone = self._settings.default_timezone
+            if payload.runtime and payload.runtime.locale:
+                locale = payload.runtime.locale
+            if payload.runtime and payload.runtime.timezone:
+                timezone = payload.runtime.timezone
+
+        tool_trace = timing.build_tool_trace(
+            used_tools=used_tools,
+            pre_search_path=pre_search_path,
+        )
 
         self._logger.info(
             "tool_search_parts_finished",
@@ -224,7 +276,9 @@ class ProcessAgentRequestUseCase:
                 "branch_id": payload.business.branch_id,
                 "results_count": len(items),
                 "used_tools": used_tools,
-                "latency_ms": latency_ms,
+                "latency_ms": tool_trace.latency_ms,
+                "stage_latency_ms": tool_trace.stage_latency_ms,
+                "pre_search_path": pre_search_path,
                 "locale": locale,
                 "timezone": timezone,
             },
@@ -235,7 +289,7 @@ class ProcessAgentRequestUseCase:
             actions=actions,
             handoff=handoff,
             confidence=confidence,
-            tool_trace=ToolTrace(used_tools=used_tools, latency_ms=latency_ms),
+            tool_trace=tool_trace,
             conversation_state=current_state,
         )
         self._record_review_case(
@@ -246,6 +300,59 @@ class ProcessAgentRequestUseCase:
             search_query=search_query,
         )
         return result
+
+    def _validate_pre_search(
+        self,
+        *,
+        query: str,
+        last_messages: list[dict[str, str]],
+        incoming_state: ConversationState | None,
+    ) -> tuple[PreSearchValidation, str, list[str]]:
+        deterministic_validator = getattr(
+            self._pre_search_validator,
+            "try_validate_deterministically",
+            None,
+        )
+        if (
+            self._settings.pre_search_deterministic_bypass_enabled
+            and callable(deterministic_validator)
+        ):
+            try:
+                deterministic_result = deterministic_validator(
+                    query,
+                    last_messages=last_messages,
+                    conversation_state=incoming_state,
+                )
+            except Exception:
+                self._logger.warning(
+                    "pre_search_deterministic_bypass_failed",
+                    exc_info=True,
+                )
+            else:
+                if isinstance(deterministic_result, PreSearchValidation):
+                    self._logger.info(
+                        "pre_search_deterministic_bypass_used",
+                        extra={
+                            "criteria": deterministic_result.criteria.model_dump(
+                                exclude_none=True
+                            ),
+                        },
+                    )
+                    return (
+                        deterministic_result,
+                        "deterministic_bypass",
+                        ["pre_search_deterministic"],
+                    )
+
+        return (
+            self._pre_search_validator.validate(
+                query,
+                last_messages=last_messages,
+                conversation_state=incoming_state,
+            ),
+            "llm",
+            ["pre_search_validator"],
+        )
 
     @staticmethod
     def _build_search_query(criteria: SearchCriteria) -> str:

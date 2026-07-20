@@ -102,13 +102,16 @@ flowchart TD
     Q -->|Falha ou timeout| O
     Q -->|Sem candidato seguro| O
     Q -->|Um ou mais candidatos| R[Backend aplica score e margem<br/>planejado]
-    R --> S[LLM redige pergunta usando somente candidatos aprovados<br/>planejado]
+    R --> S[Backend monta pergunta por template<br/>somente com candidatos aprovados<br/>planejado]
     S --> T[Cria semantic_disambiguation no ConversationState<br/>planejado]
     T --> R1
 
-    M --> U[Merge com conversation_state]
+    M --> U[Merge defensivo com conversation_state]
     O --> U
-    U --> V[Envia LLM: mensagem, historico, seed, estado e score_policy]
+    U --> U0{Alias exato ou codigo literal,<br/>criterios completos, regras e score satisfeitos?}
+    U0 -->|Sim| U1[Bypass da LLM<br/>decisao search]
+    U1 --> AA
+    U0 -->|Nao| V[Envia LLM: mensagem, historico, seed, estado e score_policy]
     V --> W{LLM disponivel?}
     W -->|Nao| W1[docker-agent retorna 503]
     W -->|Sim| X{JSON da LLM valido?}
@@ -178,7 +181,8 @@ Regras dessa ordem:
 - fuzzy continua tratando typo e variacao lexical curta
 - embedding trata descricao funcional, sintoma ou expressao popular
 - candidato semantico nao vira `part_query` confirmado no mesmo turno
-- a LLM redige a pergunta, mas nao escolhe livremente novas familias
+- o backend redige a pergunta por template usando somente candidatos aprovados
+- a LLM fica opcional para redacao futura, condicionada a ganho comprovado
 - apenas o backend interpreta score, margem e limite de tentativas
 
 ## Fluxo Da Desambiguacao Semantica Planejada
@@ -190,7 +194,6 @@ sequenceDiagram
     participant R as Redis
     participant A as docker-agent
     participant V as Recuperador vetorial
-    participant L as LLM
 
     U->>C: Tem aquilo que segura o carro?
     C->>R: GET history + state
@@ -200,8 +203,7 @@ sequenceDiagram
     A->>V: embedding da mensagem e consulta top-k
     V-->>A: suspensao 0.82, amortecedor 0.78, mola 0.72
     A->>A: aplica score, margem e politica de confirmacao
-    A->>L: candidatos aprovados + instrucao de redacao
-    L-->>A: pergunta curta
+    A->>A: monta pergunta curta por template
     A-->>C: ask + options + semantic_disambiguation
     C->>R: SET history + state com TTL
     C-->>U: Voce procura amortecedor, mola ou outra peca da suspensao?
@@ -279,9 +281,10 @@ O `docker-agent` monta e devolve esse objeto. O `docker-comm` apenas valida o co
 | Redis indisponivel antes da chamada | falha ao carregar sessao | erro operacional do `docker-comm` | agent nao e chamado |
 | Redis falha depois da resposta do agent | falha ao salvar historico ou estado | erro operacional do `docker-comm` | persistencia pode ficar incompleta e exige nova tentativa |
 | Falha ao chamar o agent | timeout, indisponibilidade ou resposta invalida | erro do gateway | mensagem do usuario e preservada no historico |
-| LLM indisponivel | validador nao consegue consultar inferencia | erro `503` | fluxo pode ser tentado novamente |
+| LLM indisponivel | caso nao e elegivel ao bypass e o validador nao consegue consultar inferencia | erro `503` | fluxo pode ser tentado novamente |
 | LLM retorna JSON invalido | fallback do conteudo bruto com seed | `ask`, `search` ou `handoff` defensivo | estado correspondente a decisao |
-| Alias exato encontrado | extractor deterministico | segue para validacao e gate | criterios mesclados |
+| Alias exato e pedido completo | extractor, catalogo, regras e score | bypass da LLM e segue para busca | criterios validados |
+| Alias exato, mas pedido incompleto | extractor deterministico | segue para validacao por LLM e gate | criterios mesclados |
 | Typo seguro encontrado | fuzzy de `part_query` | segue para validacao e gate | familia canonica no criterio |
 | Descricao generica com candidatos | recuperacao semantica planejada | pergunta com opcoes | `semantic_disambiguation` pendente no Redis |
 | Resposta confirma opcao | resolucao contra candidatos pendentes | proxima pergunta obrigatoria ou busca | `part_query` canonica; estado semantico limpo |
@@ -318,20 +321,28 @@ O `docker-agent` monta e devolve esse objeto. O `docker-comm` apenas valida o co
 4. Merge de estado
    Os criterios da mensagem atual sao combinados defensivamente com o `ConversationState` recuperado do Redis pelo `docker-comm`.
 
-5. LLM como validador
+5. Gate de bypass deterministico
+   O backend libera diretamente apenas `search` quando existe alias exato ou `part_code` literal, todos os requisitos da familia estao preenchidos e o score minimo foi atingido.
+   Um follow-up tambem pode usar esse caminho quando responde de forma deterministica ao `pending_slot` de um estado anterior com decisao `ask`.
+   Fuzzy-only, familia generica, campo faltante, motor textual e estado incerto seguem para a LLM.
+
+6. LLM como validador
    A LLM recebe `message_text`, historico, `dictionary_seed_criteria`, `conversation_state` e politica de score.
    Ela nao e o decisor final isolado.
 
-6. Gate backend
+7. Gate backend
    Depois da LLM, o backend recalcula:
    - campos obrigatorios por regra da peca
    - score minimo para liberar `search`
    - promocao ou rebaixamento entre `search` e `ask`
 
-7. Busca no ERP
+8. Busca no ERP
    So depois do gate o sistema monta a query textual e chama `search_parts`.
 
-8. Persistencia da resposta
+9. Telemetria por etapa
+   O contrato retorna `tool_trace.pre_search_path` com `deterministic_bypass` ou `llm` e `tool_trace.stage_latency_ms` separado em `pre_search_validator`, `search_parts` quando executado e `response_assembly`.
+
+10. Persistencia da resposta
    O `docker-comm` salva a janela de mensagens e o estado retornado pelo agent no Redis.
 
 ## Exemplos
@@ -385,7 +396,7 @@ Leitura planejada:
 - alias e fuzzy nao confirmam uma familia
 - embeddings recuperam candidatos reais como amortecedor e mola
 - backend aprova apenas os candidatos que passaram pela politica
-- LLM redige uma pergunta usando essas opcoes
+- backend redige uma pergunta por template usando essas opcoes
 - `docker-comm` persiste a desambiguacao pendente no Redis
 - somente a resposta seguinte pode consolidar `part_query`
 
@@ -395,6 +406,8 @@ Leitura planejada:
 - o fuzzy nao consulta o texto grande do ERP
 - o fuzzy nao libera `search` sozinho
 - o fuzzy hoje e restrito a `part_query`
+- o bypass deterministico so libera `search` e pode ser desligado por feature flag
+- casos que nao comprovam completude continuam no caminho LLM
 - `part_code` so e aceito com evidencia literal em mensagem do usuario ou validacao do extractor
 - `part_code` nao e restaurado apenas porque existe em `conversation_state`
 - a recuperacao semantica sera fallback, nao substituicao do extractor

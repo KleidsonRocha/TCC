@@ -220,6 +220,142 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
     def canonicalize_part_query(self, value: str | None) -> str | None:
         return self._canonicalize_part_query(value)
 
+    def try_validate_deterministically(
+        self,
+        message_text: str,
+        *,
+        last_messages: list[dict[str, Any]] | None = None,
+        conversation_state: ConversationState | None = None,
+    ) -> PreSearchValidation | None:
+        self._last_audit_info = None
+        context = last_messages or []
+        current_criteria = self._dictionary_extractor.extract(
+            message_text,
+            last_messages=[],
+        )
+        is_follow_up = self._is_deterministic_follow_up_candidate(
+            current_criteria=current_criteria,
+            conversation_state=conversation_state,
+        )
+
+        if conversation_state and conversation_state.pending_slot and not is_follow_up:
+            return None
+
+        if is_follow_up:
+            dictionary_criteria = self._dictionary_extractor.extract(
+                message_text,
+                last_messages=context,
+            )
+            criteria = self._merge_dictionary_with_conversation_state(
+                dictionary_criteria=dictionary_criteria,
+                conversation_state=conversation_state,
+            )
+            bypass_reason = "complete_follow_up"
+        else:
+            criteria = self._canonicalize_criteria_part_query(current_criteria)
+            bypass_reason = "complete_request"
+
+        explicit_part_code = bool(criteria.part_code)
+        if not self._deterministic_identity_is_trusted(
+            message_text=message_text,
+            criteria=criteria,
+            conversation_state=conversation_state,
+            is_follow_up=is_follow_up,
+        ):
+            return None
+
+        missing_fields = self._calculate_missing_fields(
+            criteria,
+            explicit_part_code=explicit_part_code,
+        )
+        if missing_fields:
+            return None
+
+        score_explicit_fields = self._build_score_explicit_fields(
+            dictionary_criteria=criteria,
+        )
+        criteria_score = self._calculate_criteria_score(
+            criteria,
+            score_explicit_fields=score_explicit_fields,
+        )
+        if (
+            self._score_threshold_applies(
+                criteria,
+                explicit_part_code=explicit_part_code,
+            )
+            and criteria_score < self._min_score_to_search_for(criteria)
+        ):
+            return None
+
+        self._last_audit_info = {
+            "llm_endpoint_used": None,
+            "llm_raw_content": None,
+            "llm_output_valid": None,
+            "llm_parse_error": None,
+            "llm_fallback_used": None,
+            "llm_decision_raw": None,
+            "pre_search_path": "deterministic_bypass",
+            "deterministic_reason": bypass_reason,
+            "criteria_score": criteria_score,
+            "min_score_to_search": self._min_score_to_search_for(criteria),
+        }
+        return PreSearchValidation(
+            decision="search",
+            criteria=criteria,
+            missing_fields=[],
+            next_question=None,
+            confidence=0.99,
+        )
+
+    @staticmethod
+    def _is_deterministic_follow_up_candidate(
+        *,
+        current_criteria: SearchCriteria,
+        conversation_state: ConversationState | None,
+    ) -> bool:
+        if not conversation_state or not conversation_state.pending_slot:
+            return False
+        if conversation_state.last_decision != "ask":
+            return False
+
+        pending_slot = str(conversation_state.pending_slot or "").strip()
+        if pending_slot not in SearchCriteria.model_fields:
+            return False
+        if pending_slot == "axle" and current_criteria.position:
+            return True
+        value = getattr(current_criteria, pending_slot, None)
+        if isinstance(value, str):
+            return bool(value.strip())
+        return value is not None
+
+    def _deterministic_identity_is_trusted(
+        self,
+        *,
+        message_text: str,
+        criteria: SearchCriteria,
+        conversation_state: ConversationState | None,
+        is_follow_up: bool,
+    ) -> bool:
+        if criteria.part_code:
+            return True
+
+        part_query = self._canonicalize_part_query(criteria.part_query)
+        if not part_query or part_query in self._generic_ambiguous_parts:
+            return False
+
+        if self._dictionary_extractor.has_exact_part_query_match(
+            message_text=message_text,
+            canonical_part_query=part_query,
+        ):
+            return True
+
+        if not is_follow_up or conversation_state is None:
+            return False
+        state_part_query = self._canonicalize_part_query(
+            conversation_state.criteria.part_query
+        )
+        return state_part_query == part_query
+
     def warmup(self) -> dict[str, Any]:
         payload = self._build_warmup_payload()
         started_at = time.perf_counter()

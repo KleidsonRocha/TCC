@@ -55,6 +55,8 @@ class HandoffPayload(BaseModel):
 class ToolTracePayload(BaseModel):
     used_tools: list[str] = Field(default_factory=list)
     latency_ms: float = 0.0
+    stage_latency_ms: dict[str, float] = Field(default_factory=dict)
+    pre_search_path: str | None = None
 
 
 class AgentResponseV1(BaseModel):

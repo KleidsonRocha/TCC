@@ -168,6 +168,12 @@ def test_respond_with_bandeja_returns_request_info() -> None:
     assert body["actions"][0]["type"] == "show_items"
     assert body["conversation_state"]["pending_slot"] == "result_disambiguation"
     assert body["tool_trace"]["used_tools"] == ["pre_search_validator", "search_parts"]
+    assert body["tool_trace"]["pre_search_path"] == "llm"
+    assert set(body["tool_trace"]["stage_latency_ms"]) == {
+        "pre_search_validator",
+        "search_parts",
+        "response_assembly",
+    }
     assert body["handoff"]["required"] is False
 
 
