@@ -42,7 +42,7 @@ jobs:
             "+refs/tags/*:refs/tags/*"
 
           git remote add forgejo \
-            "https://${FORGEJO_USUARIO}:${FORGEJO_TOKEN}@${FORGEJO_URL#https://}/${FORGEJO_USUARIO}/${FORGEJO_REPOSITORIO}"
+            "https://${FORGEJO_USUARIO}:${FORGEJO_TOKEN}@${FORGEJO_HOST}/${FORGEJO_REPOSITORIO}"
 
           git push forgejo --prune \
             "+refs/heads/*:refs/heads/*"
