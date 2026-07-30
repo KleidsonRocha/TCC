@@ -17,9 +17,9 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      FORGEJO_URL: https://www.forge.uricer.edu.br/mlucas/tcc-105087-kleidson
+      FORGEJO_HOST: www.forge.uricer.edu.br
       FORGEJO_USUARIO: 105087
-      FORGEJO_REPOSITORIO: tcc-105087-kleidson.git
+      FORGEJO_REPOSITORIO: mlucas/tcc-105087-kleidson.git
       FORGEJO_TOKEN: ${{ secrets.FORGEJO_TOKEN }}
       GITHUB_TOKEN: ${{ github.token }}
 
