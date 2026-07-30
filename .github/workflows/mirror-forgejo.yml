@@ -1,0 +1,51 @@
+name: Espelhar no Forgejo
+
+on:
+  push:
+  delete:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mirror-forgejo
+  cancel-in-progress: true
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+
+    env:
+      FORGEJO_URL: https://www.forge.uricer.edu.br/mlucas/tcc-105087-kleidson
+      FORGEJO_USUARIO: 105087
+      FORGEJO_REPOSITORIO: tcc-105087-kleidson.git
+      FORGEJO_TOKEN: ${{ secrets.FORGEJO_TOKEN }}
+      GITHUB_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Copiar branches e tags para o Forgejo
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mkdir mirror.git
+          cd mirror.git
+
+          git init --bare
+
+          git remote add github \
+            "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+
+          git fetch --prune github \
+            "+refs/heads/*:refs/heads/*" \
+            "+refs/tags/*:refs/tags/*"
+
+          git remote add forgejo \
+            "https://${FORGEJO_USUARIO}:${FORGEJO_TOKEN}@${FORGEJO_URL#https://}/${FORGEJO_USUARIO}/${FORGEJO_REPOSITORIO}"
+
+          git push forgejo --prune \
+            "+refs/heads/*:refs/heads/*"
+
+          git push forgejo --prune \
+            "+refs/tags/*:refs/tags/*"
