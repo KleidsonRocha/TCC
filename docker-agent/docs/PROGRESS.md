@@ -11,6 +11,7 @@ Este documento consolida o estado atual do projeto sem depender de leitura fragm
 - bloqueio defensivo de `part_code` sem proveniencia literal ou validada pelo extractor
 - regras direcionais de filtros corrigidas no catalogo bootstrapado
 - bypass deterministico seguro para pedidos completos e follow-ups simples
+- `ask` deterministico para incompletude obvia, com rollback independente
 - telemetria de latencia por etapa e identificacao do caminho de pre-busca
 - busca real no ERP
 - captura de interacoes reais para revisao
@@ -69,6 +70,39 @@ Reavaliacao de infraestrutura:
 - keep-alive e prompt foram preservados ate existir benchmark que demonstre ganho adicional de tempo ou qualidade
 - a suite completa no ambiente Docker oficial encerrou com `159 passed`
 
+## Prioridade 0 Concluida Em 27/08/2026
+
+### Contrato e runtime do `deterministic_ask`
+
+- a elegibilidade do bypass de `ask` foi isolada em uma politica pura e conectada ao runtime antes da LLM
+- familia conhecida so e aceita quando o alias aparece de forma exata na mensagem atual; fuzzy isolado nao confirma `part_query`
+- pedido sem familia so e aceito quando solicita explicitamente uma peca ou item automotivo, como `quero uma peca`
+- os campos ausentes e a pergunta seguinte continuam sendo calculados pelas regras e templates do backend
+- a prioridade entre campos ausentes ficou fixa em `part_query`, modelo, ano, motor, lado, posicao, eixo e variante
+- descricao funcional, sintoma, mudanca de assunto, intencao de handoff, `part_code`, candidato nao resolvido e estado com slot pendente permanecem fora desse caminho
+- o resultado usa o mesmo `PreSearchValidation`, `NextQuestion` e `ConversationState` ja devolvidos ao `docker-comm`, sem alterar o contrato persistido no Redis
+- qualquer inelegibilidade, retorno invalido ou excecao cai imediatamente no caminho da LLM
+- o bypass e independente do bypass de `search` e pode ser revertido por `PRE_SEARCH_DETERMINISTIC_ASK_ENABLED=false`
+- `tool_trace.pre_search_path` identifica o novo caminho como `deterministic_ask`
+- foram adicionadas 28 regressoes entre contrato e integracao; `tests/test_rules.py` encerrou com `91 passed`
+- a suite completa no container Linux oficial encerrou com `187 passed in 31.70s`
+
+Medicao real antes/depois com 50 casos em cada modo:
+
+- chamadas a LLM: `31 -> 12`, reducao de `61,3%`
+- 19 casos migraram de `llm` para `deterministic_ask`
+- nesses 19 casos, a media caiu de `35.325,42 ms` para `721,21 ms`, reducao de aproximadamente `97,96%`
+- latencia media global: `23.150,87 ms -> 10.836,37 ms`, reducao de `53,19%`
+- p50 global: `31.410,35 ms -> 741,96 ms`, reducao de `97,64%`
+- p95 global: `42.939,14 ms -> 43.902,60 ms`; a cauda residual da LLM em CPU nao melhorou
+- nao houve diferenca funcional central em status, resultado, handoff, `question_key`, criterios normalizados ou `pending_slot`
+- cinco perguntas de motor passaram a incluir opcoes governadas pelo catalogo que a LLM havia omitido
+- evidencia consolidada em `docs/assets/reports/deterministic_ask_comparison_2026-08-27.md`
+
+Achado de ambiente:
+
+- o volume Postgres ativo ainda possui `filtro de combustivel -> needs_side=true`, divergindo do bootstrap versionado; a regra precisa ser reconciliada no ambiente antes do beta sem apagar dados dinamicos
+
 ## O Que Ja Esta Organizado No Banco
 
 - catalogo deterministico e regras no bootstrap consolidado
@@ -122,14 +156,14 @@ Esse comparativo foi registrado para deixar explicito que a escolha do modelo ba
 
 As pendencias mais importantes continuam no backlog em `TODO.md`, principalmente:
 
-- criar `ask` deterministico para incompletude obvia
+- medir cobertura e ganho real do `ask` deterministico
 - corrigir motor textual, `no_match` e desambiguacao multi-turno
 - refinar ranking e apresentacao dos resultados do ERP
 - avaliar recuperacao semantica controlada para descricoes genericas
 
 ## Proxima Fase Recomendada
 
-1. Implementar e medir o bypass de `ask` deterministico
+1. Medir cobertura, latencia e qualidade do bypass de `ask` deterministico
 2. Corrigir os fluxos conversacionais pendentes e transformar casos reais em regressao
 3. Refinar ranking do ERP e reexecutar a bateria correspondente
 4. Fazer prova de conceito semantica em memoria com confirmacao por template

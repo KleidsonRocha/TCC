@@ -205,3 +205,32 @@ Consequencia:
 - `tool_trace` passa a expor `pre_search_path` e latencia de pre-busca, ERP e montagem de resposta
 - GPU continua relevante apenas para reduzir o custo residual dos casos que realmente precisam de inferencia
 - `LLM_KEEP_ALIVE` e prompt so devem mudar depois de comparacao mensuravel posterior ao bypass
+
+## 13. Elegibilidade conservadora para perguntas deterministicas
+
+Status:
+
+- contrato definido e testado
+- integracao ao runtime concluida
+
+Decisao:
+
+- permitir o `deterministic_ask` somente para uma familia canonica encontrada por alias exato na mensagem atual ou para um pedido explicitamente automotivo sem familia
+- calcular `missing_fields`, pergunta e opcoes exclusivamente pelas regras e templates do backend
+- escolher sempre o primeiro campo pela prioridade fixa: `part_query`, `vehicle_model`, `vehicle_year`, `engine`, `side`, `position`, `axle`, `variant`
+- nao reaproveitar historico antigo para provar a elegibilidade inicial; o historico continua disponivel no fluxo completo da LLM e no tratamento posterior de follow-up
+- encaminhar para a LLM qualquer fuzzy isolado, descricao funcional, sintoma, mudanca de assunto, intencao de handoff, candidato de peca nao resolvido ou estado com pergunta pendente
+- manter `part_code` fora desse bypass especifico, preservando o caminho que ja valida sua proveniencia
+
+Motivo:
+
+- uma pergunta deterministica so e segura quando o backend conhece tanto o campo ausente quanto a redacao permitida para solicita-lo
+- restringir a evidencia a mensagem atual evita que uma familia antiga seja tratada como o assunto atual
+- fuzzy e recuperacao semantica expressam aproximacao, nao confirmacao, e por isso nao podem consolidar familia automaticamente
+
+Consequencia:
+
+- o use case tenta `deterministic_bypass` para `search`, depois `deterministic_ask` e somente entao a LLM
+- a ativacao possui a feature flag independente `PRE_SEARCH_DETERMINISTIC_ASK_ENABLED`, fallback imediato para LLM e telemetria `pre_search_path = deterministic_ask`
+- pergunta, opcoes, criterios e campos ausentes reutilizam o contrato do backend e produzem o mesmo `ConversationState` persistido pelo `docker-comm` no Redis
+- a LLM permanece responsavel por todos os casos que nao satisfazem integralmente a politica conservadora

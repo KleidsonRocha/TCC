@@ -37,34 +37,38 @@ Objetivo:
 - evitar uma chamada de dezenas de segundos a LLM quando extractor, catalogo e regras ja sabem exatamente qual informacao falta
 - complementar o bypass de `search` existente sem relaxar o gate de seguranca
 
-- [ ] Definir criterios conservadores do bypass de `ask`
+- [x] Definir criterios conservadores do bypass de `ask`
   - liberar somente quando a pergunta seguinte puder ser determinada pelas regras do backend
   - cobrir familia exata com campo obrigatorio ausente, como `radiador gol 2010 -> engine`
   - cobrir pedido explicitamente automotivo sem familia, como `quero uma peca -> part_query`
   - usar prioridade deterministica quando mais de um campo estiver ausente
   - nao aplicar a descricao funcional, sintoma, mudanca de assunto ou intencao de handoff
   - nao transformar fuzzy inseguro em familia confirmada
+  - contrato conservador implementado e coberto por regressao; integracao ao runtime permanece no item seguinte
 
-- [ ] Implementar o caminho `deterministic_ask`
+- [x] Implementar o caminho `deterministic_ask`
   - reutilizar catalogo, `missing_fields`, `NextQuestion` e opcoes ja governadas pelo backend
   - manter o mesmo `ConversationState` enviado ao `docker-comm` e persistido no Redis
   - preservar proveniencia de `part_code`, canonizacao e regras especificas da familia
   - manter fallback imediato para a LLM quando qualquer criterio de elegibilidade falhar
   - disponibilizar feature flag independente para rollback
+  - caminho ativo antes da LLM e reversivel por `PRE_SEARCH_DETERMINISTIC_ASK_ENABLED=false`
 
-- [ ] Medir cobertura e ganho do novo caminho
+- [x] Medir cobertura e ganho do novo caminho
   - distinguir o `deterministic_bypass` atual de `deterministic_ask` e `llm` na telemetria
   - medir quantas perguntas obvias deixam de chamar a LLM
   - comparar latencia de pedidos incompletos e follow-ups antes/depois
   - garantir que a taxa de perguntas incorretas nao aumente
+  - bateria real de 50 casos: 19 chamadas removidas da LLM, queda de 97,96% nos casos elegiveis e nenhuma regressao funcional central observada
 
-- [ ] Criar regressoes minimas
+- [x] Criar regressoes minimas
   - `radiador gol 2010 -> perguntar engine`
   - `bandeja ecosport 2008 -> perguntar side`
   - `quero uma peca -> perguntar part_query`
   - typo inseguro -> continuar na LLM
   - descricao por sintoma -> nao usar `ask` deterministico de familia
   - pedido fora do dominio -> continuar elegivel a handoff pela LLM
+  - suite oficial consolidada em `187 passed`
 
 ## Prioridade 1 - Fazer a conversa ficar coerente ate o fim
 

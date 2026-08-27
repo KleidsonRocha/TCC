@@ -485,6 +485,406 @@ def test_process_agent_request_can_disable_deterministic_bypass() -> None:
     assert result.tool_trace.used_tools == ["pre_search_validator"]
 
 
+def test_process_agent_request_uses_deterministic_ask_and_preserves_state() -> None:
+    class _DeterministicAskValidator:
+        def __init__(self) -> None:
+            self.search_bypass_calls = 0
+            self.ask_bypass_calls = 0
+            self.llm_calls = 0
+
+        def try_validate_deterministically(
+            self,
+            message_text: str,
+            *,
+            last_messages=None,
+            conversation_state=None,
+        ) -> None:
+            self.search_bypass_calls += 1
+            return None
+
+        def try_validate_deterministic_ask(
+            self,
+            message_text: str,
+            *,
+            last_messages=None,
+            conversation_state=None,
+        ) -> PreSearchValidation:
+            self.ask_bypass_calls += 1
+            return PreSearchValidation(
+                decision="ask",
+                criteria=SearchCriteria(
+                    part_query="radiador",
+                    vehicle_model="Gol",
+                    vehicle_year=2010,
+                ),
+                missing_fields=["engine"],
+                next_question=NextQuestion(
+                    key="engine",
+                    prompt="Qual a motorizacao do veiculo?",
+                    options=["1.0", "1.6", "Nao sei"],
+                ),
+                confidence=0.99,
+            )
+
+        def validate(
+            self,
+            message_text: str,
+            *,
+            last_messages=None,
+            conversation_state=None,
+        ) -> PreSearchValidation:
+            self.llm_calls += 1
+            raise AssertionError("a LLM nao deveria ser chamada")
+
+        def get_last_audit(self) -> dict:
+            return {"pre_search_path": "deterministic_ask"}
+
+    validator = _DeterministicAskValidator()
+    tools = _SpyTools()
+    recorder = _SpyRecorder()
+    use_case = ProcessAgentRequestUseCase(
+        tools=tools,
+        pre_search_validator=validator,
+        settings=Settings(
+            APP_ENV="test",
+            PRE_SEARCH_DETERMINISTIC_BYPASS_ENABLED=True,
+            PRE_SEARCH_DETERMINISTIC_ASK_ENABLED=True,
+        ),
+        logger=logging.getLogger("test"),
+        review_recorder=recorder,
+    )
+    payload = AgentRequestV1.model_validate(
+        {
+            "schema_version": "1.0",
+            "trace_id": "trace-deterministic-ask",
+            "conversation_id": "conv-deterministic-ask",
+            "message": {"text": "radiador gol 2010"},
+            "business": {"branch_id": 1},
+            "channel": {"name": "whatsapp"},
+            "context": {"last_messages": []},
+        }
+    )
+
+    result = asyncio.run(use_case.execute(payload))
+
+    assert validator.search_bypass_calls == 1
+    assert validator.ask_bypass_calls == 1
+    assert validator.llm_calls == 0
+    assert tools.calls == []
+    assert result.reply_text == "Qual a motorizacao do veiculo?"
+    assert result.actions == [
+        {
+            "type": "request_info",
+            "key": "engine",
+            "prompt": "Qual a motorizacao do veiculo?",
+            "options": ["1.0", "1.6", "Nao sei"],
+        }
+    ]
+    assert result.conversation_state == ConversationState(
+        criteria=SearchCriteria(
+            part_query="radiador",
+            vehicle_model="Gol",
+            vehicle_year=2010,
+        ),
+        pending_slot="engine",
+        pending_question="Qual a motorizacao do veiculo?",
+        last_decision="ask",
+    )
+    assert result.tool_trace.pre_search_path == "deterministic_ask"
+    assert result.tool_trace.used_tools == ["pre_search_deterministic_ask"]
+    assert set(result.tool_trace.stage_latency_ms) == {
+        "pre_search_validator",
+        "response_assembly",
+    }
+    assert recorder.calls[0]["final_used_tools"] == [
+        "pre_search_deterministic_ask"
+    ]
+    assert recorder.calls[0]["predicted_missing_fields"] == ["engine"]
+
+
+def test_process_agent_request_falls_back_to_llm_when_deterministic_ask_is_ineligible() -> None:
+    class _IneligibleAskValidator:
+        def __init__(self) -> None:
+            self.ask_calls = 0
+            self.llm_calls = 0
+
+        def try_validate_deterministic_ask(
+            self,
+            message_text: str,
+            *,
+            last_messages=None,
+            conversation_state=None,
+        ) -> None:
+            self.ask_calls += 1
+            return None
+
+        def validate(
+            self,
+            message_text: str,
+            *,
+            last_messages=None,
+            conversation_state=None,
+        ) -> PreSearchValidation:
+            self.llm_calls += 1
+            return PreSearchValidation(
+                decision="handoff",
+                criteria=SearchCriteria(),
+                missing_fields=[],
+                next_question=NextQuestion(
+                    key="handoff",
+                    prompt="Vou encaminhar para atendimento humano.",
+                ),
+                confidence=0.4,
+            )
+
+        def get_last_audit(self) -> dict:
+            return {}
+
+    validator = _IneligibleAskValidator()
+    use_case = ProcessAgentRequestUseCase(
+        tools=_FakeTools(),
+        pre_search_validator=validator,
+        settings=Settings(
+            APP_ENV="test",
+            PRE_SEARCH_DETERMINISTIC_BYPASS_ENABLED=False,
+            PRE_SEARCH_DETERMINISTIC_ASK_ENABLED=True,
+        ),
+        logger=logging.getLogger("test"),
+        review_recorder=_SpyRecorder(),
+    )
+    payload = AgentRequestV1.model_validate(
+        {
+            "schema_version": "1.0",
+            "trace_id": "trace-ineligible-ask",
+            "conversation_id": "conv-ineligible-ask",
+            "message": {"text": "quero falar com um vendedor"},
+            "business": {"branch_id": 1},
+            "context": {"last_messages": []},
+        }
+    )
+
+    result = asyncio.run(use_case.execute(payload))
+
+    assert validator.ask_calls == 1
+    assert validator.llm_calls == 1
+    assert result.tool_trace.pre_search_path == "llm"
+    assert result.tool_trace.used_tools == ["pre_search_validator"]
+    assert result.handoff.required is True
+
+
+def test_process_agent_request_can_disable_deterministic_ask_independently() -> None:
+    class _FlagAwareAskValidator:
+        def __init__(self) -> None:
+            self.search_calls = 0
+            self.ask_calls = 0
+            self.llm_calls = 0
+
+        def try_validate_deterministically(
+            self,
+            message_text: str,
+            *,
+            last_messages=None,
+            conversation_state=None,
+        ) -> None:
+            self.search_calls += 1
+            return None
+
+        def try_validate_deterministic_ask(
+            self,
+            message_text: str,
+            *,
+            last_messages=None,
+            conversation_state=None,
+        ) -> PreSearchValidation:
+            self.ask_calls += 1
+            raise AssertionError("o deterministic_ask desabilitado nao deve ser consultado")
+
+        def validate(
+            self,
+            message_text: str,
+            *,
+            last_messages=None,
+            conversation_state=None,
+        ) -> PreSearchValidation:
+            self.llm_calls += 1
+            return PreSearchValidation(
+                decision="ask",
+                criteria=SearchCriteria(part_query="radiador"),
+                missing_fields=["vehicle_model"],
+                next_question=NextQuestion(
+                    key="vehicle_model",
+                    prompt="Qual o modelo do veiculo?",
+                ),
+                confidence=0.8,
+            )
+
+        def get_last_audit(self) -> dict:
+            return {}
+
+    validator = _FlagAwareAskValidator()
+    use_case = ProcessAgentRequestUseCase(
+        tools=_FakeTools(),
+        pre_search_validator=validator,
+        settings=Settings(
+            APP_ENV="test",
+            PRE_SEARCH_DETERMINISTIC_BYPASS_ENABLED=True,
+            PRE_SEARCH_DETERMINISTIC_ASK_ENABLED=False,
+        ),
+        logger=logging.getLogger("test"),
+        review_recorder=_SpyRecorder(),
+    )
+    payload = AgentRequestV1.model_validate(
+        {
+            "schema_version": "1.0",
+            "trace_id": "trace-disabled-ask",
+            "conversation_id": "conv-disabled-ask",
+            "message": {"text": "radiador"},
+            "business": {"branch_id": 1},
+            "context": {"last_messages": []},
+        }
+    )
+
+    result = asyncio.run(use_case.execute(payload))
+
+    assert validator.search_calls == 1
+    assert validator.ask_calls == 0
+    assert validator.llm_calls == 1
+    assert result.tool_trace.pre_search_path == "llm"
+
+
+def test_process_agent_request_falls_back_to_llm_when_deterministic_ask_fails() -> None:
+    class _FailingAskValidator:
+        def __init__(self) -> None:
+            self.llm_calls = 0
+
+        def try_validate_deterministic_ask(
+            self,
+            message_text: str,
+            *,
+            last_messages=None,
+            conversation_state=None,
+        ) -> PreSearchValidation:
+            raise RuntimeError("falha simulada")
+
+        def validate(
+            self,
+            message_text: str,
+            *,
+            last_messages=None,
+            conversation_state=None,
+        ) -> PreSearchValidation:
+            self.llm_calls += 1
+            return PreSearchValidation(
+                decision="ask",
+                criteria=SearchCriteria(),
+                missing_fields=["part_query"],
+                next_question=NextQuestion(
+                    key="part_query",
+                    prompt="Qual peca voce precisa?",
+                ),
+                confidence=0.7,
+            )
+
+        def get_last_audit(self) -> dict:
+            return {}
+
+    validator = _FailingAskValidator()
+    use_case = ProcessAgentRequestUseCase(
+        tools=_FakeTools(),
+        pre_search_validator=validator,
+        settings=Settings(
+            APP_ENV="test",
+            PRE_SEARCH_DETERMINISTIC_BYPASS_ENABLED=False,
+            PRE_SEARCH_DETERMINISTIC_ASK_ENABLED=True,
+        ),
+        logger=logging.getLogger("test"),
+        review_recorder=_SpyRecorder(),
+    )
+    payload = AgentRequestV1.model_validate(
+        {
+            "schema_version": "1.0",
+            "trace_id": "trace-failing-ask",
+            "conversation_id": "conv-failing-ask",
+            "message": {"text": "quero uma peca"},
+            "business": {"branch_id": 1},
+            "context": {"last_messages": []},
+        }
+    )
+
+    result = asyncio.run(use_case.execute(payload))
+
+    assert validator.llm_calls == 1
+    assert result.tool_trace.pre_search_path == "llm"
+
+
+def test_process_agent_request_rejects_invalid_deterministic_ask_contract() -> None:
+    class _InvalidAskValidator:
+        def __init__(self) -> None:
+            self.llm_calls = 0
+
+        def try_validate_deterministic_ask(
+            self,
+            message_text: str,
+            *,
+            last_messages=None,
+            conversation_state=None,
+        ) -> PreSearchValidation:
+            return PreSearchValidation(
+                decision="ask",
+                criteria=SearchCriteria(part_query="radiador"),
+                missing_fields=["vehicle_model"],
+                next_question=NextQuestion(
+                    key="engine",
+                    prompt="Qual a motorizacao do veiculo?",
+                ),
+                confidence=0.99,
+            )
+
+        def validate(
+            self,
+            message_text: str,
+            *,
+            last_messages=None,
+            conversation_state=None,
+        ) -> PreSearchValidation:
+            self.llm_calls += 1
+            return PreSearchValidation(
+                decision="ask",
+                criteria=SearchCriteria(part_query="radiador"),
+                missing_fields=["vehicle_model"],
+                next_question=NextQuestion(
+                    key="vehicle_model",
+                    prompt="Qual o modelo do veiculo?",
+                ),
+                confidence=0.8,
+            )
+
+    validator = _InvalidAskValidator()
+    use_case = ProcessAgentRequestUseCase(
+        tools=_FakeTools(),
+        pre_search_validator=validator,
+        settings=Settings(
+            APP_ENV="test",
+            PRE_SEARCH_DETERMINISTIC_BYPASS_ENABLED=False,
+            PRE_SEARCH_DETERMINISTIC_ASK_ENABLED=True,
+        ),
+        logger=logging.getLogger("test"),
+        review_recorder=_SpyRecorder(),
+    )
+
+    result, path, used_tools = use_case._validate_pre_search(
+        query="radiador",
+        last_messages=[],
+        incoming_state=None,
+    )
+
+    assert validator.llm_calls == 1
+    assert result.next_question is not None
+    assert result.next_question.key == "vehicle_model"
+    assert path == "llm"
+    assert used_tools == ["pre_search_validator"]
+
+
 def test_process_agent_request_removes_part_code_without_literal_provenance() -> None:
     class _SearchValidator:
         def validate(self, message_text: str, *, last_messages=None, conversation_state=None) -> PreSearchValidation:

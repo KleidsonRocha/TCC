@@ -868,6 +868,160 @@ def test_deterministic_validator_keeps_uncertain_cases_on_llm_path(
     assert validator.get_last_audit() is None
 
 
+def test_deterministic_ask_policy_accepts_exact_family_with_governed_missing_field() -> None:
+    validator = _validator()
+
+    result = validator.evaluate_deterministic_ask_eligibility("radiador gol 2010")
+
+    assert result.eligible is True
+    assert result.reason == "exact_family_missing_field"
+    assert result.criteria.part_query == "radiador"
+    assert result.missing_fields == ("engine",)
+    assert result.next_question is not None
+    assert result.next_question.key == "engine"
+    assert result.next_question.prompt == "Qual a motorizacao do veiculo?"
+
+
+@pytest.mark.parametrize("message", ["quero uma peca", "preciso de um item automotivo"])
+def test_deterministic_ask_policy_accepts_explicit_generic_automotive_request(
+    message: str,
+) -> None:
+    validator = _validator()
+
+    result = validator.evaluate_deterministic_ask_eligibility(message)
+
+    assert result.eligible is True
+    assert result.reason == "explicit_generic_part_request"
+    assert result.criteria.part_query is None
+    assert result.missing_fields == ("part_query",)
+    assert result.next_question is not None
+    assert result.next_question.key == "part_query"
+
+
+def test_deterministic_ask_policy_uses_stable_priority_for_multiple_missing_fields() -> None:
+    base_catalog = _catalog_fixture()
+    catalog = PreSearchCatalog(
+        part_patterns=base_catalog.part_patterns,
+        brand_aliases=base_catalog.brand_aliases,
+        model_aliases=base_catalog.model_aliases,
+        invalid_slot_tokens=base_catalog.invalid_slot_tokens,
+        generic_ambiguous_parts=base_catalog.generic_ambiguous_parts,
+        needs_side={*base_catalog.needs_side, "radiador"},
+        needs_position=base_catalog.needs_position,
+        needs_axle=base_catalog.needs_axle,
+        needs_engine=base_catalog.needs_engine,
+        needs_variant=base_catalog.needs_variant,
+        engine_by_model=base_catalog.engine_by_model,
+    )
+    validator = _validator(catalog=catalog)
+
+    result = validator.evaluate_deterministic_ask_eligibility("radiador gol 2010")
+
+    assert result.eligible is True
+    assert result.missing_fields == ("engine", "side")
+    assert result.next_question is not None
+    assert result.next_question.key == "engine"
+
+
+@pytest.mark.parametrize(
+    ("message", "expected_reason"),
+    [
+        ("rdiador gol 2010", "part_query_not_exact"),
+        ("quero aquilo que evita o carro de ficar pulando", "functional_description"),
+        ("quero uma peca que segura o carro", "functional_description"),
+        ("radiador que serve para resfriar o gol 2010", "functional_description"),
+        ("estou com barulho no carro", "symptom_description"),
+        ("radiador gol 2010 vazando", "symptom_description"),
+        ("esquece o radiador, quero outra peca", "subject_change"),
+        ("quero falar com um vendedor", "handoff_intent"),
+        ("radiador gol 2010, quero falar com um vendedor", "handoff_intent"),
+        ("quero uma peca chamada farol para gol 2010", "unresolved_part_description"),
+        ("bom dia, tenho um gol 2010", "part_request_not_explicit"),
+        ("radiador gol 2010 1.0", "no_missing_field"),
+    ],
+)
+def test_deterministic_ask_policy_rejects_unsafe_or_unresolved_cases(
+    message: str,
+    expected_reason: str,
+) -> None:
+    validator = _validator()
+
+    result = validator.evaluate_deterministic_ask_eligibility(message)
+
+    assert result.eligible is False
+    assert result.reason == expected_reason
+    assert result.next_question is None
+
+
+def test_deterministic_ask_policy_does_not_override_active_pending_slot() -> None:
+    validator = _validator()
+
+    result = validator.evaluate_deterministic_ask_eligibility(
+        "radiador gol 2010",
+        conversation_state=ConversationState(
+            criteria=SearchCriteria(part_query="bandejas", vehicle_model="EcoSport"),
+            pending_slot="side",
+            pending_question="Qual lado da peca?",
+            last_decision="ask",
+        ),
+    )
+
+    assert result.eligible is False
+    assert result.reason == "active_pending_slot"
+
+
+def test_deterministic_ask_returns_governed_validation_with_canonical_family() -> None:
+    validator = _validator()
+
+    result = validator.try_validate_deterministic_ask("bandeja ecosport 2008")
+
+    assert result is not None
+    assert result.decision == "ask"
+    assert result.criteria.part_query == "bandejas"
+    assert result.criteria.vehicle_model == "EcoSport"
+    assert result.criteria.vehicle_year == 2008
+    assert result.criteria.part_code is None
+    assert result.missing_fields == ["side"]
+    assert result.next_question is not None
+    assert result.next_question.key == "side"
+    assert result.next_question.options == ["Esquerdo", "Direito", "Nao sei"]
+    assert result.confidence == 0.99
+    assert validator.get_last_audit() == {
+        "llm_endpoint_used": None,
+        "llm_raw_content": None,
+        "llm_output_valid": None,
+        "llm_parse_error": None,
+        "llm_fallback_used": None,
+        "llm_decision_raw": None,
+        "pre_search_path": "deterministic_ask",
+        "deterministic_reason": "exact_family_missing_field",
+        "missing_fields": ["side"],
+        "next_question_key": "side",
+    }
+
+
+@pytest.mark.parametrize(
+    "message",
+    [
+        "rdiador gol 2010",
+        "radiador gol 2010 vazando",
+        "quero falar com um vendedor",
+        "codigo AB-1234",
+    ],
+)
+def test_deterministic_ask_returns_none_and_clears_audit_when_ineligible(
+    message: str,
+) -> None:
+    validator = _validator()
+    assert validator.try_validate_deterministic_ask("radiador gol 2010") is not None
+    assert validator.get_last_audit() is not None
+
+    result = validator.try_validate_deterministic_ask(message)
+
+    assert result is None
+    assert validator.get_last_audit() is None
+
+
 def test_llm_validator_position_satisfies_axle_requirement() -> None:
     validator = _validator()
     validator._post_chat_or_generate = lambda **kwargs: (

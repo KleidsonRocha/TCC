@@ -344,6 +344,53 @@ class ProcessAgentRequestUseCase:
                         ["pre_search_deterministic"],
                     )
 
+        deterministic_ask_validator = getattr(
+            self._pre_search_validator,
+            "try_validate_deterministic_ask",
+            None,
+        )
+        if (
+            self._settings.pre_search_deterministic_ask_enabled
+            and callable(deterministic_ask_validator)
+        ):
+            try:
+                deterministic_ask_result = deterministic_ask_validator(
+                    query,
+                    last_messages=last_messages,
+                    conversation_state=incoming_state,
+                )
+            except Exception:
+                self._logger.warning(
+                    "pre_search_deterministic_ask_failed",
+                    exc_info=True,
+                )
+            else:
+                if (
+                    isinstance(deterministic_ask_result, PreSearchValidation)
+                    and deterministic_ask_result.decision == "ask"
+                    and bool(deterministic_ask_result.missing_fields)
+                    and deterministic_ask_result.next_question is not None
+                    and deterministic_ask_result.next_question.key
+                    == deterministic_ask_result.missing_fields[0]
+                ):
+                    self._logger.info(
+                        "pre_search_deterministic_ask_used",
+                        extra={
+                            "criteria": deterministic_ask_result.criteria.model_dump(
+                                exclude_none=True
+                            ),
+                            "missing_fields": deterministic_ask_result.missing_fields,
+                            "next_question_key": (
+                                deterministic_ask_result.next_question.key
+                            ),
+                        },
+                    )
+                    return (
+                        deterministic_ask_result,
+                        "deterministic_ask",
+                        ["pre_search_deterministic_ask"],
+                    )
+
         return (
             self._pre_search_validator.validate(
                 query,

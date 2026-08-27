@@ -111,7 +111,10 @@ flowchart TD
     U --> U0{Alias exato ou codigo literal,<br/>criterios completos, regras e score satisfeitos?}
     U0 -->|Sim| U1[Bypass da LLM<br/>decisao search]
     U1 --> AA
-    U0 -->|Nao| V[Envia LLM: mensagem, historico, seed, estado e score_policy]
+    U0 -->|Nao| U2{Familia exata ou pedido automotivo generico<br/>com pergunta governada pelo backend?}
+    U2 -->|Sim| U3[Bypass da LLM<br/>decisao ask]
+    U3 --> AB
+    U2 -->|Nao| V[Envia LLM: mensagem, historico, seed, estado e score_policy]
     V --> W{LLM disponivel?}
     W -->|Nao| W1[docker-agent retorna 503]
     W -->|Sim| X{JSON da LLM valido?}
@@ -184,6 +187,30 @@ Regras dessa ordem:
 - o backend redige a pergunta por template usando somente candidatos aprovados
 - a LLM fica opcional para redacao futura, condicionada a ganho comprovado
 - apenas o backend interpreta score, margem e limite de tentativas
+
+## Caminho `deterministic_ask`
+
+Os criterios conservadores do bypass de perguntas estao implementados, testados e conectados ao use case antes da LLM.
+
+O contrato definido libera elegibilidade somente quando:
+
+- a mensagem atual contem alias exato de uma familia canonica e falta um campo exigido pelo catalogo; ou
+- a mensagem atual faz um pedido explicitamente automotivo sem familia e o backend pode perguntar `part_query`.
+
+Em ambos os casos, `missing_fields`, `NextQuestion` e opcoes precisam ser integralmente governados pelo backend. Quando varios campos faltarem, a ordem e `part_query`, modelo, ano, motor, lado, posicao, eixo e variante.
+
+Continuam obrigatoriamente no caminho da LLM:
+
+- fuzzy sem alias exato
+- descricao funcional ou sintoma
+- mudanca de assunto ou intencao de handoff
+- candidato de peca nao resolvido
+- mensagem com `part_code`
+- conversa que ja possui `pending_slot`
+
+Quando elegivel, o caminho retorna `PreSearchValidation(decision="ask")`, monta o mesmo `ConversationState` do fluxo tradicional e expoe `tool_trace.pre_search_path = deterministic_ask`. O `docker-comm` continua persistindo esse estado no Redis sem qualquer contrato paralelo.
+
+O bypass pode ser revertido independentemente por `PRE_SEARCH_DETERMINISTIC_ASK_ENABLED=false`. Inelegibilidade, ausencia do metodo, retorno invalido ou excecao seguem imediatamente para a LLM.
 
 ## Fluxo Da Desambiguacao Semantica Planejada
 
@@ -284,7 +311,8 @@ O `docker-agent` monta e devolve esse objeto. O `docker-comm` apenas valida o co
 | LLM indisponivel | caso nao e elegivel ao bypass e o validador nao consegue consultar inferencia | erro `503` | fluxo pode ser tentado novamente |
 | LLM retorna JSON invalido | fallback do conteudo bruto com seed | `ask`, `search` ou `handoff` defensivo | estado correspondente a decisao |
 | Alias exato e pedido completo | extractor, catalogo, regras e score | bypass da LLM e segue para busca | criterios validados |
-| Alias exato, mas pedido incompleto | extractor deterministico | segue para validacao por LLM e gate | criterios mesclados |
+| Alias exato e pedido incompleto com pergunta governada | `deterministic_ask` | pergunta backend sem chamar a LLM | `pending_slot` e criterios preservados |
+| Pedido explicitamente automotivo sem familia | `deterministic_ask` | pergunta qual peca o usuario precisa | `pending_slot = part_query` |
 | Typo seguro encontrado | fuzzy de `part_query` | segue para validacao e gate | familia canonica no criterio |
 | Descricao generica com candidatos | recuperacao semantica planejada | pergunta com opcoes | `semantic_disambiguation` pendente no Redis |
 | Resposta confirma opcao | resolucao contra candidatos pendentes | proxima pergunta obrigatoria ou busca | `part_query` canonica; estado semantico limpo |
@@ -321,28 +349,32 @@ O `docker-agent` monta e devolve esse objeto. O `docker-comm` apenas valida o co
 4. Merge de estado
    Os criterios da mensagem atual sao combinados defensivamente com o `ConversationState` recuperado do Redis pelo `docker-comm`.
 
-5. Gate de bypass deterministico
-   O backend libera diretamente apenas `search` quando existe alias exato ou `part_code` literal, todos os requisitos da familia estao preenchidos e o score minimo foi atingido.
+5. Gate de bypass deterministico de `search`
+   O backend libera diretamente `search` quando existe alias exato ou `part_code` literal, todos os requisitos da familia estao preenchidos e o score minimo foi atingido.
    Um follow-up tambem pode usar esse caminho quando responde de forma deterministica ao `pending_slot` de um estado anterior com decisao `ask`.
-   Fuzzy-only, familia generica, campo faltante, motor textual e estado incerto seguem para a LLM.
+   Fuzzy-only, familia generica, campo faltante, motor textual e estado incerto nao liberam `search`.
 
-6. LLM como validador
+6. Gate de bypass deterministico de `ask`
+   Se o pedido incompleto possuir familia exata ou for explicitamente automotivo sem familia, o backend calcula os campos ausentes e monta a proxima pergunta pelas regras do catalogo.
+   Fuzzy isolado, descricao funcional, sintoma, mudanca de assunto, handoff, `part_code` e estado pendente seguem para a LLM.
+
+7. LLM como validador
    A LLM recebe `message_text`, historico, `dictionary_seed_criteria`, `conversation_state` e politica de score.
    Ela nao e o decisor final isolado.
 
-7. Gate backend
+8. Gate backend
    Depois da LLM, o backend recalcula:
    - campos obrigatorios por regra da peca
    - score minimo para liberar `search`
    - promocao ou rebaixamento entre `search` e `ask`
 
-8. Busca no ERP
+9. Busca no ERP
    So depois do gate o sistema monta a query textual e chama `search_parts`.
 
-9. Telemetria por etapa
-   O contrato retorna `tool_trace.pre_search_path` com `deterministic_bypass` ou `llm` e `tool_trace.stage_latency_ms` separado em `pre_search_validator`, `search_parts` quando executado e `response_assembly`.
+10. Telemetria por etapa
+   O contrato retorna `tool_trace.pre_search_path` com `deterministic_bypass`, `deterministic_ask` ou `llm` e `tool_trace.stage_latency_ms` separado em `pre_search_validator`, `search_parts` quando executado e `response_assembly`.
 
-10. Persistencia da resposta
+11. Persistencia da resposta
    O `docker-comm` salva a janela de mensagens e o estado retornado pelo agent no Redis.
 
 ## Exemplos
@@ -383,7 +415,7 @@ Saida intermediaria:
 - `vehicle_model = Gol`
 - `vehicle_year = 2010`
 - falta `engine`
-- decisao `ask`
+- decisao `ask` pelo caminho `deterministic_ask`
 - pergunta `Qual a motorizacao do veiculo?`
 
 ### Descricao generica com recuperacao semantica planejada
@@ -406,7 +438,8 @@ Leitura planejada:
 - o fuzzy nao consulta o texto grande do ERP
 - o fuzzy nao libera `search` sozinho
 - o fuzzy hoje e restrito a `part_query`
-- o bypass deterministico so libera `search` e pode ser desligado por feature flag
+- o bypass deterministico de busca so libera `search` e pode ser desligado por sua feature flag
+- o `deterministic_ask` so libera perguntas integralmente governadas pelo backend e possui feature flag independente
 - casos que nao comprovam completude continuam no caminho LLM
 - `part_code` so e aceito com evidencia literal em mensagem do usuario ou validacao do extractor
 - `part_code` nao e restaurado apenas porque existe em `conversation_state`

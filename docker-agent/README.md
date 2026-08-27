@@ -7,7 +7,7 @@ Servico FastAPI do TCC para atendimento inicial de autopecas. O projeto recebe t
 - API HTTP no contrato `v1.0`
 - catalogo deterministico em Postgres
 - extracao lexical com aliases e fuzzy conservador para `part_query`
-- bypass deterministico seguro para pedidos completos e follow-ups simples
+- bypass deterministico seguro para pedidos completos, follow-ups simples e perguntas obvias
 - validacao com LLM via Ollama
 - busca real no ERP via PostgreSQL
 - captura de interacoes para revisao e fine-tuning
@@ -19,10 +19,11 @@ O caminho principal do runtime e este:
 1. a API recebe texto livre em `POST /respond`
 2. o extractor deterministico tenta preencher criterios como `part_query`, `vehicle_model`, `vehicle_year` e `engine`
 3. se alias exato, catalogo, regras e score comprovarem que o pedido esta completo, o backend libera `search` sem chamar a LLM
-4. nos demais casos, o backend monta `dictionary_seed_criteria` e `score_policy`
-5. a LLM valida o contexto e sugere `ask`, `search` ou `handoff`
-6. o backend recalcula os campos obrigatorios e decide se `search` pode ser liberado
-7. so depois disso o sistema consulta o ERP por `soccol.item_search_candidates`
+4. se o pedido estiver incompleto, mas a familia e a proxima pergunta forem comprovadas pelas regras, o backend retorna `ask` sem chamar a LLM
+5. nos demais casos, o backend monta `dictionary_seed_criteria` e `score_policy`
+6. a LLM valida o contexto e sugere `ask`, `search` ou `handoff`
+7. o backend recalcula os campos obrigatorios e decide se `search` pode ser liberado
+8. so depois disso o sistema consulta o ERP por `soccol.item_search_candidates`
 
 Resumo das decisoes:
 - `ask`: quando ainda faltam discriminadores obrigatorios

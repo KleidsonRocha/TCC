@@ -214,6 +214,72 @@ def test_respond_with_generic_filter_requests_vehicle_year() -> None:
     assert body["handoff"]["required"] is False
 
 
+def test_respond_uses_deterministic_ask_without_calling_llm() -> None:
+    settings = Settings(
+        APP_ENV="test",
+        CATALOG_DB_ENABLED=False,
+        PRE_SEARCH_REVIEW_CAPTURE_ENABLED=False,
+        PRE_SEARCH_DETERMINISTIC_BYPASS_ENABLED=True,
+        PRE_SEARCH_DETERMINISTIC_ASK_ENABLED=True,
+        LLM_WARMUP_ENABLED=False,
+    )
+    validator = LLMPreSearchValidator(
+        settings=settings,
+        logger=get_logger(),
+        catalog=_catalog_fixture(),
+    )
+
+    def fail_if_llm_is_called(*args, **kwargs) -> PreSearchValidation:
+        raise AssertionError("a LLM nao deveria ser chamada")
+
+    validator.validate = fail_if_llm_is_called  # type: ignore[method-assign]
+    app = create_app(
+        settings_override=settings,
+        pre_search_validator_override=validator,
+        tools_override=_FakeTools(),
+    )
+
+    with TestClient(app) as client:
+        response = client.post(
+            "/respond",
+            json=_payload("Preciso de bandeja da EcoSport 2008"),
+        )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["reply"]["text"] == "Qual lado da peca?"
+    assert body["actions"] == [
+        {
+            "type": "request_info",
+            "key": "side",
+            "prompt": "Qual lado da peca?",
+            "options": ["Esquerdo", "Direito", "Nao sei"],
+        }
+    ]
+    assert body["conversation_state"] == {
+        "criteria": {
+            "part_query": "bandeja",
+            "part_code": None,
+            "vehicle_brand": None,
+            "vehicle_model": "EcoSport",
+            "vehicle_year": 2008,
+            "engine": None,
+            "side": None,
+            "position": None,
+            "axle": None,
+            "variant": None,
+            "quantity": None,
+        },
+        "pending_slot": "side",
+        "pending_question": "Qual lado da peca?",
+        "last_decision": "ask",
+    }
+    assert body["tool_trace"]["pre_search_path"] == "deterministic_ask"
+    assert body["tool_trace"]["used_tools"] == [
+        "pre_search_deterministic_ask"
+    ]
+
+
 def test_respond_uses_last_messages_to_complete_year() -> None:
     app = _make_app()
     context_messages = [{"role": "user", "text": "2008"}]
@@ -313,6 +379,7 @@ def test_respond_returns_503_when_llm_pre_search_is_unavailable() -> None:
         LLM_BASE_URL="http://127.0.0.1:1",
         LLM_MODEL="deepseek-r1:8b",
         LLM_TIMEOUT_MS=1000,
+        PRE_SEARCH_DETERMINISTIC_ASK_ENABLED=False,
     )
     configure_logging(settings.log_level)
     llm_validator = LLMPreSearchValidator(

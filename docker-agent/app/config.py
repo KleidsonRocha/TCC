@@ -33,6 +33,10 @@ class Settings(BaseSettings):
         True,
         alias="PRE_SEARCH_DETERMINISTIC_BYPASS_ENABLED",
     )
+    pre_search_deterministic_ask_enabled: bool = Field(
+        True,
+        alias="PRE_SEARCH_DETERMINISTIC_ASK_ENABLED",
+    )
 
     catalog_db_enabled: bool = Field(True, alias="CATALOG_DB_ENABLED")
     catalog_db_host: str = Field("presearch-db", alias="CATALOG_DB_HOST")

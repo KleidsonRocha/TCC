@@ -3,6 +3,7 @@ import logging
 import re
 import time
 from copy import deepcopy
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -47,6 +48,56 @@ SCORING_FIELD_PRIORITY: tuple[str, ...] = (
     "axle",
     "variant",
     "quantity",
+)
+DETERMINISTIC_ASK_FIELD_PRIORITY: tuple[str, ...] = (
+    "part_query",
+    "vehicle_model",
+    "vehicle_year",
+    "engine",
+    "side",
+    "position",
+    "axle",
+    "variant",
+)
+DETERMINISTIC_ASK_PART_REQUEST_PATTERN = re.compile(
+    r"\b(?:quero|preciso|procuro|busco|tem|teria|gostaria)\b"
+    r"[^.!?]{0,40}\b(?:peca|pecas|autopeca|autopecas|item automotivo)\b"
+)
+DETERMINISTIC_ASK_GENERIC_PART_TOKENS: set[str] = {
+    "autopeca",
+    "autopecas",
+    "automotivo",
+    "item",
+}
+DETERMINISTIC_ASK_UNSAFE_INTENT_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
+    (
+        "handoff_intent",
+        re.compile(
+            r"\b(?:atendente|atendimento humano|falar com (?:um )?vendedor|"
+            r"chamar (?:um )?vendedor|transferir|humano)\b"
+        ),
+    ),
+    (
+        "subject_change",
+        re.compile(
+            r"\b(?:mudei de ideia|mudando de assunto|outro assunto|"
+            r"esquece|esqueca|deixa pra la|agora quero outra|outra peca)\b"
+        ),
+    ),
+    (
+        "functional_description",
+        re.compile(
+            r"\b(?:aquilo que|coisa que|peca que|serve para|responsavel por|"
+            r"que segura|que evita|que faz)\b"
+        ),
+    ),
+    (
+        "symptom_description",
+        re.compile(
+            r"\b(?:barulho|rangendo|vibrando|pulando|vazando|falhando|"
+            r"quebrado|quebrada|nao funciona|nao liga|esquentando)\b"
+        ),
+    ),
 )
 RUNTIME_SEARCH_RULE_OVERRIDES: dict[str, dict[str, bool]] = {
     "bandeja": {
@@ -121,6 +172,15 @@ UNSUPPORTED_PART_STOPWORDS: set[str] = {
     "voce",
     "voces",
 }
+
+
+@dataclass(frozen=True)
+class DeterministicAskEligibility:
+    eligible: bool
+    reason: str
+    criteria: SearchCriteria
+    missing_fields: tuple[str, ...] = ()
+    next_question: NextQuestion | None = None
 
 
 class LLMPreSearchValidator(PreSearchValidatorPort):
@@ -219,6 +279,197 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
 
     def canonicalize_part_query(self, value: str | None) -> str | None:
         return self._canonicalize_part_query(value)
+
+    def evaluate_deterministic_ask_eligibility(
+        self,
+        message_text: str,
+        *,
+        last_messages: list[dict[str, Any]] | None = None,
+        conversation_state: ConversationState | None = None,
+    ) -> DeterministicAskEligibility:
+        """Evaluate the conservative policy without calling the LLM.
+
+        The runtime method consumes this result only when every eligibility
+        condition and the backend-governed question are available.
+        """
+
+        _ = last_messages
+        current_criteria = self._canonicalize_criteria_part_query(
+            self._dictionary_extractor.extract(message_text, last_messages=[])
+        )
+
+        if conversation_state and conversation_state.pending_slot:
+            return self._deterministic_ask_ineligible(
+                reason="active_pending_slot",
+                criteria=current_criteria,
+            )
+
+        unsafe_reason = self._deterministic_ask_unsafe_intent_reason(message_text)
+        if unsafe_reason:
+            return self._deterministic_ask_ineligible(
+                reason=unsafe_reason,
+                criteria=current_criteria,
+            )
+
+        if current_criteria.part_code:
+            return self._deterministic_ask_ineligible(
+                reason="part_code_present",
+                criteria=current_criteria,
+            )
+
+        part_query = self._canonicalize_part_query(current_criteria.part_query)
+        exact_part_query = bool(
+            part_query
+            and part_query not in self._generic_ambiguous_parts
+            and self._dictionary_extractor.has_exact_part_query_match(
+                message_text=message_text,
+                canonical_part_query=part_query,
+            )
+        )
+
+        if part_query and not exact_part_query:
+            return self._deterministic_ask_ineligible(
+                reason="part_query_not_exact",
+                criteria=current_criteria,
+            )
+
+        if not part_query:
+            if not self._is_explicit_generic_part_request(message_text):
+                return self._deterministic_ask_ineligible(
+                    reason="part_request_not_explicit",
+                    criteria=current_criteria,
+                )
+            unresolved_tokens = set(
+                self._non_catalog_part_candidate_tokens(
+                    criteria=current_criteria,
+                    message_text=message_text,
+                    last_messages=[],
+                )
+            ) - DETERMINISTIC_ASK_GENERIC_PART_TOKENS
+            if unresolved_tokens:
+                return self._deterministic_ask_ineligible(
+                    reason="unresolved_part_description",
+                    criteria=current_criteria,
+                )
+
+        missing_fields = self._order_deterministic_ask_fields(
+            self._calculate_missing_fields(
+                current_criteria,
+                explicit_part_code=False,
+            )
+        )
+        if not missing_fields:
+            return self._deterministic_ask_ineligible(
+                reason="no_missing_field",
+                criteria=current_criteria,
+            )
+
+        next_question = self._build_default_next_question(
+            criteria=current_criteria,
+            missing_fields=missing_fields,
+        )
+        if not next_question or next_question.key != missing_fields[0]:
+            return self._deterministic_ask_ineligible(
+                reason="question_not_governed_by_backend",
+                criteria=current_criteria,
+            )
+
+        return DeterministicAskEligibility(
+            eligible=True,
+            reason=(
+                "exact_family_missing_field"
+                if exact_part_query
+                else "explicit_generic_part_request"
+            ),
+            criteria=current_criteria,
+            missing_fields=tuple(missing_fields),
+            next_question=next_question,
+        )
+
+    def try_validate_deterministic_ask(
+        self,
+        message_text: str,
+        *,
+        last_messages: list[dict[str, Any]] | None = None,
+        conversation_state: ConversationState | None = None,
+    ) -> PreSearchValidation | None:
+        self._last_audit_info = None
+        eligibility = self.evaluate_deterministic_ask_eligibility(
+            message_text,
+            last_messages=last_messages,
+            conversation_state=conversation_state,
+        )
+        if (
+            not eligibility.eligible
+            or not eligibility.missing_fields
+            or eligibility.next_question is None
+        ):
+            return None
+
+        self._last_audit_info = {
+            "llm_endpoint_used": None,
+            "llm_raw_content": None,
+            "llm_output_valid": None,
+            "llm_parse_error": None,
+            "llm_fallback_used": None,
+            "llm_decision_raw": None,
+            "pre_search_path": "deterministic_ask",
+            "deterministic_reason": eligibility.reason,
+            "missing_fields": list(eligibility.missing_fields),
+            "next_question_key": eligibility.next_question.key,
+        }
+        return PreSearchValidation(
+            decision="ask",
+            criteria=eligibility.criteria,
+            missing_fields=list(eligibility.missing_fields),
+            next_question=eligibility.next_question,
+            confidence=0.99,
+        )
+
+    @staticmethod
+    def _deterministic_ask_ineligible(
+        *,
+        reason: str,
+        criteria: SearchCriteria,
+    ) -> DeterministicAskEligibility:
+        return DeterministicAskEligibility(
+            eligible=False,
+            reason=reason,
+            criteria=criteria,
+        )
+
+    @staticmethod
+    def _deterministic_ask_unsafe_intent_reason(message_text: str) -> str | None:
+        normalized_text = normalize_pre_search_text(message_text)
+        for reason, pattern in DETERMINISTIC_ASK_UNSAFE_INTENT_PATTERNS:
+            if pattern.search(normalized_text):
+                return reason
+        return None
+
+    @staticmethod
+    def _is_explicit_generic_part_request(message_text: str) -> bool:
+        return bool(
+            DETERMINISTIC_ASK_PART_REQUEST_PATTERN.search(
+                normalize_pre_search_text(message_text)
+            )
+        )
+
+    @staticmethod
+    def _order_deterministic_ask_fields(missing_fields: list[str]) -> list[str]:
+        deduped = {
+            str(field_name or "").strip()
+            for field_name in missing_fields
+            if str(field_name or "").strip()
+        }
+        return sorted(
+            deduped,
+            key=lambda field_name: (
+                DETERMINISTIC_ASK_FIELD_PRIORITY.index(field_name)
+                if field_name in DETERMINISTIC_ASK_FIELD_PRIORITY
+                else len(DETERMINISTIC_ASK_FIELD_PRIORITY),
+                field_name,
+            ),
+        )
 
     def try_validate_deterministically(
         self,
