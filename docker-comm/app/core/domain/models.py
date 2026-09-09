@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 class SearchCriteriaState(BaseModel):
     part_query: str | None = None
     part_code: str | None = None
+    preferred_product_brand: str | None = None
     vehicle_brand: str | None = None
     vehicle_model: str | None = None
     vehicle_year: int | None = Field(default=None, ge=1900, le=2100)
@@ -17,11 +18,38 @@ class SearchCriteriaState(BaseModel):
     quantity: int | None = Field(default=None, ge=1, le=999)
 
 
+class ResultCandidateState(BaseModel):
+    item_id: str
+    title: str
+    score: float = Field(..., ge=0.0, le=1.0)
+    attributes: dict[str, list[str]] = Field(default_factory=dict)
+
+
+class ResultDisambiguationOption(BaseModel):
+    label: str
+    candidate_ids: list[str] = Field(default_factory=list)
+
+
+class ResultDisambiguationState(BaseModel):
+    candidates: list[ResultCandidateState] = Field(default_factory=list)
+    question_key: str
+    prompt: str
+    options: list[ResultDisambiguationOption] = Field(default_factory=list)
+    asked_fields: list[str] = Field(default_factory=list)
+    visible_candidate_ids: list[str] = Field(default_factory=list)
+    attempt: int = Field(default=1, ge=1)
+    max_attempts: int = Field(default=3, ge=1)
+
+
 class ConversationState(BaseModel):
     criteria: SearchCriteriaState = Field(default_factory=SearchCriteriaState)
+    # Optional for backward compatibility; populated when a request contains
+    # more than one independent part.
+    items: list[SearchCriteriaState] | None = None
     pending_slot: str | None = None
     pending_question: str | None = None
     last_decision: str | None = None
+    result_disambiguation: ResultDisambiguationState | None = None
 
 
 class HistoryMessage(BaseModel):
@@ -74,6 +102,7 @@ class AgentResponsePayload(BaseModel):
     handoff: HandoffInfo = Field(default_factory=HandoffInfo)
     confidence: float = 0.0
     conversation_state: ConversationState | None = None
+    item_results: list[dict[str, Any]] | None = None
 
 
 class ProcessResult(BaseModel):
@@ -85,3 +114,4 @@ class ProcessResult(BaseModel):
     confidence: float = 0.0
     agent_status_code: int
     conversation_state: ConversationState | None = None
+    item_results: list[dict[str, Any]] | None = None

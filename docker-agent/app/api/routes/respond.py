@@ -48,6 +48,10 @@ async def respond(
                 pre_search_path=result.tool_trace.pre_search_path,
             ),
             conversation_state=result.conversation_state,
+            item_results=(
+                [item.model_dump(exclude_none=True) for item in result.item_results]
+                if result.item_results else None
+            ),
         )
     except UnsupportedSchemaVersionError as exc:
         response_status = status.HTTP_400_BAD_REQUEST

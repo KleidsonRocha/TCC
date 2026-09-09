@@ -55,6 +55,7 @@ def run_mvp_eval(*, settings: Settings, dataset_path: Path, limit: int | None = 
     slot_ok = 0
     slots = (
         "part_query",
+        "preferred_product_brand",
         "vehicle_brand",
         "vehicle_model",
         "vehicle_year",

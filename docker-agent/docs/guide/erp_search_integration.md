@@ -70,6 +70,19 @@ Campos de saida mais uteis para a primeira integracao:
 - `search_text`
 - `pesquisa_full_text_txt`
 
+O runtime tambem reutiliza, sem alterar ranking, os seguintes campos como evidencia de desambiguacao:
+
+- `vehicle_application_text` -> aplicacao
+- `vehicle_complement_names` -> versao/complemento
+- `vehicle_model_motor_names` -> motor
+- `vehicle_model_injection_names` -> injecao
+- `vehicle_model_transmission_names` -> transmissao
+- `candidate_title` -> inferencia lexical conservadora de lado, posicao e caracteristicas curadas como `com/sem ar condicionado` e `com/sem rolamento`
+
+Esses atributos sao opcionais em `PartItem`. Eles servem somente para escolher a proxima pergunta depois da busca e nao aumentam o score nem comprovam compatibilidade.
+
+Quando `preferred_product_brand` e informado, o runtime procura essa marca no titulo e no texto de busca somente para elevar seu ranking. A marca preferida nao entra no `WHERE`; portanto, produtos compativeis de outras marcas continuam retornando como alternativas.
+
 ## Observacoes Praticas
 
 - `item_produto.obs_ficha_tecnica` e `item_pesquisa.ficha_tecnica_item` sao limpos de HTML para reuso posterior.

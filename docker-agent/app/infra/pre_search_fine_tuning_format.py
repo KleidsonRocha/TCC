@@ -36,6 +36,7 @@ def build_fine_tuning_assistant_payload(
     *,
     decision: str,
     criteria: dict[str, Any] | None,
+    items: list[dict[str, Any]] | None = None,
     missing_fields: list[str] | None,
     next_question: dict[str, Any] | None,
     confidence: float,
@@ -50,6 +51,7 @@ def build_fine_tuning_assistant_payload(
         {
             "decision": decision,
             "criteria": criteria_model.model_dump(exclude_none=True),
+            "items": items,
             "missing_fields": list(missing_fields or []),
             "next_question": (
                 next_question_model.model_dump(exclude_none=True)

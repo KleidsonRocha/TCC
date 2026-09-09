@@ -77,6 +77,34 @@ class StubPreSearchValidator:
 
         return self._ask(key="part_query", prompt="Qual peca voce precisa?")
 
+    def extract_dictionary_seed_criteria(
+        self,
+        *,
+        message_text: str,
+        last_messages: list[dict[str, str]] | None = None,
+    ) -> SearchCriteria:
+        _ = last_messages
+        text = (message_text or "").lower()
+        if "pastilha de freio" in text:
+            return SearchCriteria(part_query="pastilha de freio")
+        if "bandeja" in text:
+            return SearchCriteria(part_query="bandeja")
+        return SearchCriteria()
+
+    def extract_dictionary_seed_criteria(
+        self,
+        *,
+        message_text: str,
+        last_messages: list[dict[str, str]] | None = None,
+    ) -> SearchCriteria:
+        _ = last_messages
+        text = (message_text or "").lower()
+        if "pastilha de freio" in text:
+            return SearchCriteria(part_query="pastilha de freio")
+        if "bandeja" in text:
+            return SearchCriteria(part_query="bandeja")
+        return SearchCriteria()
+
 
 class _FakeTools(ToolsPort):
     def search_parts(self, query: str, branch_id: int, criteria: SearchCriteria | None = None) -> list[PartItem]:
@@ -86,8 +114,18 @@ class _FakeTools(ToolsPort):
 
         if "bandeja" in normalized:
             return [
-                PartItem(item_id="BDJ-001", title="Bandeja dianteira lado esquerdo", score=0.91),
-                PartItem(item_id="BDJ-002", title="Bandeja dianteira lado direito", score=0.89),
+                PartItem(
+                    item_id="BDJ-001",
+                    title="Bandeja dianteira lado esquerdo",
+                    score=0.91,
+                    attributes={"side": ["Esquerdo"]},
+                ),
+                PartItem(
+                    item_id="BDJ-002",
+                    title="Bandeja dianteira lado direito",
+                    score=0.89,
+                    attributes={"side": ["Direito"]},
+                ),
             ]
         if "filtro de oleo" in normalized:
             return [PartItem(item_id="FLT-010", title="Filtro de oleo motor 1.6", score=0.96)]
@@ -157,7 +195,7 @@ def test_health_returns_ok() -> None:
     assert response.json() == {"status": "ok"}
 
 
-def test_respond_with_bandeja_returns_request_info() -> None:
+def test_respond_with_bandeja_starts_result_disambiguation() -> None:
     app = _make_app()
     with TestClient(app) as client:
         response = client.post("/respond", json=_payload("Preciso de bandeja da EcoSport 2008"))
@@ -165,8 +203,16 @@ def test_respond_with_bandeja_returns_request_info() -> None:
     assert response.status_code == 200
     body = response.json()
     assert body["reply"]["text"]
-    assert body["actions"][0]["type"] == "show_items"
+    assert body["actions"] == [
+        {
+            "type": "request_info",
+            "key": "result_disambiguation",
+            "prompt": "Encontrei varias opcoes. Qual lado corresponde ao que voce procura?",
+            "options": ["1 - Direito", "2 - Esquerdo", "Nenhuma dessas"],
+        }
+    ]
     assert body["conversation_state"]["pending_slot"] == "result_disambiguation"
+    assert body["conversation_state"]["result_disambiguation"]["question_key"] == "side"
     assert body["tool_trace"]["used_tools"] == ["pre_search_validator", "search_parts"]
     assert body["tool_trace"]["pre_search_path"] == "llm"
     assert set(body["tool_trace"]["stage_latency_ms"]) == {
@@ -175,6 +221,180 @@ def test_respond_with_bandeja_returns_request_info() -> None:
         "response_assembly",
     }
     assert body["handoff"]["required"] is False
+
+
+def test_respond_selects_result_in_follow_up_without_new_erp_search() -> None:
+    app = _make_app()
+    with TestClient(app) as client:
+        first = client.post(
+            "/respond",
+            json=_payload("Preciso de bandeja da EcoSport 2008"),
+        ).json()
+        second = client.post(
+            "/respond",
+            json=_payload(
+                "esquerdo",
+                context_messages=[
+                    {"role": "user", "text": "Preciso de bandeja da EcoSport 2008"},
+                    {"role": "assistant", "text": first["reply"]["text"]},
+                ],
+                conversation_state=first["conversation_state"],
+            ),
+        )
+
+    assert second.status_code == 200
+    body = second.json()
+    assert "BDJ-001" in body["reply"]["text"]
+    assert body["actions"][0]["type"] == "show_items"
+    assert body["actions"][0]["items"][0]["item_id"] == "BDJ-001"
+    assert body["tool_trace"]["pre_search_path"] == "result_disambiguation"
+    assert body["tool_trace"]["used_tools"] == ["result_disambiguation"]
+    assert "search_parts" not in body["tool_trace"]["used_tools"]
+    assert body["conversation_state"]["pending_slot"] is None
+    assert body["conversation_state"]["result_disambiguation"] is None
+
+
+def test_respond_change_of_part_clears_result_disambiguation() -> None:
+    app = _make_app()
+    with TestClient(app) as client:
+        first = client.post(
+            "/respond",
+            json=_payload("Preciso de bandeja da EcoSport 2008"),
+        ).json()
+        second = client.post(
+            "/respond",
+            json=_payload(
+                "Preciso de pastilha de freio para ecosport 2008",
+                conversation_state=first["conversation_state"],
+            ),
+        )
+
+    assert second.status_code == 200
+    body = second.json()
+    assert body["tool_trace"]["pre_search_path"] == "llm"
+    assert body["conversation_state"]["criteria"]["part_query"] == "pastilha de freio"
+    assert body["conversation_state"]["result_disambiguation"] is None
+
+
+def test_respond_negates_result_options_and_offers_new_search() -> None:
+    app = _make_app()
+    with TestClient(app) as client:
+        first = client.post(
+            "/respond",
+            json=_payload("Preciso de bandeja da EcoSport 2008"),
+        ).json()
+        second = client.post(
+            "/respond",
+            json=_payload(
+                "nenhuma dessas",
+                conversation_state=first["conversation_state"],
+            ),
+        )
+
+    assert second.status_code == 200
+    body = second.json()
+    assert "novo criterio" in body["reply"]["text"].lower()
+    assert body["handoff"]["required"] is False
+    assert body["conversation_state"]["pending_slot"] == "no_match_retry"
+    assert body["conversation_state"]["result_disambiguation"] is None
+
+
+def test_respond_handoffs_after_result_disambiguation_attempt_limit() -> None:
+    app = _make_app()
+    with TestClient(app) as client:
+        response = client.post(
+            "/respond",
+            json=_payload("Preciso de bandeja da EcoSport 2008"),
+        ).json()
+        for answer in ("talvez", "aquela", "indefinido"):
+            response = client.post(
+                "/respond",
+                json=_payload(
+                    answer,
+                    conversation_state=response["conversation_state"],
+                ),
+            ).json()
+
+    assert response["handoff"] == {
+        "required": True,
+        "reason": "result_disambiguation_limit",
+    }
+    assert response["conversation_state"]["pending_slot"] is None
+    assert response["conversation_state"]["result_disambiguation"] is None
+
+
+def test_respond_respects_explicit_handoff_during_result_disambiguation() -> None:
+    app = _make_app()
+    with TestClient(app) as client:
+        first = client.post(
+            "/respond",
+            json=_payload("Preciso de bandeja da EcoSport 2008"),
+        ).json()
+        second = client.post(
+            "/respond",
+            json=_payload(
+                "quero falar com um vendedor",
+                conversation_state=first["conversation_state"],
+            ),
+        ).json()
+
+    assert second["handoff"] == {
+        "required": True,
+        "reason": "result_disambiguation_requested",
+    }
+
+
+def test_respond_selects_result_in_follow_up_without_new_erp_search() -> None:
+    app = _make_app()
+    with TestClient(app) as client:
+        first = client.post(
+            "/respond",
+            json=_payload("Preciso de bandeja da EcoSport 2008"),
+        ).json()
+        second = client.post(
+            "/respond",
+            json=_payload(
+                "esquerdo",
+                context_messages=[
+                    {"role": "user", "text": "Preciso de bandeja da EcoSport 2008"},
+                    {"role": "assistant", "text": first["reply"]["text"]},
+                ],
+                conversation_state=first["conversation_state"],
+            ),
+        )
+
+    assert second.status_code == 200
+    body = second.json()
+    assert "BDJ-001" in body["reply"]["text"]
+    assert body["actions"][0]["type"] == "show_items"
+    assert body["actions"][0]["items"][0]["item_id"] == "BDJ-001"
+    assert body["tool_trace"]["pre_search_path"] == "result_disambiguation"
+    assert body["tool_trace"]["used_tools"] == ["result_disambiguation"]
+    assert "search_parts" not in body["tool_trace"]["used_tools"]
+    assert body["conversation_state"]["pending_slot"] is None
+    assert body["conversation_state"]["result_disambiguation"] is None
+
+
+def test_respond_change_of_part_clears_result_disambiguation() -> None:
+    app = _make_app()
+    with TestClient(app) as client:
+        first = client.post(
+            "/respond",
+            json=_payload("Preciso de bandeja da EcoSport 2008"),
+        ).json()
+        second = client.post(
+            "/respond",
+            json=_payload(
+                "Preciso de pastilha de freio para ecosport 2008",
+                conversation_state=first["conversation_state"],
+            ),
+        )
+
+    assert second.status_code == 200
+    body = second.json()
+    assert body["tool_trace"]["pre_search_path"] == "llm"
+    assert body["conversation_state"]["criteria"]["part_query"] == "pastilha de freio"
+    assert body["conversation_state"]["result_disambiguation"] is None
 
 
 def test_respond_with_filtro_de_oleo_returns_single_match() -> None:
@@ -189,15 +409,22 @@ def test_respond_with_filtro_de_oleo_returns_single_match() -> None:
     assert body["handoff"]["required"] is False
 
 
-def test_respond_without_match_requests_handoff() -> None:
+def test_respond_without_match_offers_retry_or_handoff() -> None:
     app = _make_app()
     with TestClient(app) as client:
         response = client.post("/respond", json=_payload("Preciso de pastilha de freio para ecosport 2008"))
 
     assert response.status_code == 200
     body = response.json()
-    assert body["handoff"]["required"] is True
-    assert body["handoff"]["reason"] == "no_match"
+    assert body["handoff"] == {"required": False, "reason": None}
+    assert "criterios pesquisados" in body["reply"]["text"].lower()
+    assert 'peca "pastilha de freio"' in body["reply"]["text"].lower()
+    assert 'modelo "ecosport"' in body["reply"]["text"].lower()
+    assert 'ano "2008"' in body["reply"]["text"].lower()
+    assert "nao comprova incompatibilidade" in body["reply"]["text"].lower()
+    assert "me informe modelo, ano e motorizacao" not in body["reply"]["text"].lower()
+    assert body["conversation_state"]["pending_slot"] == "no_match_retry"
+    assert body["conversation_state"]["last_decision"] == "no_match"
 
 
 def test_respond_with_generic_filter_requests_vehicle_year() -> None:
@@ -257,10 +484,11 @@ def test_respond_uses_deterministic_ask_without_calling_llm() -> None:
         }
     ]
     assert body["conversation_state"] == {
-        "criteria": {
-            "part_query": "bandeja",
-            "part_code": None,
-            "vehicle_brand": None,
+            "criteria": {
+                "part_query": "bandeja",
+                "part_code": None,
+                "preferred_product_brand": None,
+                "vehicle_brand": None,
             "vehicle_model": "EcoSport",
             "vehicle_year": 2008,
             "engine": None,
@@ -268,12 +496,14 @@ def test_respond_uses_deterministic_ask_without_calling_llm() -> None:
             "position": None,
             "axle": None,
             "variant": None,
-            "quantity": None,
-        },
-        "pending_slot": "side",
-        "pending_question": "Qual lado da peca?",
-        "last_decision": "ask",
-    }
+                "quantity": None,
+            },
+            "items": None,
+            "pending_slot": "side",
+            "pending_question": "Qual lado da peca?",
+            "last_decision": "ask",
+            "result_disambiguation": None,
+        }
     assert body["tool_trace"]["pre_search_path"] == "deterministic_ask"
     assert body["tool_trace"]["used_tools"] == [
         "pre_search_deterministic_ask"

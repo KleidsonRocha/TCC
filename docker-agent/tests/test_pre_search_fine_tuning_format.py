@@ -84,6 +84,7 @@ def test_build_fine_tuning_assistant_payload_keeps_contract_shape() -> None:
         "criteria": {
             "part_query": "radiador",
             "part_code": None,
+            "preferred_product_brand": None,
             "vehicle_brand": None,
             "vehicle_model": "Gol",
             "vehicle_year": 2010,
@@ -94,6 +95,7 @@ def test_build_fine_tuning_assistant_payload_keeps_contract_shape() -> None:
             "variant": None,
             "quantity": None,
         },
+        "items": None,
         "missing_fields": ["engine"],
         "next_question": {
             "type": "request_info",
@@ -119,6 +121,7 @@ def test_build_fine_tuning_assistant_payload_for_search_keeps_null_next_question
         "criteria": {
             "part_query": None,
             "part_code": "AB-1234",
+            "preferred_product_brand": None,
             "vehicle_brand": None,
             "vehicle_model": None,
             "vehicle_year": None,
@@ -129,6 +132,7 @@ def test_build_fine_tuning_assistant_payload_for_search_keeps_null_next_question
             "variant": None,
             "quantity": 2,
         },
+        "items": None,
         "missing_fields": [],
         "next_question": None,
         "confidence": 0.99,

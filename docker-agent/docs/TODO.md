@@ -18,6 +18,51 @@ Regra para buscas genericas ou incertas:
 - ambiguidade contextual real ou caso fora das regras: manter a LLM
 - GPU, modelo menor e tuning de inferencia entram somente para o volume residual de LLM
 
+## Plano derivado da bateria real
+
+- [x] Corrigir o runner da bateria
+  - enviar para cada turno somente o historico anterior
+  - truncar contextos capturados que contenham a mensagem atual ou turnos futuros
+  - impedir que a resposta esperada vaze para o contexto avaliado
+
+- [x] Corrigir o estado conversacional basico
+  - dar precedencia a veiculo, peca e demais entidades explicitamente informados na mensagem atual
+  - permitir que uma correcao substitua o valor antigo do estado
+  - preservar informacoes espontaneas enquanto a pergunta pendente continua ativa
+
+- [x] Separar semanticamente `side`, `position` e `axle`
+  - nao interpretar `eixo dianteiro/traseiro` como posicao
+  - nao perguntar um campo ja preenchido explicitamente
+  - manter `axle` independente de `position` no calculo de campos faltantes
+
+- [x] Adicionar estado e extracao para multiplos itens
+  - adicionar `items[]` opcional sem quebrar o `criteria` legado
+  - preservar quantidade e criterios de veiculo por item
+  - extrair itens apenas quando houver familias catalogadas em clausulas distintas
+
+- [x] Orquestrar busca e resposta comercial de multiplos itens
+  - executar pesquisa por item
+  - agregar resultados, quantidades e falhas sem reduzir o pedido ao primeiro item
+
+- [ ] Resolver pendencias individualmente em pedidos multi-item
+  - guardar `active_item_index` ao faltar um criterio em um item
+  - retomar a pesquisa desse item depois da resposta do cliente
+
+- [ ] Reformular a extracao de quantidade
+  - exigir evidencia linguistica de quantidade
+  - ignorar numeros de motor, ano, modelo, cilindrada e especificacao tecnica
+
+- [ ] Melhorar a taxonomia e normalizacao de pecas compostas
+  - preservar composicoes como `polia da bomba`, `kit corrente da bomba` e `junta do cabecote`
+
+- [x] Medir a latencia do caminho residual com LLM
+  - medir p50/p95 do total, extractor e chamada LLM
+  - distinguir caminhos deterministico e LLM no benchmark
+
+- [ ] Reduzir chamadas e custo do caminho residual com LLM
+  - usar os caminhos deterministas ja existentes antes da LLM
+  - reduzir `num_predict` ou trocar modelo somente depois de benchmark de qualidade
+
 ## Criterio Obrigatorio Para Cada Bloco
 
 Toda prioridade implementada deve:
@@ -78,18 +123,20 @@ Objetivo:
   - permitir que um motor textual complete o `pending_slot` e seja elegivel ao caminho deterministico quando seguro
   - revalidar `coxim amortecedor ecosport 2008 -> zetec rocam`
 
-- [ ] Melhorar a resposta de `no_match`
+- [x] Melhorar a resposta de `no_match`
   - separar ausencia real no ERP de criterio ainda insuficiente ou conflitante
   - usar `conversation_state` para nao pedir novamente modelo, ano ou motor ja informados
   - informar quais criterios foram pesquisados
   - oferecer nova tentativa ou handoff sem afirmar incompatibilidade que o ERP nao comprovou
+  - resposta agora distingue incompletude, divergencia de contexto e zero itens para filtros completos; nova tentativa fica pendente sem acionar handoff antes da escolha do usuario
 
-- [ ] Criar desambiguacao real quando houver muitos itens
+- [x] Criar desambiguacao real quando houver muitos itens
   - escolher o melhor discriminador seguinte entre aplicacao, versao, motor, lado, posicao e outros dados disponiveis
   - perguntar em vez de apenas devolver uma lista extensa
   - tratar `result_disambiguation` como etapa funcional multi-turno
   - resolver selecao, negacao, mudanca de assunto e limite de tentativas
   - reutilizar o Redis atual, sem store paralelo
+  - atributos opcionais do ERP governam a pergunta; sem separador confiavel, o backend usa paginas curtas de quatro itens e aceita numero, codigo ou titulo
 
 - [ ] Reestruturar o prompt residual da LLM como contrato operacional
   - aplicar somente aos casos que nao foram resolvidos deterministicamente

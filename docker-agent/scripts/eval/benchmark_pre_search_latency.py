@@ -211,6 +211,12 @@ def _summarize_measurements(measurements: list[dict[str, Any]]) -> dict[str, Any
     extractor_latencies = [float(item["extractor_ms"]) for item in measurements]
     decisions = [str(item["decision"]) for item in measurements]
     paths = [str(item.get("pre_search_path") or "llm") for item in measurements]
+    llm_latencies = [
+        float(item["llm_audit"]["llm_elapsed_ms"])
+        for item in measurements
+        if isinstance(item.get("llm_audit"), dict)
+        and item["llm_audit"].get("llm_elapsed_ms") is not None
+    ]
     target_loaded_before = [
         bool(item["ollama_ps_before"].get("target_loaded"))
         for item in measurements
@@ -229,6 +235,8 @@ def _summarize_measurements(measurements: list[dict[str, Any]]) -> dict[str, Any
         "latency_p50_ms": _safe_percentile(latencies, 0.50),
         "latency_p95_ms": _safe_percentile(latencies, 0.95),
         "extractor_avg_ms": round(statistics.mean(extractor_latencies), 2) if extractor_latencies else 0.0,
+        "llm_latency_p50_ms": _safe_percentile(llm_latencies, 0.50),
+        "llm_latency_p95_ms": _safe_percentile(llm_latencies, 0.95),
         "decisions": decisions,
         "pre_search_paths": paths,
         "deterministic_bypass_count": sum(

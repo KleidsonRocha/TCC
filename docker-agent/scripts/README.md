@@ -34,7 +34,7 @@ Exemplos:
 
 ```powershell
 python .\scripts\eval\generate_eval_report.py
-python .\scripts\eval\run_real_respond_battery.py
+python .\scripts\eval\run_real_respond_battery.py --dataset docs/assets/datasets/battery_real_omnichannel_250.json
 ```
 
 Smoke rapido do consolidado:

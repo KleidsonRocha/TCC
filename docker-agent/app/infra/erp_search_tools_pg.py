@@ -42,6 +42,7 @@ _STOPWORDS = {
 _SIDE_TOKENS = {"left": "esquerd", "right": "direit"}
 _POSITION_TOKENS = {"front": "dianteir", "rear": "traseir"}
 _AXLE_TOKENS = {"front": "eixo dianteiro", "rear": "eixo traseiro"}
+_ATTRIBUTE_SPLIT_RE = re.compile(r"\s*(?:\||;|\r?\n)\s*")
 
 
 def _normalize_optional_text(value: str | None) -> str | None:
@@ -162,6 +163,7 @@ class PostgresErpSearchTools(ToolsPort):
                 item_id=str(row["item_code"]),
                 title=str(row["title"]),
                 score=max(0.0, min(float(row["score"]), 1.0)),
+                attributes=self._build_disambiguation_attributes(row),
             )
             for row in rows
         ]
@@ -190,6 +192,7 @@ class PostgresErpSearchTools(ToolsPort):
     def _build_search_sql(cls, *, criteria: SearchCriteria, limit: int) -> tuple[str, dict[str, object]]:
         part_query = _normalize_optional_text(criteria.part_query)
         part_code = _normalize_optional_text(criteria.part_code)
+        preferred_product_brand = _normalize_optional_text(criteria.preferred_product_brand)
         vehicle_brand = _normalize_optional_text(criteria.vehicle_brand)
         vehicle_model = _normalize_optional_text(criteria.vehicle_model)
         engine = _normalize_optional_text(criteria.engine)
@@ -202,6 +205,7 @@ class PostgresErpSearchTools(ToolsPort):
         params: dict[str, object] = {
             "has_part_query": bool(part_query),
             "has_part_code": bool(part_code),
+            "has_preferred_product_brand": bool(preferred_product_brand),
             "has_vehicle_brand": bool(vehicle_brand),
             "has_vehicle_model": bool(vehicle_model),
             "has_vehicle_year": criteria.vehicle_year is not None,
@@ -214,6 +218,9 @@ class PostgresErpSearchTools(ToolsPort):
             "part_query_like": f"%{part_query}%" if part_query else None,
             "part_query_prefix_like": f"{part_query}%" if part_query else None,
             "part_code_norm": part_code.lower() if part_code else None,
+            "preferred_product_brand_like": (
+                f"%{preferred_product_brand}%" if preferred_product_brand else None
+            ),
             "vehicle_brand_like": f"%{vehicle_brand}%" if vehicle_brand else None,
             "vehicle_brand_norm": vehicle_brand.lower() if vehicle_brand else None,
             "vehicle_model_like": f"%{vehicle_model}%" if vehicle_model else None,
@@ -268,6 +275,10 @@ class PostgresErpSearchTools(ToolsPort):
         side_match_sql = "coalesce(search_text, '') ILIKE %(side_like)s"
         position_match_sql = "coalesce(search_text, '') ILIKE %(position_like)s"
         axle_match_sql = "coalesce(search_text, '') ILIKE %(axle_like)s"
+        preferred_product_brand_match_sql = (
+            "(coalesce(candidate_title, '') ILIKE %(preferred_product_brand_like)s "
+            "OR coalesce(search_text, '') ILIKE %(preferred_product_brand_like)s)"
+        )
 
         required_filters: list[str] = []
         if part_code:
@@ -301,6 +312,11 @@ class PostgresErpSearchTools(ToolsPort):
                     id_item,
                     COALESCE(NULLIF(cd_item, ''), id_item::text) AS item_code,
                     candidate_title AS title,
+                    vehicle_application_text,
+                    vehicle_complement_names,
+                    vehicle_model_motor_names,
+                    vehicle_model_injection_names,
+                    vehicle_model_transmission_names,
                     CASE
                         WHEN %(has_part_code)s AND {exact_code_sql} THEN 1.0
                         ELSE
@@ -316,6 +332,7 @@ class PostgresErpSearchTools(ToolsPort):
                             + CASE WHEN %(has_vehicle_year)s AND {year_match_sql} THEN 0.08 ELSE 0.0 END
                             + CASE WHEN %(has_engine)s AND {engine_match_sql} THEN 0.08 ELSE 0.0 END
                             + CASE WHEN %(has_variant)s AND {variant_match_sql} THEN 0.05 ELSE 0.0 END
+                            + CASE WHEN %(has_preferred_product_brand)s AND {preferred_product_brand_match_sql} THEN 0.08 ELSE 0.0 END
                             + CASE WHEN %(has_side)s AND {side_match_sql} THEN 0.03 ELSE 0.0 END
                             + CASE WHEN %(has_position)s AND {position_match_sql} THEN 0.04 ELSE 0.0 END
                             + CASE WHEN %(has_axle)s AND {axle_match_sql} THEN 0.03 ELSE 0.0 END
@@ -325,6 +342,10 @@ class PostgresErpSearchTools(ToolsPort):
                                 ELSE 0.0
                             END
                     END AS score,
+                    CASE
+                        WHEN %(has_preferred_product_brand)s AND {preferred_product_brand_match_sql} THEN 0
+                        ELSE 1
+                    END AS preferred_product_brand_rank,
                     CASE
                         WHEN %(has_vehicle_model)s AND {exact_model_sql} THEN 0
                         ELSE 1
@@ -339,13 +360,79 @@ class PostgresErpSearchTools(ToolsPort):
             SELECT
                 item_code,
                 title,
+                vehicle_application_text,
+                vehicle_complement_names,
+                vehicle_model_motor_names,
+                vehicle_model_injection_names,
+                vehicle_model_transmission_names,
                 ROUND(GREATEST(0.0, LEAST(score, 1.0))::numeric, 4) AS score
             FROM ranked
             WHERE score >= 0.12
-            ORDER BY score DESC, model_rank ASC, title_rank ASC, length(title) ASC, item_code ASC
+            ORDER BY score DESC, preferred_product_brand_rank ASC, model_rank ASC, title_rank ASC, length(title) ASC, item_code ASC
             LIMIT %(limit)s
         """
         return sql, params
+
+    @classmethod
+    def _build_disambiguation_attributes(cls, row: dict[str, object]) -> dict[str, list[str]]:
+        title = str(row.get("title") or "")
+        attributes = {
+            "application": cls._split_attribute_values(row.get("vehicle_application_text")),
+            "variant": cls._split_attribute_values(row.get("vehicle_complement_names")),
+            "engine": cls._split_attribute_values(row.get("vehicle_model_motor_names")),
+            "injection": cls._split_attribute_values(row.get("vehicle_model_injection_names")),
+            "transmission": cls._split_attribute_values(row.get("vehicle_model_transmission_names")),
+            "side": cls._infer_directional_attribute(
+                title,
+                {"esquerd": "Esquerdo", "direit": "Direito"},
+            ),
+            "position": cls._infer_directional_attribute(
+                title,
+                {"dianteir": "Dianteiro", "traseir": "Traseiro"},
+            ),
+            "feature": cls._infer_feature_attributes(title),
+        }
+        return {key: values for key, values in attributes.items() if values}
+
+    @staticmethod
+    def _split_attribute_values(raw_value: object) -> list[str]:
+        if raw_value is None:
+            return []
+        values: list[str] = []
+        seen: set[str] = set()
+        for fragment in _ATTRIBUTE_SPLIT_RE.split(str(raw_value)):
+            value = " ".join(fragment.strip().split())
+            normalized = value.casefold()
+            if not value or len(value) > 80 or normalized in seen:
+                continue
+            seen.add(normalized)
+            values.append(value)
+            if len(values) >= 8:
+                break
+        return values
+
+    @staticmethod
+    def _infer_directional_attribute(
+        title: str,
+        token_labels: dict[str, str],
+    ) -> list[str]:
+        lowered = title.casefold()
+        return [label for token, label in token_labels.items() if token in lowered]
+
+    @staticmethod
+    def _infer_feature_attributes(title: str) -> list[str]:
+        normalized = " ".join(title.casefold().replace("/", " / ").split())
+        feature_patterns = (
+            (r"\b(?:com|c\s*/?)\s*ar\s+condicionado\b", "Com ar condicionado"),
+            (r"\b(?:sem|s\s*/?)\s*ar\s+condicionado\b", "Sem ar condicionado"),
+            (r"\b(?:com|c\s*/?)\s*rol(?:amento)?\b", "Com rolamento"),
+            (r"\b(?:sem|s\s*/?)\s*rol(?:amento)?\b", "Sem rolamento"),
+        )
+        return [
+            label
+            for pattern, label in feature_patterns
+            if re.search(pattern, normalized)
+        ]
 
     @staticmethod
     def _build_token_filters(

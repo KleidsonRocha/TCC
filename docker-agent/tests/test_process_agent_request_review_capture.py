@@ -49,8 +49,18 @@ class _FakeTools(ToolsPort):
         _ = criteria
         if "bandeja" in normalized:
             return [
-                PartItem(item_id="BDJ-001", title="Bandeja dianteira lado esquerdo", score=0.91),
-                PartItem(item_id="BDJ-002", title="Bandeja dianteira lado direito", score=0.89),
+                PartItem(
+                    item_id="BDJ-001",
+                    title="Bandeja dianteira lado esquerdo",
+                    score=0.91,
+                    attributes={"side": ["Esquerdo"]},
+                ),
+                PartItem(
+                    item_id="BDJ-002",
+                    title="Bandeja dianteira lado direito",
+                    score=0.89,
+                    attributes={"side": ["Direito"]},
+                ),
             ]
         if "coxim" in normalized:
             return [
@@ -1186,7 +1196,7 @@ def test_process_agent_request_passes_conversation_state_to_validator() -> None:
     assert result.conversation_state.pending_slot == "position"
 
 
-def test_process_agent_request_multiple_results_returns_only_show_items() -> None:
+def test_process_agent_request_multiple_results_starts_disambiguation() -> None:
     class _SearchValidator:
         def validate(self, message_text: str, *, last_messages=None, conversation_state=None) -> PreSearchValidation:
             return PreSearchValidation(
@@ -1233,6 +1243,180 @@ def test_process_agent_request_multiple_results_returns_only_show_items() -> Non
 
     result = asyncio.run(use_case.execute(payload))
 
-    assert [action["type"] for action in result.actions] == ["show_items"]
+    assert [action["type"] for action in result.actions] == ["request_info"]
+    assert result.actions[0]["key"] == "result_disambiguation"
+    assert result.actions[0]["options"] == [
+        "1 - Direito",
+        "2 - Esquerdo",
+        "Nenhuma dessas",
+    ]
     assert result.conversation_state is not None
     assert result.conversation_state.pending_slot == "result_disambiguation"
+    assert result.conversation_state.result_disambiguation is not None
+    assert result.conversation_state.result_disambiguation.question_key == "side"
+
+
+def test_no_match_reuses_known_conversation_criteria_in_erp_search() -> None:
+    class _FollowUpSearchValidator:
+        def validate(self, message_text: str, *, last_messages=None, conversation_state=None) -> PreSearchValidation:
+            return PreSearchValidation(
+                decision="search",
+                criteria=SearchCriteria(engine="1.0"),
+                missing_fields=[],
+                next_question=None,
+                confidence=0.9,
+            )
+
+        def get_last_audit(self) -> dict:
+            return {}
+
+    tools = _SpyTools()
+    recorder = _SpyRecorder()
+    use_case = ProcessAgentRequestUseCase(
+        tools=tools,
+        pre_search_validator=_FollowUpSearchValidator(),
+        settings=Settings(
+            APP_ENV="test",
+            PRE_SEARCH_DETERMINISTIC_BYPASS_ENABLED=False,
+            PRE_SEARCH_DETERMINISTIC_ASK_ENABLED=False,
+        ),
+        logger=logging.getLogger("test"),
+        review_recorder=recorder,
+    )
+    payload = AgentRequestV1.model_validate(
+        {
+            "schema_version": "1.0",
+            "trace_id": "trace-no-match-state",
+            "conversation_id": "conv-no-match-state",
+            "message": {"text": "1.0"},
+            "business": {"branch_id": 1},
+            "context": {
+                "last_messages": [],
+                "conversation_state": {
+                    "criteria": {
+                        "part_query": "pastilha de freio",
+                        "vehicle_model": "Gol",
+                        "vehicle_year": 2010,
+                    },
+                    "pending_slot": "engine",
+                    "pending_question": "Qual a motorizacao?",
+                    "last_decision": "ask",
+                },
+            },
+        }
+    )
+
+    result = asyncio.run(use_case.execute(payload))
+
+    searched_criteria = tools.calls[0]["criteria"]
+    assert searched_criteria == SearchCriteria(
+        part_query="pastilha de freio",
+        vehicle_model="Gol",
+        vehicle_year=2010,
+        engine="1.0",
+    )
+    assert 'modelo "Gol"' in result.reply_text
+    assert 'ano "2010"' in result.reply_text
+    assert 'motor "1.0"' in result.reply_text
+    assert "Informe modelo" not in result.reply_text
+    assert result.handoff.required is False
+    assert result.handoff.reason is None
+    assert result.conversation_state is not None
+    assert result.conversation_state.pending_slot == "no_match_retry"
+    assert result.conversation_state.last_decision == "no_match"
+    assert recorder.calls[0]["final_handoff_required"] is False
+
+
+def test_no_match_reports_context_conflict_without_claiming_incompatibility() -> None:
+    criteria = SearchCriteria(
+        part_query="radiador",
+        vehicle_model="Gol",
+        vehicle_year=2010,
+        engine="1.6",
+    )
+    incoming_state = ConversationState(
+        criteria=SearchCriteria(
+            part_query="radiador",
+            vehicle_model="Gol",
+            vehicle_year=2010,
+            engine="1.0",
+        ),
+        pending_slot="no_match_retry",
+        pending_question="Corrija algum criterio.",
+        last_decision="no_match",
+    )
+
+    reply_text, pending_slot, _ = ProcessAgentRequestUseCase._build_no_match_reply(
+        criteria=criteria,
+        missing_fields=[],
+        incoming_state=incoming_state,
+    )
+
+    assert "Ha divergencia com o contexto anterior" in reply_text
+    assert 'motor era "1.0" e foi pesquisado como "1.6"' in reply_text
+    assert "nao comprova incompatibilidade" in reply_text
+    assert pending_slot == "no_match_retry"
+
+
+def test_no_match_reports_only_criteria_that_are_still_missing() -> None:
+    criteria = SearchCriteria(
+        part_query="radiador",
+        vehicle_model="Gol",
+        vehicle_year=2010,
+    )
+
+    reply_text, pending_slot, pending_question = (
+        ProcessAgentRequestUseCase._build_no_match_reply(
+            criteria=criteria,
+            missing_fields=["vehicle_model", "engine"],
+            incoming_state=None,
+        )
+    )
+
+    assert "criterios ainda estao insuficientes" in reply_text
+    assert "Ainda falta: motor" in reply_text
+    assert "Ainda falta: modelo" not in reply_text
+    assert pending_slot == "engine"
+    assert pending_question == "Informe motor para refazer a pesquisa."
+
+
+def test_search_continuation_does_not_restore_part_code_or_cross_part_families() -> None:
+    incoming_state = ConversationState(
+        criteria=SearchCriteria(
+            part_query="radiador",
+            part_code="RAD-1234",
+            vehicle_model="Gol",
+            vehicle_year=2010,
+        ),
+        pending_slot="no_match_retry",
+        pending_question="Corrija algum criterio.",
+        last_decision="no_match",
+    )
+    same_family = PreSearchValidation(
+        decision="search",
+        criteria=SearchCriteria(part_query="radiador", engine="1.6"),
+        missing_fields=[],
+        next_question=None,
+        confidence=0.9,
+    )
+    changed_family = PreSearchValidation(
+        decision="search",
+        criteria=SearchCriteria(part_query="bandeja", engine="1.6"),
+        missing_fields=[],
+        next_question=None,
+        confidence=0.9,
+    )
+
+    merged = ProcessAgentRequestUseCase._preserve_search_continuation_criteria(
+        same_family,
+        incoming_state=incoming_state,
+    )
+    unchanged = ProcessAgentRequestUseCase._preserve_search_continuation_criteria(
+        changed_family,
+        incoming_state=incoming_state,
+    )
+
+    assert merged.criteria.part_code is None
+    assert merged.criteria.vehicle_model == "Gol"
+    assert merged.criteria.vehicle_year == 2010
+    assert unchanged.criteria == changed_family.criteria

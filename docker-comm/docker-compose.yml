@@ -8,6 +8,9 @@ services:
       REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
       AGENT_URL: ${AGENT_URL}
       DEFAULT_BRANCH_ID: ${DEFAULT_BRANCH_ID:-1}
+      REVIEW_API_URL: ${REVIEW_API_URL:-http://docker-agent:8001}
+      REVIEW_API_KEY: ${REVIEW_API_KEY:-}
+      REVIEWED_BY: ${REVIEWED_BY:-}
       HISTORY_LIMIT: ${HISTORY_LIMIT:-6}
       AGENT_TIMEOUT_SECONDS: ${AGENT_TIMEOUT_SECONDS:-20}
       AGENT_RETRY_COUNT: ${AGENT_RETRY_COUNT:-1}
@@ -45,6 +48,9 @@ services:
     depends_on:
       - docker-comm
     restart: unless-stopped
+    networks:
+      - default
+      - tcc-integration
 
   redis:
     image: redis:7-alpine

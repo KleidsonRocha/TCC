@@ -3,10 +3,23 @@ from hashlib import sha256
 
 from scripts.training.export_pre_search_fine_tuning_dataset import (
     _build_export_rows,
+    _normalize_export_contract,
     _pick_system_prompt,
     _write_manifest,
     _write_split_files,
 )
+
+
+def test_normalize_export_contract_clears_stale_search_question_and_missing_fields() -> None:
+    missing, question, adjustments = _normalize_export_contract(
+        decision="search",
+        missing_fields=["engine"],
+        next_question={"key": "engine", "prompt": "Qual o motor?"},
+    )
+
+    assert missing == []
+    assert question is None
+    assert adjustments == ["search_contract_cleared_stale_missing_fields"]
 
 
 class _Seed:
@@ -81,6 +94,14 @@ def test_build_export_rows_groups_splits_and_serializes_records() -> None:
             "input_last_messages": [],
             "expected_decision": "ask",
             "expected_criteria": {"part_query": "radiador", "vehicle_model": "Gol", "vehicle_year": 2010},
+            "expected_items": [
+                {"decision": "search", "criteria": {"part_query": "coifa interna"}},
+                {
+                    "decision": "ask",
+                    "criteria": {"part_query": "bucha da bandeja"},
+                    "missing_fields": ["side"],
+                },
+            ],
             "expected_missing_fields": ["engine"],
             "expected_next_question": {
                 "type": "request_info",
@@ -123,6 +144,10 @@ def test_build_export_rows_groups_splits_and_serializes_records() -> None:
     assert train_item["record"]["metadata"]["dataset_slug"] == "pre-search-ft-v1"
     assert train_item["record"]["metadata"]["example_key"] == "ask_engine"
     assert train_item["record"]["assistant_payload"]["decision"] == "ask"
+    assert [
+        item["part_query"] for item in train_item["record"]["assistant_payload"]["items"]
+    ] == ["coifa interna", "bucha da bandeja"]
+    assert train_item["record"]["metadata"]["item_reviews"][1]["decision"] == "ask"
     assert train_item["messages"]["messages"][0] == {"role": "system", "content": "retorne json"}
     assert '"message_text":"radiador gol 2010"' in train_item["messages"]["messages"][1]["content"]
     assert '"decision":"ask"' in train_item["messages"]["messages"][2]["content"]

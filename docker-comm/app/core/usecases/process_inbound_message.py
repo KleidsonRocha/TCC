@@ -110,4 +110,5 @@ class ProcessInboundMessageUseCase:
             confidence=agent_response.confidence,
             agent_status_code=status_code,
             conversation_state=agent_response.conversation_state,
+            item_results=agent_response.item_results,
         )

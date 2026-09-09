@@ -130,6 +130,21 @@ Saida esperada:
 - `.tmp/fine_tuning/pre-search-ft-v1/system_prompt.txt`
 - `.tmp/fine_tuning/pre-search-ft-v1/manifest.json`
 
+### Balancear treino, validacao e teste
+
+Depois de promover novos exemplos, o dataset pode ser redistribuido de forma
+deterministica com 80% para treino, 10% para validacao e 10% para teste. Os
+turnos da mesma conversa permanecem sempre no mesmo split:
+
+```bash
+python scripts/training/rebalance_pre_search_fine_tuning_dataset.py \
+  --dataset-slug pre-search-ft-v1
+```
+
+Em seguida, execute novamente o exportador. O arquivo `test.messages.jsonl`
+gerado deve ser usado como avaliacao retida, junto do golden set, e nao deve
+ser usado para ajustar o adapter.
+
 ## Exemplos seed
 
 O schema ja sobe com exemplos iniciais, incluindo:
@@ -162,6 +177,35 @@ Depois voce revisa os casos e informa:
 - `reviewed_question_key`
 - `reviewed_question_prompt`
 - opcionalmente `reviewed_criteria` e `reviewed_missing_fields`
+
+### Revisao visual no Streamlit
+
+A aba `Revisao de IA` do `docker-comm-ui` agrupa os registros por
+`conversation_id` e exibe a conversa inteira em ordem cronologica. A unidade de
+rotulagem continua sendo cada interacao: o avaliador seleciona um turno pendente,
+corrige decisao, criterios, campos ausentes e proxima pergunta, e registra suas
+observacoes.
+
+Pedidos com varias pecas usam `reviewed_items`. Cada cartao possui criterios,
+decisao, campos faltantes e pergunta proprios. O criterio principal permanece no
+registro por compatibilidade com exemplos antigos, mas nao substitui os itens.
+Na promocao, os criterios de cada cartao alimentam `items` no payload supervisionado;
+as avaliacoes individuais permanecem em `expected_items` como metadado curado.
+
+Ao salvar, o turno muda de `pending` para `reviewed`. Ele nao e promovido
+automaticamente ao dataset: a promocao continua sendo uma decisao posterior e
+explicita. Quando nao resta nenhum turno pendente, a conversa sai da fila
+`Pendentes` e passa a aparecer em `Concluidas` como ja avaliada. Tambem e possivel
+descartar um turno isolado ou todos os turnos pendentes da conversa.
+
+Uma revisao `reviewed` ou `discarded` pode ser reaberta para correcao. A versao
+anterior e gravada em `pre_search_review_revision` antes de o turno voltar para
+`pending`. Registros ja promovidos exigem remocao explicita do dataset antes de
+serem reabertos, evitando divergencia silenciosa entre fila e treino.
+
+Conversas com varias interacoes devem permanecer no mesmo split quando forem
+promovidas, evitando que o contexto de uma mesma conversa seja dividido entre
+treino e validacao/teste.
 
 CLI:
 

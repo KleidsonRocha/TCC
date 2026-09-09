@@ -8,6 +8,26 @@ Este guia concentra o caminho operacional mais curto para a stack atual:
 - `ollama` hospeda os modelos de inferencia
 - `trainer` e usado apenas quando voce dispara fine-tuning
 
+## Revisar Conversas No Streamlit
+
+Com a stack ativa, acesse `http://localhost:8501` e abra a aba `Revisao de IA`.
+A fila `Pendentes` mostra apenas conversas que ainda possuem turnos sem avaliacao;
+a fila `Concluidas` permite consultar o que ja foi revisado ou descartado.
+
+Para proteger a operacao, defina o mesmo segredo nos dois projetos:
+
+```env
+# docker-agent/.env
+REVIEW_API_KEY=troque-por-um-segredo-forte
+
+# docker-comm/.env
+REVIEW_API_KEY=troque-por-um-segredo-forte
+REVIEWED_BY=nome-do-avaliador
+```
+
+Depois recrie `docker-agent` e `docker-comm-ui`. A UI acessa o agent pela rede
+interna usando `REVIEW_API_URL`; nao exponha o Postgres para executar a revisao.
+
 ## Subir E Derrubar A Stack
 
 Subir ou rebuildar a stack base:
@@ -237,6 +257,26 @@ Rodar a bateria de latencia:
 ```bash
 python scripts/eval/benchmark_pre_search_latency.py
 ```
+
+Validar a selecao da bateria real sem chamar as APIs:
+
+```bash
+python scripts/eval/run_real_respond_battery.py --tier extended --dry-run
+```
+
+Executar o conjunto critico diretamente no `docker-agent`:
+
+```bash
+python scripts/eval/run_real_respond_battery.py --tier smoke
+```
+
+Executar um cenario multi-turno pelo `docker-comm` e pelo Redis real:
+
+```bash
+python scripts/eval/run_real_respond_battery.py --target comm --tier regression --scenario-id disambiguation_001
+```
+
+Se `API_KEY` estiver ativo no `docker-comm`, acrescente `--api-key <valor>`. Filtros por `--category` e `--scenario-id` aceitam repeticao ou valores separados por virgula. Cada rodada integrada usa um `conversation_id` unico para nao herdar estado Redis anterior. As saidas usam nomes unicos em `.tmp/eval/`; um relatorio versionado so e substituido quando `--output-json` ou `--output-md` for informado conscientemente.
 
 ## Ciclo De Fine-Tuning
 

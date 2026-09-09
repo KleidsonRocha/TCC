@@ -12,6 +12,9 @@ from app.core.domain.models import (
     HandoffInfo,
     HistoryMessage,
     IncomingMessage,
+    ResultCandidateState,
+    ResultDisambiguationOption,
+    ResultDisambiguationState,
     RuntimeInfo,
     SearchCriteriaState,
 )
@@ -97,9 +100,38 @@ def test_process_inbound_message_forwards_and_persists_conversation_state() -> N
                     vehicle_model="Ecosport",
                     engine="1.6",
                 ),
-                pending_slot="position",
-                pending_question="A peca e dianteira ou traseira?",
+                pending_slot="result_disambiguation",
+                pending_question="Qual lado corresponde?",
                 last_decision="ask",
+                result_disambiguation=ResultDisambiguationState(
+                    candidates=[
+                        ResultCandidateState(
+                            item_id="BAT-1",
+                            title="Batente esquerdo",
+                            score=0.9,
+                            attributes={"side": ["Esquerdo"]},
+                        ),
+                        ResultCandidateState(
+                            item_id="BAT-2",
+                            title="Batente direito",
+                            score=0.88,
+                            attributes={"side": ["Direito"]},
+                        ),
+                    ],
+                    question_key="side",
+                    prompt="Qual lado corresponde?",
+                    options=[
+                        ResultDisambiguationOption(
+                            label="Esquerdo",
+                            candidate_ids=["BAT-1"],
+                        ),
+                        ResultDisambiguationOption(
+                            label="Direito",
+                            candidate_ids=["BAT-2"],
+                        ),
+                    ],
+                    attempt=1,
+                ),
             ),
         )
     )
@@ -127,9 +159,13 @@ def test_process_inbound_message_forwards_and_persists_conversation_state() -> N
     assert agent_client.last_payload.context.conversation_state is not None
     assert agent_client.last_payload.context.conversation_state.pending_slot == "engine"
     assert result.conversation_state is not None
-    assert result.conversation_state.pending_slot == "position"
+    assert result.conversation_state.pending_slot == "result_disambiguation"
+    assert result.conversation_state.result_disambiguation is not None
+    assert result.conversation_state.result_disambiguation.question_key == "side"
     assert session_store.saved_state is not None
-    assert session_store.saved_state.pending_slot == "position"
+    assert session_store.saved_state.pending_slot == "result_disambiguation"
+    assert session_store.saved_state.result_disambiguation is not None
+    assert len(session_store.saved_state.result_disambiguation.candidates) == 2
     assert len(session_store.appended_batches) == 1
     assert [message.role for message in session_store.appended_batches[0]] == ["user", "assistant"]
 
@@ -154,9 +190,25 @@ def test_http_agent_client_parses_conversation_state() -> None:
                 "confidence": 0.88,
                 "conversation_state": {
                     "criteria": {"part_query": "batentes", "vehicle_model": "Ecosport"},
-                    "pending_slot": "engine",
-                    "pending_question": "Qual a motorizacao do veiculo?",
+                    "pending_slot": "result_disambiguation",
+                    "pending_question": "Qual motor corresponde?",
                     "last_decision": "ask",
+                    "result_disambiguation": {
+                        "candidates": [
+                            {
+                                "item_id": "BAT-1",
+                                "title": "Batente 1.6",
+                                "score": 0.9,
+                                "attributes": {"engine": ["1.6"]},
+                            }
+                        ],
+                        "question_key": "engine",
+                        "prompt": "Qual motor corresponde?",
+                        "options": [
+                            {"label": "1.6", "candidate_ids": ["BAT-1"]}
+                        ],
+                        "attempt": 1,
+                    },
                 },
             }
 
@@ -196,4 +248,6 @@ def test_http_agent_client_parses_conversation_state() -> None:
 
     assert status_code == 200
     assert parsed.conversation_state is not None
-    assert parsed.conversation_state.pending_slot == "engine"
+    assert parsed.conversation_state.pending_slot == "result_disambiguation"
+    assert parsed.conversation_state.result_disambiguation is not None
+    assert parsed.conversation_state.result_disambiguation.candidates[0].item_id == "BAT-1"

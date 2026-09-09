@@ -20,6 +20,18 @@ AUDITED_FILTER_FAMILIES = {
     "pre filtro injecao",
 }
 
+NON_DIRECTIONAL_RULE_EXPECTATIONS = (
+    ("aditivos", "needs_side"),
+    ("anti-chama", "needs_axle"),
+    ("bico injetor", "needs_side"),
+    ("lubrificantes", "needs_axle"),
+    ("velas de ignicao automotivas", "needs_side"),
+)
+
+REQUIRED_RULE_EXPECTATIONS = (
+    ("lubrificantes", "needs_variant"),
+)
+
 
 def _load_subgroups() -> dict[tuple[str, str], str]:
     with SUBGROUP_PATH.open(encoding="utf-8", newline="") as file:
@@ -72,3 +84,27 @@ def test_filter_families_do_not_require_directional_slots(family: str) -> None:
     assert not _as_bool(rule["needs_side"]), family
     assert not _as_bool(rule["needs_position"]), family
     assert not _as_bool(rule["needs_axle"]), family
+
+
+@pytest.mark.parametrize(("family", "field"), NON_DIRECTIONAL_RULE_EXPECTATIONS)
+def test_audited_engine_product_families_do_not_require_directional_slots(
+    family: str,
+    field: str,
+) -> None:
+    matching_rules = _load_rules_by_family()[family]
+    assert matching_rules, family
+
+    for rule in matching_rules:
+        assert not _as_bool(rule[field]), f"{family}: {field}"
+
+
+@pytest.mark.parametrize(("family", "field"), REQUIRED_RULE_EXPECTATIONS)
+def test_audited_families_require_their_search_discriminator(
+    family: str,
+    field: str,
+) -> None:
+    matching_rules = _load_rules_by_family()[family]
+    assert matching_rules, family
+
+    for rule in matching_rules:
+        assert _as_bool(rule[field]), f"{family}: {field}"

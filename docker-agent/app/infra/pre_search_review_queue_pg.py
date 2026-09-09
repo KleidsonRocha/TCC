@@ -35,6 +35,7 @@ class PGPreSearchReviewRecorder(PreSearchReviewRecorderPort):
         last_messages: list[dict[str, str]],
         predicted_decision: str,
         predicted_criteria: dict[str, Any],
+        predicted_items: list[dict[str, Any]],
         predicted_missing_fields: list[str],
         predicted_next_question: dict[str, Any] | None,
         predicted_confidence: float,
@@ -72,6 +73,7 @@ class PGPreSearchReviewRecorder(PreSearchReviewRecorderPort):
                         last_messages,
                         predicted_decision,
                         predicted_criteria,
+                        predicted_items,
                         predicted_missing_fields,
                         predicted_next_question,
                         predicted_confidence,
@@ -94,7 +96,7 @@ class PGPreSearchReviewRecorder(PreSearchReviewRecorderPort):
                         review_priority_score
                     )
                     VALUES (
-                        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
                     )
                     """,
                     (
@@ -107,6 +109,7 @@ class PGPreSearchReviewRecorder(PreSearchReviewRecorderPort):
                         Jsonb(last_messages),
                         predicted_decision,
                         Jsonb(predicted_criteria),
+                        Jsonb(predicted_items),
                         Jsonb(predicted_missing_fields),
                         Jsonb(predicted_next_question) if predicted_next_question is not None else None,
                         round(float(predicted_confidence), 3),

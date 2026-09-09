@@ -135,7 +135,8 @@ def test_review_case_updates_reviewed_interaction_and_commits(monkeypatch: pytes
     assert "UPDATE pre_search_review_interaction" in sql
     assert params[0] == "search"
     assert getattr(params[1], "obj", None) == {"part_query": "radiador", "part_code": "AB-1234"}
-    assert getattr(params[2], "obj", None) == []
+    assert params[2] is None
+    assert getattr(params[3], "obj", None) == []
     assert params[-1] == 12
 
 
@@ -207,9 +208,10 @@ def test_promote_cases_promotes_reviewed_search_and_marks_source_literal(
         "vehicle_year": 2010,
     }
     assert getattr(insert_params[7], "obj", None) == []
-    assert insert_params[10] == "literal"
-    assert getattr(insert_params[11], "obj", None) == ["review_capture", "predicted_search"]
-    assert "interaction_id=44" in insert_params[12]
+    assert getattr(insert_params[8], "obj", None) == []
+    assert insert_params[11] == "literal"
+    assert getattr(insert_params[12], "obj", None) == ["review_capture", "predicted_search"]
+    assert "interaction_id=44" in insert_params[13]
     assert insert_params[-1] == "Kleidson"
 
     update_sql, update_params = cursor.executed[3]

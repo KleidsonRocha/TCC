@@ -32,6 +32,17 @@ class DictionaryPreSearchExtractor:
     _MIN_FUZZY_TOKEN_LENGTH = 4
     _SINGLE_TOKEN_FUZZY_GAP = 0.05
     _MULTI_TOKEN_FUZZY_GAP = 0.03
+    _COMPOSITE_PART_PATTERNS = (
+        (r"\bpolia(?:s)?\s+(?:da|de)?\s*bomba\s+(?:d(?:a|e)?['\s]+)?agua\b", "polia bomba de agua"),
+        (r"\bkit\s+corrente\s+(?:da|de)?\s*bomba\s+(?:de\s+)?oleo\b", "kit corrente bomba de oleo"),
+        (r"\bjunta\s+(?:do|da|de)?\s*cabecote\b", "junta do cabecote"),
+        (r"\baditivo\s+(?:do|para\s+o)?\s*radiador\b", "aditivo radiador"),
+    )
+    _PRODUCT_BRAND_ALIASES = {
+        "NGK": ("ngk",),
+        "Nakata": ("nakata",),
+        "Cofap": ("cofap",),
+    }
 
     def __init__(self, *, catalog: PreSearchCatalog) -> None:
         self._part_patterns = list(catalog.part_patterns)
@@ -63,6 +74,42 @@ class DictionaryPreSearchExtractor:
             return None
         return self._extract_part_query(normalized_value)
 
+    def extract_items(self, message_text: str) -> list[SearchCriteria]:
+        """Extract independent part requests while sharing vehicle context.
+
+        This is deliberately conservative: an item is created only when a
+        catalogued part family is found in a clause. The existing single-item
+        extractor remains the source of truth for each item.
+        """
+        normalized = normalize_pre_search_text(message_text)
+        if not normalized:
+            return []
+        shared = self._extract_from(normalized, raw_text=message_text)
+        clauses = [part.strip() for part in re.split(r"[,;]|\s+e\s+", normalized) if part.strip()]
+        items: list[SearchCriteria] = []
+        seen: set[tuple[str, str | None, str | None]] = set()
+        for clause in clauses:
+            part_query = self._extract_part_query(clause)
+            if not part_query:
+                continue
+            local = self._extract_from(clause, raw_text=clause)
+            values = local.model_dump(exclude_none=False)
+            for field_name in (
+                "preferred_product_brand",
+                "vehicle_brand",
+                "vehicle_model",
+                "vehicle_year",
+                "engine",
+            ):
+                if values.get(field_name) in (None, "", []):
+                    values[field_name] = getattr(shared, field_name)
+            item = SearchCriteria.model_validate(values)
+            key = (item.part_query or "", item.position, item.side)
+            if key not in seen:
+                seen.add(key)
+                items.append(item)
+        return items
+
     def has_exact_part_query_match(
         self,
         *,
@@ -88,6 +135,7 @@ class DictionaryPreSearchExtractor:
                 vehicle_model=vehicle_model,
                 vehicle_year=vehicle_year,
             ),
+            preferred_product_brand=self._extract_preferred_product_brand(normalized_text),
             vehicle_brand=vehicle_brand,
             vehicle_model=vehicle_model,
             vehicle_year=vehicle_year,
@@ -95,6 +143,7 @@ class DictionaryPreSearchExtractor:
             side=self._extract_side(normalized_text),
             position=self._extract_position(normalized_text),
             axle=self._extract_axle(normalized_text),
+            variant=self._extract_variant(normalized_text),
             quantity=self._extract_quantity(normalized_text),
         )
 
@@ -103,6 +152,9 @@ class DictionaryPreSearchExtractor:
         return SearchCriteria(
             part_query=primary.part_query or fallback.part_query,
             part_code=primary.part_code or fallback.part_code,
+            preferred_product_brand=(
+                primary.preferred_product_brand or fallback.preferred_product_brand
+            ),
             vehicle_brand=primary.vehicle_brand or fallback.vehicle_brand,
             vehicle_model=DictionaryPreSearchExtractor._merge_vehicle_model(
                 primary.vehicle_model,
@@ -128,6 +180,9 @@ class DictionaryPreSearchExtractor:
         return bool(re.fullmatch(r"(19\d{2}|20\d{2})", str(value or "").strip()))
 
     def _extract_part_query(self, text: str) -> str | None:
+        for pattern, canonical in self._COMPOSITE_PART_PATTERNS:
+            if re.search(pattern, text):
+                return canonical
         exact_match = self._extract_exact_part_query_match(text)
         fuzzy_match = self._extract_fuzzy_part_query_match(text)
         if exact_match and fuzzy_match:
@@ -240,6 +295,13 @@ class DictionaryPreSearchExtractor:
                     return brand
         return None
 
+    @classmethod
+    def _extract_preferred_product_brand(cls, text: str) -> str | None:
+        for brand, aliases in cls._PRODUCT_BRAND_ALIASES.items():
+            if any(re.search(rf"\b{re.escape(alias)}\b", text) for alias in aliases):
+                return brand
+        return None
+
     @staticmethod
     def _extract_year(text: str) -> int | None:
         match = re.search(r"\b(19\d{2}|20\d{2})\b", text)
@@ -275,6 +337,9 @@ class DictionaryPreSearchExtractor:
 
     @staticmethod
     def _extract_position(text: str) -> str | None:
+        # "eixo dianteiro/traseiro" belongs to axle, not position.
+        if re.search(r"\b(eixo\s+diant|eixo\s+dianteir[oa]|eixo\s+tras|eixo\s+traseir[oa])\b", text):
+            return None
         if re.search(r"\b(diant|dianteir[oa])\b", text):
             return "front"
         if re.search(r"\b(tras|traseir[oa])\b", text):
@@ -290,12 +355,40 @@ class DictionaryPreSearchExtractor:
         return None
 
     @staticmethod
-    def _extract_quantity(text: str) -> int | None:
-        values = re.findall(r"\b(\d{1,3})\b", text)
-        for raw in values:
-            value = int(raw)
-            if 1 <= value <= 50:
+    def _extract_variant(text: str) -> str | None:
+        oil_viscosity = re.search(r"\b(\d{1,2})\s*w\s*(\d{2})\b", text)
+        if oil_viscosity:
+            return f"{oil_viscosity.group(1)}W{oil_viscosity.group(2)}"
+
+        variants = (
+            (r"\babs\b", "ABS"),
+            (r"\bdualogic\b", "Dualogic"),
+            (r"\bautomatic[oa]\b", "automatico"),
+            (r"\bmanual\b", "manual"),
+            (r"\bgasolina\b", "gasolina"),
+            (r"\bdiesel\b", "diesel"),
+            (r"\bflex\b", "flex"),
+        )
+        for pattern, value in variants:
+            if re.search(pattern, text):
                 return value
+        return None
+
+    @staticmethod
+    def _extract_quantity(text: str) -> int | None:
+        # A bare number is never enough in automotive text: it may be a year,
+        # model, engine displacement, valve count or product specification.
+        explicit_patterns = (
+            r"\b(\d{1,3})\s*(?:unid(?:ade|ades)?|pecas?|itens?|unidades?)\b",
+            r"\b(\d{1,3})\s*x\s*(?:pecas?|itens?|unid(?:ade|ades)?)\b",
+            r"\b(?:quantidade|qtd|qtde)\s*[:=]?\s*(\d{1,3})\b",
+        )
+        for pattern in explicit_patterns:
+            match = re.search(pattern, text)
+            if match:
+                value = int(match.group(1))
+                if 1 <= value <= 50:
+                    return value
         return None
 
     def _extract_part_code(

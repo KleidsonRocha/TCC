@@ -2,6 +2,34 @@
 
 Este documento consolida o estado atual do projeto sem depender de leitura fragmentada de relatorios e arquivos historicos.
 
+## Revisao Visual De Conversas Implementada Em 08/09/2026
+
+- o Streamlit ganhou a aba `Revisao de IA`, com filas separadas de conversas pendentes e concluidas
+- cada conversa e exibida integralmente, em ordem cronologica, enquanto a avaliacao permanece individual por turno
+- o formulario permite corrigir decisao, criterios, campos ausentes, proxima pergunta, opcoes e observacoes do avaliador
+- salvar altera o turno de `pending` para `reviewed`; descartar altera para `discarded`; nenhuma dessas acoes promove automaticamente o registro ao dataset
+- quando o ultimo turno pendente e tratado, a conversa deixa a fila pendente e passa a informar que ja foi avaliada na fila de concluidas
+- atualizacoes concorrentes ou repetidas sao bloqueadas com conflito, impedindo sobrescrever uma avaliacao existente
+- `part_code` revisado continua sujeito a evidencia literal na mensagem atual ou no contexto anterior
+- os endpoints administrativos aceitam protecao opcional por `REVIEW_API_KEY`
+- os testes focados de API, repositorio, promocao e exportacao encerraram com `31 passed`; a suite completa do `docker-comm` encerrou com `22 passed`
+- a revisao agora aceita varios cartoes de peca no mesmo turno, cada um com decisao e pendencias independentes
+- revisoes concluidas podem ser reabertas, inclusive enquanto outro turno da conversa permanece pendente
+- toda revisao, descarte e reabertura gera trilha em `pre_search_review_revision`
+- a promocao preserva as avaliacoes em `expected_items` e a exportacao inclui os criterios no campo `items` do payload
+- a suite completa do agent encerrou com `228 passed` e quatro falhas anteriores ainda abertas: uma frase composta de peca e tres expectativas antigas sobre a relacao entre `position` e `axle`
+
+## Regras Direcionais De Produtos De Motor Corrigidas Em 08/09/2026
+
+- `VELAS DE IGNIÇÃO AUTOMOTIVAS` nao exige mais `needs_side`
+- as duas familias `ADITIVOS` nao exigem mais `needs_side`
+- `ANTI-CHAMA` nao exige mais `needs_axle`, pois sua aplicacao e no motor
+- a correcao foi feita em `db/init/csv/pre_search_part_rule.csv`, fonte consumida pelo bootstrap consolidado
+- regressao automatizada valida todas as ocorrencias dessas familias no CSV
+- um Postgres descartavel confirmou os quatro registros com `needs_side`, `needs_position` e `needs_axle` desativados
+- o volume ativo foi sincronizado por atualizacao pontual, sem remover a fila de revisao, e o `docker-agent` foi reiniciado para recarregar o catalogo
+- os testes focados encerraram com `105 passed`; permaneceram somente as quatro falhas anteriores ja registradas nesta pagina
+
 ## O Que Ja Esta Implementado
 
 - API `POST /respond` e `GET /health`
@@ -112,11 +140,54 @@ Achado de ambiente:
   - `pre_search_fine_tuning_dataset_record`
 - historico de runs em `pre_search_fine_tuning_run`
 
+## Resposta De `no_match` Corrigida Em 27/08/2026
+
+- zero itens no ERP nao e mais apresentado como prova de incompatibilidade entre peca e veiculo
+- a resposta lista os criterios efetivamente enviados para a busca
+- criterios ainda ausentes sao separados de divergencias com o estado anterior
+- modelo, ano, motor e demais dados de uma continuacao pendente sao preservados antes da nova consulta, sem restaurar `part_code` a partir do estado
+- mudanca de familia impede o reaproveitamento defensivo de criterios da pesquisa anterior
+- `handoff.required` permanece falso enquanto o sistema apenas oferece atendimento; o handoff real depende da escolha seguinte do usuario
+- o estado retorna `pending_slot = no_match_retry`, permitindo corrigir um criterio sem perder o contexto persistido no Redis
+- regressao de API e testes de use case cobrem ausencia completa, incompletude, conflito, preservacao de estado e protecao de familia/codigo
+- a suite completa no container Linux oficial encerrou com `191 passed in 30.85s`
+- teste operacional no ERP com o codigo inexistente `ZZ-99999999` confirmou `no_match_retry`, filtros exibidos, `handoff.required = false` e latencia total de `669.73 ms`
+
+## Desambiguacao Multi-turno Implementada Em 27/08/2026
+
+- o ERP passa a fornecer ao dominio atributos opcionais de aplicacao, versao, motor, injecao, transmissao, lado e posicao
+- o backend escolhe o melhor atributo que realmente separa os candidatos; se nenhum servir, apresenta somente quatro itens por vez
+- a primeira resposta com varios resultados usa `request_info` e conserva candidatos e opcoes em `ConversationState.result_disambiguation`
+- a etapa seguinte aceita numero, codigo, titulo ou valor do atributo sem nova chamada a LLM ou ao ERP
+- `nenhuma dessas` pagina os candidatos diretos ou encerra a selecao por atributo oferecendo nova pesquisa
+- uma nova familia de peca limpa o estado anterior e volta ao fluxo normal
+- pedido explicito de vendedor gera `result_disambiguation_requested`; tres respostas irreconheciveis geram `result_disambiguation_limit`
+- o `docker-comm` valida e persiste o novo objeto opcional na chave Redis ja existente
+- testes focados do agent encerraram com `51 passed`; a suite completa final encerrou com `204 passed in 77.55s`
+- a suite completa do comm encerrou com `16 passed in 1.21s`
+- no teste integrado via `docker-comm`, `radiador gol 2010 1.0` retornou dez itens e perguntou primeiro `Com ar condicionado` ou `Sem ar condicionado`; a resposta `sem ar condicionado` reduziu para dois candidatos e `1` selecionou `IR48108`
+- a primeira busca levou `667.82 ms`; os dois follow-ups usaram apenas `result_disambiguation`, com montagem interna de `0.61 ms` e `0.16 ms`, sem nova LLM ou consulta ao ERP
+
 ## Evidencias Atuais
 
 - testes automatizados em `tests/`
 - datasets de avaliacao em `docs/assets/datasets/`
 - relatorios de analise em `docs/assets/reports/`
+
+## Bateria Real Versionada Expandida Em 27/08/2026
+
+- os 50 casos da bateria anterior foram preservados em cenarios multi-turno identificaveis
+- a nova base possui 135 cenarios e 164 turnos
+- distribuicao: 24 cenarios `smoke`, 101 `regression` e 10 `extended`
+- cobertura adicionada para `deterministic_ask`, busca completa, aliases e typos, proveniencia de `part_code`, validacao de contrato, `no_match` e desambiguacao multi-turno
+- o executor suporta alvo direto `agent` e fluxo integrado `comm`, que reutiliza o Redis existente
+- filtros por nivel, categoria e cenario permitem rodadas focadas
+- saidas exploratorias agora usam `.tmp/eval/` e nomes unicos, sem sobrescrever relatorios historicos
+- 27 cenarios dependentes de ranking, discriminacao comercial ou politica foram separados em `real_respond_battery_human_validation.md`
+- a primeira rodada revelou drift no volume ativo: `FILTRO DE COMBUSTIVEL` ainda tinha `needs_side=true`; o bootstrap consolidado foi reaplicado sem excluir o volume
+- depois da sincronizacao, o smoke integrado encerrou com `30/30` turnos aprovados
+- cada rodada pelo `docker-comm` recebe um `conversation_id` unico, evitando herdar estado Redis de uma avaliacao anterior
+- validacao final: `212 passed` no `docker-agent`, `16 passed` no `docker-comm` e fluxo integrado de desambiguacao pelo comm `2/2`
 
 Artefatos de referencia atuais:
 
@@ -154,20 +225,29 @@ Esse comparativo foi registrado para deixar explicito que a escolha do modelo ba
 
 ## Maiores Pendencias Atuais
 
+Bloco da bateria real concluido nesta iteracao:
+
+- runner protegido contra contexto futuro ou resposta esperada vazada
+- entidades atuais prevalecem sobre estado antigo e saida conflitante da LLM
+- `side`, `position` e `axle` separados no extractor e no calculo de campos faltantes
+- regressao adicionada para os tres comportamentos
+- estado ganhou `items[]` opcional, com extracao conservadora de pedidos multi-item
+- quantidade agora exige evidencia linguistica; o benchmark passou a registrar p50/p95 da LLM
+- busca multi-item executa uma consulta por item e devolve `item_results` com status `found`, `not_found`, `incomplete` ou `error`
+- contrato da LLM aceita `items[]` e instrui explicitamente a preservar uma ou varias pecas
+
 As pendencias mais importantes continuam no backlog em `TODO.md`, principalmente:
 
-- medir cobertura e ganho real do `ask` deterministico
-- corrigir motor textual, `no_match` e desambiguacao multi-turno
+- corrigir motor textual
 - refinar ranking e apresentacao dos resultados do ERP
 - avaliar recuperacao semantica controlada para descricoes genericas
 
 ## Proxima Fase Recomendada
 
-1. Medir cobertura, latencia e qualidade do bypass de `ask` deterministico
-2. Corrigir os fluxos conversacionais pendentes e transformar casos reais em regressao
-3. Refinar ranking do ERP e reexecutar a bateria correspondente
-4. Fazer prova de conceito semantica em memoria com confirmacao por template
-5. Medir o volume residual de LLM antes de decidir GPU, modelo menor ou fine-tuning
+1. Corrigir motor textual com regressoes reais
+2. Refinar ranking do ERP e reexecutar a bateria correspondente
+3. Fazer prova de conceito semantica em memoria com confirmacao por template
+4. Medir o volume residual de LLM antes de decidir GPU, modelo menor ou fine-tuning
 
 ## Como Manter Este Documento Util
 

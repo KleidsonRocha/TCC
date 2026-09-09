@@ -26,6 +26,7 @@ def _catalog_fixture() -> PreSearchCatalog:
             ("amortecedores suspensao", ("amortecedores suspensao", "amortecedor suspensao", "suspensao", "suspencao")),
             ("pastilhas de freio", ("pastilha de freio", "pastilha freio", "pastilha", "pastilhas", "pastilhas de freio", "pstilhas")),
             ("discos de freio", ("disco de freio", "disco freio", "discos de freio")),
+            ("lubrificantes", ("lubrificantes", "lubrificante", "oleo", "oleos")),
         ],
         brand_aliases={"Ford": ("ford",)},
         model_aliases={"EcoSport": ("ecosport",), "Gol": ("gol",), "2008": ("2008",)},
@@ -35,7 +36,7 @@ def _catalog_fixture() -> PreSearchCatalog:
         needs_position={"amortecedores suspensao", "pastilhas de freio", "discos de freio"},
         needs_axle=set(),
         needs_engine={"radiador"},
-        needs_variant=set(),
+        needs_variant={"lubrificantes"},
         engine_by_model={"ecosport": ["1.6", "2.0", "Nao sei"]},
         known_group_terms={"freio", "freios", "motor", "suspensao"},
     )
@@ -109,6 +110,92 @@ def test_dictionary_extractor_extracts_part_model_and_year() -> None:
     assert result.vehicle_year == 2008
 
 
+def test_dictionary_extractor_extracts_oil_viscosity_as_variant() -> None:
+    result = DictionaryPreSearchExtractor(catalog=_catalog_fixture()).extract(
+        "Quero oleo 20w50"
+    )
+
+    assert result.part_query == "lubrificantes"
+    assert result.variant == "20W50"
+
+
+@pytest.mark.parametrize(
+    ("message", "expected_brand"),
+    [
+        ("jogo de velas NGK", "NGK"),
+        ("amortecedor Cofap", "Cofap"),
+        ("bandeja Nakata", "Nakata"),
+    ],
+)
+def test_dictionary_extractor_separates_product_brand_from_vehicle_brand(
+    message: str,
+    expected_brand: str,
+) -> None:
+    result = DictionaryPreSearchExtractor(catalog=_catalog_fixture()).extract(message)
+
+    assert result.preferred_product_brand == expected_brand
+    assert result.vehicle_brand is None
+
+
+@pytest.mark.parametrize(
+    ("message", "expected_brand"),
+    [
+        ("jogo de velas NGK", "NGK"),
+        ("amortecedor Cofap", "Cofap"),
+        ("bandeja Nakata", "Nakata"),
+    ],
+)
+def test_dictionary_extractor_separates_product_brand_from_vehicle_brand(
+    message: str,
+    expected_brand: str,
+) -> None:
+    result = DictionaryPreSearchExtractor(catalog=_catalog_fixture()).extract(message)
+
+    assert result.preferred_product_brand == expected_brand
+    assert result.vehicle_brand is None
+
+
+def test_dictionary_extractor_does_not_turn_automotive_numbers_into_quantity() -> None:
+    extractor = DictionaryPreSearchExtractor(catalog=_catalog_fixture())
+
+    assert extractor.extract("radiador gol 2010 1.6").quantity is None
+    assert extractor.extract("2 unidades de filtro de oleo gol 2010").quantity == 2
+
+
+def test_dictionary_extractor_preserves_composite_part_phrases() -> None:
+    extractor = DictionaryPreSearchExtractor(catalog=_catalog_fixture())
+
+    assert extractor.extract("polia da bomba d'agua do Focus").part_query == "polia bomba de agua"
+    assert extractor.extract("kit corrente da bomba de oleo").part_query == "kit corrente bomba de oleo"
+    assert extractor.extract("junta do cabecote").part_query == "junta do cabecote"
+
+
+def test_dictionary_extractor_builds_independent_items_with_shared_vehicle() -> None:
+    extractor = DictionaryPreSearchExtractor(catalog=_catalog_fixture())
+
+    items = extractor.extract_items(
+        "2 unidades de filtro de oleo e pastilha de freio da ecosport 2008"
+    )
+
+    assert [item.part_query for item in items] == ["filtro de oleo", "pastilhas de freio"]
+    assert all(item.vehicle_model == "EcoSport" for item in items)
+    assert all(item.vehicle_year == 2008 for item in items)
+    assert items[0].quantity == 2
+
+
+def test_dictionary_extractor_builds_independent_items_with_shared_vehicle() -> None:
+    extractor = DictionaryPreSearchExtractor(catalog=_catalog_fixture())
+
+    items = extractor.extract_items(
+        "2 unidades de filtro de oleo e pastilha de freio da ecosport 2008"
+    )
+
+    assert [item.part_query for item in items] == ["filtro de oleo", "pastilhas de freio"]
+    assert all(item.vehicle_model == "EcoSport" for item in items)
+    assert all(item.vehicle_year == 2008 for item in items)
+    assert items[0].quantity == 2
+
+
 def test_dictionary_extractor_uses_last_messages_for_year() -> None:
     result = DictionaryPreSearchExtractor(catalog=_catalog_fixture()).extract(
         "Quero filtro de oleo para ecosport",
@@ -151,6 +238,24 @@ def test_dictionary_extractor_extracts_axle_when_eixo_is_present() -> None:
     )
     assert result.part_query == "coxim"
     assert result.axle == "front"
+    assert result.position is None
+
+
+def test_dictionary_extractor_keeps_position_separate_from_axle() -> None:
+    result = DictionaryPreSearchExtractor(catalog=_catalog_fixture()).extract(
+        "quero coxim dianteiro da ecosport"
+    )
+
+    assert result.position == "front"
+    assert result.axle is None
+
+
+def test_dictionary_extractor_keeps_spontaneous_variant_information() -> None:
+    result = DictionaryPreSearchExtractor(catalog=_catalog_fixture()).extract(
+        "com ABS"
+    )
+
+    assert result.variant == "ABS"
 
 
 def test_dictionary_extractor_prefers_text_model_over_numeric_year_like_model() -> None:
@@ -509,6 +614,39 @@ def test_llm_validator_merges_conversation_state_when_pending_slot_exists() -> N
     assert result.decision == "search"
     assert result.criteria.part_query == "batentes"
     assert str(result.criteria.vehicle_model).lower() == "ecosport"
+    assert result.criteria.engine == "1.6"
+
+
+def test_current_message_identity_overrides_old_state_and_llm_identity() -> None:
+    validator = _validator()
+    validator._post_chat_or_generate = lambda **kwargs: (
+        {
+            "message": {
+                "content": (
+                    '{"decision":"ask","criteria":{"part_query":"radiador",'
+                    '"vehicle_model":"Gol","vehicle_year":2010,"engine":null},'
+                    '"missing_fields":["engine"],"next_question":{"key":"engine",'
+                    '"prompt":"Qual a motorizacao?"},"confidence":0.8}'
+                )
+            }
+        },
+        "/api/chat",
+    )
+
+    result = validator.validate(
+        "radiador ecosport 2008 1.6",
+        conversation_state=ConversationState(
+            criteria=SearchCriteria(
+                part_query="radiador", vehicle_model="Gol", vehicle_year=2010
+            ),
+            pending_slot="engine",
+            pending_question="Qual a motorizacao?",
+            last_decision="ask",
+        ),
+    )
+
+    assert result.criteria.vehicle_model == "EcoSport"
+    assert result.criteria.vehicle_year == 2008
     assert result.criteria.engine == "1.6"
 
 
@@ -882,6 +1020,33 @@ def test_deterministic_ask_policy_accepts_exact_family_with_governed_missing_fie
     assert result.next_question.prompt == "Qual a motorizacao do veiculo?"
 
 
+def test_deterministic_ask_requests_oil_specification_without_vehicle_data() -> None:
+    validator = _validator()
+
+    result = validator.try_validate_deterministic_ask("quero oleo")
+
+    assert result is not None
+    assert result.decision == "ask"
+    assert result.criteria.part_query == "lubrificantes"
+    assert result.missing_fields == ["variant"]
+    assert result.next_question is not None
+    assert result.next_question.key == "variant"
+    assert result.next_question.prompt == "Qual a especificacao do oleo (por exemplo, 20W50)?"
+
+
+def test_deterministic_bypass_searches_oil_when_specification_is_present() -> None:
+    validator = _validator()
+
+    result = validator.try_validate_deterministically("quero oleo 20w50")
+
+    assert result is not None
+    assert result.decision == "search"
+    assert result.criteria.part_query == "lubrificantes"
+    assert result.criteria.variant == "20W50"
+    assert result.criteria.vehicle_model is None
+    assert result.missing_fields == []
+
+
 @pytest.mark.parametrize("message", ["quero uma peca", "preciso de um item automotivo"])
 def test_deterministic_ask_policy_accepts_explicit_generic_automotive_request(
     message: str,
@@ -1022,7 +1187,7 @@ def test_deterministic_ask_returns_none_and_clears_audit_when_ineligible(
     assert validator.get_last_audit() is None
 
 
-def test_llm_validator_position_satisfies_axle_requirement() -> None:
+def test_llm_validator_keeps_position_separate_from_axle_requirement() -> None:
     validator = _validator()
     validator._post_chat_or_generate = lambda **kwargs: (
         {
@@ -1066,8 +1231,10 @@ def test_llm_validator_position_satisfies_axle_requirement() -> None:
 
     result = validator.validate("coxim ecosport 2008 dianteira")
 
-    assert result.decision == "search"
-    assert result.missing_fields == []
+    assert result.decision == "ask"
+    assert result.missing_fields == ["axle"]
+    assert result.next_question is not None
+    assert result.next_question.key == "axle"
     assert result.criteria.position == "front"
     assert result.criteria.axle is None
 
@@ -1109,7 +1276,7 @@ def test_llm_validator_uses_part_specific_score_threshold_when_configured() -> N
     assert "engine" in result.missing_fields
 
 
-def test_llm_validator_promotes_answered_follow_up_to_search_when_requirements_are_met() -> None:
+def test_llm_validator_does_not_use_position_as_axle_in_follow_up() -> None:
     catalog = PreSearchCatalog(
         part_patterns=_catalog_fixture().part_patterns,
         brand_aliases=_catalog_fixture().brand_aliases,
@@ -1155,9 +1322,10 @@ def test_llm_validator_promotes_answered_follow_up_to_search_when_requirements_a
         ),
     )
 
-    assert result.decision == "search"
-    assert result.missing_fields == []
-    assert result.next_question is None
+    assert result.decision == "ask"
+    assert result.missing_fields == ["axle"]
+    assert result.next_question is not None
+    assert result.next_question.key == "axle"
     assert result.criteria.part_query == "coxim"
     assert str(result.criteria.vehicle_model).lower() == "ecosport"
     assert result.criteria.vehicle_year == 2008
@@ -1196,8 +1364,8 @@ def test_llm_validator_does_not_promote_ask_without_follow_up_state() -> None:
 
     assert result.decision == "ask"
     assert result.next_question is not None
-    assert result.next_question.key == "engine"
-    assert result.missing_fields == ["engine"]
+    assert result.next_question.key == "axle"
+    assert result.missing_fields == ["axle"]
 
 
 def test_llm_validator_asks_when_score_is_below_minimum_even_without_rule_missing() -> None:

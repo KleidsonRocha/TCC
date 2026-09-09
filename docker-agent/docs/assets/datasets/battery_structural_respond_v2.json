@@ -1,0 +1,3292 @@
+{
+  "schema_version": "2.0",
+  "name": "real_respond_battery_v2",
+  "description": "Bateria multi-turno estrutural para docker-agent e docker-comm.",
+  "curation_status": "structural assertions approved; flagged commercial cases require human review",
+  "tier_semantics": {
+    "smoke": "fluxos criticos e deterministas para cada alteracao",
+    "regression": "smoke mais cobertura estrutural ampla",
+    "extended": "regression mais linguagem incerta e politica dependente da LLM"
+  },
+  "scenarios": [
+    {
+      "id": "legacy_001",
+      "category": "complete",
+      "tier": "smoke",
+      "turns": [
+        {
+          "id": "legacy_001_t1",
+          "message": "radiador gol 2010 1.0",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "pre_search_path": "deterministic_bypass",
+            "used_tools_contains": [
+              "search_parts"
+            ]
+          }
+        }
+      ],
+      "legacy_case_ids": [
+        "case_001"
+      ]
+    },
+    {
+      "id": "legacy_002",
+      "category": "complete",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "legacy_002_t1",
+          "message": "radiador ecosport 2008 1.6",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200
+          }
+        }
+      ],
+      "legacy_case_ids": [
+        "case_002"
+      ]
+    },
+    {
+      "id": "legacy_003",
+      "category": "typo_complete",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "legacy_003_t1",
+          "message": "rdiador ecosport 2008 1.6",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200
+          }
+        }
+      ],
+      "legacy_case_ids": [
+        "case_003"
+      ]
+    },
+    {
+      "id": "legacy_004",
+      "category": "complete_alias",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "legacy_004_t1",
+          "message": "radiador motor gol 2010 1.0",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200
+          }
+        }
+      ],
+      "legacy_case_ids": [
+        "case_004"
+      ]
+    },
+    {
+      "id": "legacy_005",
+      "category": "complete",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "legacy_005_t1",
+          "message": "coxim amortecedor ecosport 2008 1.6",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200
+          }
+        }
+      ],
+      "legacy_case_ids": [
+        "case_005"
+      ]
+    },
+    {
+      "id": "legacy_006",
+      "category": "typo_complete",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "legacy_006_t1",
+          "message": "coxin amortecedor ecosport 2008 1.6",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200
+          }
+        }
+      ],
+      "legacy_case_ids": [
+        "case_006"
+      ]
+    },
+    {
+      "id": "legacy_007",
+      "category": "complete_alias",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "legacy_007_t1",
+          "message": "coxim amort ecosport 2008 1.6",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200
+          }
+        }
+      ],
+      "legacy_case_ids": [
+        "case_007"
+      ]
+    },
+    {
+      "id": "legacy_008",
+      "category": "complete_alias",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "legacy_008_t1",
+          "message": "coxins amortecedor ecosport 2008 1.6",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200
+          }
+        }
+      ],
+      "legacy_case_ids": [
+        "case_008"
+      ]
+    },
+    {
+      "id": "legacy_009",
+      "category": "complete",
+      "tier": "smoke",
+      "turns": [
+        {
+          "id": "legacy_009_t1",
+          "message": "pastilha de freio gol 2010 1.0",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "question_key": "position",
+            "pre_search_path": "deterministic_ask",
+            "part_code": null
+          }
+        }
+      ],
+      "legacy_case_ids": [
+        "case_009"
+      ]
+    },
+    {
+      "id": "legacy_010",
+      "category": "typo_complete",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "legacy_010_t1",
+          "message": "pstilhas de freio gol 2010 1.0",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200
+          }
+        }
+      ],
+      "legacy_case_ids": [
+        "case_010"
+      ]
+    },
+    {
+      "id": "legacy_011",
+      "category": "complete_alias",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "legacy_011_t1",
+          "message": "pastilhas freio gol 2010 1.0",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200
+          }
+        }
+      ],
+      "legacy_case_ids": [
+        "case_011"
+      ]
+    },
+    {
+      "id": "legacy_012",
+      "category": "complete_alias",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "legacy_012_t1",
+          "message": "pastilha gol 2010 1.0",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200
+          }
+        }
+      ],
+      "legacy_case_ids": [
+        "case_012"
+      ]
+    },
+    {
+      "id": "legacy_013",
+      "category": "complete",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "legacy_013_t1",
+          "message": "disco de freio gol 2010 dianteiro",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200
+          }
+        }
+      ],
+      "legacy_case_ids": [
+        "case_013"
+      ]
+    },
+    {
+      "id": "legacy_014",
+      "category": "complete_alias",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "legacy_014_t1",
+          "message": "radiadores motor ecosport 2008 1.6",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200
+          }
+        }
+      ],
+      "legacy_case_ids": [
+        "case_014"
+      ]
+    },
+    {
+      "id": "legacy_015",
+      "category": "complete_alias",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "legacy_015_t1",
+          "message": "radiadores arrefecimento gol 2010 1.0",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200
+          }
+        }
+      ],
+      "legacy_case_ids": [
+        "case_015"
+      ]
+    },
+    {
+      "id": "legacy_016",
+      "category": "partial",
+      "tier": "smoke",
+      "turns": [
+        {
+          "id": "legacy_016_t1",
+          "message": "radiador gol 2010",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "question_key": "engine",
+            "pre_search_path": "deterministic_ask"
+          }
+        },
+        {
+          "id": "legacy_016_t2",
+          "message": "1.0",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200
+          }
+        }
+      ],
+      "legacy_case_ids": [
+        "case_016",
+        "case_031"
+      ]
+    },
+    {
+      "id": "legacy_017",
+      "category": "partial",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "legacy_017_t1",
+          "message": "radiador ecosport 2008",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200
+          }
+        },
+        {
+          "id": "legacy_017_t2",
+          "message": "1.6",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200
+          }
+        }
+      ],
+      "legacy_case_ids": [
+        "case_017",
+        "case_032"
+      ]
+    },
+    {
+      "id": "legacy_018",
+      "category": "partial",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "legacy_018_t1",
+          "message": "coxim amortecedor ecosport 2008",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200
+          }
+        },
+        {
+          "id": "legacy_018_t2",
+          "message": "1.6",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200
+          }
+        }
+      ],
+      "legacy_case_ids": [
+        "case_018",
+        "case_033"
+      ]
+    },
+    {
+      "id": "legacy_019",
+      "category": "partial",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "legacy_019_t1",
+          "message": "pastilha de freio gol 2010",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200
+          }
+        },
+        {
+          "id": "legacy_019_t2",
+          "message": "1.0",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200
+          }
+        }
+      ],
+      "legacy_case_ids": [
+        "case_019",
+        "case_034"
+      ]
+    },
+    {
+      "id": "legacy_020",
+      "category": "partial",
+      "tier": "smoke",
+      "turns": [
+        {
+          "id": "legacy_020_t1",
+          "message": "filtro de oleo gol 2010",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "used_tools_contains": [
+              "search_parts"
+            ],
+            "used_tools_excludes": [
+              "pre_search_deterministic_ask"
+            ]
+          }
+        },
+        {
+          "id": "legacy_020_t2",
+          "message": "dianteiro",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200
+          }
+        }
+      ],
+      "legacy_case_ids": [
+        "case_020",
+        "case_035"
+      ]
+    },
+    {
+      "id": "legacy_021",
+      "category": "partial",
+      "tier": "smoke",
+      "turns": [
+        {
+          "id": "legacy_021_t1",
+          "message": "bandeja ecosport 2008",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "question_key": "side",
+            "pre_search_path": "deterministic_ask"
+          }
+        },
+        {
+          "id": "legacy_021_t2",
+          "message": "dianteiro",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200
+          }
+        }
+      ],
+      "legacy_case_ids": [
+        "case_021",
+        "case_036"
+      ]
+    },
+    {
+      "id": "legacy_022",
+      "category": "partial",
+      "tier": "smoke",
+      "turns": [
+        {
+          "id": "legacy_022_t1",
+          "message": "filtro de combustivel gol 2010",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "question_key_excludes": [
+              "side"
+            ]
+          }
+        },
+        {
+          "id": "legacy_022_t2",
+          "message": "esquerdo",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200
+          }
+        }
+      ],
+      "legacy_case_ids": [
+        "case_022",
+        "case_037"
+      ]
+    },
+    {
+      "id": "legacy_023",
+      "category": "partial",
+      "tier": "smoke",
+      "turns": [
+        {
+          "id": "legacy_023_t1",
+          "message": "filtro ar motor gol 2010",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "question_key_excludes": [
+              "axle"
+            ]
+          }
+        },
+        {
+          "id": "legacy_023_t2",
+          "message": "dianteiro",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200
+          }
+        }
+      ],
+      "legacy_case_ids": [
+        "case_023",
+        "case_038"
+      ]
+    },
+    {
+      "id": "legacy_024",
+      "category": "partial",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "legacy_024_t1",
+          "message": "disco de freio gol 2010",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200
+          }
+        },
+        {
+          "id": "legacy_024_t2",
+          "message": "dianteiro",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200
+          }
+        }
+      ],
+      "legacy_case_ids": [
+        "case_024",
+        "case_039"
+      ]
+    },
+    {
+      "id": "legacy_025",
+      "category": "partial",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "legacy_025_t1",
+          "message": "farol gol 2010",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200
+          }
+        },
+        {
+          "id": "legacy_025_t2",
+          "message": "esquerdo",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200
+          }
+        }
+      ],
+      "legacy_case_ids": [
+        "case_025",
+        "case_040"
+      ]
+    },
+    {
+      "id": "legacy_026",
+      "category": "partial",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "legacy_026_t1",
+          "message": "radiador focus 2010",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200
+          }
+        },
+        {
+          "id": "legacy_026_t2",
+          "message": "1.6",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200
+          }
+        }
+      ],
+      "legacy_case_ids": [
+        "case_026",
+        "case_041"
+      ]
+    },
+    {
+      "id": "legacy_027",
+      "category": "partial",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "legacy_027_t1",
+          "message": "coxim amortecedor ecosport 2008",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200
+          }
+        },
+        {
+          "id": "legacy_027_t2",
+          "message": "zetec rocam",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200
+          }
+        }
+      ],
+      "legacy_case_ids": [
+        "case_027",
+        "case_042"
+      ]
+    },
+    {
+      "id": "legacy_028",
+      "category": "partial",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "legacy_028_t1",
+          "message": "pastilha de freio ecosport 2008",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200
+          }
+        },
+        {
+          "id": "legacy_028_t2",
+          "message": "1.6",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200
+          }
+        }
+      ],
+      "legacy_case_ids": [
+        "case_028",
+        "case_043"
+      ]
+    },
+    {
+      "id": "legacy_029",
+      "category": "partial_generic",
+      "tier": "smoke",
+      "turns": [
+        {
+          "id": "legacy_029_t1",
+          "message": "quero uma peca",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "question_key": "part_query",
+            "pre_search_path": "deterministic_ask"
+          }
+        },
+        {
+          "id": "legacy_029_t2",
+          "message": "radiador gol 2010",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200
+          }
+        }
+      ],
+      "legacy_case_ids": [
+        "case_029",
+        "case_044"
+      ]
+    },
+    {
+      "id": "legacy_030",
+      "category": "partial_generic",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "legacy_030_t1",
+          "message": "preciso de ajuda com uma peca do gol",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200
+          }
+        },
+        {
+          "id": "legacy_030_t2",
+          "message": "pastilha de freio 2010 1.0",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200
+          }
+        }
+      ],
+      "legacy_case_ids": [
+        "case_030",
+        "case_045"
+      ]
+    },
+    {
+      "id": "legacy_046",
+      "category": "validation_error",
+      "tier": "smoke",
+      "turns": [
+        {
+          "id": "legacy_046_t1",
+          "message": "   ",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 400
+          }
+        }
+      ],
+      "legacy_case_ids": [
+        "case_046"
+      ]
+    },
+    {
+      "id": "legacy_047",
+      "category": "validation_error",
+      "tier": "smoke",
+      "turns": [
+        {
+          "id": "legacy_047_t1",
+          "message": "Oi",
+          "schema_version": "2.0",
+          "expect": {
+            "status": 400
+          }
+        }
+      ],
+      "legacy_case_ids": [
+        "case_047"
+      ]
+    },
+    {
+      "id": "legacy_048",
+      "category": "typo_partial",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "legacy_048_t1",
+          "message": "rdiador gol 2010",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "question_key": "engine",
+            "part_code": null
+          }
+        }
+      ],
+      "legacy_case_ids": [
+        "case_048"
+      ]
+    },
+    {
+      "id": "legacy_049",
+      "category": "typo_partial",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "legacy_049_t1",
+          "message": "pstilhas gol 2010",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "question_key": "engine",
+            "part_code": null
+          }
+        }
+      ],
+      "legacy_case_ids": [
+        "case_049"
+      ]
+    },
+    {
+      "id": "legacy_050",
+      "category": "typo_complete",
+      "tier": "smoke",
+      "turns": [
+        {
+          "id": "legacy_050_t1",
+          "message": "bndejas ecosport 2008 eixo dianteiro",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "question_key": "side",
+            "part_code": null
+          }
+        }
+      ],
+      "legacy_case_ids": [
+        "case_050"
+      ]
+    },
+    {
+      "id": "ask_001",
+      "category": "deterministic_ask",
+      "tier": "smoke",
+      "turns": [
+        {
+          "id": "ask_001_t1",
+          "message": "radiador gol 2010",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "action_type": "request_info",
+            "question_key": "engine",
+            "pending_slot": "engine",
+            "pre_search_path": "deterministic_ask",
+            "used_tools_contains": [
+              "pre_search_deterministic_ask"
+            ],
+            "used_tools_excludes": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "criteria_contains": {
+              "part_query": "radiador"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "ask_002",
+      "category": "deterministic_ask",
+      "tier": "smoke",
+      "turns": [
+        {
+          "id": "ask_002_t1",
+          "message": "radiador ecosport 2008",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "action_type": "request_info",
+            "question_key": "engine",
+            "pending_slot": "engine",
+            "pre_search_path": "deterministic_ask",
+            "used_tools_contains": [
+              "pre_search_deterministic_ask"
+            ],
+            "used_tools_excludes": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "criteria_contains": {
+              "part_query": "radiador"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "ask_003",
+      "category": "deterministic_ask",
+      "tier": "smoke",
+      "turns": [
+        {
+          "id": "ask_003_t1",
+          "message": "radiador focus 2010",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "action_type": "request_info",
+            "question_key": "engine",
+            "pending_slot": "engine",
+            "pre_search_path": "deterministic_ask",
+            "used_tools_contains": [
+              "pre_search_deterministic_ask"
+            ],
+            "used_tools_excludes": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "criteria_contains": {
+              "part_query": "radiador"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "ask_004",
+      "category": "deterministic_ask",
+      "tier": "smoke",
+      "turns": [
+        {
+          "id": "ask_004_t1",
+          "message": "radiador gol ano 2010",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "action_type": "request_info",
+            "question_key": "engine",
+            "pending_slot": "engine",
+            "pre_search_path": "deterministic_ask",
+            "used_tools_contains": [
+              "pre_search_deterministic_ask"
+            ],
+            "used_tools_excludes": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "criteria_contains": {
+              "part_query": "radiador"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "ask_005",
+      "category": "deterministic_ask",
+      "tier": "smoke",
+      "turns": [
+        {
+          "id": "ask_005_t1",
+          "message": "radiador ford ecosport 2008",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "action_type": "request_info",
+            "question_key": "engine",
+            "pending_slot": "engine",
+            "pre_search_path": "deterministic_ask",
+            "used_tools_contains": [
+              "pre_search_deterministic_ask"
+            ],
+            "used_tools_excludes": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "criteria_contains": {
+              "part_query": "radiador"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "ask_006",
+      "category": "deterministic_ask",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "ask_006_t1",
+          "message": "preciso de radiador para gol 2010",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "action_type": "request_info",
+            "question_key": "engine",
+            "pending_slot": "engine",
+            "pre_search_path": "deterministic_ask",
+            "used_tools_contains": [
+              "pre_search_deterministic_ask"
+            ],
+            "used_tools_excludes": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "criteria_contains": {
+              "part_query": "radiador"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "ask_007",
+      "category": "deterministic_ask",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "ask_007_t1",
+          "message": "preciso de radiador para ecosport 2008",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "action_type": "request_info",
+            "question_key": "engine",
+            "pending_slot": "engine",
+            "pre_search_path": "deterministic_ask",
+            "used_tools_contains": [
+              "pre_search_deterministic_ask"
+            ],
+            "used_tools_excludes": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "criteria_contains": {
+              "part_query": "radiador"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "ask_008",
+      "category": "deterministic_ask",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "ask_008_t1",
+          "message": "preciso de radiador para focus 2010",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "action_type": "request_info",
+            "question_key": "engine",
+            "pending_slot": "engine",
+            "pre_search_path": "deterministic_ask",
+            "used_tools_contains": [
+              "pre_search_deterministic_ask"
+            ],
+            "used_tools_excludes": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "criteria_contains": {
+              "part_query": "radiador"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "ask_009",
+      "category": "deterministic_ask",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "ask_009_t1",
+          "message": "preciso de radiador para gol ano 2010",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "action_type": "request_info",
+            "question_key": "engine",
+            "pending_slot": "engine",
+            "pre_search_path": "deterministic_ask",
+            "used_tools_contains": [
+              "pre_search_deterministic_ask"
+            ],
+            "used_tools_excludes": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "criteria_contains": {
+              "part_query": "radiador"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "ask_010",
+      "category": "deterministic_ask",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "ask_010_t1",
+          "message": "preciso de radiador para ford ecosport 2008",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "action_type": "request_info",
+            "question_key": "engine",
+            "pending_slot": "engine",
+            "pre_search_path": "deterministic_ask",
+            "used_tools_contains": [
+              "pre_search_deterministic_ask"
+            ],
+            "used_tools_excludes": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "criteria_contains": {
+              "part_query": "radiador"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "ask_011",
+      "category": "deterministic_ask",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "ask_011_t1",
+          "message": "coxim amortecedor gol 2010",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "action_type": "request_info",
+            "question_key": "engine",
+            "pending_slot": "engine",
+            "pre_search_path": "deterministic_ask",
+            "used_tools_contains": [
+              "pre_search_deterministic_ask"
+            ],
+            "used_tools_excludes": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "criteria_contains": {
+              "part_query": "coxim amortecedor"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "ask_012",
+      "category": "deterministic_ask",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "ask_012_t1",
+          "message": "coxim amortecedor ecosport 2008",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "action_type": "request_info",
+            "question_key": "engine",
+            "pending_slot": "engine",
+            "pre_search_path": "deterministic_ask",
+            "used_tools_contains": [
+              "pre_search_deterministic_ask"
+            ],
+            "used_tools_excludes": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "criteria_contains": {
+              "part_query": "coxim amortecedor"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "ask_013",
+      "category": "deterministic_ask",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "ask_013_t1",
+          "message": "coxim amortecedor focus 2010",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "action_type": "request_info",
+            "question_key": "engine",
+            "pending_slot": "engine",
+            "pre_search_path": "deterministic_ask",
+            "used_tools_contains": [
+              "pre_search_deterministic_ask"
+            ],
+            "used_tools_excludes": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "criteria_contains": {
+              "part_query": "coxim amortecedor"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "ask_014",
+      "category": "deterministic_ask",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "ask_014_t1",
+          "message": "coxim amortecedor gol ano 2010",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "action_type": "request_info",
+            "question_key": "engine",
+            "pending_slot": "engine",
+            "pre_search_path": "deterministic_ask",
+            "used_tools_contains": [
+              "pre_search_deterministic_ask"
+            ],
+            "used_tools_excludes": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "criteria_contains": {
+              "part_query": "coxim amortecedor"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "ask_015",
+      "category": "deterministic_ask",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "ask_015_t1",
+          "message": "coxim amortecedor ford ecosport 2008",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "action_type": "request_info",
+            "question_key": "engine",
+            "pending_slot": "engine",
+            "pre_search_path": "deterministic_ask",
+            "used_tools_contains": [
+              "pre_search_deterministic_ask"
+            ],
+            "used_tools_excludes": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "criteria_contains": {
+              "part_query": "coxim amortecedor"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "ask_016",
+      "category": "deterministic_ask",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "ask_016_t1",
+          "message": "pastilha de freio gol 2010",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "action_type": "request_info",
+            "question_key": "engine",
+            "pending_slot": "engine",
+            "pre_search_path": "deterministic_ask",
+            "used_tools_contains": [
+              "pre_search_deterministic_ask"
+            ],
+            "used_tools_excludes": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "criteria_contains": {
+              "part_query": "pastilhas de freio"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "ask_017",
+      "category": "deterministic_ask",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "ask_017_t1",
+          "message": "pastilha de freio ecosport 2008",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "action_type": "request_info",
+            "question_key": "engine",
+            "pending_slot": "engine",
+            "pre_search_path": "deterministic_ask",
+            "used_tools_contains": [
+              "pre_search_deterministic_ask"
+            ],
+            "used_tools_excludes": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "criteria_contains": {
+              "part_query": "pastilhas de freio"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "ask_018",
+      "category": "deterministic_ask",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "ask_018_t1",
+          "message": "pastilha de freio focus 2010",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "action_type": "request_info",
+            "question_key": "engine",
+            "pending_slot": "engine",
+            "pre_search_path": "deterministic_ask",
+            "used_tools_contains": [
+              "pre_search_deterministic_ask"
+            ],
+            "used_tools_excludes": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "criteria_contains": {
+              "part_query": "pastilhas de freio"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "ask_019",
+      "category": "deterministic_ask",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "ask_019_t1",
+          "message": "pastilha de freio gol ano 2010",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "action_type": "request_info",
+            "question_key": "engine",
+            "pending_slot": "engine",
+            "pre_search_path": "deterministic_ask",
+            "used_tools_contains": [
+              "pre_search_deterministic_ask"
+            ],
+            "used_tools_excludes": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "criteria_contains": {
+              "part_query": "pastilhas de freio"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "ask_020",
+      "category": "deterministic_ask",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "ask_020_t1",
+          "message": "pastilha de freio ford ecosport 2008",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "action_type": "request_info",
+            "question_key": "engine",
+            "pending_slot": "engine",
+            "pre_search_path": "deterministic_ask",
+            "used_tools_contains": [
+              "pre_search_deterministic_ask"
+            ],
+            "used_tools_excludes": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "criteria_contains": {
+              "part_query": "pastilhas de freio"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "ask_021",
+      "category": "deterministic_ask",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "ask_021_t1",
+          "message": "disco de freio gol 2010 dianteiro",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "action_type": "request_info",
+            "question_key": "engine",
+            "pending_slot": "engine",
+            "pre_search_path": "deterministic_ask",
+            "used_tools_contains": [
+              "pre_search_deterministic_ask"
+            ],
+            "used_tools_excludes": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "criteria_contains": {
+              "part_query": "discos de freio"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "ask_022",
+      "category": "deterministic_ask",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "ask_022_t1",
+          "message": "disco de freio ecosport 2008 dianteiro",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "action_type": "request_info",
+            "question_key": "engine",
+            "pending_slot": "engine",
+            "pre_search_path": "deterministic_ask",
+            "used_tools_contains": [
+              "pre_search_deterministic_ask"
+            ],
+            "used_tools_excludes": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "criteria_contains": {
+              "part_query": "discos de freio"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "ask_023",
+      "category": "deterministic_ask",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "ask_023_t1",
+          "message": "disco de freio focus 2010 dianteiro",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "action_type": "request_info",
+            "question_key": "engine",
+            "pending_slot": "engine",
+            "pre_search_path": "deterministic_ask",
+            "used_tools_contains": [
+              "pre_search_deterministic_ask"
+            ],
+            "used_tools_excludes": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "criteria_contains": {
+              "part_query": "discos de freio"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "ask_024",
+      "category": "deterministic_ask",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "ask_024_t1",
+          "message": "disco de freio gol ano 2010 dianteiro",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "action_type": "request_info",
+            "question_key": "engine",
+            "pending_slot": "engine",
+            "pre_search_path": "deterministic_ask",
+            "used_tools_contains": [
+              "pre_search_deterministic_ask"
+            ],
+            "used_tools_excludes": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "criteria_contains": {
+              "part_query": "discos de freio"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "ask_025",
+      "category": "deterministic_ask",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "ask_025_t1",
+          "message": "disco de freio ford ecosport 2008 dianteiro",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "action_type": "request_info",
+            "question_key": "engine",
+            "pending_slot": "engine",
+            "pre_search_path": "deterministic_ask",
+            "used_tools_contains": [
+              "pre_search_deterministic_ask"
+            ],
+            "used_tools_excludes": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "criteria_contains": {
+              "part_query": "discos de freio"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "ask_026",
+      "category": "deterministic_ask",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "ask_026_t1",
+          "message": "bandeja gol 2010",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "action_type": "request_info",
+            "question_key": "side",
+            "pending_slot": "side",
+            "pre_search_path": "deterministic_ask",
+            "used_tools_contains": [
+              "pre_search_deterministic_ask"
+            ],
+            "used_tools_excludes": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "criteria_contains": {
+              "part_query": "bandejas"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "ask_027",
+      "category": "deterministic_ask",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "ask_027_t1",
+          "message": "bandeja ecosport 2008",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "action_type": "request_info",
+            "question_key": "side",
+            "pending_slot": "side",
+            "pre_search_path": "deterministic_ask",
+            "used_tools_contains": [
+              "pre_search_deterministic_ask"
+            ],
+            "used_tools_excludes": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "criteria_contains": {
+              "part_query": "bandejas"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "ask_028",
+      "category": "deterministic_ask",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "ask_028_t1",
+          "message": "bandeja focus 2010",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "action_type": "request_info",
+            "question_key": "side",
+            "pending_slot": "side",
+            "pre_search_path": "deterministic_ask",
+            "used_tools_contains": [
+              "pre_search_deterministic_ask"
+            ],
+            "used_tools_excludes": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "criteria_contains": {
+              "part_query": "bandejas"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "ask_029",
+      "category": "deterministic_ask",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "ask_029_t1",
+          "message": "bandeja gol ano 2010",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "action_type": "request_info",
+            "question_key": "side",
+            "pending_slot": "side",
+            "pre_search_path": "deterministic_ask",
+            "used_tools_contains": [
+              "pre_search_deterministic_ask"
+            ],
+            "used_tools_excludes": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "criteria_contains": {
+              "part_query": "bandejas"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "ask_030",
+      "category": "deterministic_ask",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "ask_030_t1",
+          "message": "bandeja ford ecosport 2008",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "action_type": "request_info",
+            "question_key": "side",
+            "pending_slot": "side",
+            "pre_search_path": "deterministic_ask",
+            "used_tools_contains": [
+              "pre_search_deterministic_ask"
+            ],
+            "used_tools_excludes": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "criteria_contains": {
+              "part_query": "bandejas"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "search_001",
+      "category": "complete_search",
+      "tier": "smoke",
+      "turns": [
+        {
+          "id": "search_001_t1",
+          "message": "radiador gol 2010 1.0",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "pre_search_path": "deterministic_bypass",
+            "used_tools_contains": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "handoff_required": false
+          }
+        }
+      ],
+      "review_required": true,
+      "review_reason": "O ERP pode mudar candidatos, discriminador e ordenacao.",
+      "validation_question": "A familia entendida, os filtros e o primeiro discriminador fazem sentido comercialmente?"
+    },
+    {
+      "id": "search_002",
+      "category": "complete_search",
+      "tier": "smoke",
+      "turns": [
+        {
+          "id": "search_002_t1",
+          "message": "radiador gol 2010 1.6",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "pre_search_path": "deterministic_bypass",
+            "used_tools_contains": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "handoff_required": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "search_003",
+      "category": "complete_search",
+      "tier": "smoke",
+      "turns": [
+        {
+          "id": "search_003_t1",
+          "message": "radiador ecosport 2008 1.6",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "pre_search_path": "deterministic_bypass",
+            "used_tools_contains": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "handoff_required": false
+          }
+        }
+      ],
+      "review_required": true,
+      "review_reason": "O ERP pode mudar candidatos, discriminador e ordenacao.",
+      "validation_question": "A familia entendida, os filtros e o primeiro discriminador fazem sentido comercialmente?"
+    },
+    {
+      "id": "search_004",
+      "category": "complete_search",
+      "tier": "smoke",
+      "turns": [
+        {
+          "id": "search_004_t1",
+          "message": "rdiador ecosport 2008 1.6",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "pre_search_path": "deterministic_bypass",
+            "used_tools_contains": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "handoff_required": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "search_005",
+      "category": "complete_search",
+      "tier": "smoke",
+      "turns": [
+        {
+          "id": "search_005_t1",
+          "message": "radiador focus 2010 1.6",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "pre_search_path": "deterministic_bypass",
+            "used_tools_contains": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "handoff_required": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "search_006",
+      "category": "complete_search",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "search_006_t1",
+          "message": "coxim amortecedor ecosport 2008 1.6",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "pre_search_path": "deterministic_bypass",
+            "used_tools_contains": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "handoff_required": false
+          }
+        }
+      ],
+      "review_required": true,
+      "review_reason": "O ERP pode mudar candidatos, discriminador e ordenacao.",
+      "validation_question": "A familia entendida, os filtros e o primeiro discriminador fazem sentido comercialmente?"
+    },
+    {
+      "id": "search_007",
+      "category": "complete_search",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "search_007_t1",
+          "message": "coxin amortecedor ecosport 2008 1.6",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "pre_search_path": "deterministic_bypass",
+            "used_tools_contains": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "handoff_required": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "search_008",
+      "category": "complete_search",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "search_008_t1",
+          "message": "coxim amort ecosport 2008 zetec rocam",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "pre_search_path": "deterministic_bypass",
+            "used_tools_contains": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "handoff_required": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "search_009",
+      "category": "complete_search",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "search_009_t1",
+          "message": "coxins amortecedor gol 2010 1.0",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "pre_search_path": "deterministic_bypass",
+            "used_tools_contains": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "handoff_required": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "search_010",
+      "category": "complete_search",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "search_010_t1",
+          "message": "coxim do amortecedor focus 2010 1.6",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "pre_search_path": "deterministic_bypass",
+            "used_tools_contains": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "handoff_required": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "search_011",
+      "category": "complete_search",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "search_011_t1",
+          "message": "pastilha de freio gol 2010 1.0 dianteira",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "pre_search_path": "deterministic_bypass",
+            "used_tools_contains": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "handoff_required": false
+          }
+        }
+      ],
+      "review_required": true,
+      "review_reason": "O ERP pode mudar candidatos, discriminador e ordenacao.",
+      "validation_question": "A familia entendida, os filtros e o primeiro discriminador fazem sentido comercialmente?"
+    },
+    {
+      "id": "search_012",
+      "category": "complete_search",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "search_012_t1",
+          "message": "pastilhas freio gol 2010 1.0 traseira",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "pre_search_path": "deterministic_bypass",
+            "used_tools_contains": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "handoff_required": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "search_013",
+      "category": "complete_search",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "search_013_t1",
+          "message": "pstilhas ecosport 2008 1.6 dianteira",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "pre_search_path": "deterministic_bypass",
+            "used_tools_contains": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "handoff_required": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "search_014",
+      "category": "complete_search",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "search_014_t1",
+          "message": "pastilha focus 2010 1.6 dianteira",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "pre_search_path": "deterministic_bypass",
+            "used_tools_contains": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "handoff_required": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "search_015",
+      "category": "complete_search",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "search_015_t1",
+          "message": "pastilha de freio ecosport 2008 1.6 traseira",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "pre_search_path": "deterministic_bypass",
+            "used_tools_contains": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "handoff_required": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "search_016",
+      "category": "complete_search",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "search_016_t1",
+          "message": "disco de freio gol 2010 1.0 dianteiro",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "pre_search_path": "deterministic_bypass",
+            "used_tools_contains": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "handoff_required": false
+          }
+        }
+      ],
+      "review_required": true,
+      "review_reason": "O ERP pode mudar candidatos, discriminador e ordenacao.",
+      "validation_question": "A familia entendida, os filtros e o primeiro discriminador fazem sentido comercialmente?"
+    },
+    {
+      "id": "search_017",
+      "category": "complete_search",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "search_017_t1",
+          "message": "discos freio gol 2010 1.6 traseiro",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "pre_search_path": "deterministic_bypass",
+            "used_tools_contains": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "handoff_required": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "search_018",
+      "category": "complete_search",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "search_018_t1",
+          "message": "disco de freio ecosport 2008 1.6 dianteiro",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "pre_search_path": "deterministic_bypass",
+            "used_tools_contains": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "handoff_required": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "search_019",
+      "category": "complete_search",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "search_019_t1",
+          "message": "disco focus 2010 1.6 dianteiro",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "pre_search_path": "deterministic_bypass",
+            "used_tools_contains": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "handoff_required": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "search_020",
+      "category": "complete_search",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "search_020_t1",
+          "message": "discos de freio ecosport 2008 1.6 traseiro",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "pre_search_path": "deterministic_bypass",
+            "used_tools_contains": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "handoff_required": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "search_021",
+      "category": "complete_search",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "search_021_t1",
+          "message": "bandeja ecosport 2008 esquerda",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "pre_search_path": "deterministic_bypass",
+            "used_tools_contains": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "handoff_required": false
+          }
+        }
+      ],
+      "review_required": true,
+      "review_reason": "O ERP pode mudar candidatos, discriminador e ordenacao.",
+      "validation_question": "A familia entendida, os filtros e o primeiro discriminador fazem sentido comercialmente?"
+    },
+    {
+      "id": "search_022",
+      "category": "complete_search",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "search_022_t1",
+          "message": "bandeja ecosport 2008 direita",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "pre_search_path": "deterministic_bypass",
+            "used_tools_contains": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "handoff_required": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "search_023",
+      "category": "complete_search",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "search_023_t1",
+          "message": "bndejas ecosport 2008 lado esquerdo",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "pre_search_path": "deterministic_bypass",
+            "used_tools_contains": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "handoff_required": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "search_024",
+      "category": "complete_search",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "search_024_t1",
+          "message": "bandeja gol 2010 lado direito",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "pre_search_path": "deterministic_bypass",
+            "used_tools_contains": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "handoff_required": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "search_025",
+      "category": "complete_search",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "search_025_t1",
+          "message": "bandeja focus 2010 esquerda",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "pre_search_path": "deterministic_bypass",
+            "used_tools_contains": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "handoff_required": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "search_026",
+      "category": "complete_search",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "search_026_t1",
+          "message": "filtro de oleo gol 2010",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "pre_search_path": "deterministic_bypass",
+            "used_tools_contains": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "handoff_required": false
+          }
+        }
+      ],
+      "review_required": true,
+      "review_reason": "O ERP pode mudar candidatos, discriminador e ordenacao.",
+      "validation_question": "A familia entendida, os filtros e o primeiro discriminador fazem sentido comercialmente?"
+    },
+    {
+      "id": "search_027",
+      "category": "complete_search",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "search_027_t1",
+          "message": "filtro oleo ecosport 2008",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "pre_search_path": "deterministic_bypass",
+            "used_tools_contains": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "handoff_required": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "search_028",
+      "category": "complete_search",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "search_028_t1",
+          "message": "filtro ar motor gol 2010",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "pre_search_path": "deterministic_bypass",
+            "used_tools_contains": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "handoff_required": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "search_029",
+      "category": "complete_search",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "search_029_t1",
+          "message": "filtro de combustivel gol 2010",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "pre_search_path": "deterministic_bypass",
+            "used_tools_contains": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "handoff_required": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "search_030",
+      "category": "complete_search",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "search_030_t1",
+          "message": "filtro de ar do motor ecosport 2008",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "pre_search_path": "deterministic_bypass",
+            "used_tools_contains": [
+              "search_parts"
+            ],
+            "part_code": null,
+            "handoff_required": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "provenance_001",
+      "category": "part_code_provenance",
+      "tier": "smoke",
+      "turns": [
+        {
+          "id": "provenance_001_t1",
+          "message": "pastilha de freio 2010 1.0",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "part_code": null,
+            "reply_excludes": [
+              "FREIO-2010",
+              "GOL-2010"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "provenance_002",
+      "category": "part_code_provenance",
+      "tier": "smoke",
+      "turns": [
+        {
+          "id": "provenance_002_t1",
+          "message": "pastilha para gol 2010 1.0",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "part_code": null,
+            "reply_excludes": [
+              "FREIO-2010",
+              "GOL-2010"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "provenance_003",
+      "category": "part_code_provenance",
+      "tier": "smoke",
+      "turns": [
+        {
+          "id": "provenance_003_t1",
+          "message": "freio gol 2010",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "part_code": null,
+            "reply_excludes": [
+              "FREIO-2010",
+              "GOL-2010"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "provenance_004",
+      "category": "part_code_provenance",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "provenance_004_t1",
+          "message": "radiador gol 2010",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "part_code": null,
+            "reply_excludes": [
+              "FREIO-2010",
+              "GOL-2010"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "provenance_005",
+      "category": "part_code_provenance",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "provenance_005_t1",
+          "message": "bandeja ecosport 2008",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "part_code": null,
+            "reply_excludes": [
+              "FREIO-2010",
+              "GOL-2010"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "provenance_006",
+      "category": "part_code_provenance",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "provenance_006_t1",
+          "message": "disco de freio focus 2010",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "part_code": null,
+            "reply_excludes": [
+              "FREIO-2010",
+              "GOL-2010"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "provenance_007",
+      "category": "part_code_provenance",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "provenance_007_t1",
+          "message": "filtro gol 2010",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "part_code": null,
+            "reply_excludes": [
+              "FREIO-2010",
+              "GOL-2010"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "provenance_008",
+      "category": "part_code_provenance",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "provenance_008_t1",
+          "message": "coxim ecosport 2008",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "part_code": null,
+            "reply_excludes": [
+              "FREIO-2010",
+              "GOL-2010"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "provenance_009",
+      "category": "part_code_provenance",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "provenance_009_t1",
+          "message": "farol gol 2010",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "part_code": null,
+            "reply_excludes": [
+              "FREIO-2010",
+              "GOL-2010"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "provenance_010",
+      "category": "part_code_provenance",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "provenance_010_t1",
+          "message": "peca gol 2010",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "part_code": null,
+            "reply_excludes": [
+              "FREIO-2010",
+              "GOL-2010"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "provenance_011",
+      "category": "literal_part_code",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "provenance_011_t1",
+          "message": "codigo AB-1234",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "part_code": "AB-1234",
+            "used_tools_contains": [
+              "search_parts"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "provenance_012",
+      "category": "literal_part_code",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "provenance_012_t1",
+          "message": "procure AB-5678",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "part_code": "AB-5678",
+            "used_tools_contains": [
+              "search_parts"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "provenance_013",
+      "category": "literal_part_code",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "provenance_013_t1",
+          "message": "peca XP-9012",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "part_code": "XP-9012",
+            "used_tools_contains": [
+              "search_parts"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "provenance_014",
+      "category": "literal_part_code",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "provenance_014_t1",
+          "message": "item RAD-4321",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "part_code": "RAD-4321",
+            "used_tools_contains": [
+              "search_parts"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "provenance_015",
+      "category": "literal_part_code",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "provenance_015_t1",
+          "message": "codigo BDJ-9876",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "part_code": "BDJ-9876",
+            "used_tools_contains": [
+              "search_parts"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "disambiguation_001",
+      "category": "result_disambiguation",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "disambiguation_001_t1",
+          "message": "radiador gol 2010 1.0",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "action_type_one_of": [
+              "request_info",
+              "show_items"
+            ],
+            "used_tools_contains": [
+              "search_parts"
+            ],
+            "handoff_required": false
+          }
+        },
+        {
+          "id": "disambiguation_001_t2",
+          "message": "1",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "pre_search_path_one_of": [
+              "result_disambiguation",
+              "llm",
+              "deterministic_bypass"
+            ]
+          }
+        }
+      ],
+      "review_required": true,
+      "review_reason": "A selecao depende dos atributos e candidatos atuais do ERP.",
+      "validation_question": "As opcoes apresentadas distinguem produtos de forma compreensivel e a resposta final escolhe o item correto?"
+    },
+    {
+      "id": "disambiguation_002",
+      "category": "result_disambiguation",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "disambiguation_002_t1",
+          "message": "radiador ecosport 2008 1.6",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "action_type_one_of": [
+              "request_info",
+              "show_items"
+            ],
+            "used_tools_contains": [
+              "search_parts"
+            ],
+            "handoff_required": false
+          }
+        },
+        {
+          "id": "disambiguation_002_t2",
+          "message": "nenhuma dessas",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "pending_slot": "no_match_retry",
+            "handoff_required": false
+          }
+        }
+      ],
+      "review_required": true,
+      "review_reason": "A selecao depende dos atributos e candidatos atuais do ERP.",
+      "validation_question": "As opcoes apresentadas distinguem produtos de forma compreensivel e a resposta final escolhe o item correto?"
+    },
+    {
+      "id": "disambiguation_003",
+      "category": "result_disambiguation",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "disambiguation_003_t1",
+          "message": "coxim amortecedor ecosport 2008 1.6",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "action_type_one_of": [
+              "request_info",
+              "show_items"
+            ],
+            "used_tools_contains": [
+              "search_parts"
+            ],
+            "handoff_required": false
+          }
+        },
+        {
+          "id": "disambiguation_003_t2",
+          "message": "quero falar com um vendedor",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "handoff_required": true
+          }
+        }
+      ],
+      "review_required": true,
+      "review_reason": "A selecao depende dos atributos e candidatos atuais do ERP.",
+      "validation_question": "As opcoes apresentadas distinguem produtos de forma compreensivel e a resposta final escolhe o item correto?"
+    },
+    {
+      "id": "disambiguation_004",
+      "category": "result_disambiguation",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "disambiguation_004_t1",
+          "message": "bandeja ecosport 2008 esquerda",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "action_type_one_of": [
+              "request_info",
+              "show_items"
+            ],
+            "used_tools_contains": [
+              "search_parts"
+            ],
+            "handoff_required": false
+          }
+        },
+        {
+          "id": "disambiguation_004_t2",
+          "message": "2",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "pre_search_path_one_of": [
+              "result_disambiguation",
+              "llm",
+              "deterministic_bypass"
+            ]
+          }
+        }
+      ],
+      "review_required": true,
+      "review_reason": "A selecao depende dos atributos e candidatos atuais do ERP.",
+      "validation_question": "As opcoes apresentadas distinguem produtos de forma compreensivel e a resposta final escolhe o item correto?"
+    },
+    {
+      "id": "disambiguation_005",
+      "category": "result_disambiguation",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "disambiguation_005_t1",
+          "message": "radiador focus 2010 1.6",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "action_type_one_of": [
+              "request_info",
+              "show_items"
+            ],
+            "used_tools_contains": [
+              "search_parts"
+            ],
+            "handoff_required": false
+          }
+        },
+        {
+          "id": "disambiguation_005_t2",
+          "message": "talvez",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "pre_search_path_one_of": [
+              "result_disambiguation",
+              "llm",
+              "deterministic_bypass"
+            ]
+          }
+        },
+        {
+          "id": "disambiguation_005_t3",
+          "message": "aquela",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200
+          }
+        },
+        {
+          "id": "disambiguation_005_t4",
+          "message": "indefinido",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200
+          }
+        }
+      ],
+      "review_required": true,
+      "review_reason": "A selecao depende dos atributos e candidatos atuais do ERP.",
+      "validation_question": "As opcoes apresentadas distinguem produtos de forma compreensivel e a resposta final escolhe o item correto?"
+    },
+    {
+      "id": "disambiguation_006",
+      "category": "result_disambiguation",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "disambiguation_006_t1",
+          "message": "radiador gol 2010 1.6",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "action_type_one_of": [
+              "request_info",
+              "show_items"
+            ],
+            "used_tools_contains": [
+              "search_parts"
+            ],
+            "handoff_required": false
+          }
+        },
+        {
+          "id": "disambiguation_006_t2",
+          "message": "1",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "pre_search_path_one_of": [
+              "result_disambiguation",
+              "llm",
+              "deterministic_bypass"
+            ]
+          }
+        }
+      ],
+      "review_required": true,
+      "review_reason": "A selecao depende dos atributos e candidatos atuais do ERP.",
+      "validation_question": "As opcoes apresentadas distinguem produtos de forma compreensivel e a resposta final escolhe o item correto?"
+    },
+    {
+      "id": "disambiguation_007",
+      "category": "result_disambiguation",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "disambiguation_007_t1",
+          "message": "coxim amortecedor gol 2010 1.0",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "action_type_one_of": [
+              "request_info",
+              "show_items"
+            ],
+            "used_tools_contains": [
+              "search_parts"
+            ],
+            "handoff_required": false
+          }
+        },
+        {
+          "id": "disambiguation_007_t2",
+          "message": "nenhuma dessas",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "pending_slot": "no_match_retry",
+            "handoff_required": false
+          }
+        }
+      ],
+      "review_required": true,
+      "review_reason": "A selecao depende dos atributos e candidatos atuais do ERP.",
+      "validation_question": "As opcoes apresentadas distinguem produtos de forma compreensivel e a resposta final escolhe o item correto?"
+    },
+    {
+      "id": "disambiguation_008",
+      "category": "result_disambiguation",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "disambiguation_008_t1",
+          "message": "bandeja ecosport 2008 direita",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "action_type_one_of": [
+              "request_info",
+              "show_items"
+            ],
+            "used_tools_contains": [
+              "search_parts"
+            ],
+            "handoff_required": false
+          }
+        },
+        {
+          "id": "disambiguation_008_t2",
+          "message": "2",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "pre_search_path_one_of": [
+              "result_disambiguation",
+              "llm",
+              "deterministic_bypass"
+            ]
+          }
+        }
+      ],
+      "review_required": true,
+      "review_reason": "A selecao depende dos atributos e candidatos atuais do ERP.",
+      "validation_question": "As opcoes apresentadas distinguem produtos de forma compreensivel e a resposta final escolhe o item correto?"
+    },
+    {
+      "id": "disambiguation_009",
+      "category": "result_disambiguation",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "disambiguation_009_t1",
+          "message": "radiador ecosport 2008 zetec rocam",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "action_type_one_of": [
+              "request_info",
+              "show_items"
+            ],
+            "used_tools_contains": [
+              "search_parts"
+            ],
+            "handoff_required": false
+          }
+        },
+        {
+          "id": "disambiguation_009_t2",
+          "message": "a primeira",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "pre_search_path_one_of": [
+              "result_disambiguation",
+              "llm",
+              "deterministic_bypass"
+            ]
+          }
+        }
+      ],
+      "review_required": true,
+      "review_reason": "A selecao depende dos atributos e candidatos atuais do ERP.",
+      "validation_question": "As opcoes apresentadas distinguem produtos de forma compreensivel e a resposta final escolhe o item correto?"
+    },
+    {
+      "id": "disambiguation_010",
+      "category": "result_disambiguation",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "disambiguation_010_t1",
+          "message": "radiador motor gol 2010 1.0",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "action_type_one_of": [
+              "request_info",
+              "show_items"
+            ],
+            "used_tools_contains": [
+              "search_parts"
+            ],
+            "handoff_required": false
+          }
+        },
+        {
+          "id": "disambiguation_010_t2",
+          "message": "nao sei",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "pre_search_path_one_of": [
+              "result_disambiguation",
+              "llm",
+              "deterministic_bypass"
+            ]
+          }
+        },
+        {
+          "id": "disambiguation_010_t3",
+          "message": "aquela",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200
+          }
+        },
+        {
+          "id": "disambiguation_010_t4",
+          "message": "indefinido",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200
+          }
+        }
+      ],
+      "review_required": true,
+      "review_reason": "A selecao depende dos atributos e candidatos atuais do ERP.",
+      "validation_question": "As opcoes apresentadas distinguem produtos de forma compreensivel e a resposta final escolhe o item correto?"
+    },
+    {
+      "id": "policy_001",
+      "category": "semantic_or_policy",
+      "tier": "extended",
+      "turns": [
+        {
+          "id": "policy_001_t1",
+          "message": "meu carro esta esquentando, o que pode ser?",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200
+          }
+        }
+      ],
+      "review_required": true,
+      "review_reason": "Descricao funcional, sintoma ou politica de handoff nao possui uma unica resposta objetiva.",
+      "validation_question": "A resposta e segura, nao confirma familia por fuzzy inseguro e pergunta ou transfere no momento correto?"
+    },
+    {
+      "id": "policy_002",
+      "category": "semantic_or_policy",
+      "tier": "extended",
+      "turns": [
+        {
+          "id": "policy_002_t1",
+          "message": "tem aquilo que segura o carro?",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200
+          }
+        }
+      ],
+      "review_required": true,
+      "review_reason": "Descricao funcional, sintoma ou politica de handoff nao possui uma unica resposta objetiva.",
+      "validation_question": "A resposta e segura, nao confirma familia por fuzzy inseguro e pergunta ou transfere no momento correto?"
+    },
+    {
+      "id": "policy_003",
+      "category": "semantic_or_policy",
+      "tier": "extended",
+      "turns": [
+        {
+          "id": "policy_003_t1",
+          "message": "a peca faz barulho quando viro",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200
+          }
+        }
+      ],
+      "review_required": true,
+      "review_reason": "Descricao funcional, sintoma ou politica de handoff nao possui uma unica resposta objetiva.",
+      "validation_question": "A resposta e segura, nao confirma familia por fuzzy inseguro e pergunta ou transfere no momento correto?"
+    },
+    {
+      "id": "policy_004",
+      "category": "semantic_or_policy",
+      "tier": "extended",
+      "turns": [
+        {
+          "id": "policy_004_t1",
+          "message": "quero falar com um vendedor",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200
+          }
+        }
+      ],
+      "review_required": true,
+      "review_reason": "Descricao funcional, sintoma ou politica de handoff nao possui uma unica resposta objetiva.",
+      "validation_question": "A resposta e segura, nao confirma familia por fuzzy inseguro e pergunta ou transfere no momento correto?"
+    },
+    {
+      "id": "policy_005",
+      "category": "semantic_or_policy",
+      "tier": "extended",
+      "turns": [
+        {
+          "id": "policy_005_t1",
+          "message": "preciso de uma peca mas nao sei o nome",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200
+          }
+        }
+      ],
+      "review_required": true,
+      "review_reason": "Descricao funcional, sintoma ou politica de handoff nao possui uma unica resposta objetiva.",
+      "validation_question": "A resposta e segura, nao confirma familia por fuzzy inseguro e pergunta ou transfere no momento correto?"
+    },
+    {
+      "id": "policy_006",
+      "category": "semantic_or_policy",
+      "tier": "extended",
+      "turns": [
+        {
+          "id": "policy_006_t1",
+          "message": "voces vendem pneu?",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200
+          }
+        }
+      ],
+      "review_required": true,
+      "review_reason": "Descricao funcional, sintoma ou politica de handoff nao possui uma unica resposta objetiva.",
+      "validation_question": "A resposta e segura, nao confirma familia por fuzzy inseguro e pergunta ou transfere no momento correto?"
+    },
+    {
+      "id": "policy_007",
+      "category": "semantic_or_policy",
+      "tier": "extended",
+      "turns": [
+        {
+          "id": "policy_007_t1",
+          "message": "quero trocar o oleo inteiro",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200
+          }
+        }
+      ],
+      "review_required": true,
+      "review_reason": "Descricao funcional, sintoma ou politica de handoff nao possui uma unica resposta objetiva.",
+      "validation_question": "A resposta e segura, nao confirma familia por fuzzy inseguro e pergunta ou transfere no momento correto?"
+    },
+    {
+      "id": "policy_008",
+      "category": "semantic_or_policy",
+      "tier": "extended",
+      "turns": [
+        {
+          "id": "policy_008_t1",
+          "message": "o carro nao liga",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200
+          }
+        }
+      ],
+      "review_required": true,
+      "review_reason": "Descricao funcional, sintoma ou politica de handoff nao possui uma unica resposta objetiva.",
+      "validation_question": "A resposta e segura, nao confirma familia por fuzzy inseguro e pergunta ou transfere no momento correto?"
+    },
+    {
+      "id": "policy_009",
+      "category": "semantic_or_policy",
+      "tier": "extended",
+      "turns": [
+        {
+          "id": "policy_009_t1",
+          "message": "tem uma coisa perto do motor vazando",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200
+          }
+        }
+      ],
+      "review_required": true,
+      "review_reason": "Descricao funcional, sintoma ou politica de handoff nao possui uma unica resposta objetiva.",
+      "validation_question": "A resposta e segura, nao confirma familia por fuzzy inseguro e pergunta ou transfere no momento correto?"
+    },
+    {
+      "id": "policy_010",
+      "category": "semantic_or_policy",
+      "tier": "extended",
+      "turns": [
+        {
+          "id": "policy_010_t1",
+          "message": "agora quero uma bateria para o carro",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200
+          }
+        }
+      ],
+      "review_required": true,
+      "review_reason": "Descricao funcional, sintoma ou politica de handoff nao possui uma unica resposta objetiva.",
+      "validation_question": "A resposta e segura, nao confirma familia por fuzzy inseguro e pergunta ou transfere no momento correto?"
+    },
+    {
+      "id": "invalid_001",
+      "category": "contract_validation",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "invalid_001_t1",
+          "message": "",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 400
+          }
+        }
+      ]
+    },
+    {
+      "id": "invalid_002",
+      "category": "contract_validation",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "invalid_002_t1",
+          "message": " ",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 400
+          }
+        }
+      ]
+    },
+    {
+      "id": "invalid_003",
+      "category": "contract_validation",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "invalid_003_t1",
+          "message": "\t",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 400
+          }
+        }
+      ]
+    },
+    {
+      "id": "invalid_004",
+      "category": "contract_validation",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "invalid_004_t1",
+          "message": "Oi",
+          "schema_version": "0.9",
+          "expect": {
+            "status": 400
+          }
+        }
+      ]
+    },
+    {
+      "id": "invalid_005",
+      "category": "contract_validation",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "invalid_005_t1",
+          "message": "radiador",
+          "schema_version": "99.0",
+          "expect": {
+            "status": 400
+          }
+        }
+      ]
+    }
+  ]
+}

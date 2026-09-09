@@ -9,6 +9,7 @@ PreSearchDecision = Literal["search", "ask", "handoff"]
 class SearchCriteria(BaseModel):
     part_query: str | None = None
     part_code: str | None = None
+    preferred_product_brand: str | None = None
     vehicle_brand: str | None = None
     vehicle_model: str | None = None
     vehicle_year: int | None = Field(default=None, ge=1900, le=2100)
@@ -30,6 +31,7 @@ class NextQuestion(BaseModel):
 class PreSearchValidation(BaseModel):
     decision: PreSearchDecision
     criteria: SearchCriteria = Field(default_factory=SearchCriteria)
+    items: list[SearchCriteria] | None = None
     missing_fields: list[str] = Field(default_factory=list)
     next_question: NextQuestion | None = None
     confidence: float = Field(0.0, ge=0.0, le=1.0)

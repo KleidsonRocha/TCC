@@ -8,9 +8,12 @@ Servico FastAPI do TCC para atendimento inicial de autopecas. O projeto recebe t
 - catalogo deterministico em Postgres
 - extracao lexical com aliases e fuzzy conservador para `part_query`
 - bypass deterministico seguro para pedidos completos, follow-ups simples e perguntas obvias
+- desambiguacao deterministica e multi-turno quando o ERP retorna varios itens
 - validacao com LLM via Ollama
 - busca real no ERP via PostgreSQL
 - captura de interacoes para revisao e fine-tuning
+- API administrativa para revisar visualmente as conversas capturadas
+- curadoria multi-item e reabertura auditada de revisoes
 
 ## Fluxo Funcional Resumido
 
@@ -24,6 +27,7 @@ O caminho principal do runtime e este:
 6. a LLM valida o contexto e sugere `ask`, `search` ou `handoff`
 7. o backend recalcula os campos obrigatorios e decide se `search` pode ser liberado
 8. so depois disso o sistema consulta o ERP por `soccol.item_search_candidates`
+9. quando houver varios itens, o backend escolhe um discriminador real, pergunta ao usuario e conserva os candidatos no `ConversationState` persistido pelo Redis
 
 Resumo das decisoes:
 - `ask`: quando ainda faltam discriminadores obrigatorios
@@ -93,6 +97,17 @@ Servicos principais:
 - catalogo Postgres: `localhost:5433`
 - Ollama: `http://localhost:11434`
 
+Endpoints administrativos de revisao:
+- `GET /review/conversations`: lista conversas pendentes ou concluidas
+- `GET /review/conversations/{conversation_id}`: carrega a conversa completa
+- `PUT /review/interactions/{id}`: salva a avaliacao de um turno pendente
+- `POST /review/interactions/{id}/discard`: descarta um turno inadequado para curadoria
+- `POST /review/conversations/{conversation_id}/discard-pending`: descarta todos os turnos ainda pendentes
+- `POST /review/interactions/{id}/reopen`: reabre uma revisao ainda nao promovida e preserva seu historico
+
+Esses endpoints podem ser protegidos com `REVIEW_API_KEY`. A interface Streamlit
+envia o valor no header `X-Review-Key` e nao acessa o Postgres diretamente.
+
 ## Banco E Bootstrap
 
 O projeto trabalha sem migrations. A fonte operacional do schema e:
@@ -142,6 +157,11 @@ Observacao:
 Artefatos relevantes para avaliacao:
 - `docs/assets/datasets/pre_search_eval_dataset_mvp.json`
 - `docs/assets/datasets/pre_search_num_predict_golden_set.json`
+- `docs/assets/datasets/battery_structural_respond_v2.json`
+- `docs/assets/datasets/battery_real_omnichannel_250.json`
+- `docs/assets/datasets/real_respond_battery_human_validation.md`
+
+A bateria real versionada cobre contratos, regras deterministicas, buscas, proveniencia de codigo e conversas multi-turno. Ela pode ser filtrada por `smoke`, `regression` ou `extended`; consulte `docs/guide/operational_commands.md` antes de executar.
 
 ## Documentacao Principal
 

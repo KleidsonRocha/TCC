@@ -86,6 +86,7 @@ def _load_examples(cur: psycopg.Cursor[Any], dataset_slug: str) -> list[dict[str
             input_last_messages,
             expected_decision,
             expected_criteria,
+            expected_items,
             expected_missing_fields,
             expected_next_question,
             expected_confidence,
@@ -111,6 +112,32 @@ def _to_float(value: Any) -> float:
     if isinstance(value, Decimal):
         return float(value)
     return float(value or 0.0)
+
+
+def _normalize_export_contract(
+    *,
+    decision: str,
+    missing_fields: list[str],
+    next_question: dict[str, Any] | None,
+) -> tuple[list[str], dict[str, Any] | None, list[str]]:
+    """Keep legacy promoted snapshots aligned with the current output contract.
+
+    Older promoted records could retain a stale missing field after the review
+    was corrected. A `search` target is complete by definition, so exporting
+    that stale state would create contradictory supervision examples. The
+    source record remains untouched; the normalization is recorded in metadata.
+    """
+    normalized_missing = list(missing_fields)
+    normalized_question = next_question
+    adjustments: list[str] = []
+    if decision == "search" and (normalized_missing or normalized_question is not None):
+        normalized_missing = []
+        normalized_question = None
+        adjustments.append("search_contract_cleared_stale_missing_fields")
+    if decision != "ask" and normalized_question is not None:
+        normalized_question = None
+        adjustments.append("non_ask_contract_cleared_question")
+    return normalized_missing, normalized_question, adjustments
 
 
 def _build_validator(settings: Settings) -> LLMPreSearchValidator:
@@ -148,11 +175,26 @@ def _build_export_rows(
             dictionary_seed_criteria=dictionary_seed.model_dump(exclude_none=True),
             score_policy=score_policy,
         )
-        assistant_payload = build_fine_tuning_assistant_payload(
-            decision=str(row.get("expected_decision", "")).strip(),
-            criteria=row.get("expected_criteria") or {},
+        expected_decision = str(row.get("expected_decision", "")).strip()
+        expected_missing_fields, expected_next_question, export_adjustments = _normalize_export_contract(
+            decision=expected_decision,
             missing_fields=list(row.get("expected_missing_fields") or []),
             next_question=row.get("expected_next_question"),
+        )
+        assistant_payload = build_fine_tuning_assistant_payload(
+            decision=expected_decision,
+            criteria=row.get("expected_criteria") or {},
+            items=[
+                item.get("criteria") or {}
+                for item in (row.get("expected_items") or [])
+                if isinstance(item, dict)
+                and (
+                    (item.get("criteria") or {}).get("part_query")
+                    or (item.get("criteria") or {}).get("part_code")
+                )
+            ] or None,
+            missing_fields=expected_missing_fields,
+            next_question=expected_next_question,
             confidence=_to_float(row.get("expected_confidence")),
         )
         metadata = {
@@ -162,7 +204,10 @@ def _build_export_rows(
             "part_code_source": row.get("part_code_source"),
             "tags": row.get("tags") or [],
             "notes": row.get("notes"),
+            "item_reviews": row.get("expected_items") or [],
         }
+        if export_adjustments:
+            metadata["export_normalizations"] = export_adjustments
         messages_record = build_fine_tuning_messages_record(
             system_prompt=system_prompt,
             user_payload=user_payload,

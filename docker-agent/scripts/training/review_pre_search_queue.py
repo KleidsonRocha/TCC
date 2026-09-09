@@ -36,6 +36,7 @@ def list_queue(*, settings: Settings, status: str, limit: int) -> None:
                     branch_id,
                     message_text,
                     predicted_decision,
+                    predicted_items,
                     predicted_confidence,
                     predicted_missing_fields,
                     predicted_next_question,
@@ -46,6 +47,7 @@ def list_queue(*, settings: Settings, status: str, limit: int) -> None:
                     llm_fallback_used,
                     llm_decision_raw,
                     review_status,
+                    reviewed_items,
                     review_priority_score,
                     reviewed_decision,
                     reviewed_question_key,
@@ -74,10 +76,12 @@ def review_case(
     question_key: str | None,
     question_prompt: str | None,
     question_options_json: str | None,
+    items_json: str | None = None,
 ) -> None:
     reviewed_criteria = _json_value(criteria_json, default=None)
     reviewed_missing_fields = _json_value(missing_fields_json, default=None)
     reviewed_question_options = _json_value(question_options_json, default=None)
+    reviewed_items = _json_value(items_json, default=None)
 
     if decision == "ask" and (not question_key or not question_prompt):
         raise ValueError("Para decision=ask informe --question-key e --question-prompt.")
@@ -91,6 +95,7 @@ def review_case(
                     review_status = 'reviewed',
                     reviewed_decision = %s,
                     reviewed_criteria = COALESCE(%s, reviewed_criteria),
+                    reviewed_items = COALESCE(%s, reviewed_items),
                     reviewed_missing_fields = COALESCE(%s, reviewed_missing_fields),
                     reviewed_question_key = %s,
                     reviewed_question_prompt = %s,
@@ -105,6 +110,7 @@ def review_case(
                 (
                     decision,
                     Jsonb(reviewed_criteria) if reviewed_criteria is not None else None,
+                    Jsonb(reviewed_items) if reviewed_items is not None else None,
                     Jsonb(reviewed_missing_fields) if reviewed_missing_fields is not None else None,
                     question_key,
                     question_prompt,
@@ -115,6 +121,28 @@ def review_case(
                 ),
             )
             row = cur.fetchone()
+            if row:
+                cur.execute(
+                    """
+                    INSERT INTO pre_search_review_revision
+                        (interaction_id, action, previous_status, snapshot, changed_by, notes)
+                    VALUES (%s, 'reviewed', 'pending', %s, %s, %s)
+                    """,
+                    (
+                        interaction_id,
+                        Jsonb({
+                            "decision": decision,
+                            "criteria": reviewed_criteria,
+                            "items": reviewed_items,
+                            "missing_fields": reviewed_missing_fields,
+                            "question_key": question_key,
+                            "question_prompt": question_prompt,
+                            "question_options": reviewed_question_options,
+                        }),
+                        reviewed_by or "manual_review",
+                        reviewed_notes,
+                    ),
+                )
         conn.commit()
 
     if not row:
@@ -207,6 +235,7 @@ def promote_cases(
                         input_last_messages,
                         expected_decision,
                         expected_criteria,
+                        expected_items,
                         expected_missing_fields,
                         expected_next_question,
                         expected_confidence,
@@ -218,7 +247,7 @@ def promote_cases(
                         updated_by
                     )
                     VALUES (
-                        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, TRUE, TRUE, %s
+                        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, TRUE, TRUE, %s
                     )
                     """,
                     (
@@ -229,10 +258,18 @@ def promote_cases(
                         Jsonb(row.get("last_messages") or []),
                         reviewed_decision,
                         Jsonb(reviewed_criteria),
+                        Jsonb(row.get("reviewed_items") or []),
                         Jsonb(reviewed_missing_fields),
                         Jsonb(next_question) if next_question is not None else None,
                         row.get("predicted_confidence") or 0.95,
-                        "literal" if (reviewed_criteria or {}).get("part_code") else "none",
+                        "literal" if (
+                            (reviewed_criteria or {}).get("part_code")
+                            or any(
+                                (item.get("criteria") or {}).get("part_code")
+                                for item in (row.get("reviewed_items") or [])
+                                if isinstance(item, dict)
+                            )
+                        ) else "none",
                         Jsonb(tags),
                         notes,
                         reviewed_by or row.get("reviewed_by") or "manual_review",
@@ -277,6 +314,7 @@ def main() -> None:
     review_parser.add_argument("--interaction-id", type=int, required=True, help="ID da interacao.")
     review_parser.add_argument("--decision", required=True, choices=["search", "ask", "handoff"])
     review_parser.add_argument("--criteria-json", default=None, help="JSON com criteria corrigido.")
+    review_parser.add_argument("--items-json", default=None, help="JSON array com as pecas revisadas.")
     review_parser.add_argument("--missing-fields-json", default=None, help="JSON array com missing_fields corrigidos.")
     review_parser.add_argument("--question-key", default=None, help="Key da pergunta correta, se ask.")
     review_parser.add_argument("--question-prompt", default=None, help="Prompt da pergunta correta, se ask.")
@@ -310,6 +348,7 @@ def main() -> None:
             question_key=args.question_key,
             question_prompt=args.question_prompt,
             question_options_json=args.question_options_json,
+            items_json=args.items_json,
         )
         return
 

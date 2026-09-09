@@ -785,6 +785,7 @@ CREATE TABLE IF NOT EXISTS pre_search_fine_tuning_dataset_record (
     input_last_messages JSONB NOT NULL DEFAULT '[]'::jsonb,
     expected_decision TEXT NOT NULL CHECK (expected_decision IN ('search', 'ask', 'handoff')),
     expected_criteria JSONB NOT NULL DEFAULT '{}'::jsonb,
+    expected_items JSONB NOT NULL DEFAULT '[]'::jsonb,
     expected_missing_fields JSONB NOT NULL DEFAULT '[]'::jsonb,
     expected_next_question JSONB NULL,
     expected_confidence NUMERIC(4,3) NOT NULL DEFAULT 0.950 CHECK (expected_confidence >= 0 AND expected_confidence <= 1),
@@ -799,6 +800,7 @@ CREATE TABLE IF NOT EXISTS pre_search_fine_tuning_dataset_record (
     UNIQUE (dataset_id, example_key),
     CHECK (jsonb_typeof(input_last_messages) = 'array'),
     CHECK (jsonb_typeof(expected_criteria) = 'object'),
+    CHECK (jsonb_typeof(expected_items) = 'array'),
     CHECK (jsonb_typeof(expected_missing_fields) = 'array'),
     CHECK (expected_next_question IS NULL OR jsonb_typeof(expected_next_question) = 'object'),
     CHECK (jsonb_typeof(tags) = 'array'),
@@ -830,6 +832,9 @@ CREATE INDEX IF NOT EXISTS ix_pre_search_ft_dataset_record_dataset_split
     ON pre_search_fine_tuning_dataset_record(dataset_id, data_split)
     WHERE is_active AND include_in_fine_tune;
 
+ALTER TABLE pre_search_fine_tuning_dataset_record
+    ADD COLUMN IF NOT EXISTS expected_items JSONB NOT NULL DEFAULT '[]'::jsonb;
+
 CREATE INDEX IF NOT EXISTS ix_pre_search_ft_run_dataset
     ON pre_search_fine_tuning_run(dataset_id, status);
 
@@ -854,7 +859,8 @@ SELECT
     ex.expected_confidence,
     ex.part_code_source,
     ex.tags,
-    ex.notes
+    ex.notes,
+    ex.expected_items
 FROM pre_search_fine_tuning_dataset_header ds
 JOIN pre_search_fine_tuning_dataset_record ex
   ON ex.dataset_id = ds.id
@@ -1157,6 +1163,7 @@ CREATE TABLE IF NOT EXISTS pre_search_review_interaction (
     last_messages JSONB NOT NULL DEFAULT '[]'::jsonb,
     predicted_decision TEXT NOT NULL CHECK (predicted_decision IN ('search', 'ask', 'handoff')),
     predicted_criteria JSONB NOT NULL DEFAULT '{}'::jsonb,
+    predicted_items JSONB NOT NULL DEFAULT '[]'::jsonb,
     predicted_missing_fields JSONB NOT NULL DEFAULT '[]'::jsonb,
     predicted_next_question JSONB NULL,
     predicted_confidence NUMERIC(4,3) NOT NULL DEFAULT 0.000 CHECK (predicted_confidence >= 0 AND predicted_confidence <= 1),
@@ -1180,6 +1187,7 @@ CREATE TABLE IF NOT EXISTS pre_search_review_interaction (
     review_priority_score INTEGER NOT NULL DEFAULT 0,
     reviewed_decision TEXT NULL CHECK (reviewed_decision IS NULL OR reviewed_decision IN ('search', 'ask', 'handoff')),
     reviewed_criteria JSONB NULL,
+    reviewed_items JSONB NULL,
     reviewed_missing_fields JSONB NULL,
     reviewed_question_key TEXT NULL,
     reviewed_question_prompt TEXT NULL,
@@ -1194,11 +1202,13 @@ CREATE TABLE IF NOT EXISTS pre_search_review_interaction (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     CHECK (jsonb_typeof(last_messages) = 'array'),
     CHECK (jsonb_typeof(predicted_criteria) = 'object'),
+    CHECK (jsonb_typeof(predicted_items) = 'array'),
     CHECK (jsonb_typeof(predicted_missing_fields) = 'array'),
     CHECK (predicted_next_question IS NULL OR jsonb_typeof(predicted_next_question) = 'object'),
     CHECK (jsonb_typeof(final_actions) = 'array'),
     CHECK (jsonb_typeof(final_used_tools) = 'array'),
     CHECK (reviewed_criteria IS NULL OR jsonb_typeof(reviewed_criteria) = 'object'),
+    CHECK (reviewed_items IS NULL OR jsonb_typeof(reviewed_items) = 'array'),
     CHECK (reviewed_missing_fields IS NULL OR jsonb_typeof(reviewed_missing_fields) = 'array'),
     CHECK (reviewed_question_options IS NULL OR jsonb_typeof(reviewed_question_options) = 'array'),
     CHECK (
@@ -1224,6 +1234,27 @@ ALTER TABLE pre_search_review_interaction
 
 ALTER TABLE pre_search_review_interaction
     ADD COLUMN IF NOT EXISTS llm_decision_raw TEXT NULL;
+
+ALTER TABLE pre_search_review_interaction
+    ADD COLUMN IF NOT EXISTS predicted_items JSONB NOT NULL DEFAULT '[]'::jsonb;
+
+ALTER TABLE pre_search_review_interaction
+    ADD COLUMN IF NOT EXISTS reviewed_items JSONB NULL;
+
+CREATE TABLE IF NOT EXISTS pre_search_review_revision (
+    id BIGSERIAL PRIMARY KEY,
+    interaction_id BIGINT NOT NULL REFERENCES pre_search_review_interaction(id) ON DELETE CASCADE,
+    action TEXT NOT NULL CHECK (action IN ('reviewed', 'discarded', 'reopened')),
+    previous_status TEXT NULL,
+    snapshot JSONB NOT NULL DEFAULT '{}'::jsonb,
+    changed_by TEXT NOT NULL,
+    notes TEXT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CHECK (jsonb_typeof(snapshot) = 'object')
+);
+
+CREATE INDEX IF NOT EXISTS ix_pre_search_review_revision_interaction
+    ON pre_search_review_revision(interaction_id, created_at DESC);
 
 CREATE INDEX IF NOT EXISTS ix_pre_search_review_status_priority
     ON pre_search_review_interaction(review_status, review_priority_score DESC, created_at ASC);
@@ -1258,7 +1289,9 @@ SELECT
     reviewed_question_key,
     reviewed_question_prompt,
     promoted_dataset_slug,
-    promoted_example_key
+    promoted_example_key,
+    predicted_items,
+    reviewed_items
 FROM pre_search_review_interaction
 WHERE review_status IN ('pending', 'reviewed')
 ORDER BY review_priority_score DESC, created_at ASC;

@@ -80,6 +80,9 @@ class HttpAgentClient(AgentClient):
                 "conversation_state": raw_payload.get("conversation_state")
                 if isinstance(raw_payload, dict)
                 else None,
+                "item_results": raw_payload.get("item_results")
+                if isinstance(raw_payload, dict)
+                else None,
             }
 
             try:
@@ -92,6 +95,10 @@ class HttpAgentClient(AgentClient):
                         ConversationState.model_validate(normalized["conversation_state"])
                         if normalized["conversation_state"]
                         else None
+                    ),
+                    item_results=(
+                        list(normalized["item_results"])
+                        if normalized["item_results"] else None
                     ),
                 )
             except Exception as exc:

@@ -36,6 +36,12 @@ DEFAULT_CRITERIA_WEIGHTS: dict[str, int] = {
     "quantity": 5,
 }
 DEFAULT_MIN_SCORE_TO_SEARCH = 70
+RUNTIME_MIN_SCORE_TO_SEARCH_BY_PART: dict[str, int] = {
+    "lubrificantes": 55,
+}
+VEHICLE_OPTIONAL_PART_QUERIES: set[str] = {
+    "lubrificantes",
+}
 SCORING_FIELD_PRIORITY: tuple[str, ...] = (
     "part_code",
     "part_query",
@@ -219,6 +225,8 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         self._min_score_to_search_by_part = self._normalize_part_min_score_overrides(
             catalog.min_score_to_search_by_part
         )
+        for part_query, score in RUNTIME_MIN_SCORE_TO_SEARCH_BY_PART.items():
+            self._min_score_to_search_by_part.setdefault(part_query, score)
         self._dictionary_extractor = DictionaryPreSearchExtractor(catalog=catalog)
         self._apply_runtime_search_rule_overrides()
         self._last_audit_info: dict[str, Any] | None = None
@@ -265,6 +273,10 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             message_text,
             last_messages=last_messages or [],
         )
+
+    def extract_items(self, message_text: str) -> list[SearchCriteria]:
+        """Expose conservative multi-item extraction to the use case."""
+        return self._dictionary_extractor.extract_items(message_text)
 
     def build_score_policy(self, *, dictionary_seed_criteria: SearchCriteria) -> dict[str, Any]:
         canonical_seed_criteria = self._canonicalize_criteria_part_query(
@@ -643,6 +655,14 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
     ) -> PreSearchValidation:
         self._last_audit_info = None
         context = last_messages or []
+        # Values explicitly found in the current message are authoritative.
+        # The contextual extraction is still used for omitted fields, but it
+        # must not allow an old vehicle/part or an LLM guess to overwrite a
+        # correction made by the user now.
+        current_message_criteria = self._dictionary_extractor.extract(
+            message_text,
+            last_messages=[],
+        )
         dictionary_criteria = self._dictionary_extractor.extract(
             message_text,
             last_messages=context,
@@ -658,6 +678,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             conversation_state=conversation_state,
         )
 
+        llm_started_at = time.perf_counter()
         try:
             raw_body, endpoint_used = self._post_chat_or_generate(
                 payload=payload,
@@ -685,6 +706,11 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             raise PreSearchServiceUnavailableError(
                 "Validador de pesquisa indisponivel no momento."
             ) from exc
+
+        llm_elapsed_ms = round((time.perf_counter() - llm_started_at) * 1000, 2)
+        if self._last_audit_info is None:
+            self._last_audit_info = {}
+        self._last_audit_info["llm_elapsed_ms"] = llm_elapsed_ms
 
         content = ""
         try:
@@ -738,7 +764,14 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
                         "parse_error": str(exc),
                     },
                 )
+            if self._last_audit_info is None:
+                self._last_audit_info = {}
+            self._last_audit_info["llm_elapsed_ms"] = llm_elapsed_ms
             return ai_fallback
+
+        if self._last_audit_info is None:
+            self._last_audit_info = {}
+        self._last_audit_info["llm_elapsed_ms"] = llm_elapsed_ms
 
         llm_validation = self._merge_validation_with_dictionary_seed(
             llm_validation=llm_validation,
@@ -746,6 +779,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             message_text=message_text,
             last_messages=context,
             conversation_state=conversation_state,
+            current_message_criteria=current_message_criteria,
         )
         if self._log_raw_response:
             score_explicit_fields = self._build_score_explicit_fields(
@@ -840,6 +874,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             "last_messages": last_messages,
             "dictionary_seed_criteria": dictionary_seed_criteria.model_dump(exclude_none=True),
             "conversation_state": conversation_state.model_dump(exclude_none=True) if conversation_state else None,
+            "multi_item_rule": "A mensagem pode conter uma ou mais pecas; preserve cada peca em items quando houver mais de uma.",
             "score_policy": score_policy,
         }
         return {
@@ -873,6 +908,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             "last_messages": last_messages,
             "dictionary_seed_criteria": dictionary_seed_criteria.model_dump(exclude_none=True),
             "conversation_state": conversation_state.model_dump(exclude_none=True) if conversation_state else None,
+            "multi_item_rule": "A mensagem pode conter uma ou mais pecas; preserve cada peca em items quando houver mais de uma.",
             "score_policy": score_policy,
         }
         prompt = (
@@ -1001,6 +1037,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         message_text: str,
         last_messages: list[dict[str, Any]],
         conversation_state: ConversationState | None,
+        current_message_criteria: SearchCriteria | None = None,
     ) -> PreSearchValidation:
         explicit_part_code = bool(dictionary_criteria.part_code)
         merged_criteria = llm_validation.criteria.model_dump(exclude_none=False)
@@ -1010,6 +1047,15 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             llm_value = merged_criteria.get(key)
             if self._should_take_dictionary_value(llm_value=llm_value, dictionary_value=dictionary_value):
                 merged_criteria[key] = dictionary_value
+
+        # Current-message evidence wins over both the LLM and values recovered
+        # from previous turns. This is what makes "Sprinter -> Hilux" and
+        # user corrections behave as replacements instead of additions.
+        if current_message_criteria is not None:
+            current_values = current_message_criteria.model_dump(exclude_none=False)
+            for key, current_value in current_values.items():
+                if current_value not in (None, "", []):
+                    merged_criteria[key] = current_value
 
         merged_criteria["part_query"] = self._canonicalize_part_query(
             merged_criteria.get("part_query"),
@@ -1124,6 +1170,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         return PreSearchValidation(
             decision=decision,
             criteria=criteria_model,
+            items=llm_validation.items,
             missing_fields=missing_fields,
             next_question=next_question,
             confidence=llm_validation.confidence,
@@ -1187,9 +1234,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
                 continue
             if not self._is_follow_up_field_allowed(criteria=criteria, field_name=field_name):
                 continue
-            if field_name == "axle" and (
-                criteria_values.get("axle") is not None or criteria_values.get("position") is not None
-            ):
+            if field_name == "axle" and criteria_values.get("axle") is not None:
                 continue
             current_value = criteria_values.get(field_name)
             if current_value is None or current_value == "" or current_value == []:
@@ -1373,6 +1418,8 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             "quantity": "Quantas unidades voce precisa?",
         }
         prompt = prompts.get(field_name)
+        if field_name == "variant" and criteria.part_query == "lubrificantes":
+            prompt = "Qual a especificacao do oleo (por exemplo, 20W50)?"
         if not prompt:
             return None
 
@@ -1484,6 +1531,10 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         ignored = set(UNSUPPORTED_PART_STOPWORDS)
         if criteria.vehicle_brand:
             ignored.update(normalize_pre_search_text(criteria.vehicle_brand).split())
+        if criteria.preferred_product_brand:
+            ignored.update(
+                normalize_pre_search_text(criteria.preferred_product_brand).split()
+            )
         if criteria.vehicle_model:
             ignored.update(normalize_pre_search_text(criteria.vehicle_model).split())
         if criteria.vehicle_year:
@@ -1523,7 +1574,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         if has_explicit_part_code:
             return missing
 
-        if not criteria.vehicle_model:
+        if not criteria.vehicle_model and part_query not in VEHICLE_OPTIONAL_PART_QUERIES:
             missing.append("vehicle_model")
             return missing
 
@@ -1543,8 +1594,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         if part_query in self._needs_position and not criteria.position:
             missing.append("position")
 
-        has_axle = criteria.axle or criteria.position
-        if part_query in self._needs_axle and not has_axle:
+        if part_query in self._needs_axle and not criteria.axle:
             missing.append("axle")
 
         if part_query in self._needs_variant and not criteria.variant:
@@ -1822,7 +1872,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         if normalized_name == "position":
             return part_query in self._needs_position
         if normalized_name == "axle":
-            return part_query in self._needs_axle and not criteria.position
+            return part_query in self._needs_axle and not criteria.axle
         if normalized_name == "variant":
             return part_query in self._needs_variant
         if normalized_name == "engine":
@@ -1886,6 +1936,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
                     "properties": {
                         "part_query": {"anyOf": [{"type": "string"}, {"type": "null"}]},
                         "part_code": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+                        "preferred_product_brand": {"anyOf": [{"type": "string"}, {"type": "null"}]},
                         "vehicle_brand": {"anyOf": [{"type": "string"}, {"type": "null"}]},
                         "vehicle_model": {"anyOf": [{"type": "string"}, {"type": "null"}]},
                         "vehicle_year": {"anyOf": [{"type": "integer"}, {"type": "null"}]},
@@ -1897,6 +1948,11 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
                         "quantity": {"anyOf": [{"type": "integer"}, {"type": "null"}]},
                     },
                     "additionalProperties": False,
+                },
+                "items": {
+                    "type": "array",
+                    "description": "Uma ou mais pecas independentes; use um objeto por peca.",
+                    "items": {"type": "object", "additionalProperties": True},
                 },
                 "missing_fields": {"type": "array", "items": {"type": "string"}},
                 "next_question": {
@@ -1934,6 +1990,9 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         criteria = criteria_raw if isinstance(criteria_raw, dict) else {}
 
         part_query = self._canonicalize_part_query(self._as_str(criteria.get("part_query")))
+        preferred_product_brand = self._clean_preferred_product_brand(
+            self._as_str(criteria.get("preferred_product_brand"))
+        )
         vehicle_brand = self._clean_vehicle_brand(self._as_str(criteria.get("vehicle_brand")))
         vehicle_model = self._clean_vehicle_model(self._as_str(criteria.get("vehicle_model")))
         vehicle_year = self._parse_year(criteria.get("vehicle_year"))
@@ -1948,6 +2007,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         normalized_criteria: dict[str, Any] = {
             "part_query": part_query,
             "part_code": part_code,
+            "preferred_product_brand": preferred_product_brand,
             "vehicle_brand": vehicle_brand,
             "vehicle_model": vehicle_model,
             "vehicle_year": vehicle_year,
@@ -1963,10 +2023,22 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         missing_fields = self._normalize_missing_fields(parsed.get("missing_fields"))
         confidence = self._normalize_confidence(parsed.get("confidence"))
         next_question = self._normalize_next_question(parsed.get("next_question"))
+        normalized_items: list[SearchCriteria] | None = None
+        if isinstance(parsed.get("items"), list):
+            normalized_items = []
+            for raw_item in parsed["items"]:
+                if isinstance(raw_item, dict):
+                    try:
+                        normalized_items.append(SearchCriteria.model_validate(raw_item))
+                    except Exception:
+                        continue
+            if not normalized_items:
+                normalized_items = None
 
         return {
             "decision": decision,
             "criteria": normalized_criteria,
+            "items": normalized_items,
             "missing_fields": missing_fields,
             "next_question": next_question,
             "confidence": confidence,
@@ -2007,6 +2079,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         known_fields = {
             "part_query",
             "part_code",
+            "preferred_product_brand",
             "vehicle_brand",
             "vehicle_model",
             "vehicle_year",
@@ -2105,6 +2178,14 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         return None
 
     @staticmethod
+    def _clean_preferred_product_brand(value: str | None) -> str | None:
+        if not value:
+            return None
+        cleaned = re.sub(r"\s+", " ", value).strip()
+        known_brands = {"ngk": "NGK", "nakata": "Nakata", "cofap": "Cofap"}
+        return known_brands.get(cleaned.casefold(), cleaned.title()) or None
+
+    @staticmethod
     def _clean_vehicle_model(value: str | None) -> str | None:
         if not value:
             return None
@@ -2184,7 +2265,9 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             "Voce valida pre-busca de autopecas e retorna somente JSON. "
             "Campos obrigatorios no JSON final: decision, criteria, missing_fields, next_question, confidence. "
             "decision deve ser: search, ask ou handoff. "
-            "criteria usa apenas: part_query, part_code, vehicle_brand, vehicle_model, vehicle_year, engine, side, position, axle, variant, quantity. "
+            "criteria usa apenas: part_query, part_code, preferred_product_brand, vehicle_brand, vehicle_model, vehicle_year, engine, side, position, axle, variant, quantity. "
+            "preferred_product_brand e a marca comercial desejada da peca, como NGK, Nakata ou Cofap; nao confunda com vehicle_brand. Ela e preferencia de ranking, nunca filtro obrigatorio: outras marcas compativeis continuam validas. "
+            "Uma mensagem pode pedir uma ou varias pecas. Para duas ou mais familias independentes, preencha tambem items como uma lista de criteria, um objeto por peca, preservando quantity e os filtros especificos; nunca descarte as pecas extras. "
             "part_query deve ser uma familia canonica do catalogo; nao use plural, sinonimo ou typo quando existir forma canonica. "
             "Se nao conseguir mapear a peca para uma familia canonica do catalogo, retorne part_query como null. "
             "Regras: sem part_query e sem part_code -> ask; "

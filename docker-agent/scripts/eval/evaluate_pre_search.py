@@ -23,7 +23,15 @@ def main() -> None:
     next_question_total = 0
     slot_total = 0
     slot_ok = 0
-    slots = ("part_query", "vehicle_brand", "vehicle_model", "vehicle_year", "engine", "side")
+    slots = (
+        "part_query",
+        "preferred_product_brand",
+        "vehicle_brand",
+        "vehicle_model",
+        "vehicle_year",
+        "engine",
+        "side",
+    )
 
     for row in rows:
         message = str(row.get("message.text", ""))

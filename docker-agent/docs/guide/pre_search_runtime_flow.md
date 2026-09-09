@@ -63,7 +63,7 @@ conv:{conversation_id}:state
 
 ## Fluxo Ponta A Ponta
 
-No diagrama abaixo, os blocos com a indicacao `planejado` pertencem a Prioridade 5 e ainda nao representam comportamento implementado.
+No diagrama abaixo, os blocos com a indicacao `planejado` pertencem a Prioridade 3 e ainda nao representam comportamento implementado.
 
 ```mermaid
 flowchart TD
@@ -134,9 +134,15 @@ flowchart TD
     AG --> AH{ERP disponivel?}
     AH -->|Nao| AH1[docker-agent retorna 503]
     AH -->|Sim| AI{Quantidade de itens}
-    AI -->|Zero| AJ[No match + oferece handoff]
+    AI -->|Zero| AJ[No match: mostra filtros + oferece nova tentativa ou handoff]
     AI -->|Um| AK[Resposta confirmatoria do item]
-    AI -->|Varios| AL[show_items + pending_slot result_disambiguation]
+    AI -->|Varios| AL[Escolhe discriminador + request_info]
+    AL --> AM[Redis persiste candidatos em ConversationState]
+    AM --> AN{Resposta seguinte}
+    AN -->|Numero, codigo, titulo ou atributo| AO[Seleciona ou reduz candidatos]
+    AN -->|Nenhuma dessas| AP[Pagina ou oferece nova pesquisa]
+    AN -->|Nova familia| AQ[Limpa estado e reinicia fluxo]
+    AN -->|Handoff ou 3 tentativas| AR[Encaminha atendimento humano]
 
     AB --> BA[docker-comm recebe resposta]
     AC --> BA
@@ -144,6 +150,10 @@ flowchart TD
     AJ --> BA
     AK --> BA
     AL --> BA
+    AO --> BA
+    AP --> BA
+    AQ --> I
+    AR --> BA
     R1 --> BA
     R2 --> BA
 
@@ -323,9 +333,17 @@ O `docker-agent` monta e devolve esse objeto. O `docker-comm` apenas valida o co
 | Caso fora do catalogo ou escopo | decisao `handoff` | informa encaminhamento | `handoff.required = true` |
 | Decisao `search` sem query utilizavel | protecao do use case | pede mais detalhes | criterios atuais preservados |
 | ERP indisponivel | falha de `search_parts` | erro `503` | conversa pode ser retomada |
-| Busca retorna zero itens | `no_match` | informa ausencia e oferece atendimento humano | handoff por `no_match` |
+| Busca retorna zero itens com criterio incompleto | `no_match` defensivo | mostra os filtros e informa somente o campo ainda ausente | `pending_slot` recebe o campo ausente |
+| Busca retorna zero itens apos mudanca de criterio | `no_match` com divergencia | compara o valor anterior com o pesquisado sem afirmar incompatibilidade | `pending_slot = no_match_retry` |
+| Busca completa retorna zero itens | `no_match` do ERP | mostra os filtros e explica que zero linhas nao comprova incompatibilidade | oferece nova tentativa ou handoff; `handoff.required = false` ate a escolha do usuario |
 | Busca retorna um item | confirmacao | mostra item e pede confirmacao de encaixe | criterios preservados |
-| Busca retorna varios itens | desambiguacao de resultado | `show_items` | `pending_slot = result_disambiguation` |
+| Busca retorna varios itens com atributo discriminante | desambiguacao de resultado | pergunta por aplicacao, versao, motor, lado, posicao ou outro atributo real | candidatos em `result_disambiguation` no mesmo estado Redis |
+| Busca retorna varios itens sem atributo discriminante | selecao direta paginada | mostra ate quatro opcoes por codigo e titulo | candidatos restantes continuam no mesmo estado |
+| Usuario escolhe numero, codigo, titulo ou atributo | resolucao deterministica | seleciona item ou faz a proxima pergunta | nao chama ERP nem LLM |
+| Usuario rejeita as opcoes | negacao de resultado | pagina itens diretos ou oferece nova pesquisa | limpa ou reduz candidatos conforme a pergunta |
+| Usuario muda a familia da peca | mudanca de assunto | reinicia extractor e pre-search | desambiguacao anterior descartada |
+| Usuario pede atendente | handoff explicito | encaminha atendimento | `reason = result_disambiguation_requested` |
+| Tres respostas nao resolvidas | limite de tentativas | encaminha atendimento | `reason = result_disambiguation_limit` |
 
 ## Etapas Do Caminho Atual
 
@@ -334,7 +352,9 @@ O `docker-agent` monta e devolve esse objeto. O `docker-comm` apenas valida o co
 
 2. Extracao deterministica
    O catalogo carregado do Postgres tenta reconhecer:
-   `part_query`, `part_code`, `vehicle_brand`, `vehicle_model`, `vehicle_year`, `engine`, `side`, `position`, `axle` e `quantity`.
+   `part_query`, `part_code`, `preferred_product_brand`, `vehicle_brand`, `vehicle_model`, `vehicle_year`, `engine`, `side`, `position`, `axle`, `variant` e `quantity`.
+
+   `preferred_product_brand` representa uma preferencia comercial da peca, como NGK, Nakata ou Cofap. Ela nunca substitui `vehicle_brand` e nao elimina produtos equivalentes de outras marcas.
 
 3. Fuzzy fallback
    Hoje o fuzzy entra apenas para `part_query`.

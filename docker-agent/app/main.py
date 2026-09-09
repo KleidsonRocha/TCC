@@ -4,14 +4,17 @@ from fastapi import FastAPI
 
 from app.api.routes.health import router as health_router
 from app.api.routes.respond import router as respond_router
+from app.api.routes.review import router as review_router
 from app.config import Settings, get_settings
 from app.core.ports.pre_search_validator import PreSearchValidatorPort
 from app.core.ports.tools import ToolsPort
+from app.core.ports.pre_search_review_repository import PreSearchReviewRepositoryPort
 from app.core.usecases.process_agent_request import ProcessAgentRequestUseCase
 from app.infra.erp_search_tools_pg import resolve_search_tools
 from app.infra.logger import configure_logging, get_logger
 from app.infra.pre_search_catalog_pg import resolve_pre_search_catalog
 from app.infra.pre_search_review_queue_pg import recorder_from_settings
+from app.infra.pre_search_review_admin_pg import review_repository_from_settings
 from app.infra.pre_search_validator_llm import LLMPreSearchValidator
 
 
@@ -19,6 +22,7 @@ def create_app(
     settings_override: Settings | None = None,
     pre_search_validator_override: PreSearchValidatorPort | None = None,
     tools_override: ToolsPort | None = None,
+    review_repository_override: PreSearchReviewRepositoryPort | None = None,
 ) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -62,6 +66,9 @@ def create_app(
         app.state.tools = tools
         app.state.pre_search_validator = pre_search_validator
         app.state.process_use_case = use_case
+        app.state.review_repository = review_repository_override or review_repository_from_settings(
+            settings=settings
+        )
 
         logger.info(
             "service_started",
@@ -80,6 +87,7 @@ def create_app(
     app = FastAPI(title="docker-agent", version="0.1.0", lifespan=lifespan)
     app.include_router(health_router)
     app.include_router(respond_router)
+    app.include_router(review_router)
     return app
 
 

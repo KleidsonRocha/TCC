@@ -117,12 +117,25 @@ A UI possui:
 
 - aba `Conversa` para abrir uma conversa, enviar mensagens e receber respostas;
 - aba `Uso` com requisicoes da sessao, latencia, confianca, handoff, acoes e ultima resposta bruta;
+- aba `Revisao de IA` para avaliar turnos capturados, vendo toda a conversa como contexto;
 - painel lateral para ajustar `Comm API`, origem, filial e `conversation_id`.
+
+Na revisao, salvar ou descartar o ultimo turno pendente remove a conversa da fila
+`Pendentes`. Ela continua consultavel em `Concluidas`, onde a interface informa
+que a conversa ja foi avaliada. Uma revisao nao promove automaticamente o turno
+para o dataset de fine-tuning.
+
+Pedidos com varias pecas podem ser divididos em cartoes com criterios, decisao e
+pendencias proprios. Um turno revisado ou descartado tambem pode ser reaberto pela
+interface; a revisao anterior permanece no historico de auditoria.
 
 Variaveis relevantes:
 
 ```env
 COMM_API_URL=http://docker-comm:8000
+REVIEW_API_URL=http://docker-agent:8001
+REVIEW_API_KEY=
+REVIEWED_BY=streamlit-reviewer
 STREAMLIT_PORT=8501
 STREAMLIT_SOURCE=webchat
 ```
@@ -151,6 +164,7 @@ como `COMM_API_KEY` no container.
 - Timeout controlado para agent (retorno 504)
 - Falha do agent (5xx/indisponivel) retorna 502 com mensagem padrao
 - Persistencia de historico curto no Redis (`HISTORY_LIMIT`)
+- Persistencia retrocompativel de `result_disambiguation` dentro do mesmo `ConversationState` e da mesma chave `conv:{conversation_id}:state`
 - Logs estruturados com `trace_id`, `conversation_id`, latencia e status do agent
 - Endpoint `/test/send` pode ser desativado via `ENABLE_TEST_ENDPOINT`
 - Suporte opcional a `X-API-Key` quando `API_KEY` estiver definido

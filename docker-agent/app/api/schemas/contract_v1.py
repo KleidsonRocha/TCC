@@ -69,3 +69,4 @@ class AgentResponseV1(BaseModel):
     confidence: float = Field(0.0, ge=0.0, le=1.0)
     tool_trace: ToolTracePayload
     conversation_state: ConversationState | None = None
+    item_results: list[dict[str, Any]] | None = None

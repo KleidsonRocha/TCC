@@ -14,6 +14,7 @@ class PreSearchReviewRecorderPort(Protocol):
         last_messages: list[dict[str, str]],
         predicted_decision: str,
         predicted_criteria: dict[str, Any],
+        predicted_items: list[dict[str, Any]],
         predicted_missing_fields: list[str],
         predicted_next_question: dict[str, Any] | None,
         predicted_confidence: float,
