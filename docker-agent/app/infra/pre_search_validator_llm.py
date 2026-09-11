@@ -306,14 +306,37 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         """
 
         _ = last_messages
-        current_criteria = self._canonicalize_criteria_part_query(
-            self._dictionary_extractor.extract(message_text, last_messages=[])
+        current_criteria = self._normalize_pending_follow_up_current_criteria(
+            message_text=message_text,
+            criteria=self._canonicalize_criteria_part_query(
+                self._dictionary_extractor.extract(message_text, last_messages=[])
+            ),
+            conversation_state=conversation_state,
         )
 
+        is_follow_up = self._is_deterministic_follow_up_candidate(
+            current_criteria=current_criteria,
+            conversation_state=conversation_state,
+        )
         if conversation_state and conversation_state.pending_slot:
-            return self._deterministic_ask_ineligible(
-                reason="active_pending_slot",
-                criteria=current_criteria,
+            if not is_follow_up:
+                return self._deterministic_ask_ineligible(
+                    reason="active_pending_slot",
+                    criteria=current_criteria,
+                )
+            contextual_criteria = self._dictionary_extractor.extract(
+                message_text,
+                last_messages=last_messages,
+            )
+            contextual_criteria = self._apply_pending_follow_up_answer_to_context(
+                criteria=contextual_criteria,
+                current_criteria=current_criteria,
+                conversation_state=conversation_state,
+                message_text=message_text,
+            )
+            current_criteria = self._merge_dictionary_with_conversation_state(
+                dictionary_criteria=contextual_criteria,
+                conversation_state=conversation_state,
             )
 
         unsafe_reason = self._deterministic_ask_unsafe_intent_reason(message_text)
@@ -338,6 +361,14 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
                 canonical_part_query=part_query,
             )
         )
+
+        # A short answer to a governed question (for example, "2008" after
+        # asking the year) does not repeat the part family. The family is
+        # already proven by the active ConversationState, so requiring it in
+        # the current message would send an otherwise deterministic follow-up
+        # back to the LLM.
+        if is_follow_up and part_query and part_query not in self._generic_ambiguous_parts:
+            exact_part_query = True
 
         if part_query and not exact_part_query:
             return self._deterministic_ask_ineligible(
@@ -389,9 +420,13 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         return DeterministicAskEligibility(
             eligible=True,
             reason=(
-                "exact_family_missing_field"
-                if exact_part_query
-                else "explicit_generic_part_request"
+                "complete_follow_up_missing_field"
+                if is_follow_up
+                else (
+                    "exact_family_missing_field"
+                    if exact_part_query
+                    else "explicit_generic_part_request"
+                )
             ),
             criteria=current_criteria,
             missing_fields=tuple(missing_fields),
@@ -492,9 +527,13 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
     ) -> PreSearchValidation | None:
         self._last_audit_info = None
         context = last_messages or []
-        current_criteria = self._dictionary_extractor.extract(
-            message_text,
-            last_messages=[],
+        current_criteria = self._normalize_pending_follow_up_current_criteria(
+            message_text=message_text,
+            criteria=self._dictionary_extractor.extract(
+                message_text,
+                last_messages=[],
+            ),
+            conversation_state=conversation_state,
         )
         is_follow_up = self._is_deterministic_follow_up_candidate(
             current_criteria=current_criteria,
@@ -508,6 +547,12 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             dictionary_criteria = self._dictionary_extractor.extract(
                 message_text,
                 last_messages=context,
+            )
+            dictionary_criteria = self._apply_pending_follow_up_answer_to_context(
+                criteria=dictionary_criteria,
+                current_criteria=current_criteria,
+                conversation_state=conversation_state,
+                message_text=message_text,
             )
             criteria = self._merge_dictionary_with_conversation_state(
                 dictionary_criteria=dictionary_criteria,
@@ -591,6 +636,101 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             return bool(value.strip())
         return value is not None
 
+    @staticmethod
+    def _is_year_only_follow_up_answer(message_text: str) -> bool:
+        normalized = normalize_pre_search_text(message_text)
+        return bool(re.fullmatch(r"(?:ano\s+)?(?:19\d{2}|20\d{2})", normalized))
+
+    @staticmethod
+    def _is_direction_only_follow_up_answer(message_text: str) -> bool:
+        normalized = normalize_pre_search_text(message_text)
+        return normalized in {
+            "dianteiro",
+            "dianteira",
+            "traseiro",
+            "traseira",
+            "eixo dianteiro",
+            "eixo dianteira",
+            "eixo traseiro",
+            "eixo traseira",
+            "front",
+            "rear",
+        }
+
+    def _normalize_pending_follow_up_current_criteria(
+        self,
+        *,
+        message_text: str,
+        criteria: SearchCriteria,
+        conversation_state: ConversationState | None,
+    ) -> SearchCriteria:
+        """Interpret a short answer only through the active backend question.
+
+        Outside an active question, `position` and `axle` remain independent.
+        When the backend explicitly asked for the axle, however, its governed
+        options are "Dianteiro" and "Traseiro". A direct answer using one of
+        those options must fill `axle`, rather than loop forever as `position`.
+        """
+
+        if not conversation_state or conversation_state.last_decision != "ask":
+            return criteria
+
+        pending_slot = str(conversation_state.pending_slot or "").strip()
+        values = criteria.model_dump(exclude_none=False)
+
+        if (
+            pending_slot == "vehicle_year"
+            and self._is_year_only_follow_up_answer(message_text)
+        ):
+            # "2008" may also be a catalog alias for Peugeot 2008. In an
+            # answer to a pending year question it is year evidence, not a
+            # vehicle-model correction.
+            values["vehicle_model"] = None
+
+        if (
+            pending_slot == "axle"
+            and values.get("axle") is None
+            and values.get("position") is not None
+            and self._is_direction_only_follow_up_answer(message_text)
+        ):
+            values["axle"] = values["position"]
+            values["position"] = None
+
+        return SearchCriteria.model_validate(values)
+
+    def _apply_pending_follow_up_answer_to_context(
+        self,
+        *,
+        criteria: SearchCriteria,
+        current_criteria: SearchCriteria,
+        conversation_state: ConversationState | None,
+        message_text: str,
+    ) -> SearchCriteria:
+        """Prevent contextual extraction from undoing a direct follow-up answer."""
+
+        if not conversation_state or conversation_state.last_decision != "ask":
+            return criteria
+
+        pending_slot = str(conversation_state.pending_slot or "").strip()
+        values = criteria.model_dump(exclude_none=False)
+
+        if (
+            pending_slot == "vehicle_year"
+            and self._is_year_only_follow_up_answer(message_text)
+        ):
+            values["vehicle_year"] = current_criteria.vehicle_year
+            values["vehicle_model"] = None
+
+        if (
+            pending_slot == "axle"
+            and current_criteria.axle is not None
+            and self._is_direction_only_follow_up_answer(message_text)
+        ):
+            values["axle"] = current_criteria.axle
+            values["position"] = None
+
+        return SearchCriteria.model_validate(values)
+
     def _deterministic_identity_is_trusted(
         self,
         *,
@@ -659,13 +799,23 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         # The contextual extraction is still used for omitted fields, but it
         # must not allow an old vehicle/part or an LLM guess to overwrite a
         # correction made by the user now.
-        current_message_criteria = self._dictionary_extractor.extract(
-            message_text,
-            last_messages=[],
+        current_message_criteria = self._normalize_pending_follow_up_current_criteria(
+            message_text=message_text,
+            criteria=self._dictionary_extractor.extract(
+                message_text,
+                last_messages=[],
+            ),
+            conversation_state=conversation_state,
         )
         dictionary_criteria = self._dictionary_extractor.extract(
             message_text,
             last_messages=context,
+        )
+        dictionary_criteria = self._apply_pending_follow_up_answer_to_context(
+            criteria=dictionary_criteria,
+            current_criteria=current_message_criteria,
+            conversation_state=conversation_state,
+            message_text=message_text,
         )
         merged_seed_criteria = self._merge_dictionary_with_conversation_state(
             dictionary_criteria=dictionary_criteria,

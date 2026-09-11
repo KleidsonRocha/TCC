@@ -970,6 +970,154 @@ def test_deterministic_validator_bypasses_simple_follow_up() -> None:
     assert audit["deterministic_reason"] == "complete_follow_up"
 
 
+def test_deterministic_ask_follow_up_year_preserves_vehicle_model_and_asks_next_field() -> None:
+    catalog = PreSearchCatalog(
+        part_patterns=_catalog_fixture().part_patterns,
+        brand_aliases=_catalog_fixture().brand_aliases,
+        model_aliases=_catalog_fixture().model_aliases,
+        invalid_slot_tokens=_catalog_fixture().invalid_slot_tokens,
+        generic_ambiguous_parts=_catalog_fixture().generic_ambiguous_parts,
+        needs_side=_catalog_fixture().needs_side,
+        needs_position=_catalog_fixture().needs_position,
+        needs_axle={"coxim"},
+        needs_engine=_catalog_fixture().needs_engine,
+        needs_variant=_catalog_fixture().needs_variant,
+        engine_by_model=_catalog_fixture().engine_by_model,
+    )
+    validator = _validator(catalog=catalog)
+
+    result = validator.try_validate_deterministic_ask(
+        "2008",
+        last_messages=[
+            {"role": "user", "text": "quero coxim para ecosport"},
+            {"role": "assistant", "text": "Qual o ano do veiculo?"},
+        ],
+        conversation_state=ConversationState(
+            criteria=SearchCriteria(part_query="coxim", vehicle_model="EcoSport"),
+            pending_slot="vehicle_year",
+            pending_question="Qual o ano do veiculo?",
+            last_decision="ask",
+        ),
+    )
+
+    assert result is not None
+    assert result.decision == "ask"
+    assert result.criteria.part_query == "coxim"
+    assert result.criteria.vehicle_model == "EcoSport"
+    assert result.criteria.vehicle_year == 2008
+    assert result.missing_fields == ["axle"]
+    assert result.next_question is not None
+    assert result.next_question.key == "axle"
+    audit = validator.get_last_audit()
+    assert audit is not None
+    assert audit["deterministic_reason"] == "complete_follow_up_missing_field"
+
+
+def test_deterministic_validator_uses_direction_answer_for_pending_axle_only() -> None:
+    catalog = PreSearchCatalog(
+        part_patterns=_catalog_fixture().part_patterns,
+        brand_aliases=_catalog_fixture().brand_aliases,
+        model_aliases=_catalog_fixture().model_aliases,
+        invalid_slot_tokens=_catalog_fixture().invalid_slot_tokens,
+        generic_ambiguous_parts=_catalog_fixture().generic_ambiguous_parts,
+        needs_side=_catalog_fixture().needs_side,
+        needs_position=_catalog_fixture().needs_position,
+        needs_axle={"coxim"},
+        needs_engine=_catalog_fixture().needs_engine,
+        needs_variant=_catalog_fixture().needs_variant,
+        engine_by_model=_catalog_fixture().engine_by_model,
+    )
+    validator = _validator(catalog=catalog)
+
+    result = validator.try_validate_deterministically(
+        "dianteiro",
+        last_messages=[
+            {"role": "user", "text": "coxim ecosport 2008"},
+            {"role": "assistant", "text": "Qual o eixo da peca?"},
+        ],
+        conversation_state=ConversationState(
+            criteria=SearchCriteria(
+                part_query="coxim",
+                vehicle_model="EcoSport",
+                vehicle_year=2008,
+            ),
+            pending_slot="axle",
+            pending_question="Qual o eixo da peca?",
+            last_decision="ask",
+        ),
+    )
+
+    assert result is not None
+    assert result.decision == "search"
+    assert result.criteria.vehicle_model == "EcoSport"
+    assert result.criteria.vehicle_year == 2008
+    assert result.criteria.axle == "front"
+    assert result.criteria.position is None
+
+
+def test_deterministic_follow_up_coxim_ecosport_year_then_axle_does_not_loop() -> None:
+    """Regression for the VPS flow: EcoSport -> 2008 -> dianteiro."""
+
+    catalog = PreSearchCatalog(
+        part_patterns=_catalog_fixture().part_patterns,
+        brand_aliases=_catalog_fixture().brand_aliases,
+        model_aliases=_catalog_fixture().model_aliases,
+        invalid_slot_tokens=_catalog_fixture().invalid_slot_tokens,
+        generic_ambiguous_parts=_catalog_fixture().generic_ambiguous_parts,
+        needs_side=_catalog_fixture().needs_side,
+        needs_position=_catalog_fixture().needs_position,
+        needs_axle={"coxim"},
+        needs_engine=_catalog_fixture().needs_engine,
+        needs_variant=_catalog_fixture().needs_variant,
+        engine_by_model=_catalog_fixture().engine_by_model,
+    )
+    validator = _validator(catalog=catalog)
+    initial_state = ConversationState(
+        criteria=SearchCriteria(part_query="coxim", vehicle_model="EcoSport"),
+        pending_slot="vehicle_year",
+        pending_question="Qual o ano do veiculo?",
+        last_decision="ask",
+    )
+
+    year_result = validator.try_validate_deterministic_ask(
+        "2008",
+        last_messages=[
+            {"role": "user", "text": "quero coxim para ecosport"},
+            {"role": "assistant", "text": "Qual o ano do veiculo?"},
+        ],
+        conversation_state=initial_state,
+    )
+
+    assert year_result is not None
+    assert year_result.next_question is not None
+    assert year_result.next_question.key == "axle"
+    assert year_result.criteria.vehicle_model == "EcoSport"
+    assert year_result.criteria.vehicle_year == 2008
+
+    axle_result = validator.try_validate_deterministically(
+        "dianteiro",
+        last_messages=[
+            {"role": "user", "text": "quero coxim para ecosport"},
+            {"role": "assistant", "text": "Qual o ano do veiculo?"},
+            {"role": "user", "text": "2008"},
+            {"role": "assistant", "text": "Qual o eixo do coxim?"},
+        ],
+        conversation_state=ConversationState(
+            criteria=year_result.criteria,
+            pending_slot="axle",
+            pending_question="Qual o eixo do coxim?",
+            last_decision="ask",
+        ),
+    )
+
+    assert axle_result is not None
+    assert axle_result.decision == "search"
+    assert axle_result.criteria.vehicle_model == "EcoSport"
+    assert axle_result.criteria.vehicle_year == 2008
+    assert axle_result.criteria.axle == "front"
+    assert axle_result.criteria.position is None
+
+
 @pytest.mark.parametrize(
     ("message", "conversation_state"),
     [
@@ -1276,7 +1424,7 @@ def test_llm_validator_uses_part_specific_score_threshold_when_configured() -> N
     assert "engine" in result.missing_fields
 
 
-def test_llm_validator_does_not_use_position_as_axle_in_follow_up() -> None:
+def test_llm_validator_uses_direction_answer_for_the_active_axle_question() -> None:
     catalog = PreSearchCatalog(
         part_patterns=_catalog_fixture().part_patterns,
         brand_aliases=_catalog_fixture().brand_aliases,
@@ -1322,13 +1470,13 @@ def test_llm_validator_does_not_use_position_as_axle_in_follow_up() -> None:
         ),
     )
 
-    assert result.decision == "ask"
-    assert result.missing_fields == ["axle"]
-    assert result.next_question is not None
-    assert result.next_question.key == "axle"
+    assert result.decision == "search"
+    assert result.missing_fields == []
+    assert result.next_question is None
     assert result.criteria.part_query == "coxim"
     assert str(result.criteria.vehicle_model).lower() == "ecosport"
     assert result.criteria.vehicle_year == 2008
+    assert result.criteria.axle == "front"
     assert result.criteria.position == "front"
 
 

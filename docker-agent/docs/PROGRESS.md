@@ -46,6 +46,20 @@ Este documento consolida o estado atual do projeto sem depender de leitura fragm
 - dataset curado para fine-tuning
 - pipeline de exportacao, treino e publicacao de adapter
 
+## Follow-ups Deterministicos Corrigidos Em 11/09/2026
+
+- uma resposta composta apenas pelo ano, como `2008`, nao substitui mais o
+  modelo ja confirmado por um alias homonimo do catalogo, como `Peugeot 2008`
+- quando o backend pergunta explicitamente pelo `axle`, as respostas diretas
+  `dianteiro` e `traseiro` passam a preencher esse campo, sem serem tratadas
+  apenas como `position`
+- a normalizacao vale somente no contexto de uma pergunta ativa governada pelo
+  backend; fora dele, `position` e `axle` continuam independentes
+- o `deterministic_ask` pode concluir um follow-up seguro e formular o proximo
+  campo obrigatorio sem delegar essa transicao a LLM
+- a regressao cobre a conversa real `coxim EcoSport -> 2008 -> dianteiro` e
+  garante que ela avanca para `search`, sem repetir a pergunta de eixo
+
 ## Correcoes Concluidas Em 13/07/2026
 
 ### `part_code` inventado

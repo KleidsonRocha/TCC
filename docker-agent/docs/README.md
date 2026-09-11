@@ -11,6 +11,7 @@ Esta pasta foi reorganizada para manter menos arquivos, com foco no que e operac
 5. `DECISIONS.md`
 6. `PROGRESS.md`
 7. `TODO.md`
+8. `PROBLEMAS_E_SOLUCOES.md`
 
 ## Estrutura Atual
 
@@ -22,6 +23,9 @@ Esta pasta foi reorganizada para manter menos arquivos, com foco no que e operac
 
 - `training/`
   - `pre_search_fine_tuning.md`: fluxo de revisao, promocao, exportacao, treino e publicacao
+
+- `PROBLEMAS_E_SOLUCOES.md`
+  - historico consolidado de problemas, solucoes e pendencias
 
 - `DECISIONS.md`
   - registro das escolhas tecnicas e do motivo de cada uma
