@@ -69,11 +69,15 @@ def test_postgres_erp_tools_maps_rows_to_part_items(monkeypatch: pytest.MonkeyPa
             "item_code": "022.1505",
             "title": "COXIM AMORTECEDOR FORD ECOSPORT DIANTEIRO C/ROL.",
             "score": 0.88,
-            "vehicle_application_text": "ECOSPORT 2003 A 2012",
-            "vehicle_complement_names": "XLS | XLT",
-            "vehicle_model_motor_names": "1.6 | 2.0",
-            "vehicle_model_injection_names": None,
-            "vehicle_model_transmission_names": "MANUAL",
+            "applications": [{
+                "application_id": 10,
+                "vehicle_brand": "Ford",
+                "vehicle_model": "Ecosport",
+                "year_start": 2003, "year_end": 2012, "year_open_end": False,
+                "engines": ["1.6"], "variants": ["XLS"],
+                "injections": [], "transmissions": ["MANUAL"],
+            }],
+            "vehicle_model_motor_names": "2.0 de outra aplicacao, ignorado",
         },
         {"item_code": "022.1553", "title": "COXIM AMORTECEDOR FORD ECOSPORT C/ROL.", "score": 0.81},
     ]
@@ -92,7 +96,7 @@ def test_postgres_erp_tools_maps_rows_to_part_items(monkeypatch: pytest.MonkeyPa
         query="coxim ecosport 2008 1.6",
         branch_id=1,
         criteria=SearchCriteria(
-            part_query="coxim",
+            part_query="coxins",
             vehicle_brand="Ford",
             vehicle_model="Ecosport",
             vehicle_year=2008,
@@ -103,18 +107,19 @@ def test_postgres_erp_tools_maps_rows_to_part_items(monkeypatch: pytest.MonkeyPa
     assert [item.item_id for item in items] == ["022.1505", "022.1553"]
     assert items[0].score == 0.88
     assert items[0].attributes == {
-        "application": ["ECOSPORT 2003 A 2012"],
-        "variant": ["XLS", "XLT"],
-        "engine": ["1.6", "2.0"],
+        "application": ["Ford Ecosport 2003 a 2012"],
+        "variant": ["XLS"],
+        "engine": ["1.6"],
         "transmission": ["MANUAL"],
         "position": ["Dianteiro"],
         "feature": ["Com rolamento"],
     }
     assert "FROM soccol.item_search_candidates" in cursor.executed_sql
-    assert "vehicle_model_motor_names" in cursor.executed_sql
+    assert "FROM soccol.item_search_applications" in cursor.executed_sql
+    assert "vehicle_model_motor_names" not in cursor.executed_sql
     assert cursor.executed_params["vehicle_model_norm"] == "ecosport"
     assert cursor.executed_params["vehicle_year"] == 2008
-    assert cursor.executed_params["part_token_0"] == "%coxim%"
+    assert cursor.executed_params["part_query_norm"] == "coxins"
 
 
 def test_postgres_erp_tools_raises_service_unavailable_on_connection_error(
@@ -196,13 +201,29 @@ def test_product_brand_is_a_soft_ranking_preference_not_a_required_filter() -> N
         limit=10,
     )
 
-    where_clause = sql.split(
-        "FROM soccol.item_search_candidates\n                WHERE ", 1
-    )[1].split("\n            )", 1)[0]
+    where_clause = sql.split("), ranked AS (", 1)[0]
     assert "preferred_product_brand_like" not in where_clause
     assert "preferred_product_brand_rank" in sql
     assert "has_preferred_product_brand" in sql
     assert params["preferred_product_brand_like"] == "%NGK%"
+
+
+def test_position_is_filtered_as_dianteiro_not_as_eixo_dianteiro() -> None:
+    sql, params = PostgresErpSearchTools._build_search_sql(
+        criteria=SearchCriteria(
+            part_query="coxins",
+            vehicle_model="EcoSport",
+            vehicle_year=2008,
+            position="front",
+        ),
+        limit=10,
+    )
+
+    where_clause = sql.split("), matched_items AS (", 1)[0]
+    assert "position_like" in where_clause
+    assert "axle_like" not in where_clause
+    assert params["position_like"] == "%dianteir%"
+    assert params["has_axle"] is False
 
 
 def test_resolve_search_tools_returns_postgres_backend_when_enabled() -> None:

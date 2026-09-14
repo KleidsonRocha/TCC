@@ -29,7 +29,14 @@ NON_DIRECTIONAL_RULE_EXPECTATIONS = (
 )
 
 REQUIRED_RULE_EXPECTATIONS = (
+    ("coxins", "needs_position"),
     ("lubrificantes", "needs_variant"),
+    ("pastilhas de freio", "needs_position"),
+)
+
+NON_REQUIRED_RULE_EXPECTATIONS = (
+    ("coxins", "needs_axle"),
+    ("pastilhas de freio", "needs_engine"),
 )
 
 
@@ -108,3 +115,15 @@ def test_audited_families_require_their_search_discriminator(
 
     for rule in matching_rules:
         assert _as_bool(rule[field]), f"{family}: {field}"
+
+
+@pytest.mark.parametrize(("family", "field"), NON_REQUIRED_RULE_EXPECTATIONS)
+def test_audited_families_do_not_require_an_unsupported_discriminator(
+    family: str,
+    field: str,
+) -> None:
+    matching_rules = _load_rules_by_family()[family]
+    assert matching_rules, family
+
+    for rule in matching_rules:
+        assert not _as_bool(rule[field]), f"{family}: {field}"

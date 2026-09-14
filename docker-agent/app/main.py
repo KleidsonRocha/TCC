@@ -30,7 +30,7 @@ def create_app(
         configure_logging(settings.log_level)
         logger = get_logger()
 
-        tools = tools_override or resolve_search_tools(settings=settings, logger=logger)
+        catalog = None
         pre_search_validator = pre_search_validator_override
         if pre_search_validator is None:
             catalog = resolve_pre_search_catalog(settings=settings, logger=logger)
@@ -39,6 +39,7 @@ def create_app(
                 logger=logger,
                 catalog=catalog,
             )
+        tools = tools_override or resolve_search_tools(settings=settings, logger=logger, catalog=catalog)
         warmup = getattr(pre_search_validator, "warmup", None)
         if settings.llm_warmup_enabled and callable(warmup):
             try:

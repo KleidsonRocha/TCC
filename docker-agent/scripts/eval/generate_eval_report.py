@@ -22,9 +22,9 @@ from app.infra.pre_search_benchmark import (
 
 DEFAULT_MVP_DATASET = Path("docs/assets/datasets/pre_search_eval_dataset_mvp.json")
 DEFAULT_GOLDEN_DATASET = Path("docs/assets/datasets/pre_search_num_predict_golden_set.json")
-DEFAULT_REAL_BATTERY_JSON = Path("docs/assets/reports/real_respond_battery_2026-03-25.json")
-DEFAULT_OUTPUT_JSON = Path("docs/assets/reports/eval_report.json")
-DEFAULT_OUTPUT_MD = Path("docs/assets/reports/eval_report.md")
+DEFAULT_REAL_BATTERY_JSON = Path(".tmp/eval/real_respond_battery.json")
+DEFAULT_OUTPUT_JSON = Path(".tmp/eval/eval_report.json")
+DEFAULT_OUTPUT_MD = Path(".tmp/eval/eval_report.md")
 T = TypeVar("T")
 
 

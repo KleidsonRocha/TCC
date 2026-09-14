@@ -81,6 +81,35 @@ def test_golden_set_bandejas_uses_side_not_axle() -> None:
         assert expected.get("next_question_key") != "axle"
 
 
+def test_golden_set_coxins_uses_position_not_axle() -> None:
+    rows = load_dataset(GOLDEN_SET_PATH)
+    coxins_rows = [
+        row for row in rows if str(row.get("id", "")).startswith("ask_coxins_")
+    ]
+
+    assert len(coxins_rows) == 1
+    expected = coxins_rows[0]["expected"]
+    assert expected["missing_fields_contains"] == ["position"]
+    assert expected["next_question_key"] == "position"
+    assert "axle" not in expected["criteria"]
+
+
+def test_golden_set_pastilhas_corsa_search_does_not_require_engine() -> None:
+    rows = load_dataset(GOLDEN_SET_PATH)
+    matching_rows = [
+        row
+        for row in rows
+        if row.get("id") == "search_pastilhas_corsa_2011_position"
+    ]
+
+    assert len(matching_rows) == 1
+    expected = matching_rows[0]["expected"]
+    assert expected["decision"] == "search"
+    assert expected["criteria"]["position"] == "front"
+    assert "engine" not in expected["criteria"]
+    assert "engine" not in expected["missing_fields_contains"]
+
+
 def test_evaluate_pre_search_main_uses_mvp_dataset_file(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],

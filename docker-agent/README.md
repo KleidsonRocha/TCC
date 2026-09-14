@@ -26,7 +26,7 @@ O caminho principal do runtime e este:
 5. nos demais casos, o backend monta `dictionary_seed_criteria` e `score_policy`
 6. a LLM valida o contexto e sugere `ask`, `search` ou `handoff`
 7. o backend recalcula os campos obrigatorios e decide se `search` pode ser liberado
-8. so depois disso o sistema consulta o ERP por `soccol.item_search_candidates`
+8. so depois disso o sistema consulta `soccol.item_search_candidates` e `soccol.item_search_applications`, validando familia e todos os criterios na mesma aplicacao antes do ranking
 9. quando houver varios itens, o backend escolhe um discriminador real, pergunta ao usuario e conserva os candidatos no `ConversationState` persistido pelo Redis
 
 Resumo das decisoes:
@@ -157,6 +157,7 @@ Observacao:
 Artefatos relevantes para avaliacao:
 - `docs/assets/datasets/pre_search_eval_dataset_mvp.json`
 - `docs/assets/datasets/pre_search_num_predict_golden_set.json`
+- `docs/assets/datasets/erp_search_golden_set.json`
 - `docs/assets/datasets/battery_structural_respond_v2.json`
 - `docs/assets/datasets/battery_real_omnichannel_250.json`
 - `docs/assets/datasets/real_respond_battery_human_validation.md`
@@ -173,6 +174,7 @@ A bateria real versionada cobre contratos, regras deterministicas, buscas, prove
 - `docs/training/pre_search_fine_tuning.md`
 - `docs/DECISIONS.md`
 - `docs/PROGRESS.md`
+- `docs/HISTORICO.md`
 - `docs/TODO.md`
 
 ## Higiene Do Repositorio
@@ -183,3 +185,10 @@ Arquivos gerados localmente nao fazem parte da entrega:
 - `.pytest_cache/`
 - `.tmp/`
 - `.env`
+
+Relatorios sao gerados em `.tmp/eval/`; os resultados historicos foram
+consolidados em [HISTORICO.md](docs/HISTORICO.md). O DDL operacional do ERP
+fica fora do Git. O bootstrap local esta em `db/init/pre_search_init.sql`.
+Os dois CSVs gzip do fallback v2 ficam no Git LFS; manifestos e SHA-256
+permanecem versionados no Git comum. Execute `git lfs pull` antes de iniciar
+um banco novo. Detalhes em [operacao](docs/guide/operational_commands.md#busca-erp-v2-e-snapshot-local).

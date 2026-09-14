@@ -103,13 +103,18 @@ Nao misturar fila operacional com dataset formal de treino.
 O runtime consulta:
 
 - `soccol.item_search_candidates`
+- `soccol.item_search_applications` (contrato v2: uma linha por aplicacao)
 
-Esse objeto pertence ao banco ERP e nao ao banco local de catalogo.
+Esses objetos pertencem a camada de integracao ERP. O fallback local preserva
+uma copia do mesmo contrato; o DDL externo continua separado do bootstrap local.
 
 O modulo documental correspondente e:
 
-- `docs/assets/sql/erp_search_integration_candidates_runtime.sql`
 - `docs/guide/erp_search_integration.md`
+
+O DDL operacional do ERP nao e versionado neste projeto. O exportador consulta
+as views instaladas; auditorias de origem podem receber uma copia local do
+SQL por `scripts.eval.evaluate_erp_search --integration-sql`.
 
 Se houver mudanca em busca ERP:
 
@@ -152,8 +157,10 @@ Uso correto dos documentos:
 - `docs/training/` = revisao, dataset, treino, benchmark e publicacao
 - `docs/DECISIONS.md` = motivo das escolhas tecnicas
 - `docs/PROGRESS.md` = estado atual e evidencias
+- `docs/HISTORICO.md` = resumo unico dos relatorios e problemas das versoes anteriores
 - `docs/TODO.md` = backlog e plano operacional
-- `docs/assets/` = artefatos auxiliares, datasets, relatorios e SQLs documentais
+- `docs/assets/datasets/` = datasets ativos e roteiro de validacao humana
+- `.tmp/eval/` = relatorios gerados, fora do Git
 
 Regras:
 

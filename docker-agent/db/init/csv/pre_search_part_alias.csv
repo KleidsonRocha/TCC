@@ -302,6 +302,8 @@ cd_grupo,cd_subgrupo,alias
 3,28,separador de vapor motor
 3,28,separadores de vapores motor
 3,31,tampa radiador
+3,31,tampa do radiador
+3,31,tampa de radiador
 3,31,tampas radiador
 3,31,tampa rdiador
 3,31,tampa radiador motor
@@ -1099,6 +1101,9 @@ cd_grupo,cd_subgrupo,alias
 13,8,diversos cubo
 13,8,diverso cubo
 15,1,mangueiras de agua radiador
+15,1,mangueira radiador
+15,1,mangueira do radiador
+15,1,mangueiras do radiador
 15,1,mangueiras agua radiador
 15,1,mangueira de agua radiador
 15,1,mangueira agua radiador

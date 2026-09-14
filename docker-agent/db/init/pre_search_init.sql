@@ -1308,3 +1308,59 @@ ALTER TABLE pre_search_fine_tuning_run
 
 ALTER TABLE pre_search_fine_tuning_run
     ADD COLUMN IF NOT EXISTS promotion_applied_at TIMESTAMPTZ NULL;
+
+-- BEGIN ERP FALLBACK V2
+-- Shared by fresh database initialization and scripts.erp.install_search_snapshot.
+\set ON_ERROR_STOP on
+\echo 'Initializing ERP search snapshot contract v2'
+BEGIN;
+CREATE SCHEMA IF NOT EXISTS soccol;
+DROP TABLE IF EXISTS soccol.item_search_applications;
+DROP TABLE IF EXISTS soccol.item_search_candidates;
+
+CREATE TABLE soccol.item_search_candidates (
+    id_item BIGINT PRIMARY KEY,
+    cd_item TEXT,
+    nm_item TEXT,
+    candidate_title TEXT,
+    cd_grupo INTEGER,
+    cd_subgrupo INTEGER,
+    part_family TEXT NOT NULL,
+    cd_original TEXT,
+    cd_fabricante TEXT,
+    search_text TEXT
+);
+
+CREATE TABLE soccol.item_search_applications (
+    application_id BIGINT PRIMARY KEY,
+    id_item BIGINT NOT NULL REFERENCES soccol.item_search_candidates(id_item),
+    vehicle_brand TEXT NOT NULL,
+    vehicle_model TEXT NOT NULL,
+    year_start INTEGER,
+    year_end INTEGER,
+    year_open_end BOOLEAN NOT NULL,
+    engines TEXT[] NOT NULL,
+    variants TEXT[] NOT NULL,
+    injections TEXT[] NOT NULL,
+    transmissions TEXT[] NOT NULL,
+    application_text TEXT
+);
+
+-- Validate both files before either is accepted. Never import the lossy v1 CSV.
+COPY soccol.item_search_candidates FROM PROGRAM
+    'cd /docker-entrypoint-initdb.d/fallback/v2 && sha256sum -c manifest.sha256 > /dev/null && gzip -dc candidates.csv.gz'
+    WITH (FORMAT CSV, HEADER TRUE);
+COPY soccol.item_search_applications FROM PROGRAM
+    'cd /docker-entrypoint-initdb.d/fallback/v2 && sha256sum -c manifest.sha256 > /dev/null && gzip -dc applications.csv.gz'
+    WITH (FORMAT CSV, HEADER TRUE);
+
+CREATE INDEX ix_search_candidates_family ON soccol.item_search_candidates(lower(part_family));
+CREATE INDEX ix_search_candidates_code ON soccol.item_search_candidates(lower(cd_item));
+CREATE INDEX ix_search_candidates_original ON soccol.item_search_candidates(lower(cd_original));
+CREATE INDEX ix_search_candidates_manufacturer ON soccol.item_search_candidates(lower(cd_fabricante));
+CREATE INDEX ix_search_applications_item ON soccol.item_search_applications(id_item);
+CREATE INDEX ix_search_applications_model ON soccol.item_search_applications(lower(vehicle_model), id_item);
+ANALYZE soccol.item_search_candidates;
+ANALYZE soccol.item_search_applications;
+COMMIT;
+-- END ERP FALLBACK V2

@@ -415,7 +415,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--output",
-        default="docs/assets/reports/pre_search_validator_latency_report.json",
+        default=".tmp/eval/pre_search_validator_latency_report.json",
     )
     args = parser.parse_args()
 

@@ -4,7 +4,10 @@ from typing import Any
 
 from app.core.domain.pre_search_catalog import PreSearchCatalog
 from app.core.domain.pre_search import SearchCriteria
-from app.infra.pre_search_text import normalize_pre_search_text
+from app.infra.pre_search_text import (
+    canonicalize_longitudinal_direction,
+    normalize_pre_search_text,
+)
 from app.infra.pre_search_part_code import (
     compile_part_code_patterns,
     has_literal_part_code_evidence,
@@ -183,6 +186,29 @@ class DictionaryPreSearchExtractor:
         for pattern, canonical in self._COMPOSITE_PART_PATTERNS:
             if re.search(pattern, text):
                 return canonical
+        # Preserve the requested component before resolving a contained family.
+        # An unknown kit/support must not silently become the radiator itself.
+        component = re.search(
+            r"\b(tampas?|kits?|mangueiras?|suportes?|reparos?)\s+"
+            r"(?:(?:de|do|da|dos|das)\s+)?([^,;]+)", text
+        )
+        if component:
+            exact_component = self._extract_exact_part_query_match(text)
+            if (
+                exact_component and exact_component.token_count > 1
+                and exact_component.alias.split()[0].rstrip("s") == component.group(1).rstrip("s")
+            ):
+                return exact_component.canonical
+            target = self._extract_exact_part_query_match(component.group(2))
+            if target:
+                phrase = component.group(1) + " " + target.alias
+                full_match = self._extract_exact_part_query_match(phrase)
+                if (
+                    full_match and full_match.token_count > 1
+                    and full_match.alias.split()[0].rstrip("s") == component.group(1).rstrip("s")
+                ):
+                    return full_match.canonical
+                return phrase
         exact_match = self._extract_exact_part_query_match(text)
         fuzzy_match = self._extract_fuzzy_part_query_match(text)
         if exact_match and fuzzy_match:
@@ -340,11 +366,7 @@ class DictionaryPreSearchExtractor:
         # "eixo dianteiro/traseiro" belongs to axle, not position.
         if re.search(r"\b(eixo\s+diant|eixo\s+dianteir[oa]|eixo\s+tras|eixo\s+traseir[oa])\b", text):
             return None
-        if re.search(r"\b(diant|dianteir[oa])\b", text):
-            return "front"
-        if re.search(r"\b(tras|traseir[oa])\b", text):
-            return "rear"
-        return None
+        return canonicalize_longitudinal_direction(text)
 
     @staticmethod
     def _extract_axle(text: str) -> str | None:
@@ -442,7 +464,7 @@ class DictionaryPreSearchExtractor:
             canonical_text = str(canonical or "").strip().lower()
             if not canonical_text:
                 continue
-            for alias in aliases:
+            for alias in (canonical_text, *aliases):
                 alias_text = str(alias or "").strip().lower()
                 if not alias_text:
                     continue

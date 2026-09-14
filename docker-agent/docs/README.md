@@ -11,7 +11,7 @@ Esta pasta foi reorganizada para manter menos arquivos, com foco no que e operac
 5. `DECISIONS.md`
 6. `PROGRESS.md`
 7. `TODO.md`
-8. `PROBLEMAS_E_SOLUCOES.md`
+8. `HISTORICO.md`
 
 ## Estrutura Atual
 
@@ -24,8 +24,8 @@ Esta pasta foi reorganizada para manter menos arquivos, com foco no que e operac
 - `training/`
   - `pre_search_fine_tuning.md`: fluxo de revisao, promocao, exportacao, treino e publicacao
 
-- `PROBLEMAS_E_SOLUCOES.md`
-  - historico consolidado de problemas, solucoes e pendencias
+- `HISTORICO.md`
+  - resumo unico de relatorios, benchmarks e problemas das versoes anteriores
 
 - `DECISIONS.md`
   - registro das escolhas tecnicas e do motivo de cada uma
@@ -38,13 +38,13 @@ Esta pasta foi reorganizada para manter menos arquivos, com foco no que e operac
 
 - `assets/`
   - `datasets/`: datasets oficiais de avaliacao e benchmark
-  - `reports/`: relatorios e analises de progresso
-  - `sql/`: SQLs auxiliares
 
 ## Regras De Organizacao
 
 - documentacao normativa e atual fica no nivel `docs/` ou em `docs/guide/` e `docs/training/`
-- artefatos auxiliares ficam em `docs/assets/`
+- datasets e roteiro de validacao humana ficam em `docs/assets/datasets/`
+- relatorios gerados ficam em `.tmp/eval/`, ignorados pelo Git; registrar conclusoes em `PROGRESS.md`
+- DDL operacional do ERP fica fora do Git; seu contrato esta em `guide/erp_search_integration.md`
 - seeds reais de bootstrap ficam em `db/init/csv/`, nao em `docs/`
 - material antigo e fragmentado foi removido para reduzir duplicidade e links quebrados
 
@@ -58,4 +58,5 @@ Esta pasta foi reorganizada para manter menos arquivos, com foco no que e operac
 - para entender treino e revisao: `training/pre_search_fine_tuning.md`
 - para justificar escolhas tecnicas: `DECISIONS.md`
 - para ver status atual e evidencias: `PROGRESS.md`
+- para consultar relatorios e problemas das versoes anteriores: `HISTORICO.md`
 - para ver backlog e proximos passos: `TODO.md`

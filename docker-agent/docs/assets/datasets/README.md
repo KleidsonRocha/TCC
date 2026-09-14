@@ -7,6 +7,8 @@ Esta pasta concentra os datasets usados para avaliar, comparar e expandir o comp
 - `pre_search_eval_dataset_mvp.json`
   Conjunto pequeno e rapido para avaliacao funcional direta.
 - `pre_search_num_predict_golden_set.json`
+- `erp_search_golden_set.json`: 38 pedidos automotivos e fixtures de identidade/aplicacao,
+  consumidos por `scripts.eval.evaluate_erp_search` e pelas regressoes PostgreSQL
   Golden set usado em benchmark e promocao de modelo.
 - `battery_structural_respond_v2.json`
   Bateria estrutural multi-turno do endpoint, com niveis cumulativos `smoke`, `regression` e `extended`.

@@ -40,7 +40,7 @@ cd_grupo;part_type_id;is_generic;needs_side;needs_position;needs_axle;needs_engi
 3;25;False;False;False;False;True;False
 3;27;False;True;False;False;False;False
 4;1;False;True;False;False;False;False
-4;2;False;False;False;True;False;False
+4;2;False;False;True;False;False;False
 4;3;False;True;False;False;False;False
 4;4;False;True;False;False;False;False
 5;1;False;True;False;False;False;False
@@ -129,7 +129,7 @@ cd_grupo;part_type_id;is_generic;needs_side;needs_position;needs_axle;needs_engi
 4;5;False;False;False;True;False;False
 12;9;False;False;False;False;True;True
 12;10;True;False;False;False;True;True
-12;11;False;False;False;False;True;False
+12;11;False;False;True;False;False;False
 12;13;False;False;False;False;True;False
 12;14;False;False;False;False;True;False
 12;15;False;True;False;True;False;False

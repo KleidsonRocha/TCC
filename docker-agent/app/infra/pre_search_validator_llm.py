@@ -116,12 +116,6 @@ RUNTIME_SEARCH_RULE_OVERRIDES: dict[str, dict[str, bool]] = {
         "needs_position": False,
         "needs_axle": False,
     },
-    "pastilha de freio": {
-        "needs_position": True,
-    },
-    "pastilhas de freio": {
-        "needs_position": True,
-    },
     "disco de freio": {
         "needs_position": True,
     },

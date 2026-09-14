@@ -6,18 +6,20 @@ Este diretorio concentra automacoes auxiliares. O runtime principal continua em 
 
 - `eval/`
   Avaliacao offline, bateria real e diagnosticos auxiliares.
+- `erp/`
+  Exportacao das views do banco quente e validacao/instalacao do snapshot local.
 - `testing/`
   Ferramentas de suporte a `pytest` e mutation testing curado com `mutmut`.
 - `training/`
   Revisao, exportacao de dataset, empacotamento de modelo e ciclo de treino.
 
 Observacao:
-- o bootstrap do banco ficou centralizado em `db/init/pre_search_init.sql` + `db/init/csv/`
+- o bootstrap do banco ficou centralizado em `db/init/pre_search_init.sql`, seeds `db/init/csv/` e snapshot `db/init/fallback/v2/`
 - nao ha mais fluxo versionado de importacao manual por CSV em `scripts/db/`
 
 ## Fluxo Recomendado
 
-Operacionalmente, `eval/` deve ser usado por apenas dois entrypoints:
+Para avaliacao conversacional, os dois entrypoints principais de `eval/` sao:
 
 - `generate_eval_report.py`
   Gera um relatorio consolidado com:
@@ -43,9 +45,25 @@ Smoke rapido do consolidado:
 python .\scripts\eval\generate_eval_report.py --skip-mvp-eval --skip-golden-benchmark --skip-num-predict-sweep
 ```
 
-Observacao:
-- a execucao completa do consolidado pode demorar varios minutos, porque roda validacoes reais da LLM no dataset MVP e no golden set
-- o smoke acima serve apenas para validar o entrypoint, a leitura do JSON real e a geracao dos arquivos finais
+Relatorios novos sao gravados em `.tmp/eval/`, fora do Git. Para incluir uma
+bateria anterior no consolidado, informar `--real-battery-json` com o JSON
+gerado pelo runner; o gerador nao reutiliza automaticamente o relatorio de marco.
+
+A execucao completa pode demorar varios minutos, pois avalia a LLM no MVP e
+no golden set. O smoke valida a geracao dos arquivos; inclui uma bateria real
+somente se seu JSON estiver disponivel no caminho informado.
+
+## Busca ERP
+
+- `python -m scripts.erp.export_search_snapshot`: exporta as views v2 instaladas;
+  nao depende de arquivo SQL externo nem aplica DDL no ERP.
+- `python -m scripts.erp.install_search_snapshot`: valida carga com rollback;
+  `--apply` instala localmente e preserva as tabelas anteriores em backup.
+- `python -m scripts.eval.evaluate_erp_search`: 38 casos do contrato e da copia
+  CSV, em tabelas temporarias. `--integration-sql <arquivo-local>` adiciona
+  auditoria dos SELECTs de origem (114 verificacoes no total).
+
+Comandos Docker em [operacao](../docs/guide/operational_commands.md#busca-erp-v2-e-snapshot-local).
 
 ## Scripts Auxiliares De `eval/`
 

@@ -10,6 +10,10 @@ mutants/
 .tmp/*
 !.tmp/.gitkeep
 docs/assets/datasets/*_candidates_auto.json
+# Generated reports and operational ERP SQL stay local; history is docs/HISTORICO.md.
+/docs/assets/reports/
+/docs/assets/sql/
+/db/init/zz_erp_fallback_item_search_candidates.sql
 
 .env
 .venv/

@@ -35,6 +35,25 @@ Uso pratico:
 - qualquer mudanca estrutural de catalogo deve ser refletida no SQL consolidado e nos CSVs de bootstrap
 - para reaplicar o catalogo, o fluxo padrao do projeto e recriar o volume do Postgres
 
+## Bootstrap Da Busca Local
+
+O fallback ERP usa o contrato v2 em `soccol.item_search_candidates` e
+`soccol.item_search_applications`. O bloco `ERP FALLBACK V2` de
+`db/init/pre_search_init.sql` carrega os dois CSVs
+comprimidos de `db/init/fallback/v2/`, valida seus checksums e mantem uma chave
+estrangeira entre aplicacao e item. O snapshot deve estar presente antes de
+inicializar um volume novo. O antigo CSV agregado nao e aceito pelo runtime v2.
+
+Para atualizar somente a busca em volume existente, use
+`python -m scripts.erp.install_search_snapshot --apply` no container. O
+instalador valida em schema separado e preserva as tabelas anteriores em um
+schema de backup; nao e preciso recriar o volume nem perder a fila de revisao.
+Sem `--apply`, a validacao termina com rollback.
+
+O DDL do ERP externo e administrado no banco quente, fora do Git deste projeto.
+Consulte [integracao ERP](erp_search_integration.md) e
+[comandos de operacao](operational_commands.md#busca-erp-v2-e-snapshot-local).
+
 ## Fine-Tuning
 
 O fluxo de dataset e treino vive em:

@@ -47,6 +47,7 @@ class PostgresPreSearchCatalogProvider:
         with psycopg.connect(conninfo) as conn:  # type: ignore[union-attr]
             with conn.cursor() as cur:
                 part_patterns = self._load_part_patterns(cur)
+                part_family_ids = self._load_part_family_ids(cur)
                 brand_aliases = self._load_brand_aliases(cur)
                 model_aliases = self._load_model_aliases(cur)
                 invalid_tokens = self._load_invalid_tokens(cur)
@@ -91,6 +92,7 @@ class PostgresPreSearchCatalogProvider:
         )
         return PreSearchCatalog(
             part_patterns=part_patterns,
+            part_family_ids=part_family_ids,
             brand_aliases=brand_aliases,
             model_aliases=model_aliases,
             invalid_slot_tokens=invalid_tokens,
@@ -111,6 +113,20 @@ class PostgresPreSearchCatalogProvider:
     def _assert_not_empty(value: object, table_hint: str) -> None:
         if not value:
             raise RuntimeError(f"Catalogo pre-search sem dados obrigatorios: {table_hint}.")
+
+    @staticmethod
+    def _load_part_family_ids(cur: "psycopg.Cursor") -> dict[str, list[tuple[int, int]]]:
+        cur.execute("""
+            SELECT pt.name_normalized, pg.source_group_code, pt.source_subgroup_code
+            FROM pre_search_part_type pt
+            JOIN pre_search_part_group pg ON pg.id = pt.part_group_id
+            WHERE pt.is_active AND pg.is_active
+                AND pg.source_group_code IS NOT NULL AND pt.source_subgroup_code IS NOT NULL
+        """)
+        identities: dict[str, list[tuple[int, int]]] = defaultdict(list)
+        for name, group, subgroup in cur.fetchall():
+            identities[str(name)].append((int(group), int(subgroup)))
+        return dict(identities)
 
     @staticmethod
     def _load_part_patterns(cur: "psycopg.Cursor") -> list[tuple[str, tuple[str, ...]]]:

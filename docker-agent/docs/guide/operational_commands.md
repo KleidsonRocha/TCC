@@ -8,6 +8,49 @@ Este guia concentra o caminho operacional mais curto para a stack atual:
 - `ollama` hospeda os modelos de inferencia
 - `trainer` e usado apenas quando voce dispara fine-tuning
 
+## Busca ERP V2 E Snapshot Local
+
+O runtime corrigido exige `item_search_candidates` e `item_search_applications`
+no contrato v2. O SQL operacional do ERP fica fora do Git; a operacao do banco
+quente mantem suas definicoes. O exportador consulta as views ja instaladas.
+
+Os comandos abaixo usam o codigo do checkout, mesmo antes do rebuild da imagem.
+No PowerShell, execute da raiz do `docker-agent`:
+
+```powershell
+# Exporta em UTF-8, em uma transacao somente de leitura no ERP.
+docker compose run --rm --no-deps -v "${PWD}:/app" docker-agent python -m scripts.erp.export_search_snapshot
+
+# Valida o snapshot inteiro em um schema separado e desfaz a carga.
+docker compose run --rm --no-deps -v "${PWD}:/app" docker-agent python -m scripts.erp.install_search_snapshot
+
+# Instala localmente e informa o schema de backup das tabelas anteriores.
+docker compose run --rm --no-deps -v "${PWD}:/app" docker-agent python -m scripts.erp.install_search_snapshot --apply
+
+# Golden set: contrato e COPY de ida/volta do snapshot, em tabelas temporarias.
+docker compose run --rm --no-deps -v "${PWD}:/app" docker-agent python -m scripts.eval.evaluate_erp_search
+
+# Opcional: audita tambem os SELECTs do SQL externo fornecido localmente.
+docker compose run --rm --no-deps -v "${PWD}:/app" docker-agent python -m scripts.eval.evaluate_erp_search --integration-sql .tmp/sql/erp_search_integration_candidates_runtime.sql
+
+# Suite completa, incluindo as regressoes PostgreSQL (nao ignorar essas no CI).
+docker compose run --rm --no-deps -e ERP_SEARCH_TEST_POSTGRES=1 -v "${PWD}:/app" docker-agent python -m pytest -q
+```
+
+O exportador grava o par em `db/init/fallback/v2/` e publica os checksums por
+ultimo. O bootstrap rejeita exportacao incompleta/corrompida. O instalador
+usa exclusivamente a conexao `CATALOG_DB_*`; o modulo DDL externo nunca e
+executado por ele. Guarde o nome do schema de backup para rollback coordenado
+com a imagem anterior. Se o ERP ainda usar v1, mantenha o fallback v2 habilitado
+durante a migracao; o runtime novo nao deve reutilizar agregados antigos.
+
+No Git, manter `db/init/fallback/v2/*.csv.gz` no LFS e os dois manifestos no
+Git comum. A regra `eol=lf` protege os checksums em clones Windows/Linux.
+Em clone novo, executar `git lfs pull` antes de inicializar o Postgres. O antigo
+CSV v1 e o SQL separado `zz_erp` foram removidos; a carga local esta consolidada.
+Relatorios de execucao ficam em `.tmp/eval/`, e o historico resumido em
+[HISTORICO.md](../HISTORICO.md).
+
 ## Revisar Conversas No Streamlit
 
 Com a stack ativa, acesse `http://localhost:8501` e abra a aba `Revisao de IA`.
@@ -239,6 +282,25 @@ python scripts/training/review_pre_search_queue.py promote \
 ```
 
 ## Avaliacao Offline E Benchmark
+
+### Regra Para Casos Reais Encontrados Em Testes
+
+Todo erro funcional relatado durante teste manual deve ganhar uma protecao
+versionada antes de ser considerado resolvido. Classifique o caso conforme sua
+natureza:
+
+- regra, extracao, decisao, pergunta ou contexto multi-turno estavel: adicionar
+  ao `pre_search_num_predict_golden_set.json` e ao teste unitario/API que cobre
+  a causa;
+- ranking, disponibilidade ou cobertura do ERP: adicionar a regressao de busca
+  e a bateria real, sem tornar o golden set dependente de estoque ou de um
+  resultado comercial que muda;
+- integracao de Redis, gateway ou interface: adicionar um cenario integrado da
+  bateria real usando `docker-comm`.
+
+O registro precisa conter a mensagem original, o contexto minimo necessario,
+o comportamento esperado e um identificador rastreavel. O objetivo e impedir
+que uma correcao futura reintroduza um erro ja observado por um avaliador.
 
 Rodar o dataset MVP de avaliacao:
 

@@ -394,3 +394,36 @@ Consequencia:
 
 - a LLM, o extractor, o estado conversacional e o dataset preservam a preferencia explicitamente
 - o ranking favorece a marca solicitada sem adiciona-la aos filtros obrigatorios da consulta
+
+## 20. Identidade De Familia E Aplicacao Veicular No Contrato ERP V2
+
+Decisao:
+
+- identificar a familia pelo subgrupo canonico do item, antes de qualquer ranking
+- preservar uma linha por `produto_veiculos.id_geral` no novo objeto `soccol.item_search_applications`
+- exigir marca, modelo, ano, motor e versao na mesma aplicacao; modelo usa igualdade normalizada
+- obter motores, injecoes e transmissoes pelas relacoes `produto_veiculos_*`, nunca pelas possibilidades gerais do modelo
+- manter intervalos independentes e reconhecer fim aberto somente pela marcacao explicita da aplicacao
+- fornecer atributos de desambiguacao apenas das aplicacoes que passaram pelos filtros
+- exportar ERP e snapshot pelo mesmo SELECT, em transacao consistente e UTF-8, com verificacao de checksum
+
+Motivo:
+
+- agregados por item cruzavam atributos de veiculos e periodos diferentes; `MIN/MAX` preenchia lacunas inexistentes
+- substring aceitava `Golf` ao procurar `Gol`, e texto de acessorio podia superar a peca pedida no ranking
+- o ERP usa WIN1252; copiar bytes sem conversao impedia carregar o snapshot no PostgreSQL UTF-8 local
+
+Consequencias:
+
+- o contrato v2 exige migracao coordenada de SQL externo, runtime e fallback
+- o snapshot v1 permanece legado; suas colunas agregadas nao permitem reconstruir proveniencia com seguranca
+- falta de motor ou ano comprovado pode reduzir resultados; texto livre nao e usado para inventar compatibilidade
+- o golden set ERP valida contrato e COPY, incluindo os quatro candidatos controlados da auditoria; `--integration-sql` adiciona auditoria dos SELECTs de origem fornecidos localmente
+
+## Organizacao De Artefatos Em 14/09/2026
+
+- schema e carga do banco local ficam em `db/init/pre_search_init.sql`; o instalador reutiliza somente seu bloco de fallback
+- snapshots gzip ficam no Git LFS; manifestos e checksums ficam no Git comum com finais de linha LF
+- DDL do ERP pertence a operacao do banco quente e fica fora do Git; o contrato e a proveniencia exigida permanecem documentados
+- exportacao le as views instaladas em `REPEATABLE READ, READ ONLY`, em UTF-8 e com ordem explicita de colunas, sem depender do arquivo DDL
+- historico de relatorios e backlog legado fica em `HISTORICO.md`; saidas de execucao ficam em `.tmp/eval/`

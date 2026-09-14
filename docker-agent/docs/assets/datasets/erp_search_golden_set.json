@@ -1,0 +1,113 @@
+{
+  "contract_version": 2,
+  "description": "Busca SQL real: identidade da familia e filtros na mesma aplicacao. As mensagens sao pedidos automotivos; criteria representa a saida normalizada do pre-search.",
+  "fixtures": {
+    "audit": {
+      "candidates": [
+        {"id": 1, "code": "AUD-REAL", "title": "RADIADOR GOL", "family": "radiador"},
+        {"id": 2, "code": "AUD-GOLF", "title": "RADIADOR GOLF NGK", "family": "radiador"},
+        {"id": 3, "code": "AUD-CROSS", "title": "RADIADOR GOL FOX NGK", "family": "radiador"},
+        {"id": 4, "code": "AUD-CAP", "title": "TAMPA DO RADIADOR GOL NGK", "family": "tampa do radiador"}
+      ],
+      "applications": [
+        {"id": 11, "item": 1, "brand": "Volkswagen", "model": "Gol", "start": 2008, "end": 2012, "engines": ["1.0 L 8V FLEX"], "variants": ["Trend"], "injections": ["MPI"], "transmissions": ["Manual"]},
+        {"id": 12, "item": 1, "brand": "Ford", "model": "Fiesta", "start": 2000, "end": 2015, "engines": ["2.0"], "variants": ["GLX"], "injections": ["EFI"], "transmissions": ["Automatica"]},
+        {"id": 21, "item": 2, "brand": "Volkswagen", "model": "Golf", "start": 2008, "end": 2012, "engines": ["1.0"]},
+        {"id": 31, "item": 3, "brand": "Volkswagen", "model": "Gol", "start": 1995, "end": 1999, "engines": ["1.6"], "variants": ["GL"]},
+        {"id": 32, "item": 3, "brand": "Volkswagen", "model": "Fox", "start": 2010, "end": 2015, "engines": ["1.0"], "variants": ["Trend"]},
+        {"id": 41, "item": 4, "brand": "Volkswagen", "model": "Gol", "start": 2008, "end": 2012, "engines": ["1.0"]}
+      ]
+    },
+    "intervals": {
+      "candidates": [
+        {"id": 1, "code": "GAP", "title": "RADIADOR GOL 1.0 1.6", "family": "radiador"},
+        {"id": 2, "code": "OPEN", "title": "RADIADOR CORSA", "family": "radiador"},
+        {"id": 3, "code": "UNKNOWN", "title": "RADIADOR PALIO", "family": "radiador"},
+        {"id": 4, "code": "NO-START", "title": "RADIADOR UNO", "family": "radiador"},
+        {"id": 5, "code": "BAD-ENGINE", "title": "RADIADOR CIVIC 1.0", "family": "radiador"},
+        {"id": 6, "code": "NO-ENGINE", "title": "RADIADOR CIVIC 1.0", "family": "radiador"},
+        {"id": 7, "code": "BAD-INTERVAL", "title": "RADIADOR FOCUS", "family": "radiador"},
+        {"id": 8, "code": "CODE-ONLY", "title": "RADIADOR SEM APLICACAO CADASTRADA", "family": "radiador"}
+      ],
+      "applications": [
+        {"id": 11, "item": 1, "brand": "Volkswagen", "model": "Gol", "start": 2000, "end": 2004, "engines": ["1.0"], "variants": ["GL"]},
+        {"id": 12, "item": 1, "brand": "Volkswagen", "model": "Gol", "start": 2010, "end": 2014, "engines": ["1.6"], "variants": ["Trend"]},
+        {"id": 21, "item": 2, "brand": "Chevrolet", "model": "Corsa", "start": 2000, "end": 2005, "engines": ["1.0"]},
+        {"id": 22, "item": 2, "brand": "Chevrolet", "model": "Corsa", "start": 2015, "end": null, "open": true, "engines": ["1.6"]},
+        {"id": 31, "item": 3, "brand": "Fiat", "model": "Palio", "start": 2005, "end": null},
+        {"id": 41, "item": 4, "brand": "Fiat", "model": "Uno", "start": null, "end": 2015},
+        {"id": 51, "item": 5, "brand": "Honda", "model": "Civic", "start": 2000, "end": 2015, "engines": ["11.0"]},
+        {"id": 61, "item": 6, "brand": "Honda", "model": "Civic", "start": 2000, "end": 2015, "engines": []},
+        {"id": 71, "item": 7, "brand": "Ford", "model": "Focus", "start": 2015, "end": 2000}
+      ]
+    },
+    "accessories": {
+      "candidates": [
+        {"id": 1, "code": "RAD", "title": "RADIADOR GOL", "family": "radiador"},
+        {"id": 2, "code": "CAP", "title": "TAMPA DO RADIADOR GOL", "family": "tampa do radiador"},
+        {"id": 3, "code": "KIT", "title": "KIT DO RADIADOR GOL", "family": "kit do radiador"},
+        {"id": 4, "code": "HOSE", "title": "MANGUEIRA DO RADIADOR GOL", "family": "mangueira do radiador"},
+        {"id": 5, "code": "SUPPORT", "title": "SUPORTE DO RADIADOR GOL", "family": "suporte do radiador"},
+        {"id": 6, "code": "SPARK", "title": "VELA IGNICAO GOL", "family": "Velas de Ignição Automotivas"},
+        {"id": 7, "code": "MISCLASSIFIED-CAP", "title": "TAMPA DO RADIADOR", "family": "radiador"},
+        {"id": 8, "code": "MISCLASSIFIED-KIT", "title": "KIT DO RADIADOR", "family": "radiador"},
+        {"id": 9, "code": "MISCLASSIFIED-HOSE", "title": "MANGUEIRA DO RADIADOR", "family": "radiador"},
+        {"id": 10, "code": "SPECIALIZED-MOUNT", "title": "COXIM AMORTECEDOR", "name": "COXIM AMORTECEDOR DIANTEIRO", "family": "DIVERSOS AMORTECEDOR"},
+        {"id": 11, "code": "MOTOR-MOUNT", "title": "COXIM MOTOR DIANTEIRO", "family": "DIVERSOS AMORTECEDOR"}
+      ],
+      "applications": [
+        {"id": 11, "item": 1, "brand": "Volkswagen", "model": "Gol", "start": 2008, "end": 2012, "engines": ["1.0"]},
+        {"id": 21, "item": 2, "brand": "Volkswagen", "model": "Gol", "start": 2008, "end": 2012, "engines": ["1.0"]},
+        {"id": 31, "item": 3, "brand": "Volkswagen", "model": "Gol", "start": 2008, "end": 2012, "engines": ["1.0"]},
+        {"id": 41, "item": 4, "brand": "Volkswagen", "model": "Gol", "start": 2008, "end": 2012, "engines": ["1.0"]},
+        {"id": 51, "item": 5, "brand": "Volkswagen", "model": "Gol", "start": 2008, "end": 2012, "engines": ["1.0"]},
+        {"id": 61, "item": 6, "brand": "Volkswagen", "model": "Gol", "start": 2008, "end": 2012, "engines": ["1.0"]},
+        {"id": 71, "item": 7, "brand": "Volkswagen", "model": "Gol", "start": 2008, "end": 2012, "engines": ["1.0"]},
+        {"id": 81, "item": 8, "brand": "Volkswagen", "model": "Gol", "start": 2008, "end": 2012, "engines": ["1.0"]},
+        {"id": 91, "item": 9, "brand": "Volkswagen", "model": "Gol", "start": 2008, "end": 2012, "engines": ["1.0"]},
+        {"id": 101, "item": 10, "brand": "Volkswagen", "model": "Gol", "start": 2008, "end": 2012, "engines": ["1.0", "1.6"]},
+        {"id": 111, "item": 11, "brand": "Volkswagen", "model": "Gol", "start": 2008, "end": 2012, "engines": ["1.0"]}
+      ]
+    }
+  },
+  "cases": [
+    {"id": "audit_only_real", "fixture": "audit", "message": "Radiador para Volkswagen Gol 2010 1.0", "criteria": {"part_query": "radiador", "vehicle_brand": "Volkswagen", "vehicle_model": "Gol", "vehicle_year": 2010, "engine": "1.0"}, "expected_ids": ["AUD-REAL"], "expected_attributes": {"AUD-REAL": {"application": ["Volkswagen Gol 2008 a 2012"], "engine": ["1.0 L 8V FLEX"], "variant": ["Trend"], "injection": ["MPI"], "transmission": ["Manual"]}}},
+    {"id": "audit_ranking_limit", "fixture": "audit", "message": "Prefiro NGK, radiador Gol 2010 1.0", "criteria": {"part_query": "radiador", "vehicle_model": "Gol", "vehicle_year": 2010, "engine": "1.0", "preferred_product_brand": "NGK"}, "limit": 1, "expected_ids": ["AUD-REAL"]},
+    {"id": "golf_exact_positive", "fixture": "audit", "message": "Radiador Golf 2010 1.0", "criteria": {"part_query": "radiador", "vehicle_model": "Golf", "vehicle_year": 2010, "engine": "1.0"}, "expected_ids": ["AUD-GOLF"]},
+    {"id": "model_not_prefix", "fixture": "audit", "message": "Radiador modelo Go", "criteria": {"part_query": "radiador", "vehicle_model": "Go"}, "expected_ids": []},
+    {"id": "model_not_pattern", "fixture": "audit", "message": "Radiador modelo Gol%", "criteria": {"part_query": "radiador", "vehicle_model": "Gol%"}, "expected_ids": []},
+    {"id": "brand_same_application", "fixture": "audit", "message": "Radiador Ford Gol 2010", "criteria": {"part_query": "radiador", "vehicle_brand": "Ford", "vehicle_model": "Gol", "vehicle_year": 2010}, "expected_ids": []},
+    {"id": "engine_same_application", "fixture": "audit", "message": "Radiador Gol 2010 2.0", "criteria": {"part_query": "radiador", "vehicle_model": "Gol", "vehicle_year": 2010, "engine": "2.0"}, "expected_ids": []},
+    {"id": "variant_same_application", "fixture": "audit", "message": "Radiador Gol 2010 GLX", "criteria": {"part_query": "radiador", "vehicle_model": "Gol", "vehicle_year": 2010, "variant": "GLX"}, "expected_ids": []},
+    {"id": "variant_exact_positive", "fixture": "audit", "message": "Radiador Gol 2010 Trend", "criteria": {"part_query": "radiador", "vehicle_model": "Gol", "vehicle_year": 2010, "variant": "Trend"}, "expected_ids": ["AUD-REAL"]},
+    {"id": "other_application_positive", "fixture": "audit", "message": "Radiador Ford Fiesta 2010 2.0 GLX", "criteria": {"part_query": "radiador", "vehicle_brand": "Ford", "vehicle_model": "Fiesta", "vehicle_year": 2010, "engine": "2.0", "variant": "GLX"}, "expected_ids": ["AUD-REAL"], "expected_attributes": {"AUD-REAL": {"engine": ["2.0"], "variant": ["GLX"], "injection": ["EFI"], "transmission": ["Automatica"]}}},
+    {"id": "code_cannot_bypass_family", "fixture": "audit", "message": "Radiador codigo AUD-CAP", "criteria": {"part_query": "radiador", "part_code": "AUD-CAP"}, "expected_ids": []},
+    {"id": "code_cannot_bypass_fitment", "fixture": "audit", "message": "Radiador AUD-GOLF para Gol", "criteria": {"part_code": "AUD-GOLF", "vehicle_model": "Gol"}, "expected_ids": []},
+    {"id": "family_case_spaces", "fixture": "audit", "message": "RADIADOR para GOL 2010", "criteria": {"part_query": " RADIADOR ", "vehicle_model": " GOL ", "vehicle_year": 2010}, "expected_ids": ["AUD-REAL"]},
+    {"id": "separate_year_intervals", "fixture": "intervals", "message": "Radiador Gol 2007", "criteria": {"part_query": "radiador", "vehicle_model": "Gol", "vehicle_year": 2007}, "expected_ids": []},
+    {"id": "engine_not_from_earlier_interval", "fixture": "intervals", "message": "Radiador Gol 2012 1.0", "criteria": {"part_query": "radiador", "vehicle_model": "Gol", "vehicle_year": 2012, "engine": "1.0"}, "expected_ids": []},
+    {"id": "variant_not_from_earlier_interval", "fixture": "intervals", "message": "Radiador Gol 2012 GL", "criteria": {"part_query": "radiador", "vehicle_model": "Gol", "vehicle_year": 2012, "variant": "GL"}, "expected_ids": []},
+    {"id": "interval_start_inclusive", "fixture": "intervals", "message": "Radiador Gol 2010 1.6", "criteria": {"part_query": "radiador", "vehicle_model": "Gol", "vehicle_year": 2010, "engine": "1.6"}, "expected_ids": ["GAP"]},
+    {"id": "interval_end_inclusive", "fixture": "intervals", "message": "Radiador Gol 2004 1.0", "criteria": {"part_query": "radiador", "vehicle_model": "Gol", "vehicle_year": 2004, "engine": "1.0"}, "expected_ids": ["GAP"]},
+    {"id": "open_end_positive", "fixture": "intervals", "message": "Radiador Corsa 2026 1.6", "criteria": {"part_query": "radiador", "vehicle_model": "Corsa", "vehicle_year": 2026, "engine": "1.6"}, "expected_ids": ["OPEN"]},
+    {"id": "open_end_start_inclusive", "fixture": "intervals", "message": "Radiador Corsa 2015 1.6", "criteria": {"part_query": "radiador", "vehicle_model": "Corsa", "vehicle_year": 2015, "engine": "1.6"}, "expected_ids": ["OPEN"]},
+    {"id": "open_end_does_not_fill_gap", "fixture": "intervals", "message": "Radiador Corsa 2012 1.6", "criteria": {"part_query": "radiador", "vehicle_model": "Corsa", "vehicle_year": 2012, "engine": "1.6"}, "expected_ids": []},
+    {"id": "open_end_does_not_extend_old_engine", "fixture": "intervals", "message": "Radiador Corsa 2026 1.0", "criteria": {"part_query": "radiador", "vehicle_model": "Corsa", "vehicle_year": 2026, "engine": "1.0"}, "expected_ids": []},
+    {"id": "unknown_end_not_open", "fixture": "intervals", "message": "Radiador Palio 2010", "criteria": {"part_query": "radiador", "vehicle_model": "Palio", "vehicle_year": 2010}, "expected_ids": []},
+    {"id": "unknown_start_not_universal", "fixture": "intervals", "message": "Radiador Uno 2010", "criteria": {"part_query": "radiador", "vehicle_model": "Uno", "vehicle_year": 2010}, "expected_ids": []},
+    {"id": "engine_not_title_or_substring", "fixture": "intervals", "message": "Radiador Civic 2010 1.0", "criteria": {"part_query": "radiador", "vehicle_model": "Civic", "vehicle_year": 2010, "engine": "1.0"}, "expected_ids": []},
+    {"id": "inverted_interval", "fixture": "intervals", "message": "Radiador Focus 2010", "criteria": {"part_query": "radiador", "vehicle_model": "Focus", "vehicle_year": 2010}, "expected_ids": []},
+    {"id": "radiator_excludes_accessories", "fixture": "accessories", "message": "Radiador Gol 2010 1.0", "criteria": {"part_query": "radiador", "vehicle_model": "Gol", "vehicle_year": 2010, "engine": "1.0"}, "expected_ids": ["RAD"]},
+    {"id": "cap_requested", "fixture": "accessories", "message": "Tampa do radiador Gol 2010", "criteria": {"part_query": "tampa do radiador", "vehicle_model": "Gol", "vehicle_year": 2010}, "expected_ids": ["CAP"]},
+    {"id": "kit_requested", "fixture": "accessories", "message": "Kit do radiador Gol 2010", "criteria": {"part_query": "kit do radiador", "vehicle_model": "Gol", "vehicle_year": 2010}, "expected_ids": ["KIT"]},
+    {"id": "hose_requested", "fixture": "accessories", "message": "Mangueira do radiador Gol 2010", "criteria": {"part_query": "mangueira do radiador", "vehicle_model": "Gol", "vehicle_year": 2010}, "expected_ids": ["HOSE"]},
+    {"id": "support_requested", "fixture": "accessories", "message": "Suporte do radiador Gol 2010", "criteria": {"part_query": "suporte do radiador", "vehicle_model": "Gol", "vehicle_year": 2010}, "expected_ids": ["SUPPORT"]},
+    {"id": "family_accents", "fixture": "accessories", "message": "Velas de ignicao Gol 2010", "criteria": {"part_query": "velas de ignicao automotivas", "vehicle_model": "Gol", "vehicle_year": 2010}, "expected_ids": ["SPARK"]},
+    {"id": "family_not_pattern", "fixture": "accessories", "message": "Peca radiador% Gol", "criteria": {"part_query": "radiador%", "vehicle_model": "Gol"}, "expected_ids": []},
+    {"id": "code_only_without_application", "fixture": "intervals", "message": "Peca codigo CODE-ONLY", "criteria": {"part_code": "CODE-ONLY"}, "expected_ids": ["CODE-ONLY"]},
+    {"id": "missing_part_identity", "fixture": "accessories", "message": "Tenho um Gol 2010", "criteria": {"vehicle_model": "Gol", "vehicle_year": 2010}, "expected_ids": []},
+    {"id": "catalog_specialization", "fixture": "accessories", "message": "Coxim amortecedor Gol 2010 1.0 dianteiro", "criteria": {"part_query": "coxim amortecedor", "vehicle_model": "Gol", "vehicle_year": 2010, "engine": "1.0", "position": "front"}, "family_ids": [[1,10],[1,11]], "expected_ids": ["SPECIALIZED-MOUNT"], "expected_attributes": {"SPECIALIZED-MOUNT": {"engine": ["1.0"]}}},
+    {"id": "catalog_identity_cannot_match_other_group", "fixture": "accessories", "message": "Radiador Gol 2010", "criteria": {"part_query": "radiador", "vehicle_model": "Gol", "vehicle_year": 2010}, "family_ids": [[2,1]], "expected_ids": []},
+    {"id": "unmapped_catalog_identity_fails_closed", "fixture": "accessories", "message": "Kit radiador Gol 2010", "criteria": {"part_query": "radiador", "vehicle_model": "Gol", "vehicle_year": 2010}, "family_ids": [], "expected_ids": []}
+  ]
+}

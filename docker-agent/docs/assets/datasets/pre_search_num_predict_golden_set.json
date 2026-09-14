@@ -52,6 +52,53 @@
     }
   },
   {
+    "id": "ask_coxins_position",
+    "message.text": "quero um coxim para ecosport 2008",
+    "context.last_messages": [],
+    "expected": {
+      "decision": "ask",
+      "criteria": {
+        "part_query": "coxins",
+        "vehicle_model": "EcoSport",
+        "vehicle_year": 2008
+      },
+      "missing_fields_contains": ["position"],
+      "next_question_key": "position"
+    }
+  },
+  {
+    "id": "search_coxins_position",
+    "message.text": "quero um coxim dianteiro para ecosport 2008",
+    "context.last_messages": [],
+    "expected": {
+      "decision": "search",
+      "criteria": {
+        "part_query": "coxins",
+        "vehicle_model": "EcoSport",
+        "vehicle_year": 2008,
+        "position": "front"
+      },
+      "missing_fields_contains": [],
+      "next_question_key": null
+    }
+  },
+  {
+    "id": "search_pastilhas_corsa_2011_position",
+    "message.text": "PASTILHA FREIO CORSA 2011 DIANTEIRA",
+    "context.last_messages": [],
+    "expected": {
+      "decision": "search",
+      "criteria": {
+        "part_query": "pastilhas de freio",
+        "vehicle_model": "Corsa",
+        "vehicle_year": 2011,
+        "position": "front"
+      },
+      "missing_fields_contains": [],
+      "next_question_key": null
+    }
+  },
+  {
     "id": "search_bandejas_side",
     "message.text": "bandejas ecosport 2008 lado esquerdo",
     "context.last_messages": [],
@@ -181,6 +228,28 @@
         "vehicle_year": 2010,
         "engine": "1.6"
       },
+      "missing_fields_contains": [],
+      "next_question_key": null
+    }
+  },
+  {
+    "id": "search_radiator_cap_identity",
+    "message.text": "tampa do radiador Gol 2010 1.0",
+    "context.last_messages": [],
+    "expected": {
+      "decision": "search",
+      "criteria": {"part_query": "tampa radiador", "vehicle_model": "Gol", "vehicle_year": 2010, "engine": "1.0"},
+      "missing_fields_contains": [],
+      "next_question_key": null
+    }
+  },
+  {
+    "id": "search_golf_exact_identity",
+    "message.text": "radiador Golf 2010 1.6",
+    "context.last_messages": [],
+    "expected": {
+      "decision": "search",
+      "criteria": {"part_query": "radiador", "vehicle_model": "Golf", "vehicle_year": 2010, "engine": "1.6"},
       "missing_fields_contains": [],
       "next_question_key": null
     }

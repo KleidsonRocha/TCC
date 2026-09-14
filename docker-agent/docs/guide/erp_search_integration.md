@@ -1,235 +1,160 @@
 # Integracao De Pesquisa Com O ERP
 
-Este guia descreve a camada de integracao de pesquisa com o ERP.
+A busca usa o contrato v2 em dois objetos:
 
-Use isso no banco ERP, nao no banco local de catalogo do `docker-agent`.
+- `soccol.item_search_candidates`: uma linha por item, com identidade de familia.
+- `soccol.item_search_applications`: uma linha por aplicacao da peca a um veiculo.
 
-Nome esperado do objeto final:
-- `soccol.item_search_candidates`
+O DDL externo pertence a operacao do banco ERP e fica fora do Git.
+A [consulta Python](../../app/infra/erp_search_query.py)
+consome o mesmo contrato no ERP e no fallback local.
 
-## Objetivo
+Ordem das colunas exportadas (tambem exigida pela carga CSV local):
 
-A primeira integracao real de busca deve retornar apenas itens candidatos:
-- `item_id`
-- titulo de exibicao
-- score de busca calculado pela query
+- itens: `id_item`, `cd_item`, `nm_item`, `candidate_title`, `cd_grupo`,
+  `cd_subgrupo`, `part_family`, `cd_original`, `cd_fabricante`, `search_text`;
+- aplicacoes: `application_id`, `id_item`, `vehicle_brand`, `vehicle_model`,
+  `year_start`, `year_end`, `year_open_end`, `engines`, `variants`, `injections`,
+  `transmissions`, `application_text`.
 
-Esta primeira camada nao deve trazer:
-- preco
-- estoque
-- tributacao
-- WMS
-- enriquecimento tecnico detalhado
+Tipos, chaves e indices da copia local estao no
+[bootstrap consolidado](../../db/init/pre_search_init.sql). O exportador
+projeta as colunas explicitamente, mesmo se a view externa mudar sua ordem.
 
-Esse enriquecimento pode ficar para uma segunda consulta, depois que a lista de itens ja for conhecida.
+## Identidade Antes Do Ranking
 
-## Por Que Criar Uma View Ou Camada Equivalente
+`part_query` deve ser a familia canonica resolvida pelo catalogo. O runtime usa
+os codigos de grupo/subgrupo de origem preservados em `part_family_ids`. Exige
+tambem igualdade com `part_family` ou, nas especializacoes curadas de subgrupos
+amplos, todos os termos significativos da familia no titulo. A consulta avulsa
+sem catalogo exige igualdade do nome da familia. As comparacoes ignoram caixa,
+acentos portugueses e espacos repetidos; nao aceitam substring de familia.
 
-Os dados de busca no ERP estao espalhados por varias tabelas:
-- `item`
-- `item_produto`
-- `produto_veiculos`
-- `item_pesquisa`
-- `grupo_similar_item`
-- `grupo_similar_outros_codigos`
+Assim, `radiador` nao aceita `tampa do radiador`, kit, mangueira ou suporte
+classificado em outra familia. Prefixos de acessorio no titulo tambem bloqueiam
+um item erroneamente classificado como a peca principal. Esses componentes continuam pesquisaveis quando
+sua propria familia e solicitada. A qualidade da classificacao do subgrupo no
+ERP permanece uma dependencia: titulo parecido nao substitui essa identidade.
+A extracao preserva o componente em frases como `tampa do radiador` e
+`kit do radiador`; um composto desconhecido nao vira a familia interna. Os
+aliases de tampa e mangueira tambem estao registrados no CSV de bootstrap.
 
-Se o `docker-agent` consultar essas tabelas diretamente, a integracao fica acoplada demais aos detalhes internos do ERP.
+Codigo de item, original ou fabricante usa igualdade e respeita os demais
+criterios fornecidos. Pedido sem identidade de peca ou codigo nao enumera o
+estoque. Lado, posicao e eixo usam o nome completo e o titulo do proprio item,
+pois o titulo abreviado pode omitir a direcao presente no nome completo.
 
-Essa camada entrega uma linha por `id_item`, ja achatando:
-- codigo e nome do item
-- dimensoes de marca e modelo vindas das tabelas veiculares do ERP
-- codigos do produto
-- texto de aplicacao veicular
-- faixa de anos
-- codigos de complemento, injecao, motor e transmissao
-- codigos similares
-- texto auxiliar de busca
+## Aplicacao Veicular E Proveniencia
 
-## Modulo SQL De Integracao
+Cada linha de `item_search_applications` preserva:
 
-Arquivo principal:
-- [erp_search_integration_candidates_runtime.sql](/d:/TCC/docker-agent/docs/assets/sql/erp_search_integration_candidates_runtime.sql:1)
+| Campo | Origem |
+| --- | --- |
+| `application_id`, `id_item` | `produto_veiculos.id_geral`, `id_item` |
+| `vehicle_brand`, `vehicle_model` | Dimensoes identificadas na mesma linha de `produto_veiculos` |
+| `year_start`, `year_end`, `year_open_end` | Anos daquela aplicacao; `ano_final = 0` significa fim aberto |
+| `engines` | `produto_veiculos_motor.id_produto_veiculos` -> `veiculo_motor` |
+| `variants` | Complemento cadastrado na propria aplicacao |
+| `injections`, `transmissions` | Relacoes `produto_veiculos_injecao/transmissao` por aplicacao |
+| `application_text` | Texto original conservado para inspecao, sem comprovar compatibilidade |
 
-Campos de saida mais uteis para a primeira integracao:
-- `id_item`
-- `cd_item`
-- `candidate_title`
-- `cd_original`
-- `cd_fabricante`
-- `vehicle_brand_names`
-- `vehicle_model_names`
-- `vehicle_complement_names`
-- `vehicle_model_injection_names`
-- `vehicle_model_motor_names`
-- `vehicle_model_transmission_names`
-- `vehicle_year_start`
-- `vehicle_year_end`
-- `vehicle_year_open_end`
-- `vehicle_application_text`
-- `similar_codes_text`
-- `search_text`
-- `pesquisa_full_text_txt`
+Montadora e modelo precisam pertencer ao mesmo cadastro de veiculo. Nomes de
+modelo usam igualdade: `Gol` e `Golf` sao identidades distintas. Motor usa
+limites de token, permitindo `1.0` em `1.0 L 8V FLEX`, sem aceitar `11.0`.
+Versao/complemento usa igualdade normalizada.
 
-O runtime tambem reutiliza, sem alterar ranking, os seguintes campos como evidencia de desambiguacao:
+Todos os criterios veiculares sao aplicados a uma mesma linha. Nao basta que
+cada criterio apareca em algum veiculo do item. Os motores e demais atributos
+possiveis do modelo (`veiculo_modelo_motor` etc.) nao sao herdados pela peca.
 
-- `vehicle_application_text` -> aplicacao
-- `vehicle_complement_names` -> versao/complemento
-- `vehicle_model_motor_names` -> motor
-- `vehicle_model_injection_names` -> injecao
-- `vehicle_model_transmission_names` -> transmissao
-- `candidate_title` -> inferencia lexical conservadora de lado, posicao e caracteristicas curadas como `com/sem ar condicionado` e `com/sem rolamento`
+Ano inicial conhecido e obrigatorio quando o pedido informa ano. Intervalos
+fechados incluem ambos os limites. Fim aberto exige a marcacao explicita e
+preserva o inicio da propria aplicacao. Fim desconhecido (`NULL`) nao significa
+fim aberto. Intervalos separados continuam separados, inclusive para motores
+ou versoes diferentes do mesmo modelo. Os antigos `MIN/MAX` e
+`vehicle_year_open_end` agregados por item deixam de comprovar aplicacao.
 
-Esses atributos sao opcionais em `PartItem`. Eles servem somente para escolher a proxima pergunta depois da busca e nao aumentam o score nem comprovam compatibilidade.
+A consulta devolve as aplicacoes que passaram pelos filtros e restringe os
+motores/versoes exibidos ao criterio informado, inclusive quando uma aplicacao
+tem varias alternativas cadastradas. Somente essas
+linhas fornecem motor, versao, injecao, transmissao e rotulo de aplicacao para
+`PartItem.attributes`. Texto livre e atributos de outros veiculos nao
+alimentam a desambiguacao.
 
-Quando `preferred_product_brand` e informado, o runtime procura essa marca no titulo e no texto de busca somente para elevar seu ranking. A marca preferida nao entra no `WHERE`; portanto, produtos compativeis de outras marcas continuam retornando como alternativas.
+## Ordenacao E Limites
 
-## Observacoes Praticas
+O ranking e o `LIMIT` operam depois da identidade e da aplicacao.
+`preferred_product_brand` continua uma preferencia no titulo, sem excluir
+outras marcas compativeis. Um acessorio com titulo muito parecido ou marca
+preferida nao entra na lista da peca solicitada.
 
-- `item_produto.obs_ficha_tecnica` e `item_pesquisa.ficha_tecnica_item` sao limpos de HTML para reuso posterior.
-- `produto_veiculos` e agregado para a camada final manter uma linha por item.
-- `veiculo_montadora` e `veiculo_modelo` sao resolvidos para nomes legiveis de marca e modelo.
-- `grupo_similar_outros_codigos` e agregado em um unico campo textual.
-- `veiculo_complemento`, `veiculo_injecao`, `veiculo_motor` e `veiculo_transmissao` sao resolvidos em nomes legiveis.
-- as tabelas relacionais por modelo continuam expostas como codigos e nomes agregados.
-- a camada final ja exclui itens inativos e itens com `cd_tipo = '07'`.
+Esta camada retorna codigo, titulo, score e atributos de desambiguacao. Preco,
+estoque, tributacao e enriquecimento comercial continuam fora deste contrato.
 
-## Exemplo De Query De Busca
+## Instalacao No ERP
 
-Exemplo para:
-- peca: `coxim`
-- modelo: `ecosport`
-- ano: `2008`
+O contrato v2 exige atualizar os dois objetos e o runtime na mesma entrega.
+O runtime novo nao consome os agregados v1. Quando o ERP ainda esta em v1, a
+consulta falha e o fallback v2 pode atender se estiver habilitado.
 
-```sql
-WITH params AS (
-    SELECT
-        'coxim'::text AS part_query,
-        'ford'::text AS vehicle_brand,
-        'ecosport'::text AS vehicle_model,
-        '1.6'::text AS vehicle_engine,
-        2008::int AS vehicle_year
-)
-SELECT
-    v.id_item,
-    v.cd_item,
-    v.candidate_title,
-    (
-        CASE
-            WHEN v.cd_item ILIKE '%' || p.part_query || '%' THEN 0.35
-            WHEN v.search_text ILIKE '%' || p.part_query || '%' THEN 0.25
-            ELSE 0
-        END
-        +
-        CASE
-            WHEN COALESCE(v.vehicle_brand_names, '') ILIKE '%' || p.vehicle_brand || '%' THEN 0.15
-            WHEN COALESCE(v.pesquisa_full_text_txt, '') ILIKE '%' || p.vehicle_brand || '%' THEN 0.10
-            ELSE 0
-        END
-        +
-        CASE
-            WHEN COALESCE(v.vehicle_application_text, v.aplicacoes_veiculos, '') ILIKE '%' || p.vehicle_model || '%' THEN 0.30
-            WHEN COALESCE(v.vehicle_model_names, '') ILIKE '%' || p.vehicle_model || '%' THEN 0.25
-            WHEN COALESCE(v.pesquisa_full_text_txt, '') ILIKE '%' || p.vehicle_model || '%' THEN 0.20
-            ELSE 0
-        END
-        +
-        CASE
-            WHEN p.vehicle_engine IS NULL THEN 0
-            WHEN COALESCE(v.vehicle_model_motor_names, '') ILIKE '%' || p.vehicle_engine || '%' THEN 0.20
-            WHEN COALESCE(v.vehicle_application_text, '') ILIKE '%' || p.vehicle_engine || '%' THEN 0.15
-            WHEN COALESCE(v.pesquisa_full_text_txt, '') ILIKE '%' || p.vehicle_engine || '%' THEN 0.10
-            ELSE 0
-        END
-        +
-        CASE
-            WHEN p.vehicle_year IS NULL THEN 0
-            WHEN (
-                p.vehicle_year >= COALESCE(v.vehicle_year_start, 1900)
-                AND (
-                    v.vehicle_year_open_end
-                    OR p.vehicle_year <= COALESCE(v.vehicle_year_end, 2100)
-                )
-            ) THEN 0.25
-            WHEN COALESCE(v.vehicle_application_text, v.aplicacoes_veiculos, '') ILIKE '%' || p.vehicle_year::text || '%' THEN 0.15
-            ELSE 0
-        END
-    ) AS score
-FROM soccol.item_search_candidates v
-CROSS JOIN params p
-WHERE v.search_text ILIKE '%' || p.part_query || '%'
-  AND (
-      p.vehicle_brand IS NULL
-      OR COALESCE(v.vehicle_brand_names, '') ILIKE '%' || p.vehicle_brand || '%'
-      OR COALESCE(v.pesquisa_full_text_txt, '') ILIKE '%' || p.vehicle_brand || '%'
-  )
-  AND (
-      COALESCE(v.vehicle_application_text, v.aplicacoes_veiculos, '') ILIKE '%' || p.vehicle_model || '%'
-      OR COALESCE(v.vehicle_model_names, '') ILIKE '%' || p.vehicle_model || '%'
-      OR COALESCE(v.pesquisa_full_text_txt, '') ILIKE '%' || p.vehicle_model || '%'
-  )
-  AND (
-      p.vehicle_engine IS NULL
-      OR COALESCE(v.vehicle_model_motor_names, '') ILIKE '%' || p.vehicle_engine || '%'
-      OR COALESCE(v.vehicle_application_text, '') ILIKE '%' || p.vehicle_engine || '%'
-      OR COALESCE(v.pesquisa_full_text_txt, '') ILIKE '%' || p.vehicle_engine || '%'
-  )
-ORDER BY score DESC, v.id_item
-LIMIT 20;
-```
+O usuario informou a aplicacao do SQL v2 no banco quente em 14/09/2026.
+Uma exportacao posterior confirmou acesso as duas views pelo contrato novo.
+Para outra instalacao ERP, obter as definicoes junto a operacao desse banco;
+um clone deste repositorio inicia o fallback, sem instalar objetos no ERP.
+Guardar definicoes e imagem anterior antes de novas migracoes externas.
+Agregados auxiliares v1 nao sao consumidos pelo runtime v2; sua remocao exige
+verificar consumidores externos ao projeto.
 
-## Nome Final Esperado
-
-Este guia assume:
-- schema: `soccol`
-- nome do objeto: `item_search_candidates`
-
-Entao o uso esperado e:
+Atualizacao consistente dos dados, apos a instalacao:
 
 ```sql
-SELECT * FROM soccol.item_search_candidates LIMIT 10;
-```
-
-## Limitacao Importante
-
-Se voce quiser indices com `pg_trgm` depois, uma `VIEW` simples nao e o melhor alvo final.
-
-Para desempenho, a evolucao mais provavel e:
-1. comecar com essa estrutura de integracao
-2. validar a qualidade da busca
-3. se necessario, evoluir para:
-   - `MATERIALIZED VIEW`, ou
-   - tabela dedicada de busca no ERP com refresh periodico
-
-Esse e o lugar certo para indexacao mais pesada e busca trigram.
-
-## Estrutura Criada Pelo Modulo
-
-O SQL de integracao cria:
-1. `soccol.item_vehicle_model_agg_mv`
-2. `soccol.item_vehicle_agg_mv`
-3. `soccol.item_search_candidates_mv`
-4. `soccol.item_search_candidates` como view final fina
-
-Isso reduz agregacoes repetidas sobre `produto_veiculos` e permite indices sobre o dataset final de busca.
-
-Ordem de refresh:
-
-```sql
-REFRESH MATERIALIZED VIEW soccol.item_vehicle_model_agg_mv;
-REFRESH MATERIALIZED VIEW soccol.item_vehicle_agg_mv;
+BEGIN ISOLATION LEVEL REPEATABLE READ;
+REFRESH MATERIALIZED VIEW soccol.item_search_applications_mv;
 REFRESH MATERIALIZED VIEW soccol.item_search_candidates_mv;
+COMMIT;
 ```
 
-## O Que Ainda Falta Definir
+## Snapshot Local Reproduzivel
 
-Esta proposta ja resolve nomes oficiais de marca e modelo por meio de:
-- `veiculo_montadora`
-- `veiculo_modelo`
+O [exportador](../../scripts/erp/export_search_snapshot.py) consulta diretamente
+as duas views instaladas no banco quente, com colunas explicitas, em uma transacao
+`REPEATABLE READ, READ ONLY`, sem instalar DDL no ERP, e exporta em UTF-8
+inclusive quando o servidor de origem usa WIN1252.
 
-O que ainda falta definir e a decisao de negocio sobre o peso de cada nova dimensao no ranking:
-- complemento
-- injecao
-- motor
-- transmissao
+O par de arquivos fica em `db/init/fallback/v2/`, acompanhado de manifesto com
+versao, data, contagens e SHA-256. A carga valida ambos os checksums e a relacao
+entre item e aplicacao. O CSV antigo agregado nao e reutilizado nem convertido
+em relacoes inventadas.
 
-A camada final ja expoe tanto codigos quanto nomes legiveis para essas dimensoes.
+O [bootstrap local](../../db/init/pre_search_init.sql), no bloco `ERP FALLBACK V2`,
+carrega esse contrato em uma instalacao nova. Para volume existente, usar o
+[instalador](../../scripts/erp/install_search_snapshot.py): primeiro validar
+com rollback; depois `--apply` instala em transacao e preserva as tabelas
+anteriores em um schema de backup. A fila de revisao e o catalogo nao sao
+alterados. Comandos em [operacao](operational_commands.md#busca-erp-v2-e-snapshot-local).
+
+## Regressoes E Golden Set
+
+O [golden set ERP](../assets/datasets/erp_search_golden_set.json) contem pedidos
+automotivos, criterios normalizados, fixtures adversariais e IDs esperados.
+O [avaliador](../../scripts/eval/evaluate_erp_search.py) instala fixtures do
+contrato em tabelas temporarias e repete os casos apos COPY de ida e volta com
+a projecao do exportador. Sao 38 casos em dois backends (76 verificacoes).
+Nao modifica o ERP nem os dados permanentes locais.
+
+Para auditar tambem a proveniencia nas tabelas de origem, fornecer
+`--integration-sql .tmp/sql/erp_search_integration_candidates_runtime.sql`.
+Esse modo adiciona 38 verificacoes dos SELECTs marcados `BEGIN/END
+CANDIDATES SELECT` e `BEGIN/END APPLICATIONS SELECT` no arquivo fornecido.
+As fixtures contaminam deliberadamente atributos globais do modelo, para
+detectar heranca indevida. Somente os SELECTs sao usados em tabelas temporarias;
+o DDL fornecido nao e aplicado. O modo padrao valida consumo do contrato e
+serializacao, sem afirmar que auditou a definicao instalada no ERP.
+
+O caso `audit_only_real` exige somente `AUD-REAL`, rejeitando `AUD-GOLF`,
+`AUD-CROSS` e `AUD-CAP`. Outros casos cobrem lacunas de anos, fim aberto,
+proveniencia de atributos, limites de motor, familia, acessorios, codigo,
+preferencia de marca e aplicacao antes do limite.
+
+Esse golden set testa recuperacao SQL. O golden set de pre-search continua
+avaliando extracao e decisao conversacional separadamente.

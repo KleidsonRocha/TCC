@@ -41,7 +41,9 @@ conv:{conversation_id}:state
 - valida contexto com LLM
 - aplica regras e gate no backend
 - monta pergunta, busca ou handoff
-- consulta `soccol.item_search_candidates` quando a busca e liberada
+- consulta `soccol.item_search_candidates` e `soccol.item_search_applications` quando a busca e liberada
+- exige familia exata e marca/modelo/ano/motor/versao na mesma aplicacao antes de ordenar ou limitar os resultados
+- usa somente as aplicacoes compativeis para os atributos de desambiguacao; detalhes no [contrato ERP v2](erp_search_integration.md)
 - devolve o `ConversationState` atualizado ao `docker-comm`
 
 ### Postgres Do Catalogo
