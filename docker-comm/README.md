@@ -55,8 +55,13 @@ docker-comm/
 docker compose up --build
 ```
 
-API exposta em `http://localhost:8000`.
+Por padrao, a API e exposta em `http://localhost:8000`.
 Interface Streamlit exposta em `http://localhost:8501`.
+
+`COMM_BIND_HOST` e `COMM_PORT` controlam somente a porta publicada no host;
+a comunicacao entre containers continua usando `http://docker-comm:8000`.
+Em uma VPS com proxy reverso, use `COMM_BIND_HOST=127.0.0.1` e uma porta local,
+como `COMM_PORT=8002`, no `.env` nao versionado.
 
 ## Endpoints
 
@@ -138,6 +143,8 @@ REVIEW_API_KEY=
 REVIEWED_BY=streamlit-reviewer
 STREAMLIT_PORT=8501
 STREAMLIT_SOURCE=webchat
+COMM_BIND_HOST=0.0.0.0
+COMM_PORT=8000
 ```
 
 Quando `API_KEY` estiver definido no `docker-comm`, a UI usa esse mesmo valor

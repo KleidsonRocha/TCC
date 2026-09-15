@@ -17,7 +17,7 @@ services:
       ENABLE_TEST_ENDPOINT: ${ENABLE_TEST_ENDPOINT:-true}
       API_KEY: ${API_KEY:-}
     ports:
-      - "8000:8000"
+      - "${COMM_BIND_HOST:-0.0.0.0}:${COMM_PORT:-8000}:8000"
     depends_on:
       - redis
     restart: unless-stopped
