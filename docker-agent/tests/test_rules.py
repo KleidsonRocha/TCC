@@ -147,6 +147,13 @@ def test_catalog_bootstrap_alters_each_review_column_with_its_table() -> None:
     ) in bootstrap
 
 
+def test_catalog_bootstrap_extracts_full_engine_years() -> None:
+    bootstrap = Path("db/init/pre_search_init.sql").read_text(encoding="utf-8")
+
+    assert "SUBSTRING(se.ano_inicial FROM '[12][0-9]{3}')::INTEGER" in bootstrap
+    assert "SUBSTRING(se.ano_final FROM '[12][0-9]{3}')::INTEGER" in bootstrap
+
+
 def test_dictionary_extractor_extracts_part_model_and_year() -> None:
     result = DictionaryPreSearchExtractor(catalog=_catalog_fixture()).extract(
         "Quero 2 unidade do filtro de oleo da ford ecosport 2008"

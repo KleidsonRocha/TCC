@@ -728,13 +728,13 @@ BEGIN
             NULLIF(TRIM(se.configuracao_motor), '-') AS engine_configuration,
             NULLIF(TRIM(se.cilindrada), '-') AS engine_displacement,
             CASE
-                WHEN COALESCE(se.ano_inicial, '') ~ '(19|20)[0-9]{2}'
-                    THEN SUBSTRING(se.ano_inicial FROM '(19|20)[0-9]{2}')::INTEGER
+                WHEN COALESCE(se.ano_inicial, '') ~ '[12][0-9]{3}'
+                    THEN SUBSTRING(se.ano_inicial FROM '[12][0-9]{3}')::INTEGER
                 ELSE NULL
             END AS year_from,
             CASE
-                WHEN COALESCE(se.ano_final, '') ~ '(19|20)[0-9]{2}'
-                    THEN SUBSTRING(se.ano_final FROM '(19|20)[0-9]{2}')::INTEGER
+                WHEN COALESCE(se.ano_final, '') ~ '[12][0-9]{3}'
+                    THEN SUBSTRING(se.ano_final FROM '[12][0-9]{3}')::INTEGER
                 ELSE NULL
             END AS year_to
         FROM stg_engine se
