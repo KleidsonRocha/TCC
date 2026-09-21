@@ -10,16 +10,16 @@ class ChannelInfo(BaseModel):
 
 
 class MessagePayload(BaseModel):
-    text: str
+    text: str = Field(max_length=2_000)
 
 
 class ContextMessage(BaseModel):
     role: Literal["user", "assistant"] | str
-    text: str
+    text: str = Field(max_length=2_000)
 
 
 class ConversationContext(BaseModel):
-    last_messages: list[ContextMessage] = Field(default_factory=list)
+    last_messages: list[ContextMessage] = Field(default_factory=list, max_length=20)
     conversation_state: ConversationState | None = None
 
 
@@ -33,9 +33,9 @@ class BusinessInfo(BaseModel):
 
 
 class AgentRequestV1(BaseModel):
-    schema_version: str
-    trace_id: str
-    conversation_id: str
+    schema_version: str = Field(max_length=16)
+    trace_id: str = Field(max_length=128)
+    conversation_id: str = Field(max_length=256)
     message: MessagePayload
     business: BusinessInfo
     channel: ChannelInfo | None = None

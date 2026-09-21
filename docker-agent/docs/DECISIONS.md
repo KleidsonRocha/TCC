@@ -657,3 +657,74 @@ Consequencia:
 
 - beta e avaliacao de ranking devem medir o ERP quente com rotulos humanos;
 - o snapshot permanece verificavel sem mascarar falha da fonte operacional.
+
+## 31. Exposicao Externa Separa Processo, Prontidao E Credenciais
+
+Decisao:
+
+- exigir `REVIEW_API_KEY` e `RESPOND_GATEWAY_API_KEY` antes de iniciar com
+  `APP_ENV=production`;
+- proteger `/review/*` com `X-Review-Key` e proteger somente requisicoes de
+  `/respond` que tragam historico ou `ConversationState` com
+  `X-Agent-Gateway-Key`, encaminhado pelo `docker-comm`;
+- limitar entrada a 2.000 caracteres por mensagem, 20 mensagens de historico,
+  10 itens e 50 candidatos no estado;
+- manter `/health` sem I/O e usar `/ready` para verificar catalogo, ERP e
+  inferencia com timeout curto por dependencia.
+
+Motivo:
+
+- revisao e estado conversacional mudam dados ou influenciam a decisao do
+  atendimento; nao podem ficar expostos por ausencia acidental de segredo;
+- disponibilidade do processo nao prova que catalogo, ERP ou inferencia estao
+  utilizaveis, e uma verificacao completa nao pode atrasar o health check.
+
+Consequencia:
+
+- o deploy de producao precisa definir os dois segredos iguais nos pontos
+  correspondentes de `docker-agent` e `docker-comm`;
+- proxy e orquestrador podem usar `/health` para liveness e `/ready` para
+  readiness, sem aceitar um `200` do processo como garantia de busca pronta.
+
+## 32. Servicos Internos Do TCC Ficam No Loopback Ou Na Rede Docker
+
+Decisao:
+
+- publicar no host somente bindings em `127.0.0.1` para manutencao do agente,
+  catalogo, Ollama, `docker-comm` e Streamlit;
+- retirar a porta publicada do Redis; usar a rede Docker para comunicacao entre
+  os containers;
+- manter Nginx como unica entrada publica do chat e manter ERP como conexao de
+  saida do agente.
+
+Motivo:
+
+- banco, cache, modelo e API interna nao precisam aceitar trafego da internet;
+- a configuracao existente do Nginx ja encaminha o chat para o Streamlit no
+  loopback, portanto nao ha dependencia funcional de portas publicas do TCC.
+
+Consequencia:
+
+- o deploy precisa confirmar `ss -ltnp`, Nginx e ERP depois do restart;
+- o firewall da VPS deve ser revisado sem alterar portas pertencentes a outros
+  projetos, como painel, Portainer e Wings.
+
+## 33. Backup Manual Revisado Precede Automacao
+
+Decisao:
+
+- manter backup e restore manuais, ja revisados, como procedimento operacional
+  atual para catalogo, regras, fila de revisao, dataset e estado conversacional;
+- adiar automacao ate haver evidencia de frequencia, volume ou risco que o
+  procedimento manual nao cubra adequadamente.
+
+Motivo:
+
+- a automacao adicionaria infraestrutura e pontos de falha antes de a beta
+  demonstrar necessidade operacional concreta.
+
+Consequencia:
+
+- cada deploy relevante continua exigindo o backup manual documentado;
+- a automacao deixa de bloquear as proximas entregas e pode retornar ao
+  backlog com criterios operacionais mensuraveis.

@@ -191,3 +191,35 @@ altera a classificacao de prontidao comercial.
   contingencia e reproducao.
 - Checklist de deploy e fluxo sem GPU foram verificados. A proxima validacao
   operacional e a beta pelo canal real, com Redis e avaliacao comercial humana.
+
+## Protecao Administrativa E Prontidao Preparadas Em 21/09/2026
+
+- Em producao, a API falha na inicializacao sem `REVIEW_API_KEY` e
+  `RESPOND_GATEWAY_API_KEY`. A chave de revisao protege `/review/*`; a chave
+  de gateway e exigida quando `/respond` recebe historico ou estado do cliente.
+- O `docker-comm` encaminha a chave de gateway em
+  `X-Agent-Gateway-Key`. Entradas da API limitam texto, historico, itens e
+  candidatos para impedir carga arbitraria do estado conversacional.
+- `/health` continua leve e local ao processo. `/ready` verifica catalogo, ERP
+  habilitado e inferencia, retornando `503` e `degraded` quando uma dependencia
+  configurada nao estiver disponivel. As regressões foram adicionadas e ainda
+  aguardam a rodada de testes da Prioridade 0.
+
+## Endurecimento De Portas Preparado Em 21/09/2026
+
+- A inspeção da VPS encontrou Redis (`6379`), catalogo (`5433`), Ollama
+  (`11434`), agente (`8001`) e Streamlit (`8501`) publicados antes da mudanca.
+  O Nginx ja atende o chat por `127.0.0.1:8501`, e o `docker-comm` usa
+  `127.0.0.1:8002`.
+- O Compose passou a limitar os servicos de manutencao ao loopback e removeu a
+  publicacao do Redis. Falta aplicar na VPS e validar os listeners, o Nginx e
+  a conexao de saida ao ERP. O UFW estava inativo; sua regra deve considerar
+  tambem os outros projetos da maquina.
+
+## Backup Manual Mantido Sob Revisao Em 21/09/2026
+
+- A automacao de backup e restore foi adiada. O procedimento manual revisado
+  continua cobrindo catalogo, regras, fila de revisao, dataset e estado
+  conversacional necessario antes de qualquer deploy ou mudanca estrutural.
+- A automacao volta ao backlog somente se a frequencia de operacao ou a beta
+  mostrarem que o procedimento manual deixou de ser suficiente.

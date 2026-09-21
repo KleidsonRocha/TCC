@@ -12,10 +12,12 @@ class HttpAgentClient(AgentClient):
         agent_url: str,
         timeout_seconds: float,
         retry_count: int,
+        gateway_api_key: str | None = None,
     ) -> None:
         self._agent_url = agent_url
         self._timeout_seconds = timeout_seconds
         self._max_attempts = max(1, retry_count + 1)
+        self._gateway_api_key = gateway_api_key
         self._client = httpx.AsyncClient(timeout=self._timeout_seconds)
 
     async def send(
@@ -25,10 +27,13 @@ class HttpAgentClient(AgentClient):
     ) -> tuple[AgentResponsePayload, int]:
         for attempt in range(self._max_attempts):
             try:
+                headers = {"X-Trace-Id": trace_id}
+                if self._gateway_api_key:
+                    headers["X-Agent-Gateway-Key"] = self._gateway_api_key
                 response = await self._client.post(
                     self._agent_url,
                     json=payload.model_dump(),
-                    headers={"X-Trace-Id": trace_id},
+                    headers=headers,
                 )
             except httpx.TimeoutException as exc:
                 if attempt < self._max_attempts - 1:

@@ -23,6 +23,7 @@ def create_app(settings_override: Settings | None = None) -> FastAPI:
             agent_url=settings.agent_url,
             timeout_seconds=settings.agent_timeout_seconds,
             retry_count=settings.agent_retry_count,
+            gateway_api_key=settings.agent_gateway_api_key,
         )
         use_case = ProcessInboundMessageUseCase(
             session_store=session_store,
@@ -59,4 +60,3 @@ def create_app(settings_override: Settings | None = None) -> FastAPI:
 
 
 app = create_app()
-

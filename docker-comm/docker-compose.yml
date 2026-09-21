@@ -14,10 +14,11 @@ services:
       HISTORY_LIMIT: ${HISTORY_LIMIT:-6}
       AGENT_TIMEOUT_SECONDS: ${AGENT_TIMEOUT_SECONDS:-20}
       AGENT_RETRY_COUNT: ${AGENT_RETRY_COUNT:-1}
+      AGENT_GATEWAY_API_KEY: ${AGENT_GATEWAY_API_KEY:-}
       ENABLE_TEST_ENDPOINT: ${ENABLE_TEST_ENDPOINT:-true}
       API_KEY: ${API_KEY:-}
     ports:
-      - "${COMM_BIND_HOST:-0.0.0.0}:${COMM_PORT:-8000}:8000"
+      - "${COMM_BIND_HOST:-127.0.0.1}:${COMM_PORT:-8000}:8000"
     depends_on:
       - redis
     restart: unless-stopped
@@ -44,7 +45,7 @@ services:
       - --server.headless=true
       - --browser.gatherUsageStats=false
     ports:
-      - "${STREAMLIT_PORT:-8501}:8501"
+      - "${STREAMLIT_BIND_HOST:-127.0.0.1}:${STREAMLIT_PORT:-8501}:8501"
     depends_on:
       - docker-comm
     restart: unless-stopped
@@ -55,8 +56,6 @@ services:
   redis:
     image: redis:7-alpine
     container_name: docker-comm-redis
-    ports:
-      - "6379:6379"
     command: ["redis-server", "--save", "", "--appendonly", "no"]
     restart: unless-stopped
 

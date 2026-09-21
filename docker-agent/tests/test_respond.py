@@ -2,6 +2,7 @@ import asyncio
 import time
 
 import httpx
+import pytest
 from fastapi.testclient import TestClient
 
 from app.config import Settings
@@ -200,6 +201,102 @@ def test_health_returns_ok() -> None:
 
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
+
+
+def test_ready_reports_dependency_state_without_changing_health(monkeypatch: pytest.MonkeyPatch) -> None:
+    async def _degraded(_settings):
+        return {
+            "status": "degraded",
+            "dependencies": {
+                "catalog": {"status": "ready"},
+                "erp": {"status": "unavailable"},
+                "inference": {"status": "ready"},
+            },
+        }
+
+    monkeypatch.setattr("app.api.routes.health.check_readiness_async", _degraded)
+    with TestClient(_make_app()) as client:
+        health = client.get("/health")
+        ready = client.get("/ready")
+
+    assert health.status_code == 200
+    assert health.json() == {"status": "ok"}
+    assert ready.status_code == 503
+    assert ready.json()["status"] == "degraded"
+    assert ready.json()["dependencies"]["erp"]["status"] == "unavailable"
+
+
+def test_production_requires_review_and_gateway_secrets() -> None:
+    app = create_app(
+        settings_override=Settings(
+            APP_ENV="production",
+            CATALOG_DB_ENABLED=False,
+            LLM_WARMUP_ENABLED=False,
+        ),
+        pre_search_validator_override=StubPreSearchValidator(),
+        tools_override=_FakeTools(),
+    )
+
+    with pytest.raises(RuntimeError, match="REVIEW_API_KEY"):
+        with TestClient(app):
+            pass
+
+
+def test_production_requires_gateway_key_for_caller_supplied_context() -> None:
+    app = create_app(
+        settings_override=Settings(
+            APP_ENV="production",
+            CATALOG_DB_ENABLED=False,
+            LLM_WARMUP_ENABLED=False,
+            REVIEW_API_KEY="review-secret",
+            RESPOND_GATEWAY_API_KEY="gateway-secret",
+        ),
+        pre_search_validator_override=StubPreSearchValidator(),
+        tools_override=_FakeTools(),
+    )
+    payload = _payload(
+        "2008",
+        context_messages=[{"role": "user", "text": "coxim ecosport"}],
+    )
+
+    with TestClient(app) as client:
+        denied = client.post("/respond", json=payload)
+        allowed = client.post(
+            "/respond",
+            json=payload,
+            headers={"X-Agent-Gateway-Key": "gateway-secret"},
+        )
+
+    assert denied.status_code == 401
+    assert allowed.status_code == 200
+
+
+def test_respond_rejects_oversized_state_and_history() -> None:
+    app = _make_app()
+    oversized_history = _payload(
+        "oi",
+        context_messages=[{"role": "user", "text": "mensagem"}] * 21,
+    )
+    oversized_state = _payload(
+        "oi",
+        conversation_state={
+            "result_disambiguation": {
+                "question_key": "side",
+                "prompt": "Qual lado?",
+                "candidates": [
+                    {"item_id": f"item-{index}", "title": "Item", "score": 0.5}
+                    for index in range(51)
+                ],
+            },
+        },
+    )
+
+    with TestClient(app) as client:
+        history_response = client.post("/respond", json=oversized_history)
+        state_response = client.post("/respond", json=oversized_state)
+
+    assert history_response.status_code == 422
+    assert state_response.status_code == 422
 
 
 def test_respond_with_bandeja_starts_result_disambiguation() -> None:

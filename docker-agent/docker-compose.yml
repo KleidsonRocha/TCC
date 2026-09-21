@@ -3,7 +3,7 @@ services:
     image: ollama/ollama:latest
     container_name: ollama
     ports:
-      - "11434:11434"
+      - "${OLLAMA_BIND_HOST:-127.0.0.1}:${OLLAMA_PORT:-11434}:11434"
     volumes:
       - ollama_data:/root/.ollama
       - ./.tmp/ollama_models:/ollama_models
@@ -19,7 +19,7 @@ services:
       POSTGRES_USER: ${CATALOG_DB_USER:-presearch}
       POSTGRES_PASSWORD: ${CATALOG_DB_PASSWORD:-presearch}
     ports:
-      - "5433:5432"
+      - "${CATALOG_DB_BIND_HOST:-127.0.0.1}:${CATALOG_DB_PUBLISHED_PORT:-5433}:5432"
     volumes:
       - presearch_db_data:/var/lib/postgresql/data
       - ./db/init:/docker-entrypoint-initdb.d:ro
@@ -65,6 +65,8 @@ services:
       ERP_FALLBACK_DB_ENABLED: ${ERP_FALLBACK_DB_ENABLED:-true}
       PRE_SEARCH_REVIEW_CAPTURE_ENABLED: ${PRE_SEARCH_REVIEW_CAPTURE_ENABLED:-true}
       REVIEW_API_KEY: ${REVIEW_API_KEY:-}
+      RESPOND_GATEWAY_API_KEY: ${RESPOND_GATEWAY_API_KEY:-}
+      READINESS_TIMEOUT_S: ${READINESS_TIMEOUT_S:-2}
       LLM_BASE_URL: ${LLM_BASE_URL:-http://ollama:11434}
       LLM_MODEL: ${LLM_MODEL:-qwen2.5:7b}
       LLM_TIMEOUT_MS: ${LLM_TIMEOUT_MS:-240000}
@@ -79,7 +81,7 @@ services:
       PRE_SEARCH_DETERMINISTIC_BYPASS_ENABLED: ${PRE_SEARCH_DETERMINISTIC_BYPASS_ENABLED:-true}
       PRE_SEARCH_DETERMINISTIC_ASK_ENABLED: ${PRE_SEARCH_DETERMINISTIC_ASK_ENABLED:-true}
     ports:
-      - "8001:8001"
+      - "${AGENT_BIND_HOST:-127.0.0.1}:${AGENT_PORT:-8001}:8001"
     restart: unless-stopped
     networks:
       - tcc-integration

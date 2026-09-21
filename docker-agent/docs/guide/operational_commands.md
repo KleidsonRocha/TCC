@@ -112,6 +112,7 @@ Health check:
 
 ```bash
 curl http://localhost:8001/health
+curl --fail http://localhost:8001/ready
 ```
 
 Exemplo de `POST /respond`:

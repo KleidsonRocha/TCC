@@ -6,17 +6,17 @@ from app.core.domain.pre_search import SearchCriteria
 
 
 class PartItem(BaseModel):
-    item_id: str
-    title: str
+    item_id: str = Field(max_length=128)
+    title: str = Field(max_length=1_000)
     score: float = Field(..., ge=0.0, le=1.0)
-    attributes: dict[str, list[str]] = Field(default_factory=dict)
+    attributes: dict[str, list[str]] = Field(default_factory=dict, max_length=20)
 
 
 class ResultCandidateState(BaseModel):
-    item_id: str
-    title: str
+    item_id: str = Field(max_length=128)
+    title: str = Field(max_length=1_000)
     score: float = Field(..., ge=0.0, le=1.0)
-    attributes: dict[str, list[str]] = Field(default_factory=dict)
+    attributes: dict[str, list[str]] = Field(default_factory=dict, max_length=20)
 
 
 class ResultDisambiguationOption(BaseModel):
@@ -25,12 +25,12 @@ class ResultDisambiguationOption(BaseModel):
 
 
 class ResultDisambiguationState(BaseModel):
-    candidates: list[ResultCandidateState] = Field(default_factory=list)
+    candidates: list[ResultCandidateState] = Field(default_factory=list, max_length=50)
     question_key: str
     prompt: str
-    options: list[ResultDisambiguationOption] = Field(default_factory=list)
+    options: list[ResultDisambiguationOption] = Field(default_factory=list, max_length=10)
     asked_fields: list[str] = Field(default_factory=list)
-    visible_candidate_ids: list[str] = Field(default_factory=list)
+    visible_candidate_ids: list[str] = Field(default_factory=list, max_length=10)
     attempt: int = Field(default=1, ge=1)
     max_attempts: int = Field(default=3, ge=1)
 
@@ -59,11 +59,11 @@ class ConversationState(BaseModel):
     criteria: SearchCriteria = Field(default_factory=SearchCriteria)
     # `criteria` remains the active/legacy item. `items` carries the complete
     # request when the customer mentions more than one part.
-    items: list[SearchCriteria] | None = None
+    items: list[SearchCriteria] | None = Field(default=None, max_length=10)
     # Index of the single item that owns pending_slot.  It prevents a short
     # follow-up such as "esquerda" from changing every item in a request.
     active_item_index: int | None = Field(default=None, ge=0)
-    item_results: list[ItemSearchResult] | None = None
+    item_results: list[ItemSearchResult] | None = Field(default=None, max_length=10)
     pending_slot: str | None = None
     pending_question: str | None = None
     last_decision: str | None = None

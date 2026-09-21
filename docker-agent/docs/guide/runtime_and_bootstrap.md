@@ -19,6 +19,31 @@ Isso cobre:
 - fluxo `/respond`
 - decisao entre `ask`, `search` e `handoff`
 
+## Seguranca E Prontidao
+
+Em `APP_ENV=production`, a API nao inicia sem `REVIEW_API_KEY` e
+`RESPOND_GATEWAY_API_KEY`. A primeira protege `/review/*` pelo header
+`X-Review-Key`; a segunda protege historico e `ConversationState` enviados a
+`/respond` pelo header `X-Agent-Gateway-Key`. O `docker-comm` deve receber o
+mesmo segundo valor em `AGENT_GATEWAY_API_KEY`.
+
+Os limites de entrada sao 2.000 caracteres por mensagem, 20 mensagens de
+historico, 10 itens por estado e 50 candidatos guardados para desambiguacao.
+`GET /health` nao consulta dependencias. `GET /ready` verifica catalogo, ERP
+habilitado e Ollama, com `READINESS_TIMEOUT_S` por dependencia; `503` significa
+`degraded`, sem impedir que `/health` continue respondendo.
+
+## Portas Da VPS
+
+Na VPS, Nginx e o unico ponto publico da stack. O Compose fixa em
+`127.0.0.1` as portas de manutencao do agente (`8001`), catalogo (`5433`),
+Ollama (`11434`), `docker-comm` e Streamlit (`8501`). Redis nao publica porta
+no host: os containers o acessam pela rede Docker. O Nginx do chat continua
+encaminhando para `127.0.0.1:8501`.
+
+A conexao ao ERP quente e de saida, iniciada pelo `docker-agent`; nao exige
+porta `5430` no Nginx nem regra de entrada na VPS.
+
 ## Bootstrap Do Catalogo
 
 A fonte operacional do schema e:

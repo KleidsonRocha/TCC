@@ -62,6 +62,8 @@ class Settings(BaseSettings):
     erp_fallback_db_enabled: bool = Field(True, alias="ERP_FALLBACK_DB_ENABLED")
     pre_search_review_capture_enabled: bool = Field(True, alias="PRE_SEARCH_REVIEW_CAPTURE_ENABLED")
     review_api_key: str | None = Field(None, alias="REVIEW_API_KEY")
+    respond_gateway_api_key: str | None = Field(None, alias="RESPOND_GATEWAY_API_KEY")
+    readiness_timeout_s: float = Field(2.0, alias="READINESS_TIMEOUT_S")
     ft_dataset_slug: str = Field("pre-search-ft-v1", alias="FT_DATASET_SLUG")
     ft_target_model_prefix: str = Field("pre-search-qwen2.5-ft", alias="FT_TARGET_MODEL_PREFIX")
     ft_golden_set_file: str = Field(
@@ -75,6 +77,10 @@ class Settings(BaseSettings):
     ft_ollama_artifact_kind: str = Field("adapter", alias="FT_OLLAMA_ARTIFACT_KIND")
     ft_ollama_artifact_path: str | None = Field(None, alias="FT_OLLAMA_ARTIFACT_PATH")
     ft_ollama_output_dir: str = Field(".tmp/ollama_models", alias="FT_OLLAMA_OUTPUT_DIR")
+
+    @property
+    def is_production(self) -> bool:
+        return self.app_env.strip().casefold() in {"prod", "production"}
 
 
 @lru_cache

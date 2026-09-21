@@ -18,6 +18,24 @@ from app.infra.pre_search_review_admin_pg import review_repository_from_settings
 from app.infra.pre_search_validator_llm import LLMPreSearchValidator
 
 
+def _validate_production_security(settings: Settings) -> None:
+    if not settings.is_production:
+        return
+    missing = [
+        name
+        for name, value in (
+            ("REVIEW_API_KEY", settings.review_api_key),
+            ("RESPOND_GATEWAY_API_KEY", settings.respond_gateway_api_key),
+        )
+        if not value
+    ]
+    if missing:
+        raise RuntimeError(
+            "Configuracao de seguranca obrigatoria em producao ausente: "
+            + ", ".join(missing)
+        )
+
+
 def create_app(
     settings_override: Settings | None = None,
     pre_search_validator_override: PreSearchValidatorPort | None = None,
@@ -27,6 +45,7 @@ def create_app(
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         settings = settings_override or get_settings()
+        _validate_production_security(settings)
         configure_logging(settings.log_level)
         logger = get_logger()
 

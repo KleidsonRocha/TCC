@@ -1,8 +1,8 @@
 import time
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
 
-from app.api.deps import get_process_agent_request_use_case
+from app.api.deps import get_process_agent_request_use_case, require_respond_gateway_key
 from app.api.schemas.contract_v1 import AgentRequestV1, AgentResponseV1, HandoffPayload, ReplyPayload, ToolTracePayload
 from app.core.domain.errors import (
     InvalidMessageError,
@@ -19,8 +19,16 @@ router = APIRouter(tags=["agent"])
 async def respond(
     payload: AgentRequestV1,
     request: Request,
+    x_agent_gateway_key: str | None = Header(default=None, alias="X-Agent-Gateway-Key"),
     use_case: ProcessAgentRequestUseCase = Depends(get_process_agent_request_use_case),
 ) -> AgentResponseV1:
+    if payload.context and (
+        payload.context.conversation_state is not None or payload.context.last_messages
+    ):
+        require_respond_gateway_key(
+            request=request,
+            x_agent_gateway_key=x_agent_gateway_key,
+        )
     logger = request.app.state.logger
     started_at = time.perf_counter()
     response_status = status.HTTP_200_OK

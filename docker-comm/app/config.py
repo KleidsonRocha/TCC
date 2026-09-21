@@ -24,6 +24,7 @@ class Settings(BaseSettings):
 
     agent_timeout_seconds: float = Field(20.0, alias="AGENT_TIMEOUT_SECONDS")
     agent_retry_count: int = Field(1, alias="AGENT_RETRY_COUNT")
+    agent_gateway_api_key: str | None = Field(None, alias="AGENT_GATEWAY_API_KEY")
 
     enable_test_endpoint: bool = Field(True, alias="ENABLE_TEST_ENDPOINT")
     api_key: str | None = Field(None, alias="API_KEY")

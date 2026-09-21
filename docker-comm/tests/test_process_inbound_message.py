@@ -251,3 +251,48 @@ def test_http_agent_client_parses_conversation_state() -> None:
     assert parsed.conversation_state.pending_slot == "result_disambiguation"
     assert parsed.conversation_state.result_disambiguation is not None
     assert parsed.conversation_state.result_disambiguation.candidates[0].item_id == "BAT-1"
+
+
+def test_http_agent_client_sends_gateway_key_when_configured() -> None:
+    class _FakeResponse:
+        status_code = 200
+
+        @staticmethod
+        def json():
+            return {"reply": {"text": "ok"}}
+
+    class _FakeHttpClient:
+        headers: dict[str, str] | None = None
+
+        async def post(self, url, json, headers):
+            _ = url, json
+            self.headers = headers
+            return _FakeResponse()
+
+        async def aclose(self) -> None:
+            return None
+
+    client = HttpAgentClient(
+        agent_url="http://agent.local/respond",
+        timeout_seconds=1.0,
+        retry_count=0,
+        gateway_api_key="gateway-secret",
+    )
+    fake_http = _FakeHttpClient()
+    client._client = fake_http
+    payload = AgentRequestPayload(
+        trace_id="trace-1",
+        conversation_id="conv-1",
+        channel=ChannelInfo(name="generic"),
+        message=IncomingMessage(text="oi"),
+        context=ConversationContext(last_messages=[]),
+        runtime=RuntimeInfo(locale="pt-BR", timezone="America/Sao_Paulo"),
+        business=BusinessInfo(branch_id=1),
+    )
+
+    asyncio.run(client.send(payload=payload, trace_id="trace-1"))
+
+    assert fake_http.headers == {
+        "X-Trace-Id": "trace-1",
+        "X-Agent-Gateway-Key": "gateway-secret",
+    }

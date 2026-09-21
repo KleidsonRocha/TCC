@@ -17,15 +17,12 @@ O backend e o catalogo permanecem a autoridade final. Caminhos deterministicos a
 
 ## Prioridade 0 - Seguranca, Operacao E Beta
 
-- [ ] Exigir protecao administrativa antes da exposicao externa
-  - configurar `REVIEW_API_KEY` ou autenticacao equivalente;
-  - impedir acesso aberto a `/review/*`; limitar texto, historico, itens e candidatos; restringir `/respond` ao gateway autorizado quando receber estado do chamador.
-- [ ] Separar saude do processo e prontidao das dependencias
-  - manter `/health` leve; expor prontidao degradada de catalogo, ERP e inferencia, com timeouts documentados.
-- [ ] Endurecer a exposicao de portas da stack
-  - publicar somente proxy reverso; restringir Redis, PostgreSQL, Ollama e APIs internas; conferir firewall e origem da conexao de saida ao ERP.
-- [ ] Automatizar backup e restore de PostgreSQL e Redis
-  - cobrir catalogo, regras, fila de revisao, dataset e estados conversacionais necessarios para recuperacao.
+- [ ] Aplicar e validar o endurecimento de portas na VPS
+  - Compose ja fixa agente, catalogo, Ollama, `docker-comm` e Streamlit em
+    `127.0.0.1`, e Redis deixou de publicar porta no host;
+  - atualizar a VPS, confirmar que Nginx continua atendendo o chat e que nao
+    ha listeners publicos do TCC; revisar firewall sem alterar portas de outros
+    projetos; confirmar que a conexao de saida ao ERP quente permanece ativa.
 - [ ] Fechar beta na VPS com evidencias do canal real
   - repetir conversas por API e `docker-comm`, com Redis; revisar amostra curada de aplicacoes/produtos; registrar que HTTP verde nao prova encaixe comercial.
 

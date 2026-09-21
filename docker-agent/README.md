@@ -105,8 +105,15 @@ Endpoints administrativos de revisao:
 - `POST /review/conversations/{conversation_id}/discard-pending`: descarta todos os turnos ainda pendentes
 - `POST /review/interactions/{id}/reopen`: reabre uma revisao ainda nao promovida e preserva seu historico
 
-Esses endpoints podem ser protegidos com `REVIEW_API_KEY`. A interface Streamlit
-envia o valor no header `X-Review-Key` e nao acessa o Postgres diretamente.
+Em producao, `REVIEW_API_KEY` e obrigatoria para proteger esses endpoints. A
+interface Streamlit envia o valor no header `X-Review-Key` e nao acessa o
+Postgres diretamente. `RESPOND_GATEWAY_API_KEY` tambem e obrigatoria: o
+`docker-comm` a envia em `X-Agent-Gateway-Key` quando encaminha historico ou
+`ConversationState` para `/respond`.
+
+`GET /health` confirma apenas que o processo HTTP esta vivo. `GET /ready`
+verifica catalogo, ERP habilitado e Ollama com timeout curto; responde `503`
+com estado `degraded` se alguma dependencia configurada estiver indisponivel.
 
 ## Banco E Bootstrap
 

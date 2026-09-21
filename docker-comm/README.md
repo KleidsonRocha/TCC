@@ -48,6 +48,8 @@ docker-comm/
 2. Ajuste principalmente:
    - `AGENT_URL` (obrigatoria)
    - `REDIS_URL` (obrigatoria)
+   - `AGENT_GATEWAY_API_KEY` (obrigatoria quando o `docker-agent` estiver em
+     producao; deve ter o mesmo valor de `RESPOND_GATEWAY_API_KEY`)
 
 ## Subir com Docker
 
