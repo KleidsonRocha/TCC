@@ -3,7 +3,14 @@ import asyncio
 
 from app.api.schemas.contract_v1 import AgentRequestV1
 from app.config import Settings
-from app.core.domain.models import ConversationState, PartItem
+from app.core.domain.errors import SearchPartsServiceUnavailableError
+from app.core.domain.models import (
+    ConversationState,
+    ItemSearchResult,
+    PartItem,
+    ResultCandidateState,
+    ResultDisambiguationState,
+)
 from app.core.domain.pre_search import NextQuestion, PreSearchValidation, SearchCriteria
 from app.core.ports.tools import ToolsPort
 from app.core.usecases.process_agent_request import ProcessAgentRequestUseCase
@@ -269,6 +276,256 @@ def test_process_agent_request_passes_structured_criteria_to_search_tools() -> N
         "vehicle_year": 2008,
         "engine": "1.6",
     }
+
+
+def test_process_agent_request_searches_only_multi_items_that_pass_their_gate() -> None:
+    class _MultiItemValidator:
+        def validate(self, message_text: str, *, last_messages=None, conversation_state=None) -> PreSearchValidation:
+            return PreSearchValidation(
+                decision="search",
+                criteria=SearchCriteria(
+                    part_query="radiador",
+                    vehicle_model="Gol",
+                    vehicle_year=2010,
+                    engine="1.0",
+                ),
+                items=[
+                    SearchCriteria(
+                        part_query="radiador",
+                        vehicle_model="Gol",
+                        vehicle_year=2010,
+                        engine="1.0",
+                    ),
+                    SearchCriteria(
+                        part_query="bandeja",
+                        vehicle_model="Corsa",
+                        vehicle_year=2011,
+                    ),
+                ],
+                missing_fields=[],
+                confidence=0.95,
+            )
+
+        def validate_item_for_search(self, criteria, *, message_text, last_messages=None):
+            if criteria.part_query == "bandeja":
+                return PreSearchValidation(
+                    decision="ask",
+                    criteria=criteria,
+                    missing_fields=["side"],
+                    next_question=NextQuestion(key="side", prompt="Qual o lado da bandeja?"),
+                    confidence=0.99,
+                )
+            return PreSearchValidation(
+                decision="search",
+                criteria=criteria,
+                missing_fields=[],
+                confidence=0.99,
+            )
+
+        def get_last_audit(self) -> dict:
+            return {}
+
+    tools = _SpyTools()
+    use_case = ProcessAgentRequestUseCase(
+        tools=tools,
+        pre_search_validator=_MultiItemValidator(),
+        settings=Settings(APP_ENV="test", PRE_SEARCH_DETERMINISTIC_BYPASS_ENABLED=False),
+        logger=logging.getLogger("test"),
+        review_recorder=_SpyRecorder(),
+    )
+    payload = AgentRequestV1.model_validate(
+        {
+            "schema_version": "1.0",
+            "trace_id": "trace-multi-gate",
+            "conversation_id": "conv-multi-gate",
+            "message": {"text": "radiador Gol 2010 1.0 e bandeja Corsa 2011"},
+            "business": {"branch_id": 1},
+            "context": {"last_messages": []},
+        }
+    )
+
+    result = asyncio.run(use_case.execute(payload))
+
+    assert len(tools.calls) == 1
+    assert tools.calls[0]["criteria"].part_query == "radiador"
+    assert result.item_results is not None
+    assert [item.status for item in result.item_results] == ["not_found", "incomplete"]
+    assert result.item_results[1].item.vehicle_model == "Corsa"
+    assert result.item_results[1].item.engine is None
+
+
+def test_multi_item_follow_up_updates_only_the_active_item_and_reuses_sibling_result() -> None:
+    class _MultiItemFollowUpValidator:
+        def validate(self, message_text: str, *, last_messages=None, conversation_state=None) -> PreSearchValidation:
+            if message_text == "esquerda":
+                return PreSearchValidation(
+                    decision="search",
+                    criteria=SearchCriteria(
+                        part_query="bandejas",
+                        vehicle_model="Corsa",
+                        vehicle_year=2011,
+                        side="left",
+                    ),
+                    missing_fields=[],
+                    confidence=0.99,
+                )
+            return PreSearchValidation(
+                decision="search",
+                criteria=SearchCriteria(
+                    part_query="radiador",
+                    vehicle_model="Gol",
+                    vehicle_year=2010,
+                    engine="1.0",
+                ),
+                items=[
+                    SearchCriteria(part_query="radiador", vehicle_model="Gol", vehicle_year=2010, engine="1.0"),
+                    SearchCriteria(part_query="bandejas", vehicle_model="Corsa", vehicle_year=2011),
+                ],
+                missing_fields=[],
+                confidence=0.95,
+            )
+
+        def validate_item_for_search(self, criteria, *, message_text, last_messages=None):
+            if criteria.part_query == "bandejas" and criteria.side is None:
+                return PreSearchValidation(
+                    decision="ask",
+                    criteria=criteria,
+                    missing_fields=["side"],
+                    next_question=NextQuestion(key="side", prompt="Qual o lado da bandeja?"),
+                    confidence=0.99,
+                )
+            return PreSearchValidation(decision="search", criteria=criteria, confidence=0.99)
+
+        def get_last_audit(self) -> dict:
+            return {}
+
+    tools = _SpyTools()
+    use_case = ProcessAgentRequestUseCase(
+        tools=tools,
+        pre_search_validator=_MultiItemFollowUpValidator(),
+        settings=Settings(APP_ENV="test", PRE_SEARCH_DETERMINISTIC_BYPASS_ENABLED=False),
+        logger=logging.getLogger("test"),
+        review_recorder=_SpyRecorder(),
+    )
+    initial_payload = AgentRequestV1.model_validate(
+        {
+            "schema_version": "1.0",
+            "trace_id": "trace-multi-follow-up-1",
+            "conversation_id": "conv-multi-follow-up",
+            "message": {"text": "radiador Gol 2010 1.0 e bandeja Corsa 2011"},
+            "business": {"branch_id": 1},
+            "context": {"last_messages": []},
+        }
+    )
+    initial = asyncio.run(use_case.execute(initial_payload))
+
+    assert initial.conversation_state is not None
+    assert initial.conversation_state.active_item_index == 1
+    assert initial.conversation_state.pending_slot == "side"
+    assert initial.conversation_state.item_results is not None
+    assert [row.status for row in initial.conversation_state.item_results] == ["not_found", "incomplete"]
+
+    follow_up_payload = AgentRequestV1.model_validate(
+        {
+            "schema_version": "1.0",
+            "trace_id": "trace-multi-follow-up-2",
+            "conversation_id": "conv-multi-follow-up",
+            "message": {"text": "esquerda"},
+            "business": {"branch_id": 1},
+            "context": {
+                "last_messages": [
+                    {"role": "user", "text": initial_payload.message.text},
+                    {"role": "assistant", "text": initial.reply_text},
+                ],
+                "conversation_state": initial.conversation_state.model_dump(exclude_none=True),
+            },
+        }
+    )
+    follow_up = asyncio.run(use_case.execute(follow_up_payload))
+
+    assert len(tools.calls) == 2
+    assert [call["criteria"].part_query for call in tools.calls] == ["radiador", "bandejas"]
+    assert follow_up.conversation_state is not None
+    assert follow_up.conversation_state.active_item_index is None
+    assert follow_up.conversation_state.pending_slot is None
+    assert follow_up.conversation_state.items is not None
+    assert follow_up.conversation_state.items[0].engine == "1.0"
+    assert follow_up.conversation_state.items[1].vehicle_model == "Corsa"
+    assert follow_up.conversation_state.items[1].side == "left"
+
+
+def test_multi_item_correction_replaces_only_the_active_item() -> None:
+    items = [
+        SearchCriteria(part_query="radiador", vehicle_model="Gol", vehicle_year=2010, engine="1.0"),
+        SearchCriteria(part_query="bandejas", vehicle_model="Corsa", vehicle_year=2011),
+    ]
+    state = ConversationState(
+        criteria=items[1],
+        items=items,
+        active_item_index=1,
+        pending_slot="side",
+        last_decision="ask",
+    )
+
+    updated = ProcessAgentRequestUseCase._apply_active_item_follow_up(
+        items=items,
+        criteria=SearchCriteria(part_query="bandejas", vehicle_model="Corsa", vehicle_year=2012),
+        incoming_state=state,
+    )
+
+    assert updated is not None
+    assert updated[0].vehicle_model == "Gol"
+    assert updated[0].vehicle_year == 2010
+    assert updated[0].engine == "1.0"
+    assert updated[1].vehicle_model == "Corsa"
+    assert updated[1].vehicle_year == 2012
+    assert updated[1].side is None
+
+
+def test_multi_item_negation_removes_only_the_active_item_without_new_search() -> None:
+    tools = _SpyTools()
+    use_case = ProcessAgentRequestUseCase(
+        tools=tools,
+        pre_search_validator=_StubValidator(),
+        settings=Settings(APP_ENV="test"),
+        logger=logging.getLogger("test"),
+        review_recorder=_SpyRecorder(),
+    )
+    radiator = SearchCriteria(part_query="radiador", vehicle_model="Gol", vehicle_year=2010, engine="1.0")
+    tray = SearchCriteria(part_query="bandejas", vehicle_model="Corsa", vehicle_year=2011)
+    state = ConversationState(
+        criteria=tray,
+        items=[radiator, tray],
+        item_results=[
+            ItemSearchResult(item=radiator, status="not_found"),
+            ItemSearchResult(item=tray, status="incomplete", missing_fields=["side"]),
+        ],
+        active_item_index=1,
+        pending_slot="side",
+        last_decision="ask",
+    )
+    payload = AgentRequestV1.model_validate(
+        {
+            "schema_version": "1.0",
+            "trace_id": "trace-multi-negation",
+            "conversation_id": "conv-multi-negation",
+            "message": {"text": "nao quero bandeja"},
+            "business": {"branch_id": 1},
+            "context": {"last_messages": [], "conversation_state": state.model_dump(exclude_none=True)},
+        }
+    )
+
+    result = asyncio.run(use_case.execute(payload))
+
+    assert tools.calls == []
+    assert result.conversation_state is not None
+    assert result.conversation_state.active_item_index is None
+    assert result.conversation_state.pending_slot is None
+    assert result.conversation_state.items is not None
+    assert result.conversation_state.items == [radiator]
+    assert result.conversation_state.item_results is not None
+    assert result.conversation_state.item_results[0].item == radiator
+    assert "removi bandejas" in result.reply_text
 
 
 def test_process_agent_request_uses_deterministic_bypass_and_stage_timings() -> None:
@@ -827,6 +1084,65 @@ def test_process_agent_request_falls_back_to_llm_when_deterministic_ask_fails() 
     assert result.tool_trace.pre_search_path == "llm"
 
 
+def test_multi_item_keeps_erp_unavailability_per_item_for_retry() -> None:
+    class _MultiValidator:
+        def validate(self, message_text: str, *, last_messages=None, conversation_state=None):
+            _ = message_text, last_messages, conversation_state
+            radiador = SearchCriteria(
+                part_query="radiador", vehicle_model="Gol", vehicle_year=2010, engine="1.0"
+            )
+            filtro = SearchCriteria(
+                part_query="filtro de oleo", vehicle_model="Gol", vehicle_year=2010
+            )
+            return PreSearchValidation(
+                decision="search",
+                criteria=radiador,
+                items=[radiador, filtro],
+                missing_fields=[],
+                confidence=0.95,
+            )
+
+        def validate_item_for_search(self, criteria, *, message_text, last_messages=None):
+            _ = message_text, last_messages
+            return PreSearchValidation(
+                decision="search", criteria=criteria, missing_fields=[], confidence=0.95
+            )
+
+    class _PartiallyUnavailableTools(_FakeTools):
+        def search_parts(self, query: str, branch_id: int, criteria=None):
+            if criteria and criteria.part_query == "radiador":
+                raise SearchPartsServiceUnavailableError("ERP indisponivel")
+            return [PartItem(item_id="FLT-1", title="Filtro de oleo", score=0.9)]
+
+    recorder = _SpyRecorder()
+    use_case = ProcessAgentRequestUseCase(
+        tools=_PartiallyUnavailableTools(),
+        pre_search_validator=_MultiValidator(),
+        settings=Settings(APP_ENV="test", PRE_SEARCH_REVIEW_CAPTURE_ENABLED=True),
+        logger=logging.getLogger("test"),
+        review_recorder=recorder,
+    )
+    payload = AgentRequestV1.model_validate(
+        {
+            "schema_version": "1.0",
+            "trace_id": "trace-multi-unavailable",
+            "conversation_id": "conv-multi-unavailable",
+            "message": {"text": "radiador e filtro de oleo Gol 2010"},
+            "business": {"branch_id": 1},
+        }
+    )
+
+    result = asyncio.run(use_case.execute(payload))
+
+    assert [row.status for row in result.item_results or []] == ["error", "found"]
+    assert result.conversation_state.item_results is not None
+    assert result.conversation_state.item_results[0].error_message == "ERP indisponivel"
+    assert "falha ao pesquisar" in result.reply_text
+    captured = recorder.calls[0]["final_actions"][-1]
+    assert captured["type"] == "item_search_results"
+    assert [item["status"] for item in captured["items"]] == ["error", "found"]
+
+
 def test_process_agent_request_rejects_invalid_deterministic_ask_contract() -> None:
     class _InvalidAskValidator:
         def __init__(self) -> None:
@@ -882,10 +1198,12 @@ def test_process_agent_request_rejects_invalid_deterministic_ask_contract() -> N
         review_recorder=_SpyRecorder(),
     )
 
-    result, path, used_tools = use_case._validate_pre_search(
-        query="radiador",
-        last_messages=[],
-        incoming_state=None,
+    result, path, used_tools = asyncio.run(
+        use_case._validate_pre_search(
+            query="radiador",
+            last_messages=[],
+            incoming_state=None,
+        )
     )
 
     assert validator.llm_calls == 1
@@ -1196,7 +1514,7 @@ def test_process_agent_request_passes_conversation_state_to_validator() -> None:
     assert result.conversation_state.pending_slot == "position"
 
 
-def test_process_agent_request_multiple_results_starts_disambiguation() -> None:
+def test_process_agent_request_two_results_are_presented_without_disambiguation() -> None:
     class _SearchValidator:
         def validate(self, message_text: str, *, last_messages=None, conversation_state=None) -> PreSearchValidation:
             return PreSearchValidation(
@@ -1243,17 +1561,180 @@ def test_process_agent_request_multiple_results_starts_disambiguation() -> None:
 
     result = asyncio.run(use_case.execute(payload))
 
-    assert [action["type"] for action in result.actions] == ["request_info"]
-    assert result.actions[0]["key"] == "result_disambiguation"
-    assert result.actions[0]["options"] == [
-        "1 - Direito",
-        "2 - Esquerdo",
-        "Nenhuma dessas",
-    ]
+    assert [action["type"] for action in result.actions] == ["show_items"]
+    assert len(result.actions[0]["items"]) == 2
     assert result.conversation_state is not None
-    assert result.conversation_state.pending_slot == "result_disambiguation"
-    assert result.conversation_state.result_disambiguation is not None
-    assert result.conversation_state.result_disambiguation.question_key == "side"
+    assert result.conversation_state.pending_slot is None
+    assert result.conversation_state.result_disambiguation is None
+
+
+def test_result_disambiguation_criteria_correction_discards_old_candidates_and_researches() -> None:
+    class _CorrectionValidator:
+        def __init__(self) -> None:
+            self.received_state: ConversationState | None = None
+
+        def extract_dictionary_seed_criteria(
+            self,
+            *,
+            message_text: str,
+            last_messages=None,
+        ) -> SearchCriteria:
+            _ = message_text, last_messages
+            return SearchCriteria(
+                vehicle_model="Corsa",
+                vehicle_year=2011,
+                engine="1.4",
+            )
+
+        def validate(self, message_text: str, *, last_messages=None, conversation_state=None) -> PreSearchValidation:
+            _ = message_text, last_messages
+            self.received_state = conversation_state
+            return PreSearchValidation(
+                decision="search",
+                criteria=SearchCriteria(
+                    part_query="radiador",
+                    vehicle_model="Corsa",
+                    vehicle_year=2011,
+                    engine="1.4",
+                ),
+                missing_fields=[],
+                next_question=None,
+                confidence=0.95,
+            )
+
+        def get_last_audit(self) -> dict:
+            return {}
+
+    validator = _CorrectionValidator()
+    tools = _SpyTools()
+    use_case = ProcessAgentRequestUseCase(
+        tools=tools,
+        pre_search_validator=validator,
+        settings=Settings(
+            APP_ENV="test",
+            PRE_SEARCH_DETERMINISTIC_BYPASS_ENABLED=False,
+            PRE_SEARCH_DETERMINISTIC_ASK_ENABLED=False,
+        ),
+        logger=logging.getLogger("test"),
+        review_recorder=_SpyRecorder(),
+    )
+    payload = AgentRequestV1.model_validate(
+        {
+            "schema_version": "1.0",
+            "trace_id": "trace-result-correction",
+            "conversation_id": "conv-result-correction",
+            "message": {"text": "corrigindo, o carro e um Corsa 2011 1.4"},
+            "business": {"branch_id": 1},
+            "context": {
+                "last_messages": [
+                    {"role": "user", "text": "radiador Gol 2010 1.0"},
+                    {"role": "assistant", "text": "Qual opcao corresponde?"},
+                ],
+                "conversation_state": {
+                    "criteria": {
+                        "part_query": "radiador",
+                        "vehicle_model": "Gol",
+                        "vehicle_year": 2010,
+                        "engine": "1.0",
+                    },
+                    "pending_slot": "result_disambiguation",
+                    "last_decision": "ask",
+                    "result_disambiguation": ResultDisambiguationState(
+                        candidates=[
+                            ResultCandidateState(
+                                item_id="RAD-GOL-OLD",
+                                title="Radiador Gol 2010 1.0",
+                                score=0.99,
+                            )
+                        ],
+                        question_key="side",
+                        prompt="Qual opcao corresponde?",
+                    ).model_dump(),
+                },
+            },
+        }
+    )
+
+    result = asyncio.run(use_case.execute(payload))
+
+    assert validator.received_state is not None
+    assert validator.received_state.result_disambiguation is None
+    assert validator.received_state.items is None
+    assert tools.calls[0]["criteria"] == SearchCriteria(
+        part_query="radiador",
+        vehicle_model="Corsa",
+        vehicle_year=2011,
+        engine="1.4",
+    )
+    assert result.tool_trace.pre_search_path == "llm"
+    assert all("RAD-GOL-OLD" not in str(action) for action in result.actions)
+    assert result.conversation_state is not None
+    assert result.conversation_state.result_disambiguation is None
+
+
+def test_result_disambiguation_invalidates_every_replaced_search_filter() -> None:
+    class _CriteriaExtractor:
+        def __init__(self, criteria: SearchCriteria) -> None:
+            self.criteria = criteria
+
+        def extract_dictionary_seed_criteria(self, *, message_text: str, last_messages=None) -> SearchCriteria:
+            _ = message_text, last_messages
+            return self.criteria
+
+    previous = SearchCriteria(
+        part_query="radiador",
+        part_code="RAD-100",
+        preferred_product_brand="Marca A",
+        vehicle_brand="Volkswagen",
+        vehicle_model="Gol",
+        vehicle_year=2010,
+        engine="1.0",
+        side="left",
+        position="front",
+        axle="front",
+        variant="G5",
+    )
+    pending = ResultDisambiguationState(
+        candidates=[ResultCandidateState(item_id="OLD", title="Candidato antigo", score=0.9)],
+        question_key="side",
+        prompt="Qual opcao corresponde?",
+    )
+    for field_name, replacement in {
+        "part_code": "RAD-200",
+        "preferred_product_brand": "Marca B",
+        "vehicle_brand": "Chevrolet",
+        "vehicle_model": "Corsa",
+        "vehicle_year": 2011,
+        "engine": "1.4",
+        "side": "right",
+        "position": "rear",
+        "axle": "rear",
+        "variant": "Classic",
+    }.items():
+        updated = previous.model_copy(update={field_name: replacement})
+        use_case = ProcessAgentRequestUseCase(
+            tools=_FakeTools(),
+            pre_search_validator=_CriteriaExtractor(updated),
+            settings=Settings(APP_ENV="test"),
+            logger=logging.getLogger("test"),
+            review_recorder=_SpyRecorder(),
+        )
+        state, invalidated = use_case._invalidate_result_disambiguation_for_criteria_correction(
+            query="corrigindo",
+            incoming_state=ConversationState(
+                criteria=previous,
+                pending_slot="result_disambiguation",
+                last_decision="ask",
+                result_disambiguation=pending,
+            ),
+        )
+
+        assert invalidated is True, field_name
+        assert state is not None
+        assert state.pending_slot == field_name
+        assert state.result_disambiguation is None
+        assert state.items is None
+        assert state.item_results is None
 
 
 def test_no_match_reuses_known_conversation_criteria_in_erp_search() -> None:

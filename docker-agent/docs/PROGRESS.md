@@ -1,6 +1,6 @@
 # Progresso Do Projeto
 
-Estado em 14/09/2026. Historico de problemas, benchmarks e relatorios em
+Estado em 21/09/2026. Historico de problemas, benchmarks e relatorios em
 [HISTORICO.md](HISTORICO.md); pendencias e criterios de aceite em
 [TODO.md](TODO.md). Resultados locais nao encerram a validacao na VPS.
 
@@ -14,6 +14,73 @@ Estado em 14/09/2026. Historico de problemas, benchmarks e relatorios em
 - Revisao humana por conversa/turno, historico de revisoes, promocao e
   exportacao do dataset implementados. Trainer LoRA/QLoRA preparado;
   ainda sem evidencia de run concluida ou de ganho de adapter.
+
+## Negacao, Substituicao E Conflito Antes Da Busca
+
+- O extractor resolve a troca explicita para a parte afirmativa, ignora a
+  direcao negada e nao emite clausulas negativas em `items[]`.
+- Negacao ou correcao sem substituicao comprovada interrompe a busca com a
+  pergunta `intent_resolution`; conflito como `Honda Gol` usa
+  `vehicle_identity`.
+- O bootstrap passou a aplicar `vehicle_model_brand.csv` diretamente em
+  `pre_search_model.brand_id`. Modelos sem mapeamento curado continuam como
+  `SEM_MARCA_MAPEADA`, sem inferencia por texto.
+- A revisao humana promoveu 1.922 relacoes adicionais, deixando
+  `vehicle_model_brand.csv` com 1.971 vinculos. A aplicacao no catalogo local
+  atualizou 1.922 registros; a conferencia resultou em 1.971 modelos
+  vinculados e 1.523 em `SEM_MARCA_MAPEADA`.
+- A auditoria reproduzivel restante em
+  `.tmp/catalog/model_brand_review_after_import.csv` possui 5 P1, 43 P2 e
+  1.475 P3 pela recorrencia no seed de motores. A fila sera usada para
+  promover somente relacoes confirmadas para `vehicle_model_brand.csv`.
+- Golden set, bateria estrutural e testes unitarios receberam os quatro casos
+  automotivos de regressao. Em 16/09, a suite Docker aprovou 369 testes e o
+  golden da LLM aprovou 25/25 casos, incluindo negacao, substituicao e conflito.
+
+## Itens Com Aplicacoes Veiculares Distintas
+
+- A extracao multi-item conserva a identidade completa de cada item e nao
+  propaga marca, modelo, ano ou motor de uma clausula para outra.
+- Aplicacao comum no fim do pedido continua suportada quando declarada
+  explicitamente, por exemplo `radiador e pastilha para Gol 2010 1.0`.
+- Foram adicionados casos unitarios e tres cenarios estruturais para veiculos
+  distintos, ausencia de contexto e aplicacao comum; todos foram executados
+  com sucesso em 16/09.
+
+## Follow-Up De Motor E Listas Comerciais
+
+- O runtime trata motor textual como opcao do catalogo durante uma pergunta
+  pendente: `BE`, `Zetec Rocam`, `Duratec`, `Duratec HE`, `Sigma`, `EA111` e
+  `EA211` sao validados pelo modelo e, quando existir, pelo intervalo de ano.
+- A decomposicao multi-item usa aliases nao sobrepostos do catalogo como
+  fronteiras. Quantidade e atributos permanecem no item correspondente;
+  aplicacao comum so e herdada sem identidade veicular concorrente.
+- As regressões de `real_005`, `real_052`, `real_055`, `real_067` e `real_081`
+  foram executadas com `tests/test_rules.py`: 146 aprovados em 17/09. A suite
+  completa e a bateria longa continuam pendentes para o fechamento da
+  Prioridade 2.
+
+## Contrato Residual E Linguagem Publica
+
+- O payload enviado a LLM residual separa a mensagem atual, seed, estado,
+  mensagens anteriores do usuario e contexto do assistant, com precedencia
+  declarada. O backend permanece responsavel pela decisao final.
+- Perguntas direcionais usam lado esquerdo/direito, posicao dianteiro/traseiro
+  e eixo dianteiro/traseiro. A desambiguacao normaliza genero e equivalentes
+  em ingles sem confundir eixo com posicao.
+- Os testes focados de regras e desambiguacao aprovaram 165 casos em 17/09.
+
+## Correcao De Criterios Durante A Desambiguacao
+
+- Candidatos de desambiguacao agora pertencem aos filtros que os originaram.
+  Se o cliente substituir modelo, ano, motor, lado, posicao, eixo, variante,
+  marca, marca preferida ou codigo, o runtime elimina a lista pendente e volta
+  ao gate de validacao antes de consultar o ERP.
+- A correcao `radiador Gol 2010 1.0` para `Corsa 2011 1.4` conserva somente a
+  familia omitida na frase de correcao; os atributos do Gol nao sao reutilizados
+  como candidatos nem como resultados de busca.
+- Foram incluídas regressao unitária, caso no golden set e cenário estrutural
+  multi-turno. Os dois turnos foram aprovados em 16/09.
 
 ## Identidade E Aplicacao ERP Corrigidas Em 14/09/2026
 
@@ -30,6 +97,14 @@ Evidencias da correcao: 343 testes; 38 casos automotivos de SQL executados
 contra integracao e copia do snapshot (76/76). `audit_only_real` aceita somente
 `AUD-REAL`, rejeitando `AUD-GOLF`, `AUD-CROSS` e `AUD-CAP`. Golden de pre-search
 cobre tampa do radiador e identidade de Golf.
+
+Em 16/09, a consulta online passou a abrir o PostgreSQL do ERP com
+`client_encoding=UTF8`, igual ao exportador do snapshot. Isso corrigiu um JSON
+em WIN1252 que fazia o driver Python acionar o fallback: a bateria real voltou
+a obter quatro radiadores para Gol 2010 1.0 diretamente por `erp_postgres`;
+a correcao para Corsa 2011 1.4 tambem consultou o ERP e retornou um item.
+Na mesma validacao, a suite completa aprovou 369 testes e o golden residual da
+LLM aprovou 25/25 casos. A repeticao na VPS continua necessaria.
 
 Snapshot local: **52.798 itens e 1.776.907 aplicacoes**, exportado do banco
 quente em 14/09/2026. Carga validada com rollback e instalada com backup.
@@ -73,11 +148,46 @@ tinham links locais quebrados. Smoke do gerador produziu JSON/Markdown em
 `.tmp/eval/`. Hashes dos dois arquivos LFS e manifestos conferidos contra o
 indice Git: nenhum dos quatro arquivos preparados pelo usuario foi alterado.
 
+## Desambiguacao De Resultados Concluida Localmente
+
+Desambiguacao revisada em 16 e 17/09: atributos incompletos ou com uma opcao
+comum a todos os candidatos deixam de gerar perguntas. Ate dez resultados sao
+apresentados diretamente; a consulta preserva ate 50 candidatos e pagina o
+excedente em grupos de dez. Valores equivalentes sao agrupados; resposta nao
+compreendida troca o discriminador ou mostra a lista. Negacao de codigo nunca
+seleciona o item negado. Novo filtro explicito fora das opcoes invalida os
+candidatos antes de nova validacao e consulta. Os testes focados cobrem
+serializacao de `ConversationState`, selecao, negacao, pagina seguinte, troca de
+assunto e limite de tentativas no mesmo `ConversationState`.
+
 ## Pendencias Principais
 
-Negacao e conflitos, identidade/gate por item, invalidacao de candidatos,
-indisponibilidade do ERP, concorrencia e acesso administrativo permanecem
-bloqueadores. Tambem faltam motor textual, confirmacao de familia, avaliacao
-comercial mais forte, paridade treino/runtime e validacao na VPS.
+Tambem faltam motor textual, avaliacao comercial do ranking, paridade
+treino/runtime e validacao da versao atual na VPS. O teste visual confirmou a
+nova pergunta de identidade de `coxim`, mas a resposta sugerida `zetec rocam`
+ainda nao foi aceita pelo follow-up e repetiu a pergunta de motorizacao.
 O [TODO](TODO.md) concentra o trabalho restante; reorganizar arquivos nao
 altera a classificacao de prontidao comercial.
+
+## Disponibilidade Do ERP E Concorrencia Da API
+
+- A indisponibilidade da busca deixou de ser tratada como ausencia de produto:
+  pedido de uma unica peca recebe HTTP 503; em pedido multiplo, cada peca
+  conserva o status `error` e pode ser tentada novamente.
+- A resposta, a telemetria e a captura de revisao distinguem `not_found` de
+  erro. A captura armazena os resultados por item como uma acao interna,
+  sem alterar o contrato HTTP de acoes para o cliente.
+- Validacao LLM, busca PostgreSQL e gravacao da fila de revisao sao executadas
+  fora do event loop. Ha limite configuravel de duas inferencias e quatro
+  buscas simultaneas; LLM usa `LLM_TIMEOUT_MS` e a consulta usa
+  `ERP_SEARCH_TIMEOUT_MS`, inclusive como `statement_timeout` no PostgreSQL.
+- O auditor da LLM foi isolado por requisicao. Regressao focada confirmou que
+  uma inferencia lenta nao bloqueia `/health` nem outra conversa deterministica.
+
+## Operacao Verificada Em 21/09/2026
+
+- A VPS acessa o ERP quente pelo backend `erp_postgres`; conectividade,
+  autorizacao e objetos v2 foram conferidos. O snapshot local v2 serve para
+  contingencia e reproducao.
+- Checklist de deploy e fluxo sem GPU foram verificados. A proxima validacao
+  operacional e a beta pelo canal real, com Redis e avaliacao comercial humana.

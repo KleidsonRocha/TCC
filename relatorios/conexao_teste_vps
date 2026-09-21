@@ -1,0 +1,31 @@
+root@clay:~# docker exec -it presearch-db psql "host=186.250.95.113 port=5430 dbname=soccol user=paineldebordo sslmode=disable"
+Password for user paineldebordo: 
+psql (16.13, server 12.9)
+Type "help" for help.
+
+soccol=# 
+soccol=# SELECT current_database();
+ current_database 
+------------------
+ soccol
+(1 row)
+
+soccol=# SELECT current_user;
+ current_user  
+---------------
+ paineldebordo
+(1 row)
+
+soccol=# SELECT inet_server_addr(), inet_server_port();
+ inet_server_addr | inet_server_port 
+------------------+------------------
+ 10.15.1.23       |             5430
+(1 row)
+
+soccol=# SELECT version();
+                                                 version                                                 
+---------------------------------------------------------------------------------------------------------
+ PostgreSQL 12.9 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 4.8.5 20150623 (Red Hat 4.8.5-44), 64-bit
+(1 row)
+
+soccol=# 

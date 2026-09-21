@@ -177,18 +177,18 @@
     }
   },
   {
-    "id": "ask_bico_side",
+    "id": "search_bico_without_side",
     "message.text": "bico injetor gol 2010",
     "context.last_messages": [],
     "expected": {
-      "decision": "ask",
+      "decision": "search",
       "criteria": {
         "part_query": "bico injetor",
         "vehicle_model": "Gol",
         "vehicle_year": 2010
       },
-      "missing_fields_contains": ["side"],
-      "next_question_key": "side"
+      "missing_fields_contains": [],
+      "next_question_key": null
     }
   },
   {
@@ -274,6 +274,196 @@
         "vehicle_model": "Ecosport",
         "vehicle_year": 2008,
         "side": "left"
+      },
+      "missing_fields_contains": [],
+      "next_question_key": null
+    }
+  },
+  {
+    "id": "search_pastilhas_rear_with_negated_front",
+    "message.text": "pastilha traseira do Gol 2010, nao dianteira",
+    "context.last_messages": [],
+    "expected": {
+      "decision": "search",
+      "criteria": {
+        "part_query": "pastilhas de freio",
+        "vehicle_model": "Gol",
+        "vehicle_year": 2010,
+        "position": "rear"
+      },
+      "missing_fields_contains": [],
+      "next_question_key": null
+    }
+  },
+  {
+    "id": "search_filter_after_negated_replacement",
+    "message.text": "nao quero radiador, quero filtro de oleo Gol 2010 1.0",
+    "context.last_messages": [],
+    "expected": {
+      "decision": "search",
+      "criteria": {
+        "part_query": "filtro de oleo",
+        "vehicle_model": "Gol",
+        "vehicle_year": 2010,
+        "engine": "1.0"
+      },
+      "missing_fields_contains": [],
+      "next_question_key": null
+    }
+  },
+  {
+    "id": "ask_unresolved_negative_part",
+    "message.text": "nao quero radiador",
+    "context.last_messages": [],
+    "expected": {
+      "decision": "ask",
+      "criteria": {
+        "part_query": "radiador"
+      },
+      "missing_fields_contains": ["intent_resolution"],
+      "next_question_key": "intent_resolution"
+    }
+  },
+  {
+    "id": "ask_conflicting_honda_gol",
+    "message.text": "pastilha Honda Gol 2010 traseira",
+    "context.last_messages": [],
+    "expected": {
+      "decision": "ask",
+      "criteria": {
+        "part_query": "pastilhas de freio",
+        "vehicle_brand": "Honda",
+        "vehicle_model": "Gol",
+        "vehicle_year": 2010,
+        "position": "rear"
+      },
+      "missing_fields_contains": ["vehicle_identity"],
+      "next_question_key": "vehicle_identity"
+    }
+  },
+  {
+    "id": "search_multi_item_gate_radiador_bandeja",
+    "message.text": "radiador Gol 2010 1.0 e bandeja Corsa 2011",
+    "context.last_messages": [],
+    "expected": {
+      "decision": "search",
+      "criteria": {
+        "part_query": "radiador",
+        "vehicle_model": "Gol",
+        "vehicle_year": 2010,
+        "engine": "1.0"
+      },
+      "items": [
+        {
+          "part_query": "radiador",
+          "vehicle_model": "Gol",
+          "vehicle_year": 2010,
+          "engine": "1.0",
+          "part_code": null
+        },
+        {
+          "part_query": "bandejas",
+          "vehicle_model": "Corsa",
+          "vehicle_year": 2011,
+          "engine": null,
+          "part_code": null
+        }
+      ],
+      "missing_fields_contains": [],
+      "next_question_key": null
+    }
+  },
+  {
+    "id": "search_active_multi_item_follow_up_side",
+    "message.text": "esquerda",
+    "context.last_messages": [
+      {
+        "role": "user",
+        "text": "radiador Gol 2010 1.0 e bandeja Corsa 2011"
+      },
+      {
+        "role": "assistant",
+        "text": "Qual o lado da bandeja?"
+      }
+    ],
+    "context.conversation_state": {
+      "criteria": {
+        "part_query": "bandejas",
+        "vehicle_model": "Corsa",
+        "vehicle_year": 2011
+      },
+      "items": [
+        {
+          "part_query": "radiador",
+          "vehicle_model": "Gol",
+          "vehicle_year": 2010,
+          "engine": "1.0"
+        },
+        {
+          "part_query": "bandejas",
+          "vehicle_model": "Corsa",
+          "vehicle_year": 2011
+        }
+      ],
+      "active_item_index": 1,
+      "pending_slot": "side",
+      "pending_question": "Qual o lado da bandeja?",
+      "last_decision": "ask"
+    },
+    "expected": {
+      "decision": "search",
+      "criteria": {
+        "part_query": "bandejas",
+        "vehicle_model": "Corsa",
+        "vehicle_year": 2011,
+        "side": "left"
+      },
+      "missing_fields_contains": [],
+      "next_question_key": null
+    }
+  },
+  {
+    "id": "search_result_disambiguation_vehicle_correction",
+    "message.text": "corrigindo, o carro e um Corsa 2011 1.4",
+    "context.last_messages": [
+      {
+        "role": "user",
+        "text": "radiador Gol 2010 1.0"
+      },
+      {
+        "role": "assistant",
+        "text": "Encontrei algumas opcoes. Qual delas corresponde?"
+      }
+    ],
+    "context.conversation_state": {
+      "criteria": {
+        "part_query": "radiador",
+        "vehicle_model": "Gol",
+        "vehicle_year": 2010,
+        "engine": "1.0"
+      },
+      "pending_slot": "result_disambiguation",
+      "pending_question": "Qual opcao corresponde?",
+      "last_decision": "ask",
+      "result_disambiguation": {
+        "candidates": [
+          {
+            "item_id": "RAD-GOL-OLD",
+            "title": "Radiador Gol 2010 1.0",
+            "score": 0.99
+          }
+        ],
+        "question_key": "side",
+        "prompt": "Qual opcao corresponde?"
+      }
+    },
+    "expected": {
+      "decision": "search",
+      "criteria": {
+        "part_query": "radiador",
+        "vehicle_model": "Corsa",
+        "vehicle_year": 2011,
+        "engine": "1.4"
       },
       "missing_fields_contains": [],
       "next_question_key": null

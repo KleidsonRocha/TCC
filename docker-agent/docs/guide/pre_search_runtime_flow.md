@@ -1,5 +1,17 @@
 # Fluxo Runtime Do Pre-Search
 
+Pedidos com ate 10 resultados apresentam os produtos diretamente. O ERP
+retorna ate 11 para detectar se o limiar foi excedido. Somente acima de 10
+o fluxo inicia a desambiguacao; ao restarem ate 10, apresenta a lista.
+
+Na desambiguacao, cada atributo deve estar presente em todos os candidatos e
+cada opcao oferecida deve reduzir a lista. Valores equivalentes sao agrupados.
+Uma resposta nao compreendida evita repetir o atributo; sem outra diferenca
+confiavel, o texto apresenta ate quatro codigos/titulos e permite selecao,
+refinamento livre ou atendimento humano. Novos filtros fora das opcoes
+exigem nova validacao/consulta. O estado permanece em ConversationState,
+persistido pelo docker-comm na chave Redis existente.
+
 ## Objetivo
 
 Este documento descreve o fluxo ponta a ponta que transforma texto livre em:
@@ -92,7 +104,8 @@ flowchart TD
     HU --> I
 
     H -->|Nao| I[Extractor deterministico<br/>mensagem atual + mensagens user + estado]
-    I --> J[Match exato de alias]
+    I --> I0[Separa itens e mantem aplicacao local<br/>compartilha veiculo somente quando explicito]
+    I0 --> J[Match exato de alias]
     J --> K[Fuzzy conservador de part_query]
     K --> L{part_query exata ou fuzzy segura?}
     L -->|Sim| M[Usa familia canonica do catalogo]
@@ -108,7 +121,10 @@ flowchart TD
     S --> T[Cria semantic_disambiguation no ConversationState<br/>planejado]
     T --> R1
 
-    M --> U[Merge defensivo com conversation_state]
+    M --> S0{Negacao, correcao ou marca/modelo<br/>foram resolvidos com seguranca?}
+    S0 -->|Nao| S1[Retorna ask: intent_resolution ou vehicle_identity]
+    S1 --> AB
+    S0 -->|Sim| U[Merge defensivo com conversation_state]
     O --> U
     U --> U0{Alias exato ou codigo literal,<br/>criterios completos, regras e score satisfeitos?}
     U0 -->|Sim| U1[Bypass da LLM<br/>decisao search]
@@ -344,6 +360,7 @@ O `docker-agent` monta e devolve esse objeto. O `docker-comm` apenas valida o co
 | Usuario escolhe numero, codigo, titulo ou atributo | resolucao deterministica | seleciona item ou faz a proxima pergunta | nao chama ERP nem LLM |
 | Usuario rejeita as opcoes | negacao de resultado | pagina itens diretos ou oferece nova pesquisa | limpa ou reduz candidatos conforme a pergunta |
 | Usuario muda a familia da peca | mudanca de assunto | reinicia extractor e pre-search | desambiguacao anterior descartada |
+| Usuario corrige filtro que originou os candidatos | correcao de aplicacao | descarta candidatos e revalida antes de pesquisar | modelo, ano, motor, lado, posicao, eixo, variante, marcas e codigo corrigidos; nenhum candidato anterior pode ser selecionado |
 | Usuario pede atendente | handoff explicito | encaminha atendimento | `reason = result_disambiguation_requested` |
 | Tres respostas nao resolvidas | limite de tentativas | encaminha atendimento | `reason = result_disambiguation_limit` |
 
@@ -357,6 +374,17 @@ O `docker-agent` monta e devolve esse objeto. O `docker-comm` apenas valida o co
    `part_query`, `part_code`, `preferred_product_brand`, `vehicle_brand`, `vehicle_model`, `vehicle_year`, `engine`, `side`, `position`, `axle`, `variant` e `quantity`.
 
    `preferred_product_brand` representa uma preferencia comercial da peca, como NGK, Nakata ou Cofap. Ela nunca substitui `vehicle_brand` e nao elimina produtos equivalentes de outras marcas.
+
+   Em pedido com varias pecas, cada clausula conserva seus proprios atributos
+   de veiculo. Duas familias iguais continuam sendo dois itens se qualquer
+   criterio diferir; contexto comum so e copiado quando a aplicacao aparece
+   explicitamente para o conjunto.
+
+   Antes de qualquer bypass, uma substituicao explicita mantem somente a
+   parte afirmativa; uma direcao negada nao sobrescreve a direcao afirmativa.
+   Negacao/correcao sem substituicao e marca/modelo conflitantes retornam uma
+   pergunta governada pelo backend (`intent_resolution` ou
+   `vehicle_identity`) e nao chegam ao ERP.
 
 3. Fuzzy fallback
    Hoje o fuzzy entra apenas para `part_query`.

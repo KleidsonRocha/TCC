@@ -1,5 +1,25 @@
 # Integracao De Pesquisa Com O ERP
 
+## Resultados E Alcance Comercial
+
+O runtime apresenta diretamente ate 10 candidatos. A consulta padrao busca
+11 linhas para detectar excedente; esse limite nao e uma contagem total.
+Acima de 10, refina por atributos confiaveis ou apresenta paginas curtas.
+Ao reduzir a lista pendente a ate 10 candidatos, apresenta-os sem exigir
+uma unica escolha. Candidatos sao opcoes de catalogo, nao ofertas comerciais.
+
+`branch_id` identifica o contexto e a telemetria, mas nao filtra o SQL atual.
+Preco e estoque por filial exigem integracao propria antes de serem informados.
+`confidence` e um indicador heuristico nao calibrado do fluxo; `score` e
+relevancia heuristica da busca. Nenhum deles e probabilidade comprovada de
+encaixe. Confirmacao de aplicacao depende dos dados e da verificacao da peca.
+Calibracao requer avaliacoes humanas rotuladas.
+
+Filtros de identidade e aplicacao precedem o ranking; todos os candidatos
+aprovados satisfazem esses filtros. Empates continuam possiveis. Alterar pesos
+de motor, complemento, injecao e transmissao exige comparacao rotulada;
+desempate estavel nao deve ser confundido com ganho de qualidade medido.
+
 A busca usa o contrato v2 em dois objetos:
 
 - `soccol.item_search_candidates`: uma linha por item, com identidade de familia.
@@ -120,6 +140,11 @@ O [exportador](../../scripts/erp/export_search_snapshot.py) consulta diretamente
 as duas views instaladas no banco quente, com colunas explicitas, em uma transacao
 `REPEATABLE READ, READ ONLY`, sem instalar DDL no ERP, e exporta em UTF-8
 inclusive quando o servidor de origem usa WIN1252.
+
+O runtime da busca tambem abre a conexao ao ERP com `client_encoding=UTF8`.
+Isso faz o libpq converter textos e valores JSON do servidor WIN1252 antes que
+o driver Python os decodifique, mantendo a consulta online no mesmo contrato
+UTF-8 do exportador e do snapshot local.
 
 O par de arquivos fica em `db/init/fallback/v2/`, acompanhado de manifesto com
 versao, data, contagens e SHA-256. A carga valida ambos os checksums e a relacao

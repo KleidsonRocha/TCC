@@ -291,12 +291,15 @@ Decisao:
 - armazenar candidatos, opcoes, atributo perguntado, campos ja usados e contador de tentativas em `ConversationState.result_disambiguation`
 - persistir esse objeto na mesma chave `conv:{conversation_id}:state` usada pelo `docker-comm`, sem novo banco, chave ou store
 - aceitar resposta por numero, valor do atributo, codigo ou titulo exato
-- usar paginas de ate quatro itens quando nenhum atributo confiavel separar os candidatos
-- tratar negacao, mudanca de familia, pedido de handoff e limite de tres tentativas sem consultar a LLM
+- apresentar diretamente ate dez resultados, pois alternativas comercialmente validas
+  nao exigem a escolha artificial de um unico codigo
+- consultar uma janela de ate 50 candidatos e usar paginas de dez itens quando houver
+  excedente e nenhum atributo confiavel separar os resultados
+- tratar negacao, mudanca de familia, correcao de filtro, pedido de handoff e limite de tres tentativas sem consultar a LLM
 
 Motivo:
 
-- devolver dez itens transfere a decisao ao usuario sem conduzir a conversa
+- uma pergunta adicional so ajuda quando a resposta elimina candidatos de forma comprovavel
 - a view do ERP ja possui aplicacao, complemento, motor, injecao e transmissao; esses dados sao evidencia melhor que uma pergunta inventada pela LLM
 - manter os candidatos no estado existente permite resolver a proxima mensagem sem repetir a busca nem criar persistencia paralela
 
@@ -306,12 +309,26 @@ Limites:
 - valores extensos ou que nao separam os itens sao ignorados
 - a selecao nao afirma compatibilidade; a resposta ainda solicita confirmacao do codigo antes de finalizar
 - mudanca de familia limpa a desambiguacao anterior e reinicia o fluxo normal
+- correcao de um filtro usado na busca tambem limpa candidatos e resultados
+  pendentes; somente a familia pode ser recuperada como contexto quando ela
+  foi omitida na frase de correcao
 
 Consequencia:
 
-- buscas com varios itens retornam `request_info`, nao uma lista extensa imediata
+- buscas com ate dez itens retornam a lista diretamente; buscas maiores perguntam
+  somente quando houver discriminador confiavel e, nos demais casos, exibem a
+  primeira pagina com a opcao `ver mais`
 - a resposta seguinte usa `pre_search_path = result_disambiguation` e nao chama LLM nem ERP
 - `result_disambiguation_requested` identifica handoff escolhido pelo usuario e `result_disambiguation_limit` identifica o limite operacional
+
+### Indicadores publicos da busca
+
+- `confidence` representa a confianca heuristica do fluxo na decisao tomada; nao e
+  probabilidade comprovada de encaixe da peca
+- `score` ordena a relevancia dos candidatos retornados; nao confirma aplicacao,
+  disponibilidade ou compatibilidade comercial
+- qualquer calibracao numerica desses indicadores depende de exemplos rotulados por
+  avaliador humano e das metricas top-1, top-3, incompatibilidade, empate e `no_match`
 
 ## 16. Bateria real separa contrato estrutural de aprovacao comercial
 
@@ -427,3 +444,216 @@ Consequencias:
 - DDL do ERP pertence a operacao do banco quente e fica fora do Git; o contrato e a proveniencia exigida permanecem documentados
 - exportacao le as views instaladas em `REPEATABLE READ, READ ONLY`, em UTF-8 e com ordem explicita de colunas, sem depender do arquivo DDL
 - historico de relatorios e backlog legado fica em `HISTORICO.md`; saidas de execucao ficam em `.tmp/eval/`
+
+## 21. Negacao E Conflito De Veiculo Sao Resolvidos Antes Da Busca
+
+Decisao:
+
+- resolver substituicao explicita como `nao quero X, quero Y` para somente Y;
+- excluir direcoes negadas da extracao, preservando a direcao afirmativa;
+- nao criar `items[]` a partir de uma clausula negativa;
+- responder com `intent_resolution` quando a negacao ou correcao nao possui
+  alvo afirmativo seguro;
+- responder com `vehicle_identity` quando a marca conflita com a relacao
+  modelo/montadora comprovada no catalogo; `vehicle_model_brand.csv` alimenta
+  essa relacao durante o bootstrap.
+
+Motivo:
+
+- uma busca pode ser estruturalmente completa e ainda contrariar o pedido do
+  cliente se uma negativa for lida como item ou filtro positivo;
+- marca e modelo contraditorios nao comprovam uma aplicacao veicular.
+
+Consequencia:
+
+- os caminhos `deterministic_bypass`, `deterministic_ask` e LLM passam pelo
+  mesmo gate de seguranca antes de chamar o ERP;
+- a pergunta resultante fica no `ConversationState`, para que a proxima
+  mensagem complete a intencao em vez de manter uma combinacao insegura.
+
+## 22. Contexto Veicular E Identidade De Item Sao Locais A Clausula
+
+Decisao:
+
+- deduplicar itens pela combinacao completa de criterios, e nao somente por
+  familia, lado e posicao;
+- manter marca, modelo, ano e motor encontrados na propria clausula;
+- compartilhar a aplicacao somente quando o veiculo estiver explicitamente
+  associado ao conjunto no fim do pedido, como `radiador e pastilha para Gol`.
+
+Motivo:
+
+- dois pedidos da mesma familia podem ser para veiculos e motores distintos;
+- herdar o veiculo da frase inteira transforma uma ausencia de dado em filtro
+  inventado e pode retornar uma peca incompatível.
+
+Consequencia:
+
+- `ConversationState.items` preserva cada aplicacao para o gate e a pesquisa
+  individual posteriores;
+- a validacao executavel foi adicionada, mas golden set e bateria ficaram
+  pendentes de execucao a pedido do usuario.
+
+## 23. Curadoria Prioriza Novidade Sobre Volume
+
+- revisar conversas por `conversation_id` e comparar candidatas com exemplos
+  ja promovidos;
+- descartar duplicatas, contexto contaminado e selecao sem aplicacao provada;
+- promover somente cobertura nova de familia, estado ou seguranca;
+- manter casos bloqueados como `reviewed` ate a evidencia de catalogo existir.
+
+## 24. Falha De Busca E Ausencia De Produto Sao Estados Distintos
+
+Decisao:
+
+- devolver HTTP 503 quando a unica busca ERP nao puder ser executada;
+- em pedidos com varias pecas, manter o resultado de cada item, incluindo
+  `error`, para que o cliente possa repetir apenas a parte indisponivel;
+- registrar os estados por item na captura de revisao e na telemetria.
+
+Motivo:
+
+- `no_match` afirma que a consulta foi concluida sem resultado; usa-lo para uma
+  falha de infraestrutura induz o atendimento e a curadoria ao diagnostico
+  errado.
+
+## 25. I/O Sincrono Roda Em Workers Limitados
+
+Decisao:
+
+- manter as integracoes existentes sincrona em workers via `asyncio.to_thread`;
+- limitar inferencia e busca por configuracao e aplicar prazo externo ao worker;
+- aplicar tambem `statement_timeout` no PostgreSQL;
+- manter a auditoria da LLM em `ContextVar` por requisicao.
+
+Motivo:
+
+- a migracao completa de todos os clientes para APIs assincronas aumentaria o
+  escopo sem melhorar o contrato. O isolamento atual preserva as integracoes e
+  impede que uma chamada lenta bloqueie o loop da FastAPI.
+
+## 26. Motor Textual E Uma Opcao Governada Pelo Catalogo
+
+Decisao:
+
+- carregar de `pre_search_engine_option` o nome da motorizacao e seus anos de
+  vigencia, alem da lista usada para sugerir respostas;
+- em resposta a uma pergunta pendente de motor, canonizar somente uma opcao
+  textual inteira do modelo ativo, priorizando a forma mais especifica;
+- aceitar a resposta quando algum intervalo conhecido cobre o ano informado;
+  se nao houver intervalo, manter a evidencia para a camada posterior, sem
+  inventar compatibilidade;
+- interpretar tokens como `BE`, `Zetec Rocam`, `Duratec HE`, `Sigma`, `EA111`
+  e `EA211` como motor nesse contexto, e nao como codigo de peca.
+
+Motivo:
+
+- o catalogo ja possui esses nomes e intervalos, mas o runtime carregava apenas
+  a lista visual e extraia somente cilindrada numerica;
+- repetir a mesma pergunta depois de uma resposta catalogada perde evidencia e
+  degrada o atendimento.
+
+Consequencia:
+
+- o follow-up preenche o item pendente e avanca para o proximo atributo
+  obrigatorio; `coxim amortecedor` ainda pergunta a posicao quando ela faltar;
+- uma motorizacao incompatavel com o ano conhecido nao libera busca
+  deterministica.
+
+## 27. Lista Comercial E Delimitada Por Aliases Do Catalogo
+
+Decisao:
+
+- localizar todas as ocorrencias exatas e nao sobrepostas de aliases de familia
+  em uma mensagem antes de depender de virgulas ou da conjuncao `e`;
+- construir cada `SearchCriteria` com o texto entre sua ancora e a proxima,
+  preservando quantidade, lado, posicao e aplicacao locais;
+- compartilhar uma aplicacao apenas quando ela estiver antes da primeira ou
+  depois da ultima peca e o item nao tiver marca ou modelo proprio;
+- manter itens sem veiculo como pendentes parciais, em vez de completar seus
+  campos com outra clausula da lista.
+
+Motivo:
+
+- pedidos reais enumeram produtos por espacos, abreviacoes e quantidades;
+  separar somente por pontuacao colapsava a lista em uma familia;
+- copiar ano ou motor de uma peca para outra transforma ausencia de evidencia
+  em um filtro falso no ERP.
+
+Consequencia:
+
+- os casos `real_005`, `real_052`, `real_055`, `real_067` e `real_081` cobrem
+  listas comerciais, veiculos distintos e sucesso parcial sem frases especiais
+  no runtime;
+- novos sinonimos continuam sendo adicionados ao catalogo, nao a uma lista de
+  excecoes do extractor.
+
+## 28. Prompt Da LLM Residual E Um Contrato De Evidencia
+
+Decisao:
+
+- chamar a LLM somente depois de os caminhos deterministicos nao produzirem
+  busca ou pergunta governada;
+- enviar o payload residual com fontes separadas e ordem explicita: mensagem
+  atual, seed extraido dela, estado do item ativo para campos omitidos,
+  mensagens anteriores do usuario para omissoes e mensagens do assistant como
+  contexto nao factual;
+- instruir a LLM a nao reutilizar historico que conflite com a mensagem atual;
+- manter o backend como autoridade para canonizacao, proveniencia de codigo,
+  campos obrigatorios, score e decisao de busca.
+
+Motivo:
+
+- um historico misturado sem origem torna facil confundir uma pergunta ou uma
+  resposta anterior do assistente com fato informado pelo cliente;
+- a LLM deve conduzir casos residuais, nao substituir o contrato operacional.
+
+Consequencia:
+
+- o payload e auditavel por fonte de evidencia;
+- uma saida da LLM continua sendo candidata e passa pelos mesmos gates do
+  backend antes de chegar ao ERP.
+
+## 29. Direcoes Publicas Usam Vocabulario Unico
+
+Decisao:
+
+- publicar `side` como esquerdo/direito, `position` como dianteiro/traseiro e
+  `axle` como eixo dianteiro/traseiro;
+- gerar perguntas desses tres campos pelo backend, mesmo quando a LLM sugerir
+  outra redacao;
+- normalizar equivalentes de genero e ingles na desambiguacao, preservando
+  `position` e `axle` como atributos diferentes.
+
+Motivo:
+
+- textos como `lateral`, `frente` e `eixo` sem padrao confundem a resposta do
+  cliente e dificultam retomar o estado;
+- eixo nao e sinonimo de posicao: cada um filtra uma caracteristica distinta.
+
+Consequencia:
+
+- regras de familia continuam decidindo quando perguntar eixo;
+- a desambiguacao pode usar eixo quando os candidatos realmente o separam,
+  exibindo uma opcao compreensivel e consistente.
+
+## 30. ERP Quente E A Fonte Operacional; Snapshot E Contingencia
+
+Decisao:
+
+- usar o ERP quente pelo backend `erp_postgres` como fonte operacional da
+  busca e manter o snapshot local v2 para contingencia e reproducao;
+- distinguir indisponibilidade de ausencia de produto e executar I/O de
+  inferencia, PostgreSQL e revisao fora do event loop, com limite, timeout e
+  auditoria por requisicao.
+
+Motivo:
+
+- o snapshot permite recuperar e repetir testes, mas nao prova disponibilidade
+  comercial atual; falha tecnica nao pode virar `no_match`;
+- isolamento evita bloquear saude e misturar auditorias de conversas distintas.
+
+Consequencia:
+
+- beta e avaliacao de ranking devem medir o ERP quente com rotulos humanos;
+- o snapshot permanece verificavel sem mascarar falha da fonte operacional.

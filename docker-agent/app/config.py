@@ -22,6 +22,9 @@ class Settings(BaseSettings):
     llm_base_url: str = Field("http://host.docker.internal:11434", alias="LLM_BASE_URL")
     llm_model: str = Field("qwen2.5:7b", alias="LLM_MODEL")
     llm_timeout_ms: int = Field(240000, alias="LLM_TIMEOUT_MS")
+    llm_max_concurrent_requests: int = Field(
+        2, alias="LLM_MAX_CONCURRENT_REQUESTS"
+    )
     llm_temperature: float = Field(0.0, alias="LLM_TEMPERATURE")
     llm_num_predict: int = Field(220, alias="LLM_NUM_PREDICT")
     llm_keep_alive: str | None = Field("1h", alias="LLM_KEEP_ALIVE")
@@ -52,6 +55,10 @@ class Settings(BaseSettings):
     erp_db_user: str = Field("postgres", alias="ERP_DB_USER")
     erp_db_password: str = Field("", alias="ERP_DB_PASSWORD")
     erp_db_connect_timeout_s: int = Field(2, alias="ERP_DB_CONNECT_TIMEOUT_S")
+    erp_search_timeout_ms: int = Field(10000, alias="ERP_SEARCH_TIMEOUT_MS")
+    erp_search_max_concurrent_requests: int = Field(
+        4, alias="ERP_SEARCH_MAX_CONCURRENT_REQUESTS"
+    )
     erp_fallback_db_enabled: bool = Field(True, alias="ERP_FALLBACK_DB_ENABLED")
     pre_search_review_capture_enabled: bool = Field(True, alias="PRE_SEARCH_REVIEW_CAPTURE_ENABLED")
     review_api_key: str | None = Field(None, alias="REVIEW_API_KEY")

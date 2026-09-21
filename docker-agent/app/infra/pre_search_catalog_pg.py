@@ -50,6 +50,7 @@ class PostgresPreSearchCatalogProvider:
                 part_family_ids = self._load_part_family_ids(cur)
                 brand_aliases = self._load_brand_aliases(cur)
                 model_aliases = self._load_model_aliases(cur)
+                model_brands = self._load_model_brands(cur)
                 invalid_tokens = self._load_invalid_tokens(cur)
                 (
                     generic_parts,
@@ -59,7 +60,8 @@ class PostgresPreSearchCatalogProvider:
                     needs_engine,
                     needs_variant,
                 ) = self._load_part_rules(cur)
-                engine_by_model = self._load_engine_options(cur)
+                needs_title_identity = self._load_title_identity_rules(cur)
+                engine_by_model, engine_options_by_model = self._load_engine_options(cur)
                 criteria_weights, min_score_to_search = self._load_search_scoring(cur)
                 part_code_patterns = self._load_part_code_patterns(cur)
                 known_group_terms = self._load_known_group_terms(cur)
@@ -83,6 +85,7 @@ class PostgresPreSearchCatalogProvider:
                 "needs_axle_count": len(needs_axle),
                 "needs_engine_count": len(needs_engine),
                 "needs_variant_count": len(needs_variant),
+                "needs_title_identity_count": len(needs_title_identity),
                 "engine_models_count": len(engine_by_model),
                 "criteria_weights_count": len(criteria_weights),
                 "min_score_to_search": min_score_to_search,
@@ -95,6 +98,7 @@ class PostgresPreSearchCatalogProvider:
             part_family_ids=part_family_ids,
             brand_aliases=brand_aliases,
             model_aliases=model_aliases,
+            model_brands=model_brands,
             invalid_slot_tokens=invalid_tokens,
             generic_ambiguous_parts=generic_parts,
             needs_side=needs_side,
@@ -102,7 +106,9 @@ class PostgresPreSearchCatalogProvider:
             needs_axle=needs_axle,
             needs_engine=needs_engine,
             needs_variant=needs_variant,
+            needs_title_identity=needs_title_identity,
             engine_by_model=engine_by_model,
+            engine_options_by_model=engine_options_by_model,
             criteria_weights=criteria_weights,
             min_score_to_search=min_score_to_search,
             part_code_patterns=part_code_patterns,
@@ -248,6 +254,31 @@ class PostgresPreSearchCatalogProvider:
         }
 
     @staticmethod
+    def _load_model_brands(cur: "psycopg.Cursor") -> dict[str, tuple[str, ...]]:
+        """Load only proven model/manufacturer relations from the catalog."""
+        cur.execute(
+            """
+            SELECT m.name, b.name_normalized
+            FROM pre_search_model m
+            JOIN pre_search_brand b ON b.id = m.brand_id
+            WHERE m.is_active = TRUE
+              AND b.is_active = TRUE
+              AND b.name_normalized <> 'sem_marca_mapeada'
+            ORDER BY m.name, b.name_normalized
+            """
+        )
+        values: dict[str, list[str]] = defaultdict(list)
+        for model_name, brand_name in cur.fetchall():
+            model = str(model_name or "").strip()
+            brand = str(brand_name or "").strip().lower()
+            if model and brand:
+                values[model].append(brand)
+        return {
+            model: tuple(sorted(set(brands)))
+            for model, brands in sorted(values.items())
+        }
+
+    @staticmethod
     def _load_invalid_tokens(cur: "psycopg.Cursor") -> set[str]:
         cur.execute(
             """
@@ -322,10 +353,33 @@ class PostgresPreSearchCatalogProvider:
         return generic_parts, needs_side, needs_position, needs_axle, needs_engine, needs_variant
 
     @staticmethod
-    def _load_engine_options(cur: "psycopg.Cursor") -> dict[str, list[str]]:
+    def _load_title_identity_rules(cur: "psycopg.Cursor") -> set[str]:
         cur.execute(
             """
-            SELECT m.name_normalized, eo.engine_option
+            SELECT pt.name_normalized
+            FROM pre_search_part_rule pr
+            JOIN pre_search_part_type pt ON pt.id = pr.part_type_id
+            WHERE pt.is_active = TRUE
+              AND pr.needs_title_identity = TRUE
+            ORDER BY pt.name_normalized
+            """
+        )
+        return {
+            str(part_name or "").strip().lower()
+            for (part_name,) in cur.fetchall()
+            if str(part_name or "").strip()
+        }
+
+    @staticmethod
+    def _load_engine_options(
+        cur: "psycopg.Cursor",
+    ) -> tuple[
+        dict[str, list[str]],
+        dict[str, list[tuple[str, int | None, int | None]]],
+    ]:
+        cur.execute(
+            """
+            SELECT m.name_normalized, eo.engine_option, eo.year_from, eo.year_to
             FROM pre_search_engine_option eo
             JOIN pre_search_model m ON m.id = eo.model_id
             WHERE m.is_active = TRUE AND eo.is_active = TRUE
@@ -334,17 +388,28 @@ class PostgresPreSearchCatalogProvider:
         )
         rows = cur.fetchall()
         values: dict[str, list[str]] = defaultdict(list)
-        for model_key, option in rows:
+        details: dict[str, list[tuple[str, int | None, int | None]]] = defaultdict(list)
+        for model_key, option, year_from, year_to in rows:
             key = str(model_key or "").strip().lower()
             engine_option = str(option or "").strip()
             if not key or not engine_option:
                 continue
             values[key].append(engine_option)
+            details[key].append(
+                (
+                    engine_option,
+                    int(year_from) if year_from is not None else None,
+                    int(year_to) if year_to is not None else None,
+                )
+            )
 
-        return {
-            key: list(dict.fromkeys(options))
-            for key, options in values.items()
-        }
+        return (
+            {key: list(dict.fromkeys(options)) for key, options in values.items()},
+            {
+                key: list(dict.fromkeys(options))
+                for key, options in details.items()
+            },
+        )
 
     def _load_part_code_patterns(self, cur: "psycopg.Cursor") -> tuple[str, ...]:
         if not self._table_exists(cur, "pre_search_part_code_pattern"):

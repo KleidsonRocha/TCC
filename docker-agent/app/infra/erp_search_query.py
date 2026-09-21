@@ -22,8 +22,29 @@ def _literal_like(value: str) -> str:
     return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
 
+def _family_head_pattern(part_query: str) -> str | None:
+    tokens = [
+        token for token in part_query.split()
+        if token not in {"de", "do", "da", "dos", "das", "e"}
+    ]
+    if not tokens:
+        return None
+    head = tokens[0]
+    if head in {"coxim", "coxins"}:
+        return r"\mcoxi[mn]\M"
+    if head.endswith("ores") and len(head) > 5:
+        head = head[:-2]
+    elif head.endswith("es") and len(head) > 4:
+        head = head[:-2]
+    elif head.endswith("s") and len(head) > 3:
+        head = head[:-1]
+    return r"\m" + re.escape(head) + r"\M"
+
+
 def build_search_sql(
-    *, criteria: SearchCriteria, limit: int, family_ids: list[tuple[int, int]] | None = None,
+    *, criteria: SearchCriteria, limit: int,
+    family_ids: list[tuple[int, int]] | None = None,
+    require_family_title_identity: bool = False,
 ) -> tuple[str, dict[str, object]]:
     """No title, aggregate year envelope or model-wide attribute proves fitment."""
     normalized = {
@@ -55,15 +76,26 @@ def build_search_sql(
                 params[f"family_subgroup_{index}"] = subgroup
                 identities.append(f"(cd_grupo = %(family_group_{index})s AND cd_subgrupo = %(family_subgroup_{index})s)")
             item_filters.append("(" + " OR ".join(identities or ["FALSE"]) + ")")
-            # A curated specialization of a broad ERP subgroup must also prove
-            # its own identity in the title (e.g. COXIM AMORTECEDOR in DIVERSOS).
-            title_filters = []
-            for index, token in enumerate(normalized["part_query"].split()):
-                if token in {"de", "do", "da", "dos", "das", "e"}:
-                    continue
-                params[f"family_token_{index}"] = r"\m" + re.escape(token) + r"\M"
-                title_filters.append(f"{_identity('candidate_title')} ~ %(family_token_{index})s")
-            item_filters.append("(" + family_name_match + " OR (" + " AND ".join(title_filters or ["FALSE"]) + "))")
+            family_head_pattern = _family_head_pattern(normalized["part_query"])
+            if require_family_title_identity and family_head_pattern:
+                params["family_head_pattern"] = family_head_pattern
+                item_filters.append(
+                    f"{_identity('candidate_title')} ~ %(family_head_pattern)s"
+                )
+            # One curated ERP group/subgroup pair is a complete family
+            # identity.  When a specialized family spans several broad ERP
+            # subgroups, require its canonical words in the title as a second
+            # identity proof (for example, coxim de amortecedor vs. motor).
+            if len(family_ids) > 1:
+                title_filters = []
+                for index, token in enumerate(normalized["part_query"].split()):
+                    if token in {"de", "do", "da", "dos", "das", "e"}:
+                        continue
+                    params[f"family_token_{index}"] = r"\m" + re.escape(token) + r"\M"
+                    title_filters.append(
+                        f"{_identity('candidate_title')} ~ %(family_token_{index})s"
+                    )
+                item_filters.append("(" + " AND ".join(title_filters or ["FALSE"]) + ")")
         # A wrongly classified accessory cannot masquerade as the main part.
         accessory_heads = ("tampa", "tampas", "kit", "kits", "mangueira", "mangueiras", "suporte", "suportes", "reparo", "reparos")
         requested_words = set(normalized["part_query"].split())

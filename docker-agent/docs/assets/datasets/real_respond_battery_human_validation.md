@@ -106,6 +106,12 @@ Marque cada item depois de testar no Streamlit e registre a resposta esperada qu
   - validar: As opcoes apresentadas distinguem produtos de forma compreensivel e a resposta final escolhe o item correto?
   - resultado esperado aprovado: _preencher_
 
+- [ ] **disambiguation_correction_001 — result_disambiguation_correction**
+  - conversa: `radiador Gol 2010 1.0` → `corrigindo, o carro e um Corsa 2011 1.4`
+  - por que revisar: A correcao precisa descartar os candidatos da aplicacao anterior antes de pesquisar de novo.
+  - validar: A segunda busca usa somente Corsa 2011 1.4 e nao permite selecionar um candidato do Gol?
+  - resultado esperado aprovado: _preencher_
+
 - [ ] **policy_001 — semantic_or_policy**
   - conversa: `meu carro esta esquentando, o que pode ser?`
   - por que revisar: Descricao funcional, sintoma ou politica de handoff nao possui uma unica resposta objetiva.

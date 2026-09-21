@@ -159,13 +159,53 @@ def normalize_response(body: Any) -> dict[str, Any]:
     reply = body.get("reply")
     reply_text = reply.get("text", "") if isinstance(reply, dict) else reply or body.get("reply_text", "")
     handoff = body.get("handoff") if isinstance(body.get("handoff"), dict) else {}
+    catalog_candidates = _catalog_candidates_from_actions(actions)
     return {
         "reply_text": str(reply_text), "actions": actions,
         "action_types": [item.get("type") for item in actions if isinstance(item, dict)],
+        "catalog_candidates": catalog_candidates,
         "conversation_state": body.get("conversation_state") if isinstance(body.get("conversation_state"), dict) else {},
         "diagnostics": body.get("tool_trace") if isinstance(body.get("tool_trace"), dict) else {},
+        "item_results": body.get("item_results") if isinstance(body.get("item_results"), list) else [],
         "handoff_required": bool(handoff.get("required", body.get("handoff_required", False))),
     }
+
+
+def _catalog_candidates_from_actions(actions: list[Any]) -> list[dict[str, Any]]:
+    """Preserve the ordered items exposed by `show_items` in either API path.
+
+    The single-item agent flow intentionally uses `show_items` instead of
+    `item_results`. The gateway forwards that action to the Streamlit UI, so an
+    evaluator must read it as the source of candidate codes and scores.
+    """
+    candidates: list[dict[str, Any]] = []
+    for action in actions:
+        if not isinstance(action, dict) or action.get("type") != "show_items":
+            continue
+        items = action.get("items")
+        if not isinstance(items, list):
+            continue
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            item_id = item.get("item_id")
+            if item_id is None:
+                continue
+            candidates.append(
+                {
+                    "position": len(candidates) + 1,
+                    "item_id": str(item_id),
+                    "title": str(item.get("title") or ""),
+                    "score": item.get("score"),
+                }
+            )
+    return candidates
+
+
+def _values_match(actual: Any, expected: Any) -> bool:
+    if isinstance(actual, str) or isinstance(expected, str):
+        return str(actual or "").strip().casefold() == str(expected or "").strip().casefold()
+    return actual == expected
 
 
 def evaluate_expectations(expect: dict[str, Any], status: int, data: dict[str, Any], target: str) -> list[str]:
@@ -198,6 +238,7 @@ def evaluate_expectations(expect: dict[str, Any], status: int, data: dict[str, A
     if target == "agent":
         equal("question_key", state.get("pending_slot"))
         equal("pending_slot", state.get("pending_slot"))
+        equal("active_item_index", state.get("active_item_index"))
         if state.get("pending_slot") in expect.get("question_key_excludes", []):
             failures.append(f"question_key_excludes: {state.get('pending_slot')!r} found")
         equal("part_code", criteria.get("part_code"))
@@ -205,8 +246,54 @@ def evaluate_expectations(expect: dict[str, Any], status: int, data: dict[str, A
         if expect.get("pre_search_path_one_of") and diag.get("pre_search_path") not in expect["pre_search_path_one_of"]:
             failures.append(f"pre_search_path_one_of: got {diag.get('pre_search_path')!r}")
         for key, value in expect.get("criteria_contains", {}).items():
-            if criteria.get(key) != value:
+            if not _values_match(criteria.get(key), value):
                 failures.append(f"criteria_contains.{key}: expected {value!r}, got {criteria.get(key)!r}")
+        expected_items = expect.get("items_contains")
+        if expected_items is not None:
+            actual_items = state.get("items", [])
+            if not isinstance(actual_items, list):
+                actual_items = []
+            if len(actual_items) != len(expected_items):
+                failures.append(
+                    f"items_contains: expected {len(expected_items)} items, got {len(actual_items)}"
+                )
+            else:
+                for index, expected_item in enumerate(expected_items):
+                    actual_item = actual_items[index]
+                    if not isinstance(actual_item, dict):
+                        failures.append(f"items_contains[{index}]: expected object, got {actual_item!r}")
+                        continue
+                    for key, value in expected_item.items():
+                        if not _values_match(actual_item.get(key), value):
+                            failures.append(
+                                f"items_contains[{index}].{key}: expected {value!r}, "
+                                f"got {actual_item.get(key)!r}"
+                            )
+        expected_item_results = expect.get("item_results_contains")
+        if expected_item_results is not None:
+            actual_item_results = data["item_results"]
+            if len(actual_item_results) != len(expected_item_results):
+                failures.append(
+                    "item_results_contains: expected "
+                    f"{len(expected_item_results)} items, got {len(actual_item_results)}"
+                )
+            else:
+                for index, expected_result in enumerate(expected_item_results):
+                    actual_result = actual_item_results[index]
+                    for key, value in expected_result.items():
+                        if key == "item":
+                            actual_item = actual_result.get("item", {})
+                            for item_key, item_value in value.items():
+                                if not _values_match(actual_item.get(item_key), item_value):
+                                    failures.append(
+                                        f"item_results_contains[{index}].item.{item_key}: "
+                                        f"expected {item_value!r}, got {actual_item.get(item_key)!r}"
+                                    )
+                        elif not _values_match(actual_result.get(key), value):
+                            failures.append(
+                                f"item_results_contains[{index}].{key}: expected {value!r}, "
+                                f"got {actual_result.get(key)!r}"
+                            )
         tools = diag.get("used_tools", [])
         for tool in expect.get("used_tools_contains", []):
             if tool not in tools:
@@ -214,6 +301,12 @@ def evaluate_expectations(expect: dict[str, Any], status: int, data: dict[str, A
         for tool in expect.get("used_tools_excludes", []):
             if tool in tools:
                 failures.append(f"used_tools_excludes: {tool!r} found")
+        for tool, expected_count in expect.get("used_tools_count", {}).items():
+            actual_count = tools.count(tool)
+            if actual_count != expected_count:
+                failures.append(
+                    f"used_tools_count.{tool}: expected {expected_count}, got {actual_count}"
+                )
         options = state.get("last_question_options", [])
         if "options_max" in expect and len(options) > int(expect["options_max"]):
             failures.append(f"options_max: expected <= {expect['options_max']}, got {len(options)}")

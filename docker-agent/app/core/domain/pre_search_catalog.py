@@ -14,6 +14,17 @@ class PreSearchCatalog:
     needs_engine: set[str]
     needs_variant: set[str]
     engine_by_model: dict[str, list[str]]
+    # Opcao, inicio e fim de vigencia vindos do mesmo catalogo que alimenta as
+    # opcoes exibidas ao cliente.  A lista simples acima continua sendo usada
+    # na apresentacao; estes dados permitem validar uma resposta textual.
+    engine_options_by_model: dict[str, list[tuple[str, int | None, int | None]]] = field(
+        default_factory=dict
+    )
+    needs_title_identity: set[str] = field(default_factory=set)
+    # The source catalog is authoritative when it knows the manufacturer of a
+    # model.  Older seeds can leave a model under SEM_MARCA_MAPEADA, therefore
+    # this map is optional while the catalog is being enriched.
+    model_brands: dict[str, tuple[str, ...]] = field(default_factory=dict)
     criteria_weights: dict[str, int] = field(default_factory=dict)
     min_score_to_search: int = 0
     min_score_to_search_by_part: dict[str, int] = field(default_factory=dict)

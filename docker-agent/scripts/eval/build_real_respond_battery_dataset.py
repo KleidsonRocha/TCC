@@ -100,7 +100,7 @@ def legacy_scenarios() -> list[dict[str, Any]]:
         if index == 48:
             expect.update({"question_key": "engine", "part_code": None})
         if index == 49:
-            expect.update({"question_key": "engine", "part_code": None})
+            expect.update({"question_key": "position", "part_code": None})
         if index == 50:
             expect.update({"question_key": "side", "part_code": None})
         rows.append(scenario(f"legacy_{index:03d}", category,
@@ -115,7 +115,7 @@ def deterministic_ask_scenarios() -> list[dict[str, Any]]:
         ("engine", "radiador {vehicle}", "radiador"),
         ("engine", "preciso de radiador para {vehicle}", "radiador"),
         ("engine", "coxim amortecedor {vehicle}", "coxim amortecedor"),
-        ("engine", "pastilha de freio {vehicle}", "pastilhas de freio"),
+        ("position", "pastilha de freio {vehicle}", "pastilhas de freio"),
         ("engine", "disco de freio {vehicle} dianteiro", "discos de freio"),
         ("side", "bandeja {vehicle}", "bandejas"),
     ]
@@ -143,7 +143,7 @@ def complete_search_scenarios() -> list[dict[str, Any]]:
         "radiador gol 2010 1.0", "radiador gol 2010 1.6", "radiador ecosport 2008 1.6",
         "rdiador ecosport 2008 1.6", "radiador focus 2010 1.6",
         "coxim amortecedor ecosport 2008 1.6", "coxin amortecedor ecosport 2008 1.6",
-        "coxim amort ecosport 2008 zetec rocam", "coxins amortecedor gol 2010 1.0",
+        "coxim amort ecosport 2008 zetec rocam dianteiro", "coxins amortecedor gol 2010 1.0",
         "coxim do amortecedor focus 2010 1.6",
         "pastilha de freio gol 2010 1.0 dianteira", "pastilhas freio gol 2010 1.0 traseira",
         "pstilhas ecosport 2008 1.6 dianteira", "pastilha focus 2010 1.6 dianteira",
@@ -200,7 +200,7 @@ def disambiguation_scenarios() -> list[dict[str, Any]]:
         "radiador gol 2010 1.0", "radiador ecosport 2008 1.6", "coxim amortecedor ecosport 2008 1.6",
         "bandeja ecosport 2008 esquerda", "radiador focus 2010 1.6",
         "radiador gol 2010 1.6", "coxim amortecedor gol 2010 1.0",
-        "bandeja ecosport 2008 direita", "radiador ecosport 2008 zetec rocam",
+        "bandeja ecosport 2008 direita", "radiador ecosport 2008 1.6 zetec rocam",
         "radiador motor gol 2010 1.0",
     ]
     endings = ["1", "nenhuma dessas", "quero falar com um vendedor", "2", "talvez",
@@ -226,6 +226,30 @@ def disambiguation_scenarios() -> list[dict[str, Any]]:
             turns, review_reason="A selecao depende dos atributos e candidatos atuais do ERP.",
             validation_question="As opcoes apresentadas distinguem produtos de forma compreensivel e a resposta final escolhe o item correto?",
         ))
+    rows.append(scenario(
+        "disambiguation_correction_001",
+        "result_disambiguation_correction",
+        "regression",
+        [
+            turn("disambiguation_correction_001_t1", "radiador Gol 2010 1.0", {
+                "status": 200,
+                "used_tools_contains": ["search_parts"],
+            }),
+            turn("disambiguation_correction_001_t2", "corrigindo, o carro e um Corsa 2011 1.4", {
+                "status": 200,
+                "criteria_contains": {
+                    "part_query": "radiador",
+                    "vehicle_model": "Corsa",
+                    "vehicle_year": 2011,
+                    "engine": "1.4",
+                },
+                "used_tools_contains": ["search_parts"],
+                "used_tools_excludes": ["result_disambiguation"],
+            }),
+        ],
+        review_reason="A correcao precisa descartar os candidatos da aplicacao anterior antes de pesquisar de novo.",
+        validation_question="A segunda busca usa somente Corsa 2011 1.4 e nao permite selecionar um candidato do Gol?",
+    ))
     return rows
 
 
@@ -248,6 +272,167 @@ def policy_scenarios() -> list[dict[str, Any]]:
     return rows
 
 
+def safety_resolution_scenarios() -> list[dict[str, Any]]:
+    """Regression cases that must be resolved before any catalog search."""
+    specs = [
+        (
+            "safety_001",
+            "pastilha traseira do Gol 2010, nao dianteira",
+            {
+                "status": 200,
+                "pre_search_path": "deterministic_bypass",
+                "criteria_contains": {"part_query": "pastilhas de freio", "position": "rear"},
+                "used_tools_contains": ["search_parts"],
+            },
+        ),
+        (
+            "safety_002",
+            "nao quero radiador, quero filtro de oleo Gol 2010 1.0",
+            {
+                "status": 200,
+                "pre_search_path": "deterministic_bypass",
+                "criteria_contains": {"part_query": "filtro de oleo", "engine": "1.0"},
+                "used_tools_contains": ["search_parts"],
+            },
+        ),
+        (
+            "safety_003",
+            "nao quero radiador",
+            {
+                "status": 200,
+                "pre_search_path": "deterministic_ask",
+                "question_key": "intent_resolution",
+                "used_tools_excludes": ["search_parts"],
+            },
+        ),
+        (
+            "safety_004",
+            "pastilha Honda Gol 2010 traseira",
+            {
+                "status": 200,
+                "pre_search_path": "deterministic_ask",
+                "question_key": "vehicle_identity",
+                "used_tools_excludes": ["search_parts"],
+            },
+        ),
+    ]
+    return [
+        scenario(scenario_id, "safety_resolution", "regression", [turn(f"{scenario_id}_t1", message, expect)])
+        for scenario_id, message, expect in specs
+    ]
+
+
+def multi_item_vehicle_context_scenarios() -> list[dict[str, Any]]:
+    specs = [
+        (
+            "multi_vehicle_001",
+            "radiador Gol 2010 1.0 e radiador Corsa 2011 1.4",
+            [
+                {"part_query": "radiador", "vehicle_model": "Gol", "vehicle_year": 2010, "engine": "1.0"},
+                {"part_query": "radiador", "vehicle_model": "Corsa", "vehicle_year": 2011, "engine": "1.4"},
+            ],
+        ),
+        (
+            "multi_vehicle_002",
+            "radiador Gol 2010 1.0 e pastilha de freio traseira",
+            [
+                {"part_query": "radiador", "vehicle_model": "Gol", "vehicle_year": 2010, "engine": "1.0"},
+                {"part_query": "pastilhas de freio", "position": "rear", "vehicle_model": None, "vehicle_year": None, "engine": None},
+            ],
+        ),
+        (
+            "multi_vehicle_003",
+            "radiador e pastilha de freio traseira para Gol 2010 1.0",
+            [
+                {"part_query": "radiador", "vehicle_model": "Gol", "vehicle_year": 2010, "engine": "1.0"},
+                {"part_query": "pastilhas de freio", "position": "rear", "vehicle_model": "Gol", "vehicle_year": 2010, "engine": "1.0"},
+            ],
+        ),
+    ]
+    return [
+        scenario(
+            scenario_id,
+            "multi_item_vehicle_context",
+            "regression",
+            [turn(f"{scenario_id}_t1", message, {
+                "status": 200,
+                "items_contains": expected_items,
+                "used_tools_contains": ["search_parts"],
+            })],
+        )
+        for scenario_id, message, expected_items in specs
+    ]
+
+
+def multi_item_gate_scenarios() -> list[dict[str, Any]]:
+    return [
+        scenario(
+            "multi_gate_001",
+            "multi_item_gate",
+            "regression",
+            [turn(
+                "multi_gate_001_t1",
+                "radiador Gol 2010 1.0 e bandeja Corsa 2011",
+                {
+                    "status": 200,
+                    "items_contains": [
+                        {"part_query": "radiador", "vehicle_model": "Gol", "vehicle_year": 2010, "engine": "1.0"},
+                        {"part_query": "bandejas", "vehicle_model": "Corsa", "vehicle_year": 2011, "engine": None},
+                    ],
+                    "item_results_contains": [
+                        {"item": {"part_query": "radiador", "vehicle_model": "Gol", "engine": "1.0"}},
+                        {"status": "incomplete", "item": {"part_query": "bandejas", "vehicle_model": "Corsa", "engine": None}},
+                    ],
+                    "used_tools_contains": ["search_parts"],
+                },
+            )],
+        )
+    ]
+
+
+def multi_item_follow_up_scenarios() -> list[dict[str, Any]]:
+    return [
+        scenario(
+            "multi_follow_up_001",
+            "multi_item_follow_up",
+            "regression",
+            [
+                turn(
+                    "multi_follow_up_001_t1",
+                    "radiador Gol 2010 1.0 e bandeja Corsa 2011",
+                    {
+                        "status": 200,
+                        "pending_slot": "side",
+                        "active_item_index": 1,
+                        "item_results_contains": [
+                            {"item": {"part_query": "radiador", "vehicle_model": "Gol", "engine": "1.0"}},
+                            {"status": "incomplete", "item": {"part_query": "bandejas", "vehicle_model": "Corsa"}},
+                        ],
+                    },
+                ),
+                turn(
+                    "multi_follow_up_001_t2",
+                    "esquerda",
+                    {
+                        "status": 200,
+                        "pending_slot": None,
+                        "active_item_index": None,
+                        "items_contains": [
+                            {"part_query": "radiador", "vehicle_model": "Gol", "engine": "1.0"},
+                            {"part_query": "bandejas", "vehicle_model": "Corsa", "side": "left"},
+                        ],
+                        "item_results_contains": [
+                            {"item": {"part_query": "radiador", "vehicle_model": "Gol", "engine": "1.0"}},
+                            {"item": {"part_query": "bandejas", "vehicle_model": "Corsa", "side": "left"}},
+                        ],
+                        "used_tools_count": {"search_parts": 1},
+                    },
+                ),
+            ],
+        )
+    ]
+
+
 def validation_scenarios() -> list[dict[str, Any]]:
     specs = [("", "1.0"), (" ", "1.0"), ("\t", "1.0"), ("Oi", "0.9"), ("radiador", "99.0")]
     return [scenario(f"invalid_{index:03d}", "contract_validation", "regression",
@@ -258,7 +443,11 @@ def validation_scenarios() -> list[dict[str, Any]]:
 def build_document() -> dict[str, Any]:
     scenarios = (legacy_scenarios() + deterministic_ask_scenarios() +
                  complete_search_scenarios() + provenance_scenarios() +
-                 disambiguation_scenarios() + policy_scenarios() + validation_scenarios())
+                 disambiguation_scenarios() + policy_scenarios() +
+                 safety_resolution_scenarios() + multi_item_vehicle_context_scenarios() +
+                 multi_item_gate_scenarios() +
+                 multi_item_follow_up_scenarios() +
+                 validation_scenarios())
     return {
         "schema_version": "2.0", "name": "real_respond_battery_v2",
         "description": "Bateria multi-turno estrutural para docker-agent e docker-comm.",

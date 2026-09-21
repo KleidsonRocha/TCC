@@ -838,15 +838,15 @@ def main() -> None:
     _render_sidebar()
 
     st.title("Atendimento Autopecas")
-    chat_tab, usage_tab, review_tab = st.tabs(["Conversa", "Uso", "Revisão de IA"])
-
-    with chat_tab:
+    section = st.radio(
+        "Seção", ["Conversa", "Uso", "Revisão de IA"],
+        horizontal=True, key="active_section", label_visibility="collapsed",
+    )
+    if section == "Conversa":
         _render_chat()
-
-    with usage_tab:
+    elif section == "Uso":
         _render_usage()
-
-    with review_tab:
+    else:
         _render_review()
 
 

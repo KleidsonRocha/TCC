@@ -1,11 +1,17 @@
+import asyncio
+import time
+
+import httpx
 from fastapi.testclient import TestClient
 
 from app.config import Settings
+from app.core.domain.errors import SearchPartsServiceUnavailableError
 from app.core.domain.models import ConversationState
 from app.core.domain.models import PartItem
 from app.core.domain.pre_search_catalog import PreSearchCatalog
 from app.core.domain.pre_search import NextQuestion, PreSearchValidation, SearchCriteria
 from app.core.ports.tools import ToolsPort
+from app.core.usecases.process_agent_request import ProcessAgentRequestUseCase
 from app.infra.pre_search_validator_llm import LLMPreSearchValidator
 from app.infra.logger import configure_logging, get_logger
 from app.main import create_app
@@ -126,7 +132,8 @@ class _FakeTools(ToolsPort):
                     score=0.89,
                     attributes={"side": ["Direito"]},
                 ),
-            ]
+            ] + [PartItem(item_id=f"BDJ-{i:03}", title="Bandeja direita", score=.8,
+                          attributes={"side": ["Direito"]}) for i in range(3, 12)]
         if "filtro de oleo" in normalized:
             return [PartItem(item_id="FLT-010", title="Filtro de oleo motor 1.6", score=0.96)]
         if "coxim" in normalized:
@@ -207,7 +214,7 @@ def test_respond_with_bandeja_starts_result_disambiguation() -> None:
         {
             "type": "request_info",
             "key": "result_disambiguation",
-            "prompt": "Encontrei varias opcoes. Qual lado corresponde ao que voce procura?",
+            "prompt": "Os resultados diferem em lado: Direito; Esquerdo. Qual opcao corresponde ao que voce procura?",
             "options": ["1 - Direito", "2 - Esquerdo", "Nenhuma dessas"],
         }
     ]
@@ -499,6 +506,8 @@ def test_respond_uses_deterministic_ask_without_calling_llm() -> None:
                 "quantity": None,
             },
             "items": None,
+            "active_item_index": None,
+            "item_results": None,
             "pending_slot": "side",
             "pending_question": "Qual lado da peca?",
             "last_decision": "ask",
@@ -628,6 +637,100 @@ def test_respond_returns_503_when_llm_pre_search_is_unavailable() -> None:
     assert "indisponivel" in response.json()["detail"].lower()
 
 
+def test_respond_returns_503_when_single_erp_search_is_unavailable() -> None:
+    class _UnavailableTools(_FakeTools):
+        def search_parts(
+            self,
+            query: str,
+            branch_id: int,
+            criteria: SearchCriteria | None = None,
+        ) -> list[PartItem]:
+            raise SearchPartsServiceUnavailableError("ERP temporariamente indisponivel")
+
+    app = create_app(
+        settings_override=Settings(
+            APP_ENV="test",
+            PRE_SEARCH_REVIEW_CAPTURE_ENABLED=False,
+        ),
+        pre_search_validator_override=StubPreSearchValidator(),
+        tools_override=_UnavailableTools(),
+    )
+    with TestClient(app) as client:
+        response = client.post(
+            "/respond",
+            json=_payload("Quero filtro de oleo para EcoSport 2008"),
+        )
+
+    assert response.status_code == 503
+    assert "indisponivel" in response.json()["detail"].lower()
+
+
+def test_slow_inference_does_not_block_health_or_deterministic_conversation() -> None:
+    class _SlowValidator(StubPreSearchValidator):
+        def try_validate_deterministically(
+            self,
+            message_text: str,
+            *,
+            last_messages=None,
+            conversation_state=None,
+        ) -> PreSearchValidation | None:
+            _ = last_messages, conversation_state
+            if message_text == "pedido deterministico":
+                return self._search(
+                    part_query="filtro de oleo",
+                    vehicle_model="EcoSport",
+                    vehicle_year=2008,
+                )
+            return None
+
+        def validate(self, message_text: str, *, last_messages=None, conversation_state=None):
+            if message_text == "pedido lento":
+                time.sleep(0.25)
+            return super().validate(
+                message_text,
+                last_messages=last_messages,
+                conversation_state=conversation_state,
+            )
+
+    app = create_app(
+        settings_override=Settings(
+            APP_ENV="test",
+            PRE_SEARCH_REVIEW_CAPTURE_ENABLED=False,
+            LLM_WARMUP_ENABLED=False,
+            LLM_TIMEOUT_MS=1000,
+            LLM_MAX_CONCURRENT_REQUESTS=2,
+        ),
+        pre_search_validator_override=_SlowValidator(),
+        tools_override=_FakeTools(),
+    )
+
+    async def exercise() -> tuple[float, float, int, int]:
+        async with app.router.lifespan_context(app):
+            async with httpx.AsyncClient(
+                transport=httpx.ASGITransport(app=app),
+                base_url="http://testserver",
+            ) as client:
+                slow = asyncio.create_task(client.post("/respond", json=_payload("pedido lento")))
+                await asyncio.sleep(0.03)
+                health_started = time.perf_counter()
+                health = await client.get("/health")
+                health_elapsed = time.perf_counter() - health_started
+                deterministic_started = time.perf_counter()
+                deterministic = await client.post(
+                    "/respond", json=_payload("pedido deterministico")
+                )
+                deterministic_elapsed = time.perf_counter() - deterministic_started
+                slow_response = await slow
+        return health_elapsed, deterministic_elapsed, health.status_code, slow_response.status_code
+
+    health_elapsed, deterministic_elapsed, health_status, slow_status = asyncio.run(exercise())
+
+    assert health_status == 200
+    assert slow_status == 200
+    assert health_elapsed < 0.1
+    assert deterministic_elapsed < 0.15
+
+
 def test_app_startup_runs_validator_warmup_when_enabled() -> None:
     class _WarmupValidator(StubPreSearchValidator):
         def __init__(self) -> None:
@@ -684,3 +787,54 @@ def test_app_startup_skips_validator_warmup_when_disabled() -> None:
         pass
 
     assert validator.warmup_calls == 0
+
+
+def test_catalog_result_count_boundary_and_utf8():
+    class Tools:
+        def __init__(self, count):
+            self.count = count
+        def search_parts(self, **kwargs):
+            return [PartItem(item_id=f"RAD-{i}", title="Radiador de alum?nio", score=.8)
+                    for i in range(self.count)]
+    for count in (2, 5, 10, 11):
+        app = create_app(
+            settings_override=Settings(PRE_SEARCH_REVIEW_CAPTURE_ENABLED=False, LLM_WARMUP_ENABLED=False),
+            pre_search_validator_override=StubPreSearchValidator(), tools_override=Tools(count),
+        )
+        with TestClient(app) as client:
+            response = client.post('/respond', json=_payload('filtro de oleo ecosport 2008'))
+        assert response.status_code == 200
+        body = response.json()
+        if count <= 10:
+            assert body['actions'][0]['type'] == 'show_items'
+            assert len(body['actions'][0]['items']) == count
+            assert 'alum?nio' in body['actions'][0]['items'][0]['title']
+            assert body['conversation_state']['pending_slot'] is None
+        else:
+            assert body['conversation_state']['pending_slot'] == 'result_disambiguation'
+            assert body['actions'][0]['type'] == 'show_items'
+            assert len(body['actions'][0]['items']) == 10
+            assert body['actions'][1]['type'] == 'request_info'
+
+
+def test_catalog_reply_reports_when_preferred_brand_is_absent():
+    items = [PartItem(item_id="RAD-1", title="Radiador Cofap", score=.8)]
+
+    text, action = ProcessAgentRequestUseCase._present_catalog_items(
+        items, preferred_product_brand="Valeo",
+    )
+
+    assert 'marca preferida "Valeo"' in text
+    assert action['type'] == 'show_items'
+
+
+def test_refinement_to_ten_products_stops_asking():
+    app = _make_app()
+    with TestClient(app) as client:
+        first = client.post('/respond', json=_payload('bandeja ecosport 2008')).json()
+        second = client.post('/respond', json=_payload(
+            'direito', conversation_state=first['conversation_state'],
+        )).json()
+    assert second['actions'][0]['type'] == 'show_items'
+    assert len(second['actions'][0]['items']) == 10
+    assert second['conversation_state']['pending_slot'] is None

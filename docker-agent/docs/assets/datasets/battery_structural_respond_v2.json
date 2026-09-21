@@ -776,7 +776,7 @@
           "schema_version": "1.0",
           "expect": {
             "status": 200,
-            "question_key": "engine",
+            "question_key": "position",
             "part_code": null
           }
         }
@@ -1252,8 +1252,8 @@
           "expect": {
             "status": 200,
             "action_type": "request_info",
-            "question_key": "engine",
-            "pending_slot": "engine",
+            "question_key": "position",
+            "pending_slot": "position",
             "pre_search_path": "deterministic_ask",
             "used_tools_contains": [
               "pre_search_deterministic_ask"
@@ -1281,8 +1281,8 @@
           "expect": {
             "status": 200,
             "action_type": "request_info",
-            "question_key": "engine",
-            "pending_slot": "engine",
+            "question_key": "position",
+            "pending_slot": "position",
             "pre_search_path": "deterministic_ask",
             "used_tools_contains": [
               "pre_search_deterministic_ask"
@@ -1310,8 +1310,8 @@
           "expect": {
             "status": 200,
             "action_type": "request_info",
-            "question_key": "engine",
-            "pending_slot": "engine",
+            "question_key": "position",
+            "pending_slot": "position",
             "pre_search_path": "deterministic_ask",
             "used_tools_contains": [
               "pre_search_deterministic_ask"
@@ -1339,8 +1339,8 @@
           "expect": {
             "status": 200,
             "action_type": "request_info",
-            "question_key": "engine",
-            "pending_slot": "engine",
+            "question_key": "position",
+            "pending_slot": "position",
             "pre_search_path": "deterministic_ask",
             "used_tools_contains": [
               "pre_search_deterministic_ask"
@@ -1368,8 +1368,8 @@
           "expect": {
             "status": 200,
             "action_type": "request_info",
-            "question_key": "engine",
-            "pending_slot": "engine",
+            "question_key": "position",
+            "pending_slot": "position",
             "pre_search_path": "deterministic_ask",
             "used_tools_contains": [
               "pre_search_deterministic_ask"
@@ -1838,7 +1838,7 @@
       "turns": [
         {
           "id": "search_008_t1",
-          "message": "coxim amort ecosport 2008 zetec rocam",
+          "message": "coxim amort ecosport 2008 zetec rocam dianteiro",
           "schema_version": "1.0",
           "expect": {
             "status": 200,
@@ -2946,7 +2946,7 @@
       "turns": [
         {
           "id": "disambiguation_009_t1",
-          "message": "radiador ecosport 2008 zetec rocam",
+          "message": "radiador ecosport 2008 1.6 zetec rocam",
           "schema_version": "1.0",
           "expect": {
             "status": 200,
@@ -3032,6 +3032,47 @@
       "review_required": true,
       "review_reason": "A selecao depende dos atributos e candidatos atuais do ERP.",
       "validation_question": "As opcoes apresentadas distinguem produtos de forma compreensivel e a resposta final escolhe o item correto?"
+    },
+    {
+      "id": "disambiguation_correction_001",
+      "category": "result_disambiguation_correction",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "disambiguation_correction_001_t1",
+          "message": "radiador Gol 2010 1.0",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "used_tools_contains": [
+              "search_parts"
+            ]
+          }
+        },
+        {
+          "id": "disambiguation_correction_001_t2",
+          "message": "corrigindo, o carro e um Corsa 2011 1.4",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "criteria_contains": {
+              "part_query": "radiador",
+              "vehicle_model": "Corsa",
+              "vehicle_year": 2011,
+              "engine": "1.4"
+            },
+            "used_tools_contains": [
+              "search_parts"
+            ],
+            "used_tools_excludes": [
+              "result_disambiguation"
+            ]
+          }
+        }
+      ],
+      "review_required": true,
+      "review_reason": "A correcao precisa descartar os candidatos da aplicacao anterior antes de pesquisar de novo.",
+      "validation_question": "A segunda busca usa somente Corsa 2011 1.4 e nao permite selecionar um candidato do Gol?"
     },
     {
       "id": "policy_001",
@@ -3212,6 +3253,313 @@
       "review_required": true,
       "review_reason": "Descricao funcional, sintoma ou politica de handoff nao possui uma unica resposta objetiva.",
       "validation_question": "A resposta e segura, nao confirma familia por fuzzy inseguro e pergunta ou transfere no momento correto?"
+    },
+    {
+      "id": "safety_001",
+      "category": "safety_resolution",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "safety_001_t1",
+          "message": "pastilha traseira do Gol 2010, nao dianteira",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "pre_search_path": "deterministic_bypass",
+            "criteria_contains": {
+              "part_query": "pastilhas de freio",
+              "position": "rear"
+            },
+            "used_tools_contains": [
+              "search_parts"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "safety_002",
+      "category": "safety_resolution",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "safety_002_t1",
+          "message": "nao quero radiador, quero filtro de oleo Gol 2010 1.0",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "pre_search_path": "deterministic_bypass",
+            "criteria_contains": {
+              "part_query": "filtro de oleo",
+              "engine": "1.0"
+            },
+            "used_tools_contains": [
+              "search_parts"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "safety_003",
+      "category": "safety_resolution",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "safety_003_t1",
+          "message": "nao quero radiador",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "pre_search_path": "deterministic_ask",
+            "question_key": "intent_resolution",
+            "used_tools_excludes": [
+              "search_parts"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "safety_004",
+      "category": "safety_resolution",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "safety_004_t1",
+          "message": "pastilha Honda Gol 2010 traseira",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "pre_search_path": "deterministic_ask",
+            "question_key": "vehicle_identity",
+            "used_tools_excludes": [
+              "search_parts"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "multi_vehicle_001",
+      "category": "multi_item_vehicle_context",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "multi_vehicle_001_t1",
+          "message": "radiador Gol 2010 1.0 e radiador Corsa 2011 1.4",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "items_contains": [
+              {
+                "part_query": "radiador",
+                "vehicle_model": "Gol",
+                "vehicle_year": 2010,
+                "engine": "1.0"
+              },
+              {
+                "part_query": "radiador",
+                "vehicle_model": "Corsa",
+                "vehicle_year": 2011,
+                "engine": "1.4"
+              }
+            ],
+            "used_tools_contains": [
+              "search_parts"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "multi_vehicle_002",
+      "category": "multi_item_vehicle_context",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "multi_vehicle_002_t1",
+          "message": "radiador Gol 2010 1.0 e pastilha de freio traseira",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "items_contains": [
+              {
+                "part_query": "radiador",
+                "vehicle_model": "Gol",
+                "vehicle_year": 2010,
+                "engine": "1.0"
+              },
+              {
+                "part_query": "pastilhas de freio",
+                "position": "rear",
+                "vehicle_model": null,
+                "vehicle_year": null,
+                "engine": null
+              }
+            ],
+            "used_tools_contains": [
+              "search_parts"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "multi_vehicle_003",
+      "category": "multi_item_vehicle_context",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "multi_vehicle_003_t1",
+          "message": "radiador e pastilha de freio traseira para Gol 2010 1.0",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "items_contains": [
+              {
+                "part_query": "radiador",
+                "vehicle_model": "Gol",
+                "vehicle_year": 2010,
+                "engine": "1.0"
+              },
+              {
+                "part_query": "pastilhas de freio",
+                "position": "rear",
+                "vehicle_model": "Gol",
+                "vehicle_year": 2010,
+                "engine": "1.0"
+              }
+            ],
+            "used_tools_contains": [
+              "search_parts"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "multi_gate_001",
+      "category": "multi_item_gate",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "multi_gate_001_t1",
+          "message": "radiador Gol 2010 1.0 e bandeja Corsa 2011",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "items_contains": [
+              {
+                "part_query": "radiador",
+                "vehicle_model": "Gol",
+                "vehicle_year": 2010,
+                "engine": "1.0"
+              },
+              {
+                "part_query": "bandejas",
+                "vehicle_model": "Corsa",
+                "vehicle_year": 2011,
+                "engine": null
+              }
+            ],
+            "item_results_contains": [
+              {
+                "item": {
+                  "part_query": "radiador",
+                  "vehicle_model": "Gol",
+                  "engine": "1.0"
+                }
+              },
+              {
+                "status": "incomplete",
+                "item": {
+                  "part_query": "bandejas",
+                  "vehicle_model": "Corsa",
+                  "engine": null
+                }
+              }
+            ],
+            "used_tools_contains": [
+              "search_parts"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "multi_follow_up_001",
+      "category": "multi_item_follow_up",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "multi_follow_up_001_t1",
+          "message": "radiador Gol 2010 1.0 e bandeja Corsa 2011",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "pending_slot": "side",
+            "active_item_index": 1,
+            "item_results_contains": [
+              {
+                "item": {
+                  "part_query": "radiador",
+                  "vehicle_model": "Gol",
+                  "engine": "1.0"
+                }
+              },
+              {
+                "status": "incomplete",
+                "item": {
+                  "part_query": "bandejas",
+                  "vehicle_model": "Corsa"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "multi_follow_up_001_t2",
+          "message": "esquerda",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "pending_slot": null,
+            "active_item_index": null,
+            "items_contains": [
+              {
+                "part_query": "radiador",
+                "vehicle_model": "Gol",
+                "engine": "1.0"
+              },
+              {
+                "part_query": "bandejas",
+                "vehicle_model": "Corsa",
+                "side": "left"
+              }
+            ],
+            "item_results_contains": [
+              {
+                "item": {
+                  "part_query": "radiador",
+                  "vehicle_model": "Gol",
+                  "engine": "1.0"
+                }
+              },
+              {
+                "item": {
+                  "part_query": "bandejas",
+                  "vehicle_model": "Corsa",
+                  "side": "left"
+                }
+              }
+            ],
+            "used_tools_count": {
+              "search_parts": 1
+            }
+          }
+        }
+      ]
     },
     {
       "id": "invalid_001",

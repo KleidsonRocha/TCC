@@ -66,7 +66,12 @@ class AgentResponseV1(BaseModel):
     reply: ReplyPayload
     actions: list[dict[str, Any]] = Field(default_factory=list)
     handoff: HandoffPayload = Field(default_factory=HandoffPayload)
-    confidence: float = Field(0.0, ge=0.0, le=1.0)
+    confidence: float = Field(
+        0.0, ge=0.0, le=1.0,
+        description="Indicador heurístico do fluxo de atendimento, não calibrado. "
+        "Não representa probabilidade de encaixe, preço ou estoque. "
+        "A relevância dos candidatos é indicada separadamente por score.",
+    )
     tool_trace: ToolTracePayload
     conversation_state: ConversationState | None = None
     item_results: list[dict[str, Any]] | None = None

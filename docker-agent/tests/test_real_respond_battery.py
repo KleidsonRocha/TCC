@@ -95,6 +95,7 @@ def test_runner_normalizes_agent_contract_and_evaluates_rich_assertions() -> Non
         "tool_trace": {"used_tools": ["pre_search_deterministic_ask"], "pre_search_path": "deterministic_ask"},
         "conversation_state": {
             "criteria": {"part_query": "radiador", "part_code": None},
+            "items": [{"part_query": "radiador", "vehicle_model": "Gol"}],
             "pending_slot": "engine",
         },
     }
@@ -108,11 +109,30 @@ def test_runner_normalizes_agent_contract_and_evaluates_rich_assertions() -> Non
         "pre_search_path": "deterministic_ask",
         "used_tools_contains": ["pre_search_deterministic_ask"],
         "criteria_contains": {"part_query": "radiador"},
+        "items_contains": [{"part_query": "radiador", "vehicle_model": "Gol"}],
         "part_code": None,
         "handoff_required": False,
     }, 200, normalized, "agent")
 
     assert failures == []
+
+
+def test_runner_extracts_ranked_candidates_from_show_items_action() -> None:
+    normalized = runner.normalize_response({
+        "reply": {"text": "Encontrei opcoes."},
+        "actions": [{
+            "type": "show_items",
+            "items": [
+                {"item_id": "A-1", "title": "Primeira peca", "score": 0.82},
+                {"item_id": "B-2", "title": "Segunda peca", "score": 0.74},
+            ],
+        }],
+    })
+
+    assert normalized["catalog_candidates"] == [
+        {"position": 1, "item_id": "A-1", "title": "Primeira peca", "score": 0.82},
+        {"position": 2, "item_id": "B-2", "title": "Segunda peca", "score": 0.74},
+    ]
 
 
 def test_runner_reports_assertion_failures_without_hiding_them() -> None:

@@ -4,6 +4,7 @@ import re
 from app.config import Settings
 from app.core.domain.errors import SearchPartsServiceUnavailableError
 from app.core.domain.models import PartItem
+from app.core.domain.result_disambiguation import SEARCH_CANDIDATE_LIMIT
 from app.core.domain.pre_search import SearchCriteria
 from app.core.domain.pre_search_catalog import PreSearchCatalog
 from app.core.ports.tools import ToolsPort
@@ -75,7 +76,7 @@ class PostgresErpSearchTools(ToolsPort):
         *,
         settings: Settings,
         logger: logging.Logger,
-        result_limit: int = 10,
+        result_limit: int = SEARCH_CANDIDATE_LIMIT,
         conninfo: str | None = None,
         backend_name: str = "erp_postgres",
         catalog: PreSearchCatalog | None = None,
@@ -86,6 +87,7 @@ class PostgresErpSearchTools(ToolsPort):
         self._conninfo = conninfo
         self._backend_name = backend_name
         self._family_ids = catalog.part_family_ids if catalog else None
+        self._needs_title_identity = catalog.needs_title_identity if catalog else set()
 
     def search_parts(
         self,
@@ -103,13 +105,28 @@ class PostgresErpSearchTools(ToolsPort):
             self._family_ids.get(normalize_pre_search_text(resolved_criteria.part_query), [])
             if self._family_ids is not None else None
         )
+        canonical_part = normalize_pre_search_text(resolved_criteria.part_query)
         sql, params = self._build_search_sql(
-            criteria=resolved_criteria, limit=self._result_limit, family_ids=family_ids
+            criteria=resolved_criteria,
+            limit=self._result_limit,
+            family_ids=family_ids,
+            require_family_title_identity=canonical_part in self._needs_title_identity,
         )
 
         try:
             conninfo = self._conninfo or build_erp_conninfo(self._settings)
-            with psycopg.connect(conninfo, row_factory=dict_row) as conn:  # type: ignore[union-attr]
+            # The ERP database uses WIN1252. Force libpq to transcode text and
+            # JSON values before psycopg's JSON loader decodes them in Python.
+            # This matches the snapshot exporter and keeps the live and local
+            # search paths on the same UTF-8 contract.
+            with psycopg.connect(  # type: ignore[union-attr]
+                conninfo,
+                row_factory=dict_row,
+                client_encoding="UTF8",
+                options=(
+                    f"-c statement_timeout={max(self._settings.erp_search_timeout_ms, 1)}"
+                ),
+            ) as conn:
                 with conn.cursor() as cur:
                     cur.execute(sql, params)
                     rows = cur.fetchall()

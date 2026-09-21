@@ -3,6 +3,7 @@ import logging
 import re
 import time
 from copy import deepcopy
+from contextvars import ContextVar
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -10,6 +11,10 @@ from typing import Any
 import httpx
 
 from app.config import Settings
+from app.core.domain.part_code import (
+    has_literal_part_code_evidence,
+    normalize_part_code_candidate,
+)
 from app.core.domain.models import ConversationState
 from app.core.domain.pre_search_catalog import PreSearchCatalog
 from app.core.domain.errors import PreSearchServiceUnavailableError
@@ -39,6 +44,19 @@ DEFAULT_MIN_SCORE_TO_SEARCH = 70
 RUNTIME_MIN_SCORE_TO_SEARCH_BY_PART: dict[str, int] = {
     "lubrificantes": 55,
 }
+# These are conservative safeguards for common Brazilian vehicle names while
+# older catalog imports still classify some models as SEM_MARCA_MAPEADA.  The
+# database relation, when present, always takes precedence.
+MODEL_BRAND_FALLBACKS: dict[str, set[str]] = {
+    "gol": {"volkswagen", "vw"},
+    "golf": {"volkswagen", "vw"},
+    "voyage": {"volkswagen", "vw"},
+    "saveiro": {"volkswagen", "vw"},
+    "fox": {"volkswagen", "vw"},
+    "polo": {"volkswagen", "vw"},
+    "ecosport": {"ford"},
+    "focus": {"ford"},
+}
 VEHICLE_OPTIONAL_PART_QUERIES: set[str] = {
     "lubrificantes",
 }
@@ -65,6 +83,9 @@ DETERMINISTIC_ASK_FIELD_PRIORITY: tuple[str, ...] = (
     "axle",
     "variant",
 )
+COXIM_TYPE_SLOT = "coxim_type"
+COXIM_GENERAL_FAMILY = "coxins"
+COXIM_AMORTECEDOR_FAMILY = "coxim amortecedor"
 DETERMINISTIC_ASK_PART_REQUEST_PATTERN = re.compile(
     r"\b(?:quero|preciso|procuro|busco|tem|teria|gostaria)\b"
     r"[^.!?]{0,40}\b(?:peca|pecas|autopeca|autopecas|item automotivo)\b"
@@ -213,6 +234,18 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             str(model).lower(): list(options)
             for model, options in catalog.engine_by_model.items()
         }
+        self._engine_options_by_model = {
+            str(model).lower(): list(options)
+            for model, options in catalog.engine_options_by_model.items()
+        }
+        self._model_brands = {
+            normalize_pre_search_text(model): {
+                normalize_pre_search_text(brand)
+                for brand in brands
+                if normalize_pre_search_text(brand)
+            }
+            for model, brands in catalog.model_brands.items()
+        }
         self._part_code_patterns = compile_part_code_patterns(catalog.part_code_patterns)
         self._criteria_weights = self._normalize_criteria_weights(catalog.criteria_weights)
         self._min_score_to_search = max(int(catalog.min_score_to_search), 0)
@@ -223,12 +256,16 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             self._min_score_to_search_by_part.setdefault(part_query, score)
         self._dictionary_extractor = DictionaryPreSearchExtractor(catalog=catalog)
         self._apply_runtime_search_rule_overrides()
-        self._last_audit_info: dict[str, Any] | None = None
+        self._last_audit_info: ContextVar[dict[str, Any] | None] = ContextVar(
+            "pre_search_last_audit_info",
+            default=None,
+        )
 
     def get_last_audit(self) -> dict[str, Any] | None:
-        if self._last_audit_info is None:
+        audit_info = self._last_audit_info.get()
+        if audit_info is None:
             return None
-        return deepcopy(self._last_audit_info)
+        return deepcopy(audit_info)
 
     def runtime_diagnostics(self) -> dict[str, Any]:
         return {
@@ -286,6 +323,96 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
     def canonicalize_part_query(self, value: str | None) -> str | None:
         return self._canonicalize_part_query(value)
 
+    def validate_item_for_search(
+        self,
+        criteria: SearchCriteria,
+        *,
+        message_text: str,
+        last_messages: list[dict[str, Any]] | None = None,
+    ) -> PreSearchValidation:
+        """Apply the same deterministic search gate to one multi-item row.
+
+        ``items`` returned by the LLM are only candidates.  Each row must be
+        canonicalized and independently proven before it can reach the ERP;
+        attributes and a part-code from another row cannot satisfy this gate.
+        """
+        values = criteria.model_dump(exclude_none=False)
+        values["part_query"] = self._canonicalize_part_query(values.get("part_query"))
+
+        part_code = normalize_part_code_candidate(values.get("part_code"))
+        explicit_part_code = bool(
+            part_code
+            and has_literal_part_code_evidence(
+                part_code,
+                message_text=message_text,
+                last_messages=last_messages,
+            )
+            and self._looks_like_part_code(
+                part_code,
+                vehicle_brand=values.get("vehicle_brand"),
+                vehicle_model=values.get("vehicle_model"),
+                vehicle_year=values.get("vehicle_year"),
+            )
+        )
+        values["part_code"] = part_code if explicit_part_code else None
+        item_criteria = SearchCriteria.model_validate(values)
+
+        missing_fields = self._resolve_missing_fields(
+            criteria=item_criteria,
+            llm_missing_fields=[],
+            include_rule_fields=True,
+            explicit_part_code=explicit_part_code,
+        )
+        score_explicit_fields = self._build_score_explicit_fields(
+            dictionary_criteria=item_criteria,
+        )
+        criteria_score = self._calculate_criteria_score(
+            item_criteria,
+            score_explicit_fields=score_explicit_fields,
+        )
+
+        if explicit_part_code:
+            return PreSearchValidation(
+                decision="search",
+                criteria=item_criteria,
+                missing_fields=[],
+                next_question=None,
+                confidence=0.99,
+            )
+
+        if not missing_fields and self._score_threshold_applies(item_criteria):
+            if criteria_score < self._min_score_to_search_for(item_criteria):
+                missing_fields = self._resolve_missing_fields(
+                    criteria=item_criteria,
+                    llm_missing_fields=self._calculate_score_gap_missing_fields(
+                        criteria=item_criteria,
+                        current_missing_fields=[],
+                        score_explicit_fields=score_explicit_fields,
+                    ),
+                    include_rule_fields=True,
+                )
+
+        if not missing_fields:
+            return PreSearchValidation(
+                decision="search",
+                criteria=item_criteria,
+                missing_fields=[],
+                next_question=None,
+                confidence=0.99,
+            )
+
+        next_question = self._build_default_next_question(
+            criteria=item_criteria,
+            missing_fields=missing_fields,
+        )
+        return PreSearchValidation(
+            decision="ask",
+            criteria=item_criteria,
+            missing_fields=missing_fields,
+            next_question=next_question,
+            confidence=0.99,
+        )
+
     def evaluate_deterministic_ask_eligibility(
         self,
         message_text: str,
@@ -307,6 +434,14 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             ),
             conversation_state=conversation_state,
         )
+
+        coxim_eligibility = self._evaluate_coxim_type_eligibility(
+            message_text=message_text,
+            current_criteria=current_criteria,
+            conversation_state=conversation_state,
+        )
+        if coxim_eligibility is not None:
+            return coxim_eligibility
 
         is_follow_up = self._is_deterministic_follow_up_candidate(
             current_criteria=current_criteria,
@@ -434,7 +569,15 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         last_messages: list[dict[str, Any]] | None = None,
         conversation_state: ConversationState | None = None,
     ) -> PreSearchValidation | None:
-        self._last_audit_info = None
+        self._last_audit_info.set(None)
+        safety_result = self._request_safety_confirmation(
+            message_text=message_text,
+            criteria=self._dictionary_extractor.extract(message_text, last_messages=[]),
+        )
+        if safety_result is not None:
+            self._set_deterministic_safety_audit(safety_result)
+            return safety_result
+
         eligibility = self.evaluate_deterministic_ask_eligibility(
             message_text,
             last_messages=last_messages,
@@ -447,7 +590,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         ):
             return None
 
-        self._last_audit_info = {
+        self._last_audit_info.set({
             "llm_endpoint_used": None,
             "llm_raw_content": None,
             "llm_output_valid": None,
@@ -458,7 +601,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             "deterministic_reason": eligibility.reason,
             "missing_fields": list(eligibility.missing_fields),
             "next_question_key": eligibility.next_question.key,
-        }
+        })
         return PreSearchValidation(
             decision="ask",
             criteria=eligibility.criteria,
@@ -519,7 +662,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         last_messages: list[dict[str, Any]] | None = None,
         conversation_state: ConversationState | None = None,
     ) -> PreSearchValidation | None:
-        self._last_audit_info = None
+        self._last_audit_info.set(None)
         context = last_messages or []
         current_criteria = self._normalize_pending_follow_up_current_criteria(
             message_text=message_text,
@@ -529,7 +672,19 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             ),
             conversation_state=conversation_state,
         )
-        is_follow_up = self._is_deterministic_follow_up_candidate(
+        resolved_coxim_type = self._resolve_pending_coxim_type(
+            message_text=message_text,
+            conversation_state=conversation_state,
+        )
+        trusted_coxim_resolution = resolved_coxim_type is not None
+        if resolved_coxim_type is not None:
+            current_criteria = resolved_coxim_type
+        if self._request_safety_confirmation(
+            message_text=message_text,
+            criteria=current_criteria,
+        ) is not None:
+            return None
+        is_follow_up = trusted_coxim_resolution or self._is_deterministic_follow_up_candidate(
             current_criteria=current_criteria,
             conversation_state=conversation_state,
         )
@@ -537,7 +692,10 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         if conversation_state and conversation_state.pending_slot and not is_follow_up:
             return None
 
-        if is_follow_up:
+        if trusted_coxim_resolution:
+            criteria = current_criteria
+            bypass_reason = "coxim_type_follow_up"
+        elif is_follow_up:
             dictionary_criteria = self._dictionary_extractor.extract(
                 message_text,
                 last_messages=context,
@@ -558,7 +716,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             bypass_reason = "complete_request"
 
         explicit_part_code = bool(criteria.part_code)
-        if not self._deterministic_identity_is_trusted(
+        if not trusted_coxim_resolution and not self._deterministic_identity_is_trusted(
             message_text=message_text,
             criteria=criteria,
             conversation_state=conversation_state,
@@ -589,7 +747,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         ):
             return None
 
-        self._last_audit_info = {
+        self._last_audit_info.set({
             "llm_endpoint_used": None,
             "llm_raw_content": None,
             "llm_output_valid": None,
@@ -600,7 +758,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             "deterministic_reason": bypass_reason,
             "criteria_score": criteria_score,
             "min_score_to_search": self._min_score_to_search_for(criteria),
-        }
+        })
         return PreSearchValidation(
             decision="search",
             criteria=criteria,
@@ -608,6 +766,82 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             next_question=None,
             confidence=0.99,
         )
+
+    @staticmethod
+    def _coxim_type_question(criteria: SearchCriteria) -> DeterministicAskEligibility:
+        return DeterministicAskEligibility(
+            eligible=True,
+            reason="coxim_type_required",
+            criteria=criteria,
+            missing_fields=(COXIM_TYPE_SLOT,),
+            next_question=NextQuestion(
+                key=COXIM_TYPE_SLOT,
+                prompt="O coxim é do motor/câmbio ou do amortecedor?",
+                options=["Motor/câmbio", "Coxim do amortecedor", "Não sei"],
+            ),
+        )
+
+    def _evaluate_coxim_type_eligibility(
+        self,
+        *,
+        message_text: str,
+        current_criteria: SearchCriteria,
+        conversation_state: ConversationState | None,
+    ) -> DeterministicAskEligibility | None:
+        if conversation_state and conversation_state.pending_slot == COXIM_TYPE_SLOT:
+            resolved = self._resolve_pending_coxim_type(
+                message_text=message_text,
+                conversation_state=conversation_state,
+            )
+            if resolved is None:
+                return self._coxim_type_question(conversation_state.criteria)
+            missing_fields = self._order_deterministic_ask_fields(
+                self._calculate_missing_fields(resolved, explicit_part_code=False)
+            )
+            if not missing_fields:
+                return self._deterministic_ask_ineligible(
+                    reason="coxim_type_complete",
+                    criteria=resolved,
+                )
+            return DeterministicAskEligibility(
+                eligible=True,
+                reason="coxim_type_resolved_missing_field",
+                criteria=resolved,
+                missing_fields=tuple(missing_fields),
+                next_question=self._build_default_next_question(
+                    criteria=resolved,
+                    missing_fields=missing_fields,
+                ),
+            )
+
+        part_query = self._canonicalize_part_query(current_criteria.part_query)
+        normalized = normalize_pre_search_text(message_text)
+        if (
+            part_query == COXIM_GENERAL_FAMILY
+            and not re.search(r"\b(?:motor|cambio|amortecedor)\b", normalized)
+        ):
+            return self._coxim_type_question(current_criteria)
+        return None
+
+    def _resolve_pending_coxim_type(
+        self,
+        *,
+        message_text: str,
+        conversation_state: ConversationState | None,
+    ) -> SearchCriteria | None:
+        if not conversation_state or conversation_state.pending_slot != COXIM_TYPE_SLOT:
+            return None
+        normalized = normalize_pre_search_text(message_text)
+        target: str | None = None
+        if re.search(r"\bamortecedor(?:es)?\b", normalized):
+            target = COXIM_AMORTECEDOR_FAMILY
+        elif re.search(r"\b(?:motor|cambio)\b", normalized):
+            target = COXIM_GENERAL_FAMILY
+        if target is None:
+            return None
+        values = conversation_state.criteria.model_dump(exclude_none=False)
+        values["part_query"] = self._canonicalize_part_query(target) or target
+        return SearchCriteria.model_validate(values)
 
     @staticmethod
     def _is_deterministic_follow_up_candidate(
@@ -690,7 +924,78 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             values["axle"] = values["position"]
             values["position"] = None
 
+        if pending_slot == "engine":
+            # Tokens such as EA111 can resemble a commercial code in an
+            # isolated message. Under an active engine question, the governed
+            # slot gives the token its unambiguous meaning.
+            values["part_code"] = None
+            engine = self._match_pending_engine_option(
+                message_text=message_text,
+                vehicle_model=(
+                    values.get("vehicle_model")
+                    or conversation_state.criteria.vehicle_model
+                ),
+                vehicle_year=(
+                    values.get("vehicle_year")
+                    or conversation_state.criteria.vehicle_year
+                ),
+            )
+            if engine is not None:
+                values["engine"] = engine
+
         return SearchCriteria.model_validate(values)
+
+    def _match_pending_engine_option(
+        self,
+        *,
+        message_text: str,
+        vehicle_model: str | None,
+        vehicle_year: int | None,
+    ) -> str | None:
+        """Return the catalog spelling of a textual engine option.
+
+        Engine names are domain values (``BE``, ``Zetec Rocam``, ``EA211``),
+        so parsing only a numeric displacement loses evidence supplied by the
+        customer.  Match whole normalized options, prefer the longest form
+        (``Duratec HE`` before ``Duratec``), and reject an option outside a
+        known interval for the informed year.
+        """
+        model_key = normalize_pre_search_text(vehicle_model)
+        normalized_message = normalize_pre_search_text(message_text)
+        if not model_key or not normalized_message:
+            return None
+
+        details = self._engine_options_by_model.get(model_key, [])
+        if not details:
+            details = [
+                (option, None, None)
+                for option in self._engine_by_model.get(model_key, [])
+            ]
+
+        matches: list[tuple[str, int | None, int | None]] = []
+        for option, year_from, year_to in details:
+            normalized_option = normalize_pre_search_text(option)
+            if not normalized_option or normalized_option == "nao sei":
+                continue
+            if re.search(rf"\b{re.escape(normalized_option)}\b", normalized_message):
+                matches.append((option, year_from, year_to))
+        if not matches:
+            return None
+
+        # The same option can have multiple ranges. It is valid if any range
+        # covers the vehicle year; unknown ranges do not invalidate evidence.
+        candidates_by_option: dict[str, list[tuple[int | None, int | None]]] = {}
+        for option, year_from, year_to in matches:
+            candidates_by_option.setdefault(option, []).append((year_from, year_to))
+        for option in sorted(candidates_by_option, key=lambda value: len(value), reverse=True):
+            intervals = candidates_by_option[option]
+            if vehicle_year is None or any(
+                (start is None or vehicle_year >= start)
+                and (end is None or vehicle_year <= end)
+                for start, end in intervals
+            ):
+                return option
+        return None
 
     def _apply_pending_follow_up_answer_to_context(
         self,
@@ -708,6 +1013,21 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         pending_slot = str(conversation_state.pending_slot or "").strip()
         values = criteria.model_dump(exclude_none=False)
 
+        # A multi-item follow-up belongs to the item selected by the backend,
+        # not to the first family recovered from the preceding user message.
+        # Start from that active item's criteria and then let the new message
+        # replace only the values it explicitly contains.
+        if (
+            conversation_state.active_item_index is not None
+            and pending_slot in SearchCriteria.model_fields
+        ):
+            active_values = conversation_state.criteria.model_dump(exclude_none=False)
+            current_values = current_criteria.model_dump(exclude_none=False)
+            for field_name, current_value in current_values.items():
+                if current_value not in (None, "", []):
+                    active_values[field_name] = current_value
+            values = active_values
+
         if (
             pending_slot == "vehicle_year"
             and self._is_year_only_follow_up_answer(message_text)
@@ -722,6 +1042,12 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         ):
             values["axle"] = current_criteria.axle
             values["position"] = None
+
+        if (
+            pending_slot in SearchCriteria.model_fields
+            and getattr(current_criteria, pending_slot, None) not in (None, "", [])
+        ):
+            values[pending_slot] = getattr(current_criteria, pending_slot)
 
         return SearchCriteria.model_validate(values)
 
@@ -752,6 +1078,73 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             conversation_state.criteria.part_query
         )
         return state_part_query == part_query
+
+    def _request_safety_confirmation(
+        self,
+        *,
+        message_text: str,
+        criteria: SearchCriteria,
+    ) -> PreSearchValidation | None:
+        """Stop before a search when a negative or vehicle identity is unclear."""
+        intent = self._dictionary_extractor.resolve_request_intent(message_text)
+        if intent.unresolved_reason:
+            return PreSearchValidation(
+                decision="ask",
+                criteria=criteria,
+                missing_fields=["intent_resolution"],
+                next_question=NextQuestion(
+                    key="intent_resolution",
+                    prompt=(
+                        "Entendi uma negacao ou correcao. Qual peca e qual aplicacao "
+                        "devo considerar para pesquisar?"
+                    ),
+                ),
+                confidence=0.99,
+            )
+
+        expected_brands = self._expected_brands_for_model(criteria.vehicle_model)
+        actual_brand = normalize_pre_search_text(criteria.vehicle_brand)
+        if actual_brand and expected_brands and actual_brand not in expected_brands:
+            model = str(criteria.vehicle_model or "").strip()
+            return PreSearchValidation(
+                decision="ask",
+                criteria=criteria,
+                missing_fields=["vehicle_identity"],
+                next_question=NextQuestion(
+                    key="vehicle_identity",
+                    prompt=(
+                        f'Encontrei a marca "{criteria.vehicle_brand}" e o modelo "{model}", '
+                        "que parecem conflitantes. Qual veiculo devo considerar?"
+                    ),
+                ),
+                confidence=0.99,
+            )
+        return None
+
+    def _expected_brands_for_model(self, model: str | None) -> set[str]:
+        normalized_model = normalize_pre_search_text(model)
+        if not normalized_model:
+            return set()
+        catalog_brands = self._model_brands.get(normalized_model, set())
+        if catalog_brands:
+            return set(catalog_brands)
+        return set(MODEL_BRAND_FALLBACKS.get(normalized_model, set()))
+
+    def _set_deterministic_safety_audit(self, result: PreSearchValidation) -> None:
+        self._last_audit_info.set({
+            "llm_endpoint_used": None,
+            "llm_raw_content": None,
+            "llm_output_valid": None,
+            "llm_parse_error": None,
+            "llm_fallback_used": None,
+            "llm_decision_raw": None,
+            "pre_search_path": "deterministic_ask",
+            "deterministic_reason": result.missing_fields[0],
+            "missing_fields": list(result.missing_fields),
+            "next_question_key": (
+                result.next_question.key if result.next_question is not None else None
+            ),
+        })
 
     def warmup(self) -> dict[str, Any]:
         payload = self._build_warmup_payload()
@@ -787,7 +1180,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         last_messages: list[dict[str, Any]] | None = None,
         conversation_state: ConversationState | None = None,
     ) -> PreSearchValidation:
-        self._last_audit_info = None
+        self._last_audit_info.set(None)
         context = last_messages or []
         # Values explicitly found in the current message are authoritative.
         # The contextual extraction is still used for omitted fields, but it
@@ -801,6 +1194,13 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             ),
             conversation_state=conversation_state,
         )
+        safety_result = self._request_safety_confirmation(
+            message_text=message_text,
+            criteria=current_message_criteria,
+        )
+        if safety_result is not None:
+            self._set_deterministic_safety_audit(safety_result)
+            return safety_result
         dictionary_criteria = self._dictionary_extractor.extract(
             message_text,
             last_messages=context,
@@ -852,9 +1252,9 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             ) from exc
 
         llm_elapsed_ms = round((time.perf_counter() - llm_started_at) * 1000, 2)
-        if self._last_audit_info is None:
-            self._last_audit_info = {}
-        self._last_audit_info["llm_elapsed_ms"] = llm_elapsed_ms
+        audit_info = self._last_audit_info.get() or {}
+        audit_info["llm_elapsed_ms"] = llm_elapsed_ms
+        self._last_audit_info.set(audit_info)
 
         content = ""
         try:
@@ -908,14 +1308,14 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
                         "parse_error": str(exc),
                     },
                 )
-            if self._last_audit_info is None:
-                self._last_audit_info = {}
-            self._last_audit_info["llm_elapsed_ms"] = llm_elapsed_ms
+            audit_info = self._last_audit_info.get() or {}
+            audit_info["llm_elapsed_ms"] = llm_elapsed_ms
+            self._last_audit_info.set(audit_info)
             return ai_fallback
 
-        if self._last_audit_info is None:
-            self._last_audit_info = {}
-        self._last_audit_info["llm_elapsed_ms"] = llm_elapsed_ms
+        audit_info = self._last_audit_info.get() or {}
+        audit_info["llm_elapsed_ms"] = llm_elapsed_ms
+        self._last_audit_info.set(audit_info)
 
         llm_validation = self._merge_validation_with_dictionary_seed(
             llm_validation=llm_validation,
@@ -967,14 +1367,14 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         fallback_used: bool,
     ) -> None:
         content = str(raw_content or "").strip() or None
-        self._last_audit_info = {
+        self._last_audit_info.set({
             "llm_endpoint_used": endpoint_used,
             "llm_raw_content": content,
             "llm_output_valid": bool(output_valid),
             "llm_parse_error": parse_error,
             "llm_fallback_used": bool(fallback_used),
             "llm_decision_raw": self._extract_decision_from_raw_content(content or ""),
-        }
+        })
 
     def _post_chat_or_generate(
         self,
@@ -1013,14 +1413,13 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
     ) -> dict[str, Any]:
         instructions = self._build_system_instructions(categories_text=self._categories_text)
         score_policy = self._build_llm_score_policy(dictionary_seed_criteria=dictionary_seed_criteria)
-        user_input = {
-            "message_text": message_text,
-            "last_messages": last_messages,
-            "dictionary_seed_criteria": dictionary_seed_criteria.model_dump(exclude_none=True),
-            "conversation_state": conversation_state.model_dump(exclude_none=True) if conversation_state else None,
-            "multi_item_rule": "A mensagem pode conter uma ou mais pecas; preserve cada peca em items quando houver mais de uma.",
-            "score_policy": score_policy,
-        }
+        user_input = self._build_residual_llm_input(
+            message_text=message_text,
+            last_messages=last_messages,
+            dictionary_seed_criteria=dictionary_seed_criteria,
+            conversation_state=conversation_state,
+            score_policy=score_policy,
+        )
         return {
             "model": self._model,
             "stream": False,
@@ -1047,14 +1446,13 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
     ) -> dict[str, Any]:
         instructions = self._build_system_instructions(categories_text=self._categories_text)
         score_policy = self._build_llm_score_policy(dictionary_seed_criteria=dictionary_seed_criteria)
-        user_input = {
-            "message_text": message_text,
-            "last_messages": last_messages,
-            "dictionary_seed_criteria": dictionary_seed_criteria.model_dump(exclude_none=True),
-            "conversation_state": conversation_state.model_dump(exclude_none=True) if conversation_state else None,
-            "multi_item_rule": "A mensagem pode conter uma ou mais pecas; preserve cada peca em items quando houver mais de uma.",
-            "score_policy": score_policy,
-        }
+        user_input = self._build_residual_llm_input(
+            message_text=message_text,
+            last_messages=last_messages,
+            dictionary_seed_criteria=dictionary_seed_criteria,
+            conversation_state=conversation_state,
+            score_policy=score_policy,
+        )
         prompt = (
             f"{instructions}\n\n"
             "Entrada JSON:\n"
@@ -1086,6 +1484,44 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         if self._keep_alive:
             payload["keep_alive"] = self._keep_alive
         return payload
+
+    @staticmethod
+    def _build_residual_llm_input(
+        *,
+        message_text: str,
+        last_messages: list[dict[str, Any]],
+        dictionary_seed_criteria: SearchCriteria,
+        conversation_state: ConversationState | None,
+        score_policy: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Make evidence source and precedence machine-readable to the LLM."""
+        previous_user_messages = [
+            message
+            for message in last_messages
+            if str(message.get("role", "")).strip().lower() == "user"
+        ]
+        assistant_context = [
+            message
+            for message in last_messages
+            if str(message.get("role", "")).strip().lower() == "assistant"
+        ]
+        return {
+            "residual_only": True,
+            "evidence_precedence": [
+                "current_user_message",
+                "current_message_dictionary_seed",
+                "active_conversation_state_for_omitted_fields",
+                "previous_user_messages_for_omitted_fields",
+                "assistant_messages_context_only",
+            ],
+            "message_text": message_text,
+            "previous_user_messages": previous_user_messages,
+            "assistant_context": assistant_context,
+            "dictionary_seed_criteria": dictionary_seed_criteria.model_dump(exclude_none=True),
+            "conversation_state": conversation_state.model_dump(exclude_none=True) if conversation_state else None,
+            "multi_item_rule": "A mensagem pode conter uma ou mais pecas; preserve cada peca em items quando houver mais de uma.",
+            "score_policy": score_policy,
+        }
 
     @staticmethod
     def _extract_content(raw_body: dict[str, Any]) -> str:
@@ -1192,6 +1628,17 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             if self._should_take_dictionary_value(llm_value=llm_value, dictionary_value=dictionary_value):
                 merged_criteria[key] = dictionary_value
 
+        if (
+            conversation_state is not None
+            and conversation_state.active_item_index is not None
+            and str(conversation_state.pending_slot or "") in SearchCriteria.model_fields
+        ):
+            # The active item is selected by the backend.  Do not let an LLM
+            # replay a previous item from chat history over that identity.
+            for key, dictionary_value in dictionary_values.items():
+                if key != "part_code":
+                    merged_criteria[key] = dictionary_value
+
         # Current-message evidence wins over both the LLM and values recovered
         # from previous turns. This is what makes "Sprinter -> Hilux" and
         # user corrections behave as replacements instead of additions.
@@ -1208,6 +1655,17 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         merged_criteria["part_code"] = dictionary_criteria.part_code
 
         criteria_model = SearchCriteria.model_validate(merged_criteria)
+        deterministic_items = self._dictionary_extractor.extract_items(message_text)
+        if len(deterministic_items) > 1:
+            # The LLM may still be useful for conversational wording, but it
+            # cannot merge vehicle evidence across clauses.  The deterministic
+            # extractor owns the item boundaries and the primary item is the
+            # first explicit clause for the legacy top-level contract.
+            deterministic_items = [
+                self._canonicalize_criteria_part_query(item)
+                for item in deterministic_items
+            ]
+            criteria_model = deterministic_items[0]
         score_explicit_fields = self._build_score_explicit_fields(
             dictionary_criteria=dictionary_criteria,
         )
@@ -1257,15 +1715,24 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
                     include_rule_fields=True,
                     explicit_part_code=explicit_part_code,
                 )
-        elif decision == "ask" and self._should_promote_follow_up_ask_to_search(
-            conversation_state=conversation_state,
-            criteria=criteria_model,
-            search_gate_missing=search_gate_missing,
-            criteria_score=criteria_score,
-            explicit_part_code=explicit_part_code,
-        ):
-            decision = "search"
-            missing_fields = []
+        elif decision == "ask":
+            # Mandatory fields, rules and score are backend-owned.  Once they
+            # are complete, an optional field invented by the LLM must not
+            # block a catalog search.  This covers both a regular complete
+            # request and a corrected result-disambiguation follow-up.
+            is_complete_for_search = (
+                not search_gate_missing
+                and (
+                    not self._score_threshold_applies(
+                        criteria_model,
+                        explicit_part_code=explicit_part_code,
+                    )
+                    or criteria_score >= self._min_score_to_search_for(criteria_model)
+                )
+            )
+            if is_complete_for_search:
+                decision = "search"
+                missing_fields = []
 
         if decision == "ask" and not missing_fields:
             missing_fields = self._resolve_missing_fields(
@@ -1314,7 +1781,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         return PreSearchValidation(
             decision=decision,
             criteria=criteria_model,
-            items=llm_validation.items,
+            items=deterministic_items or llm_validation.items,
             missing_fields=missing_fields,
             next_question=next_question,
             confidence=llm_validation.confidence,
@@ -1426,6 +1893,12 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         if missing_fields and next_key not in missing_fields:
             if not self._is_follow_up_field_allowed(criteria=criteria, field_name=next_key):
                 return None
+
+        if next_key in {"side", "position", "axle"}:
+            return self._build_default_next_question(
+                criteria=criteria,
+                missing_fields=[next_key],
+            )
 
         return llm_next_question
 
@@ -1555,9 +2028,9 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             "vehicle_model": "Qual o modelo do veiculo?",
             "vehicle_year": "Qual o ano do veiculo?",
             "engine": "Qual a motorizacao do veiculo?",
-            "side": "Qual lado da peca?",
-            "position": "Em qual posicao a peca fica?",
-            "axle": "Qual o eixo da peca?",
+            "side": "Esquerdo ou direito?",
+            "position": "Dianteiro ou traseiro?",
+            "axle": "Eixo dianteiro ou traseiro?",
             "variant": "Qual a versao do veiculo?",
             "quantity": "Quantas unidades voce precisa?",
         }
@@ -2418,7 +2891,9 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             "com part_code valido -> search; "
             "para termos ambiguos como filtro/correia/pastilha sem modelo ou ano -> ask; "
             "pecas dependentes de lado/posicao/eixo/versao podem ser search com missing_fields e next_question. "
-            "Use message_text e last_messages juntos no contexto. "
+            "Este e o caminho residual: ele so e chamado quando o backend nao resolveu a solicitacao deterministicamente. "
+            "Siga evidence_precedence estritamente: mensagem atual vence; o seed da mensagem atual confirma campos catalogados; ConversationState so completa campo omitido do item ativo; mensagens anteriores do usuario so completam omissoes; mensagens do assistant sao contexto, nunca evidencia factual. "
+            "Nunca reutilize valor historico que conflite com a mensagem atual. "
             "Use dictionary_seed_criteria como extracao deterministica de alta confianca para preencher slots. "
             "Se houver conflito fraco, prefira dictionary_seed_criteria. "
             "So preencha part_code quando ele aparecer literalmente em message_text, last_messages ou dictionary_seed_criteria.part_code. "
@@ -2432,7 +2907,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             "se vier 'ask', sua decision nao pode ser search; use ask ou handoff. "
             "neste caso, missing_fields deve priorizar score_policy.score_gap_missing_fields_hint. "
             "Se decision=ask, next_question deve vir preenchido no MESMO JSON (nao pode ser null). "
-            "next_question.key deve ser um campo de missing_fields e next_question.prompt deve ser direto e especifico. "
+            "next_question.key deve ser um campo de missing_fields e next_question.prompt deve ser direto e especifico. Para side use esquerdo/direito; para position use dianteiro/traseiro; axle so existe quando a familia o exigir. "
             "Quando nao souber um slot, retorne null. "
             "Nao use strings como 'nao', 'desconhecido' ou similares em criteria."
         )

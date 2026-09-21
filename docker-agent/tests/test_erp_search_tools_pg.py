@@ -83,9 +83,12 @@ def test_postgres_erp_tools_maps_rows_to_part_items(monkeypatch: pytest.MonkeyPa
     ]
     cursor = _FakeCursor(rows)
 
+    connect_kwargs = {}
+
     class _FakePsycopg:
         @staticmethod
         def connect(*args, **kwargs):
+            connect_kwargs.update(kwargs)
             return _FakeConnection(cursor)
 
     monkeypatch.setattr(erp_search_tools_pg, "psycopg", _FakePsycopg)
@@ -115,11 +118,13 @@ def test_postgres_erp_tools_maps_rows_to_part_items(monkeypatch: pytest.MonkeyPa
         "feature": ["Com rolamento"],
     }
     assert "FROM soccol.item_search_candidates" in cursor.executed_sql
+    assert cursor.executed_params["limit"] == 50
     assert "FROM soccol.item_search_applications" in cursor.executed_sql
     assert "vehicle_model_motor_names" not in cursor.executed_sql
     assert cursor.executed_params["vehicle_model_norm"] == "ecosport"
     assert cursor.executed_params["vehicle_year"] == 2008
     assert cursor.executed_params["part_query_norm"] == "coxins"
+    assert connect_kwargs["client_encoding"] == "UTF8"
 
 
 def test_postgres_erp_tools_raises_service_unavailable_on_connection_error(
@@ -206,6 +211,47 @@ def test_product_brand_is_a_soft_ranking_preference_not_a_required_filter() -> N
     assert "preferred_product_brand_rank" in sql
     assert "has_preferred_product_brand" in sql
     assert params["preferred_product_brand_like"] == "%NGK%"
+
+
+def test_curated_family_id_does_not_require_canonical_words_in_title() -> None:
+    sql, params = PostgresErpSearchTools._build_search_sql(
+        criteria=SearchCriteria(
+            part_query="amortecedores suspensao",
+            vehicle_model="Gol",
+            vehicle_year=2010,
+            engine="1.0",
+            position="front",
+        ),
+        family_ids=[(2, 1)],
+        require_family_title_identity=False,
+        limit=50,
+    )
+
+    eligible_clause = sql.split("), matched_items AS (", 1)[0]
+    assert "cd_grupo = %(family_group_0)s" in eligible_clause
+    assert "cd_subgrupo = %(family_subgroup_0)s" in eligible_clause
+    assert "family_token_" not in eligible_clause
+    assert "family_head_pattern" not in eligible_clause
+    assert params["family_group_0"] == 2
+    assert params["family_subgroup_0"] == 1
+
+
+def test_coxim_family_rejects_non_coxim_titles_from_noisy_erp_subgroup() -> None:
+    sql, params = PostgresErpSearchTools._build_search_sql(
+        criteria=SearchCriteria(
+            part_query="coxins",
+            vehicle_model="EcoSport",
+            vehicle_year=2008,
+            position="front",
+        ),
+        family_ids=[(4, 2)],
+        require_family_title_identity=True,
+        limit=50,
+    )
+
+    eligible_clause = sql.split("), matched_items AS (", 1)[0]
+    assert "family_head_pattern" in eligible_clause
+    assert params["family_head_pattern"] == r"\mcoxi[mn]\M"
 
 
 def test_position_is_filtered_as_dianteiro_not_as_eixo_dianteiro() -> None:

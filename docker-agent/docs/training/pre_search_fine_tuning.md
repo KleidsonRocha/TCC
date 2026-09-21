@@ -281,6 +281,8 @@ Perfil recomendado para uso local:
   - `TRAINER_BATCH_SIZE=1`
   - `TRAINER_GRAD_ACCUM_STEPS=8`
   - `TRAINER_MAX_SEQ_LENGTH=1024`
+  - `TRAINER_SAVE_STEPS=10` e `TRAINER_EVAL_STEPS=10`, para que o dataset
+    atual, com cerca de 30 passos, gere checkpoints e avaliacoes durante a run.
 
 Se der `CUDA out of memory`, reduza primeiro:
 - `TRAINER_MAX_SEQ_LENGTH=768`

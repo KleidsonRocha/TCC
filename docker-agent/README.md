@@ -122,6 +122,7 @@ Os CSVs reais de bootstrap ficam em:
 - `db/init/csv/pre_search_part_rule.csv`
 - `db/init/csv/vehicle_brand.csv`
 - `db/init/csv/vehicle_model.csv`
+- `db/init/csv/vehicle_model_brand.csv`
 - `db/init/csv/engine_option.csv`
 
 Para recriar a base do zero:

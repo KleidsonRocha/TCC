@@ -87,10 +87,14 @@ CREATE TABLE IF NOT EXISTS pre_search_part_rule (
     needs_axle BOOLEAN NOT NULL DEFAULT FALSE,
     needs_engine BOOLEAN NOT NULL DEFAULT FALSE,
     needs_variant BOOLEAN NOT NULL DEFAULT FALSE,
+    needs_title_identity BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_by TEXT NOT NULL DEFAULT 'seed'
 );
+
+ALTER TABLE pre_search_part_rule
+    ADD COLUMN IF NOT EXISTS needs_title_identity BOOLEAN NOT NULL DEFAULT FALSE;
 
 CREATE TABLE IF NOT EXISTS pre_search_engine_option (
     id BIGSERIAL PRIMARY KEY,
@@ -210,6 +214,7 @@ DECLARE
     has_rule BOOLEAN;
     has_brand BOOLEAN;
     has_model BOOLEAN;
+    has_model_brand BOOLEAN;
     has_engine BOOLEAN;
     has_part_alias BOOLEAN;
     rule_header TEXT;
@@ -220,12 +225,13 @@ BEGIN
     has_rule := COALESCE((pg_stat_file(base_path || '/pre_search_part_rule.csv', true)).size, 0) > 0;
     has_brand := COALESCE((pg_stat_file(base_path || '/vehicle_brand.csv', true)).size, 0) > 0;
     has_model := COALESCE((pg_stat_file(base_path || '/vehicle_model.csv', true)).size, 0) > 0;
+    has_model_brand := COALESCE((pg_stat_file(base_path || '/vehicle_model_brand.csv', true)).size, 0) > 0;
     has_engine := COALESCE((pg_stat_file(base_path || '/engine_option.csv', true)).size, 0) > 0;
     has_part_alias := COALESCE((pg_stat_file(base_path || '/pre_search_part_alias.csv', true)).size, 0) > 0;
 
-    IF NOT (has_grupo AND has_subgrupo AND has_rule AND has_brand AND has_model AND has_engine AND has_part_alias) THEN
+    IF NOT (has_grupo AND has_subgrupo AND has_rule AND has_brand AND has_model AND has_model_brand AND has_engine AND has_part_alias) THEN
         RAISE EXCEPTION
-            'CSV bootstrap obrigatorio ausente em %. Esperado: grupo.csv, subgrupo.csv, pre_search_part_rule.csv, pre_search_part_alias.csv, vehicle_brand.csv, vehicle_model.csv e engine_option.csv.',
+            'CSV bootstrap obrigatorio ausente em %. Esperado: grupo.csv, subgrupo.csv, pre_search_part_rule.csv, pre_search_part_alias.csv, vehicle_brand.csv, vehicle_model.csv, vehicle_model_brand.csv e engine_option.csv.',
             base_path;
     END IF;
 
@@ -280,6 +286,11 @@ BEGIN
         veiculo TEXT
     ) ON COMMIT DROP;
 
+    CREATE TEMP TABLE stg_model_brand (
+        veiculo TEXT NOT NULL,
+        montadora TEXT NOT NULL
+    ) ON COMMIT DROP;
+
     CREATE TEMP TABLE stg_engine (
         veiculo TEXT,
         nome_motor TEXT,
@@ -316,6 +327,10 @@ BEGIN
         base_path || '/vehicle_model.csv'
     );
     EXECUTE format(
+        'COPY stg_model_brand FROM %L WITH (FORMAT csv, HEADER true, ENCODING ''UTF8'')',
+        base_path || '/vehicle_model_brand.csv'
+    );
+    EXECUTE format(
         'COPY stg_engine FROM %L WITH (FORMAT csv, HEADER true, ENCODING ''UTF8'')',
         base_path || '/engine_option.csv'
     );
@@ -335,6 +350,26 @@ BEGIN
         WHERE ss.cd_subgrupo IS NULL
     ) THEN
         RAISE EXCEPTION 'pre_search_part_rule.csv contem linhas sem correspondencia em subgrupo.csv para chave composta (cd_grupo + part_type_id).';
+    END IF;
+
+    IF EXISTS (
+        SELECT 1
+        FROM stg_model_brand smb
+        LEFT JOIN stg_brand sb
+          ON pre_search_normalize_text(sb.montadora) = pre_search_normalize_text(smb.montadora)
+        WHERE sb.montadora IS NULL
+    ) THEN
+        RAISE EXCEPTION 'vehicle_model_brand.csv possui montadora ausente em vehicle_brand.csv';
+    END IF;
+
+    IF EXISTS (
+        SELECT 1
+        FROM stg_model_brand smb
+        LEFT JOIN stg_model sm
+          ON pre_search_normalize_text(sm.veiculo) = pre_search_normalize_text(smb.veiculo)
+        WHERE sm.veiculo IS NULL
+    ) THEN
+        RAISE EXCEPTION 'vehicle_model_brand.csv possui veiculo ausente em vehicle_model.csv';
     END IF;
 
     TRUNCATE TABLE
@@ -514,6 +549,16 @@ BEGIN
         updated_at = NOW(),
         updated_by = EXCLUDED.updated_by;
 
+    UPDATE pre_search_part_rule pr
+    SET needs_title_identity = TRUE,
+        updated_at = NOW(),
+        updated_by = 'seed_identity_rule'
+    FROM pre_search_part_type pt
+    JOIN pre_search_part_group pg ON pg.id = pt.part_group_id
+    WHERE pr.part_type_id = pt.id
+      AND pg.source_group_code = 4
+      AND pt.source_subgroup_code = 2;
+
     INSERT INTO pre_search_brand (
         name,
         name_normalized,
@@ -601,6 +646,17 @@ BEGIN
         is_active = TRUE,
         updated_at = NOW(),
         updated_by = EXCLUDED.updated_by;
+
+    UPDATE pre_search_model m
+    SET
+        brand_id = b.id,
+        updated_at = NOW(),
+        updated_by = 'seed_model_brand_csv'
+    FROM stg_model_brand smb
+    JOIN pre_search_brand b
+      ON b.name_normalized = pre_search_normalize_text(smb.montadora)
+    WHERE m.name_normalized = pre_search_normalize_text(smb.veiculo)
+      AND m.brand_id IS DISTINCT FROM b.id;
 
     INSERT INTO pre_search_model_alias (
         model_id,
@@ -1232,7 +1288,6 @@ ALTER TABLE pre_search_review_interaction
 ALTER TABLE pre_search_review_interaction
     ADD COLUMN IF NOT EXISTS llm_fallback_used BOOLEAN NULL;
 
-ALTER TABLE pre_search_review_interaction
     ADD COLUMN IF NOT EXISTS llm_decision_raw TEXT NULL;
 
 ALTER TABLE pre_search_review_interaction

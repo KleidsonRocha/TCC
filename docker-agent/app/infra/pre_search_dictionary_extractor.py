@@ -31,6 +31,19 @@ class _ScoredAliasCandidate:
     distance: int
 
 
+@dataclass(frozen=True)
+class RequestIntent:
+    """The safe, affirmative portion of one customer request.
+
+    It deliberately has a small scope: resolve explicit replacements and
+    directional negations, but expose any other negation to the validator so
+    the backend can ask instead of searching on a guess.
+    """
+
+    text: str
+    unresolved_reason: str | None = None
+
+
 class DictionaryPreSearchExtractor:
     _MIN_FUZZY_TOKEN_LENGTH = 4
     _SINGLE_TOKEN_FUZZY_GAP = 0.05
@@ -45,6 +58,7 @@ class DictionaryPreSearchExtractor:
         "NGK": ("ngk",),
         "Nakata": ("nakata",),
         "Cofap": ("cofap",),
+        "Valeo": ("valeo",),
     }
 
     def __init__(self, *, catalog: PreSearchCatalog) -> None:
@@ -65,11 +79,51 @@ class DictionaryPreSearchExtractor:
         last_messages: list[dict[str, Any]] | None = None,
     ) -> SearchCriteria:
         normalized_message = normalize_pre_search_text(message_text)
+        intent = self.resolve_request_intent(message_text)
         normalized_context = self._build_context_text(last_messages)
 
-        primary = self._extract_from(normalized_message, raw_text=message_text)
+        primary = self._extract_from(intent.text, raw_text=intent.text)
         fallback = self._extract_from(normalized_context, raw_text=normalized_context)
         return self._merge(primary=primary, fallback=fallback)
+
+    def resolve_request_intent(self, message_text: str) -> RequestIntent:
+        """Keep an explicit replacement and flag negative requests we cannot prove.
+
+        For example, ``nao quero radiador, quero filtro de oleo`` has one
+        affirmative target.  A bare ``nao quero radiador`` does not, so it
+        must never become an automated catalog search.
+        """
+        normalized = normalize_pre_search_text(message_text)
+        if not normalized:
+            return RequestIntent(text="")
+
+        replacement = re.search(
+            r"\bnao\s+(?:quero|preciso|procuro|busco)\s+[^,;.!?]+"
+            r"\s*(?:[,;.!?]|\bmas\b)\s*(?:agora\s+)?"
+            r"(?:quero|preciso|procuro|busco)\s+(.+)$",
+            normalized,
+        )
+        if replacement:
+            return RequestIntent(text=replacement.group(1).strip())
+
+        # A direction negated after an affirmative direction is resolved by
+        # _extract_position; it is not a negative part request.
+        without_directions = re.sub(
+            r"\bnao\s+(?:e\s+)?(?:dianteir[oa]|traseir[oa]|front|rear)\b",
+            "",
+            normalized,
+        ).strip()
+        if re.search(r"\bnao\s+(?:quero|preciso|procuro|busco)\b", without_directions):
+            return RequestIntent(text=normalized, unresolved_reason="unresolved_negation")
+        correction = re.search(
+            r"\b(?:corrija|corrigindo|correcao)\b\s*[,;:-]?\s*(?:e\s+)?(.+)$",
+            normalized,
+        )
+        if correction and correction.group(1).strip():
+            return RequestIntent(text=correction.group(1).strip())
+        if re.search(r"\b(?:corrija|corrigindo|correcao)\b", normalized):
+            return RequestIntent(text=normalized, unresolved_reason="unresolved_correction")
+        return RequestIntent(text=normalized)
 
     def canonicalize_part_query(self, value: str | None) -> str | None:
         normalized_value = normalize_pre_search_text(value)
@@ -78,19 +132,25 @@ class DictionaryPreSearchExtractor:
         return self._extract_part_query(normalized_value)
 
     def extract_items(self, message_text: str) -> list[SearchCriteria]:
-        """Extract independent part requests while sharing vehicle context.
+        """Extract independent part requests without crossing vehicle evidence.
 
-        This is deliberately conservative: an item is created only when a
-        catalogued part family is found in a clause. The existing single-item
-        extractor remains the source of truth for each item.
+        Vehicle attributes belong to the clause where they occur.  The only
+        exception is an explicit common application at the end of a request,
+        such as ``radiador e pastilha para Gol 2010``: in that form every
+        earlier item is explicitly governed by the same final vehicle phrase.
         """
-        normalized = normalize_pre_search_text(message_text)
-        if not normalized:
+        intent = self.resolve_request_intent(message_text)
+        normalized = intent.text
+        if not normalized or intent.unresolved_reason:
             return []
-        shared = self._extract_from(normalized, raw_text=message_text)
+        anchored_items = self._extract_items_from_part_spans(normalized)
+        if anchored_items:
+            return anchored_items
+
         clauses = [part.strip() for part in re.split(r"[,;]|\s+e\s+", normalized) if part.strip()]
+        shared_vehicle = self._extract_explicit_shared_vehicle(clauses)
         items: list[SearchCriteria] = []
-        seen: set[tuple[str, str | None, str | None]] = set()
+        seen: set[tuple[object, ...]] = set()
         for clause in clauses:
             part_query = self._extract_part_query(clause)
             if not part_query:
@@ -98,20 +158,140 @@ class DictionaryPreSearchExtractor:
             local = self._extract_from(clause, raw_text=clause)
             values = local.model_dump(exclude_none=False)
             for field_name in (
-                "preferred_product_brand",
                 "vehicle_brand",
                 "vehicle_model",
                 "vehicle_year",
                 "engine",
             ):
-                if values.get(field_name) in (None, "", []):
-                    values[field_name] = getattr(shared, field_name)
+                if values.get(field_name) in (None, "", []) and shared_vehicle:
+                    values[field_name] = getattr(shared_vehicle, field_name)
             item = SearchCriteria.model_validate(values)
-            key = (item.part_query or "", item.position, item.side)
+            key = self._item_identity_key(item)
             if key not in seen:
                 seen.add(key)
                 items.append(item)
         return items
+
+    def _extract_items_from_part_spans(self, normalized: str) -> list[SearchCriteria]:
+        """Use each non-overlapping catalog alias as an item boundary.
+
+        Commercial requests often list pieces with only spaces between them.
+        Splitting on conjunctions reduces that list to one family. Exact alias
+        spans preserve the catalog vocabulary while the text between spans
+        remains local to the corresponding item.
+        """
+        matches: list[tuple[int, int, _AliasCandidate]] = []
+        for candidate in self._part_alias_candidates:
+            for match in re.finditer(rf"\b{re.escape(candidate.alias)}\b", normalized):
+                matches.append((match.start(), match.end(), candidate))
+        if len(matches) < 2:
+            return []
+
+        matches.sort(key=lambda item: (item[0], -(item[1] - item[0])))
+        anchors: list[tuple[int, int, _AliasCandidate]] = []
+        for match in matches:
+            if anchors and match[0] < anchors[-1][1]:
+                continue
+            anchors.append(match)
+        if len(anchors) < 2:
+            return []
+
+        prefix = self._extract_from(normalized[: anchors[0][0]], raw_text=normalized[: anchors[0][0]])
+        suffix = self._extract_from(normalized[anchors[-1][1] :], raw_text=normalized[anchors[-1][1] :])
+        shared_vehicle = self._shared_vehicle_outside_part_spans(
+            prefix=prefix,
+            suffix=suffix,
+        )
+        items: list[SearchCriteria] = []
+        seen: set[tuple[object, ...]] = set()
+        for index, (start, _end, candidate) in enumerate(anchors):
+            next_start = anchors[index + 1][0] if index + 1 < len(anchors) else len(normalized)
+            segment = normalized[start:next_start]
+            local = self._extract_from(segment, raw_text=segment)
+            values = local.model_dump(exclude_none=False)
+            values["part_query"] = candidate.canonical
+            quantity = self._extract_quantity_before_part(normalized, start)
+            if quantity is not None:
+                values["quantity"] = quantity
+            # A local model or manufacturer starts a distinct vehicle
+            # application. Never complete its missing year/engine from a
+            # trailing common vehicle phrase (for example, Gol 98 ... Siena
+            # 2008). Only an item with no local vehicle identity inherits it.
+            can_share_vehicle = (
+                shared_vehicle is not None
+                and values.get("vehicle_model") in (None, "")
+                and values.get("vehicle_brand") in (None, "")
+            )
+            if can_share_vehicle:
+                for field_name in ("vehicle_brand", "vehicle_model", "vehicle_year", "engine"):
+                    if values.get(field_name) in (None, "", []):
+                        values[field_name] = getattr(shared_vehicle, field_name)
+            item = SearchCriteria.model_validate(values)
+            key = self._item_identity_key(item)
+            if key not in seen:
+                seen.add(key)
+                items.append(item)
+        return items
+
+    @staticmethod
+    def _shared_vehicle_outside_part_spans(
+        *,
+        prefix: SearchCriteria,
+        suffix: SearchCriteria,
+    ) -> SearchCriteria | None:
+        vehicle_fields = ("vehicle_brand", "vehicle_model", "vehicle_year", "engine")
+        prefix_has_vehicle = any(getattr(prefix, field_name) is not None for field_name in vehicle_fields)
+        suffix_has_vehicle = any(getattr(suffix, field_name) is not None for field_name in vehicle_fields)
+        if prefix_has_vehicle and not suffix_has_vehicle:
+            return prefix
+        if suffix_has_vehicle and not prefix_has_vehicle:
+            return suffix
+        return None
+
+    @staticmethod
+    def _extract_quantity_before_part(text: str, part_start: int) -> int | None:
+        # A short count immediately before a catalog alias is explicit list
+        # evidence ("2 disco de freio"). Years and engine sizes cannot match
+        # this bounded form.
+        prefix = text[max(0, part_start - 16) : part_start]
+        explicit_quantity = DictionaryPreSearchExtractor._extract_quantity(prefix)
+        if explicit_quantity is not None:
+            return explicit_quantity
+        match = re.search(r"\b([1-9])\s+(?:(?:kit|jogo|par)\s*)?$", prefix)
+        if match:
+            return int(match.group(1))
+        if re.search(r"\bpar\s+(?:de\s+)?$", prefix):
+            return 2
+        return None
+
+    @staticmethod
+    def _item_identity_key(item: SearchCriteria) -> tuple[object, ...]:
+        """Keep repetitions that differ in vehicle or product criteria."""
+        return tuple(item.model_dump(exclude_none=False).items())
+
+    def _extract_explicit_shared_vehicle(
+        self,
+        clauses: list[str],
+    ) -> SearchCriteria | None:
+        """Recognize only a trailing vehicle application shared by all items."""
+        if len(clauses) < 2:
+            return None
+
+        local_criteria = [self._extract_from(clause, raw_text=clause) for clause in clauses]
+        vehicle_fields = ("vehicle_brand", "vehicle_model", "vehicle_year", "engine")
+        final = local_criteria[-1]
+        if not any(getattr(final, field_name) is not None for field_name in vehicle_fields):
+            return None
+        if any(
+            any(getattr(criteria, field_name) is not None for field_name in vehicle_fields)
+            for criteria in local_criteria[:-1]
+        ):
+            return None
+        # The final clause must contain a part too. A bare value after "e" is
+        # not enough evidence that it applies to every previous item.
+        if not final.part_query:
+            return None
+        return final
 
     def has_exact_part_query_match(
         self,
@@ -130,6 +310,14 @@ class DictionaryPreSearchExtractor:
         vehicle_brand = self._extract_vehicle_brand(normalized_text)
         vehicle_model = self._extract_vehicle_model(normalized_text)
         vehicle_year = self._extract_year(normalized_text)
+        if vehicle_year is None and vehicle_model:
+            # In catalog requests a two-digit year immediately follows a known
+            # model ("Gol 98") frequently enough to be useful. Restrict it to
+            # 1980--1999 so a quantity, valve count or displacement is never
+            # promoted to an application year.
+            short_year = re.search(r"\b(8\d|9\d)\b", normalized_text)
+            if short_year:
+                vehicle_year = 1900 + int(short_year.group(1))
         return SearchCriteria(
             part_query=self._extract_part_query(normalized_text),
             part_code=self._extract_part_code(
@@ -355,9 +543,13 @@ class DictionaryPreSearchExtractor:
 
     @staticmethod
     def _extract_side(text: str) -> str | None:
-        if re.search(r"\b(esq|esquerd[oa])\b", text):
+        has_left = bool(re.search(r"\b(?:le|esq|esquerd[oa])\b", text))
+        has_right = bool(re.search(r"\b(?:ld|dir|direit[oa])\b", text))
+        if has_left and has_right:
+            return None
+        if has_left:
             return "left"
-        if re.search(r"\b(dir|direit[oa])\b", text):
+        if has_right:
             return "right"
         return None
 
@@ -366,7 +558,12 @@ class DictionaryPreSearchExtractor:
         # "eixo dianteiro/traseiro" belongs to axle, not position.
         if re.search(r"\b(eixo\s+diant|eixo\s+dianteir[oa]|eixo\s+tras|eixo\s+traseir[oa])\b", text):
             return None
-        return canonicalize_longitudinal_direction(text)
+        affirmative_text = re.sub(
+            r"\bnao\s+(?:e\s+)?(?:dianteir[oa]|traseir[oa]|front|rear)\b",
+            "",
+            text,
+        )
+        return canonicalize_longitudinal_direction(affirmative_text)
 
     @staticmethod
     def _extract_axle(text: str) -> str | None:

@@ -60,6 +60,10 @@ class ConversationState(BaseModel):
     # `criteria` remains the active/legacy item. `items` carries the complete
     # request when the customer mentions more than one part.
     items: list[SearchCriteria] | None = None
+    # Index of the single item that owns pending_slot.  It prevents a short
+    # follow-up such as "esquerda" from changing every item in a request.
+    active_item_index: int | None = Field(default=None, ge=0)
+    item_results: list[ItemSearchResult] | None = None
     pending_slot: str | None = None
     pending_question: str | None = None
     last_decision: str | None = None

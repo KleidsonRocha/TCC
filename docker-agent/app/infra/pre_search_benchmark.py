@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from app.config import Settings
+from app.core.domain.models import ConversationState
 from app.infra.pre_search_catalog_pg import resolve_pre_search_catalog
 from app.infra.pre_search_validator_llm import LLMPreSearchValidator
 
@@ -100,11 +101,30 @@ def evaluate_case(result: Any, expected: dict[str, Any]) -> dict[str, Any]:
     next_key_total = 1
     next_key_ok = 1 if values_match(actual_next_key, expected_next_key) else 0
 
+    expected_items = expected.get("items")
+    items_ok = True
+    item_failures: list[str] = []
+    if expected_items is not None:
+        actual_items = result.items or []
+        if len(actual_items) != len(expected_items):
+            items_ok = False
+            item_failures.append(
+                f"items: expected {len(expected_items)}, got {len(actual_items)}"
+            )
+        else:
+            for index, expected_item in enumerate(expected_items):
+                for field_name, expected_value in expected_item.items():
+                    actual_value = getattr(actual_items[index], field_name, None)
+                    if not values_match(actual_value, expected_value):
+                        items_ok = False
+                        item_failures.append(f"items[{index}].{field_name}")
+
     case_pass = (
         decision_ok
         and criteria_ok == criteria_total
         and missing_ok == missing_total
         and next_key_ok == next_key_total
+        and items_ok
     )
 
     return {
@@ -119,6 +139,8 @@ def evaluate_case(result: Any, expected: dict[str, Any]) -> dict[str, Any]:
         "next_key_ok": next_key_ok,
         "next_key_total": next_key_total,
         "actual_next_key": actual_next_key,
+        "items_ok": items_ok,
+        "item_failures": item_failures,
     }
 
 
@@ -197,10 +219,20 @@ def benchmark_model(
     for row in dataset:
         message_text = str(row.get("message.text", ""))
         context = as_context(row.get("context.last_messages", []))
+        raw_state = row.get("context.conversation_state")
+        conversation_state = (
+            ConversationState.model_validate(raw_state)
+            if isinstance(raw_state, dict)
+            else None
+        )
         expected = row.get("expected", {})
 
         started_at = time.perf_counter()
-        result = validator.validate(message_text=message_text, last_messages=context)
+        result = validator.validate(
+            message_text=message_text,
+            last_messages=context,
+            conversation_state=conversation_state,
+        )
         latency_ms = (time.perf_counter() - started_at) * 1000
         latencies.append(latency_ms)
 
