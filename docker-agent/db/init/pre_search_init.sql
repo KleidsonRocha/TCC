@@ -1288,6 +1288,7 @@ ALTER TABLE pre_search_review_interaction
 ALTER TABLE pre_search_review_interaction
     ADD COLUMN IF NOT EXISTS llm_fallback_used BOOLEAN NULL;
 
+ALTER TABLE pre_search_review_interaction
     ADD COLUMN IF NOT EXISTS llm_decision_raw TEXT NULL;
 
 ALTER TABLE pre_search_review_interaction

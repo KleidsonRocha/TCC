@@ -138,6 +138,15 @@ def test_model_brand_seed_links_known_models_to_existing_brands() -> None:
     assert "vehicle_model_brand.csv" in bootstrap
 
 
+def test_catalog_bootstrap_alters_each_review_column_with_its_table() -> None:
+    bootstrap = Path("db/init/pre_search_init.sql").read_text(encoding="utf-8")
+
+    assert (
+        "ALTER TABLE pre_search_review_interaction\n"
+        "    ADD COLUMN IF NOT EXISTS llm_decision_raw TEXT NULL;"
+    ) in bootstrap
+
+
 def test_dictionary_extractor_extracts_part_model_and_year() -> None:
     result = DictionaryPreSearchExtractor(catalog=_catalog_fixture()).extract(
         "Quero 2 unidade do filtro de oleo da ford ecosport 2008"

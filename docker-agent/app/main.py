@@ -1,4 +1,5 @@
-from contextlib import asynccontextmanager
+import asyncio
+from contextlib import asynccontextmanager, suppress
 
 from fastapi import FastAPI
 
@@ -59,20 +60,6 @@ def create_app(
                 catalog=catalog,
             )
         tools = tools_override or resolve_search_tools(settings=settings, logger=logger, catalog=catalog)
-        warmup = getattr(pre_search_validator, "warmup", None)
-        if settings.llm_warmup_enabled and callable(warmup):
-            try:
-                logger.info(
-                    "pre_search_llm_warmup_started",
-                    extra={"model": settings.llm_model},
-                )
-                warmup()
-            except Exception:
-                logger.warning(
-                    "pre_search_llm_warmup_failed",
-                    extra={"model": settings.llm_model},
-                    exc_info=True,
-                )
         use_case = ProcessAgentRequestUseCase(
             tools=tools,
             pre_search_validator=pre_search_validator,
@@ -90,6 +77,25 @@ def create_app(
             settings=settings
         )
 
+        warmup_task: asyncio.Task[None] | None = None
+        warmup = getattr(pre_search_validator, "warmup", None)
+        if settings.llm_warmup_enabled and callable(warmup):
+            async def run_warmup() -> None:
+                try:
+                    logger.info(
+                        "pre_search_llm_warmup_started",
+                        extra={"model": settings.llm_model},
+                    )
+                    await asyncio.to_thread(warmup)
+                except Exception:
+                    logger.warning(
+                        "pre_search_llm_warmup_failed",
+                        extra={"model": settings.llm_model},
+                        exc_info=True,
+                    )
+
+            warmup_task = asyncio.create_task(run_warmup())
+
         logger.info(
             "service_started",
             extra={
@@ -102,6 +108,10 @@ def create_app(
         try:
             yield
         finally:
+            if warmup_task is not None:
+                warmup_task.cancel()
+                with suppress(asyncio.CancelledError):
+                    await warmup_task
             logger.info("service_stopped", extra={"service": settings.app_name})
 
     app = FastAPI(title="docker-agent", version="0.1.0", lifespan=lifespan)

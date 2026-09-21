@@ -671,6 +671,8 @@ Decisao:
   10 itens e 50 candidatos no estado;
 - manter `/health` sem I/O e usar `/ready` para verificar catalogo, ERP e
   inferencia com timeout curto por dependencia.
+- executar warm-up opcional da LLM somente depois de a aplicacao estar pronta,
+  em tarefa de fundo, sem reter o startup HTTP.
 
 Motivo:
 

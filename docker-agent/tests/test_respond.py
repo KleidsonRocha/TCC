@@ -1,5 +1,6 @@
 import asyncio
 import time
+from threading import Event
 
 import httpx
 import pytest
@@ -832,9 +833,11 @@ def test_app_startup_runs_validator_warmup_when_enabled() -> None:
     class _WarmupValidator(StubPreSearchValidator):
         def __init__(self) -> None:
             self.warmup_calls = 0
+            self.warmup_finished = Event()
 
         def warmup(self) -> None:
             self.warmup_calls += 1
+            self.warmup_finished.set()
 
     validator = _WarmupValidator()
     settings = Settings(
@@ -852,9 +855,36 @@ def test_app_startup_runs_validator_warmup_when_enabled() -> None:
     )
 
     with TestClient(app):
-        pass
+        assert validator.warmup_finished.wait(timeout=1)
 
     assert validator.warmup_calls == 1
+
+
+def test_health_is_available_while_warmup_runs_in_background() -> None:
+    class _SlowWarmupValidator(StubPreSearchValidator):
+        def __init__(self) -> None:
+            self.warmup_started = Event()
+            self.release_warmup = Event()
+
+        def warmup(self) -> None:
+            self.warmup_started.set()
+            self.release_warmup.wait(timeout=1)
+
+    validator = _SlowWarmupValidator()
+    app = create_app(
+        settings_override=Settings(
+            APP_ENV="test",
+            CATALOG_DB_ENABLED=False,
+            LLM_WARMUP_ENABLED=True,
+        ),
+        pre_search_validator_override=validator,
+        tools_override=_FakeTools(),
+    )
+
+    with TestClient(app) as client:
+        assert validator.warmup_started.wait(timeout=1)
+        assert client.get("/health").status_code == 200
+        validator.release_warmup.set()
 
 
 def test_app_startup_skips_validator_warmup_when_disabled() -> None:

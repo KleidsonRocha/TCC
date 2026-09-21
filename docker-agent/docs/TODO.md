@@ -15,17 +15,6 @@ Revisado em 21/09/2026. A ordem abaixo prioriza operacao segura, conversa, avali
 
 O backend e o catalogo permanecem a autoridade final. Caminhos deterministicos atendem fatos catalogados; a LLM trata linguagem residual e nunca libera busca sem gates e proveniencia.
 
-## Prioridade 0 - Seguranca, Operacao E Beta
-
-- [ ] Aplicar e validar o endurecimento de portas na VPS
-  - Compose ja fixa agente, catalogo, Ollama, `docker-comm` e Streamlit em
-    `127.0.0.1`, e Redis deixou de publicar porta no host;
-  - atualizar a VPS, confirmar que Nginx continua atendendo o chat e que nao
-    ha listeners publicos do TCC; revisar firewall sem alterar portas de outros
-    projetos; confirmar que a conexao de saida ao ERP quente permanece ativa.
-- [ ] Fechar beta na VPS com evidencias do canal real
-  - repetir conversas por API e `docker-comm`, com Redis; revisar amostra curada de aplicacoes/produtos; registrar que HTTP verde nao prova encaixe comercial.
-
 ## Prioridade 1 - Fluxos Conversacionais Restantes
 
 - [ ] Dar continuidade util quando o cliente responder `nao sei`

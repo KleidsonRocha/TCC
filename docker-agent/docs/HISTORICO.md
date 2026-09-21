@@ -251,3 +251,18 @@ gabarito formal de compatibilidade ou disponibilidade.
 - Checklist de deploy, backup, restauracao e `/health`, alem do fluxo sem GPU,
   foram exercitados. A bateria comercial longa e a beta pelo canal real seguem
   como trabalho futuro, pois validacao estrutural nao substitui rotulo humano.
+
+## Deploy Protegido E Beta Inicial Da VPS Em 21/09/2026
+
+- O Compose foi aplicado na VPS com agente, catalogo, Ollama e Streamlit
+  restritos a `127.0.0.1`; Redis deixou de publicar `6379`. A verificacao de
+  listeners confirmou que portas internas do TCC nao estavam em `0.0.0.0`, e
+  Nginx continuou atendendo o dominio HTTPS do chat.
+- O agente iniciou com `APP_ENV=production`, catalogo carregado e backend
+  `erp_postgres` habilitado. O warm-up sincrono do modelo reteve o startup e
+  foi temporariamente desativado na VPS; a correcao versionada o move para
+  tarefa de fundo.
+- Dois fluxos reais pelo `docker-comm` confirmaram Redis e continuidade de
+  conversa: selecao de filtro de oleo para Corsa e desambiguacao de coxim da
+  EcoSport por posicao, versao e candidato. A evidencia e beta de
+  infraestrutura/fluxo, nao certificacao de compatibilidade comercial.

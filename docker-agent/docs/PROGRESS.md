@@ -204,17 +204,20 @@ altera a classificacao de prontidao comercial.
   habilitado e inferencia, retornando `503` e `degraded` quando uma dependencia
   configurada nao estiver disponivel. As regressões foram adicionadas e ainda
   aguardam a rodada de testes da Prioridade 0.
+- O warm-up opcional da LLM roda em tarefa de fundo depois de a aplicacao estar
+  pronta; carregar um modelo grande nao pode reter o startup nem resetar
+  `/health`.
 
-## Endurecimento De Portas Preparado Em 21/09/2026
+## Endurecimento De Portas Aplicado Em 21/09/2026
 
 - A inspeção da VPS encontrou Redis (`6379`), catalogo (`5433`), Ollama
   (`11434`), agente (`8001`) e Streamlit (`8501`) publicados antes da mudanca.
   O Nginx ja atende o chat por `127.0.0.1:8501`, e o `docker-comm` usa
   `127.0.0.1:8002`.
-- O Compose passou a limitar os servicos de manutencao ao loopback e removeu a
-  publicacao do Redis. Falta aplicar na VPS e validar os listeners, o Nginx e
-  a conexao de saida ao ERP. O UFW estava inativo; sua regra deve considerar
-  tambem os outros projetos da maquina.
+- O Compose limita os servicos de manutencao ao loopback e remove a publicacao
+  do Redis. A aplicacao na VPS confirmou os listeners, o Nginx e o backend do
+  ERP quente habilitado. O UFW permaneceu inativo para nao alterar portas de
+  outros projetos da maquina.
 
 ## Backup Manual Mantido Sob Revisao Em 21/09/2026
 
@@ -223,3 +226,16 @@ altera a classificacao de prontidao comercial.
   conversacional necessario antes de qualquer deploy ou mudanca estrutural.
 - A automacao volta ao backlog somente se a frequencia de operacao ou a beta
   mostrarem que o procedimento manual deixou de ser suficiente.
+
+## Deploy Protegido E Beta Inicial Na VPS Em 21/09/2026
+
+- A VPS passou a expor agente (`8001`), catalogo (`5433`), Ollama (`11434`) e
+  Streamlit (`8501`) somente no loopback; Redis nao possui porta publicada. O
+  Nginx continuou respondendo ao dominio HTTPS do chat. O UFW permaneceu
+  inativo, conscientemente, porque a maquina tambem hospeda outros projetos.
+- O agente iniciou em producao com as chaves de revisao e gateway configuradas;
+  catalogo, ERP quente com fallback local e UI responderam apos o deploy.
+- A beta inicial pelo `docker-comm` confirmou conversa persistida no Redis,
+  follow-up de selecao de filtro de oleo e desambiguacao de coxim por posicao,
+  versao e candidato. Esses smoke tests confirmam fluxo e infraestrutura; a
+  avaliacao comercial rotulada de ranking continua pendente.
