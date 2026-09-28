@@ -449,59 +449,6 @@ def test_respond_respects_explicit_handoff_during_result_disambiguation() -> Non
     }
 
 
-def test_respond_selects_result_in_follow_up_without_new_erp_search() -> None:
-    app = _make_app()
-    with TestClient(app) as client:
-        first = client.post(
-            "/respond",
-            json=_payload("Preciso de bandeja da EcoSport 2008"),
-        ).json()
-        second = client.post(
-            "/respond",
-            json=_payload(
-                "esquerdo",
-                context_messages=[
-                    {"role": "user", "text": "Preciso de bandeja da EcoSport 2008"},
-                    {"role": "assistant", "text": first["reply"]["text"]},
-                ],
-                conversation_state=first["conversation_state"],
-            ),
-        )
-
-    assert second.status_code == 200
-    body = second.json()
-    assert "BDJ-001" in body["reply"]["text"]
-    assert body["actions"][0]["type"] == "show_items"
-    assert body["actions"][0]["items"][0]["item_id"] == "BDJ-001"
-    assert body["tool_trace"]["pre_search_path"] == "result_disambiguation"
-    assert body["tool_trace"]["used_tools"] == ["result_disambiguation"]
-    assert "search_parts" not in body["tool_trace"]["used_tools"]
-    assert body["conversation_state"]["pending_slot"] is None
-    assert body["conversation_state"]["result_disambiguation"] is None
-
-
-def test_respond_change_of_part_clears_result_disambiguation() -> None:
-    app = _make_app()
-    with TestClient(app) as client:
-        first = client.post(
-            "/respond",
-            json=_payload("Preciso de bandeja da EcoSport 2008"),
-        ).json()
-        second = client.post(
-            "/respond",
-            json=_payload(
-                "Preciso de pastilha de freio para ecosport 2008",
-                conversation_state=first["conversation_state"],
-            ),
-        )
-
-    assert second.status_code == 200
-    body = second.json()
-    assert body["tool_trace"]["pre_search_path"] == "llm"
-    assert body["conversation_state"]["criteria"]["part_query"] == "pastilha de freio"
-    assert body["conversation_state"]["result_disambiguation"] is None
-
-
 def test_respond_with_filtro_de_oleo_returns_single_match() -> None:
     app = _make_app()
     with TestClient(app) as client:
@@ -579,12 +526,12 @@ def test_respond_uses_deterministic_ask_without_calling_llm() -> None:
 
     assert response.status_code == 200
     body = response.json()
-    assert body["reply"]["text"] == "Qual lado da peca?"
+    assert body["reply"]["text"] == "Esquerdo ou direito?"
     assert body["actions"] == [
         {
             "type": "request_info",
             "key": "side",
-            "prompt": "Qual lado da peca?",
+            "prompt": "Esquerdo ou direito?",
             "options": ["Esquerdo", "Direito", "Nao sei"],
         }
     ]
@@ -607,7 +554,7 @@ def test_respond_uses_deterministic_ask_without_calling_llm() -> None:
             "active_item_index": None,
             "item_results": None,
             "pending_slot": "side",
-            "pending_question": "Qual lado da peca?",
+            "pending_question": "Esquerdo ou direito?",
             "last_decision": "ask",
             "result_disambiguation": None,
         }

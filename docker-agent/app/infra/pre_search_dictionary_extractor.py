@@ -65,6 +65,7 @@ class DictionaryPreSearchExtractor:
         self._part_patterns = list(catalog.part_patterns)
         self._brand_aliases = dict(catalog.brand_aliases)
         self._model_aliases = dict(catalog.model_aliases)
+        self._variant_aliases_by_model = dict(catalog.variant_aliases_by_model)
         self._part_code_patterns = compile_part_code_patterns(catalog.part_code_patterns)
         self._part_alias_candidates = self._build_alias_candidates(self._part_patterns)
         self._max_part_alias_tokens = max(
@@ -109,7 +110,7 @@ class DictionaryPreSearchExtractor:
         # A direction negated after an affirmative direction is resolved by
         # _extract_position; it is not a negative part request.
         without_directions = re.sub(
-            r"\bnao\s+(?:e\s+)?(?:dianteir[oa]|traseir[oa]|front|rear)\b",
+            r"\bnao\s+(?:e\s+)?(?:dianteir[oa]s?|traseir[oa]s?|front|rear)\b",
             "",
             normalized,
         ).strip()
@@ -318,6 +319,18 @@ class DictionaryPreSearchExtractor:
             short_year = re.search(r"\b(8\d|9\d)\b", normalized_text)
             if short_year:
                 vehicle_year = 1900 + int(short_year.group(1))
+        exact_part_match = self._extract_exact_part_query_match(normalized_text)
+        quantity = self._extract_quantity(normalized_text)
+        if quantity is None and exact_part_match is not None:
+            alias_match = re.search(
+                rf"\b{re.escape(exact_part_match.alias)}\b",
+                normalized_text,
+            )
+            if alias_match is not None:
+                quantity = self._extract_quantity_before_part(
+                    normalized_text,
+                    alias_match.start(),
+                )
         return SearchCriteria(
             part_query=self._extract_part_query(normalized_text),
             part_code=self._extract_part_code(
@@ -334,8 +347,8 @@ class DictionaryPreSearchExtractor:
             side=self._extract_side(normalized_text),
             position=self._extract_position(normalized_text),
             axle=self._extract_axle(normalized_text),
-            variant=self._extract_variant(normalized_text),
-            quantity=self._extract_quantity(normalized_text),
+            variant=self._extract_catalog_variant(normalized_text, vehicle_model) or self._extract_variant(normalized_text),
+            quantity=quantity,
         )
 
     @staticmethod
@@ -592,6 +605,13 @@ class DictionaryPreSearchExtractor:
             if re.search(pattern, text):
                 return value
         return None
+
+    def _extract_catalog_variant(self, text: str, model: str | None) -> str | None:
+        matches = {
+            variant for variant, alias in self._variant_aliases_by_model.get(normalize_pre_search_text(model), [])
+            if re.search(rf"\b{re.escape(alias)}\b", text)
+        }
+        return next(iter(matches)) if len(matches) == 1 else None
 
     @staticmethod
     def _extract_quantity(text: str) -> int | None:

@@ -86,6 +86,11 @@ DETERMINISTIC_ASK_FIELD_PRIORITY: tuple[str, ...] = (
 COXIM_TYPE_SLOT = "coxim_type"
 COXIM_GENERAL_FAMILY = "coxins"
 COXIM_AMORTECEDOR_FAMILY = "coxim amortecedor"
+UNKNOWN_FOLLOW_UP_PATTERN = re.compile(
+    r"^\s*(?:nao sei|nao tenho certeza|nao lembro|desconheco)"
+    r"(?:\s+(?:a|o|qual|da|do)?\s*"
+    r"(?:motorizacao|motor|lado|posicao|eixo|versao|ano))?\s*$"
+)
 DETERMINISTIC_ASK_PART_REQUEST_PATTERN = re.compile(
     r"\b(?:quero|preciso|procuro|busco|tem|teria|gostaria)\b"
     r"[^.!?]{0,40}\b(?:peca|pecas|autopeca|autopecas|item automotivo)\b"
@@ -96,6 +101,11 @@ DETERMINISTIC_ASK_GENERIC_PART_TOKENS: set[str] = {
     "automotivo",
     "item",
 }
+POST_SEARCH_DIRECTIONAL_REFINEMENT_FIELDS: tuple[str, ...] = (
+    "side",
+    "position",
+    "axle",
+)
 DETERMINISTIC_ASK_UNSAFE_INTENT_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
     (
         "handoff_intent",
@@ -447,8 +457,13 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             current_criteria=current_criteria,
             conversation_state=conversation_state,
         )
+        has_new_explicit_family = self._has_new_explicit_part_family(
+            message_text=message_text,
+            current_criteria=current_criteria,
+            conversation_state=conversation_state,
+        )
         if conversation_state and conversation_state.pending_slot:
-            if not is_follow_up:
+            if not is_follow_up and not has_new_explicit_family:
                 return self._deterministic_ask_ineligible(
                     reason="active_pending_slot",
                     criteria=current_criteria,
@@ -463,6 +478,12 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
                 conversation_state=conversation_state,
                 message_text=message_text,
             )
+            if has_new_explicit_family:
+                contextual_values = contextual_criteria.model_dump(exclude_none=False)
+                for field_name, current_value in current_criteria.model_dump(exclude_none=False).items():
+                    if current_value not in (None, "", []):
+                        contextual_values[field_name] = current_value
+                contextual_criteria = SearchCriteria.model_validate(contextual_values)
             current_criteria = self._merge_dictionary_with_conversation_state(
                 dictionary_criteria=contextual_criteria,
                 conversation_state=conversation_state,
@@ -530,6 +551,18 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
                 explicit_part_code=False,
             )
         )
+        if (
+            has_new_explicit_family
+            and conversation_state is not None
+            and conversation_state.pending_slot == "vehicle_year"
+            and current_criteria.vehicle_year is None
+        ):
+            # The customer changed only the family. The unanswered year still
+            # qualifies the same vehicle application and must be collected for
+            # the replacement item before an ERP search.
+            missing_fields = self._order_deterministic_ask_fields(
+                ["vehicle_year", *missing_fields]
+            )
         if not missing_fields:
             return self._deterministic_ask_ineligible(
                 reason="no_missing_field",
@@ -552,7 +585,9 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
                 "complete_follow_up_missing_field"
                 if is_follow_up
                 else (
-                    "exact_family_missing_field"
+                    "new_explicit_family_missing_field"
+                    if has_new_explicit_family
+                    else "exact_family_missing_field"
                     if exact_part_query
                     else "explicit_generic_part_request"
                 )
@@ -684,9 +719,24 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             criteria=current_criteria,
         ) is not None:
             return None
+        unknown_follow_up = self._build_unknown_follow_up_handoff(
+            message_text=message_text,
+            conversation_state=conversation_state,
+        )
+        if unknown_follow_up is not None:
+            self._set_unknown_follow_up_audit(
+                pending_slot=str(conversation_state.pending_slot or "")
+            )
+            return unknown_follow_up
         is_follow_up = trusted_coxim_resolution or self._is_deterministic_follow_up_candidate(
             current_criteria=current_criteria,
             conversation_state=conversation_state,
+        )
+        is_post_search_directional_refinement = (
+            self._is_deterministic_post_search_directional_refinement(
+                current_criteria=current_criteria,
+                conversation_state=conversation_state,
+            )
         )
 
         if conversation_state and conversation_state.pending_slot and not is_follow_up:
@@ -695,6 +745,12 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         if trusted_coxim_resolution:
             criteria = current_criteria
             bypass_reason = "coxim_type_follow_up"
+        elif is_post_search_directional_refinement:
+            criteria = self._merge_post_search_directional_refinement(
+                current_criteria=current_criteria,
+                conversation_state=conversation_state,
+            )
+            bypass_reason = "post_search_directional_refinement"
         elif is_follow_up:
             dictionary_criteria = self._dictionary_extractor.extract(
                 message_text,
@@ -720,7 +776,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             message_text=message_text,
             criteria=criteria,
             conversation_state=conversation_state,
-            is_follow_up=is_follow_up,
+            is_follow_up=(is_follow_up or is_post_search_directional_refinement),
         ):
             return None
 
@@ -766,6 +822,70 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             next_question=None,
             confidence=0.99,
         )
+
+    @staticmethod
+    def _build_unknown_follow_up_handoff(
+        *,
+        message_text: str,
+        conversation_state: ConversationState | None,
+    ) -> PreSearchValidation | None:
+        """End an unanswered governed question without guessing or looping.
+
+        The active state proves which fact was requested, but an explicit
+        unknown answer is not evidence for any value.  A later field cannot
+        safely replace a mandatory discriminator such as engine, side or
+        position, so the deterministic path hands the conversation to a human
+        instead of asking the same question again or inventing a constraint.
+        """
+        if (
+            conversation_state is None
+            or conversation_state.last_decision != "ask"
+            or not conversation_state.pending_slot
+            or not UNKNOWN_FOLLOW_UP_PATTERN.fullmatch(
+                normalize_pre_search_text(message_text)
+            )
+        ):
+            return None
+
+        pending_slot = str(conversation_state.pending_slot).strip()
+        labels = {
+            "engine": "a motorizacao",
+            "side": "o lado",
+            "position": "a posicao",
+            "axle": "o eixo",
+            "variant": "a versao",
+            "vehicle_year": "o ano",
+            COXIM_TYPE_SLOT: "o tipo de coxim",
+        }
+        label = labels.get(pending_slot, "esse dado")
+        return PreSearchValidation(
+            decision="handoff",
+            criteria=conversation_state.criteria,
+            missing_fields=[pending_slot],
+            next_question=NextQuestion(
+                key="handoff",
+                prompt=(
+                    f"Sem {label}, nao consigo separar os itens com seguranca. "
+                    "Vou encaminhar para atendimento humano."
+                ),
+                options=None,
+            ),
+            confidence=0.3,
+        )
+
+    def _set_unknown_follow_up_audit(self, *, pending_slot: str) -> None:
+        self._last_audit_info.set({
+            "llm_endpoint_used": None,
+            "llm_raw_content": None,
+            "llm_output_valid": None,
+            "llm_parse_error": None,
+            "llm_fallback_used": None,
+            "llm_decision_raw": None,
+            "pre_search_path": "deterministic_bypass",
+            "deterministic_reason": "unknown_pending_follow_up_handoff",
+            "missing_fields": [pending_slot],
+            "next_question_key": "handoff",
+        })
 
     @staticmethod
     def _coxim_type_question(criteria: SearchCriteria) -> DeterministicAskEligibility:
@@ -863,6 +983,83 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         if isinstance(value, str):
             return bool(value.strip())
         return value is not None
+
+    @staticmethod
+    def _is_deterministic_post_search_directional_refinement(
+        *,
+        current_criteria: SearchCriteria,
+        conversation_state: ConversationState | None,
+    ) -> bool:
+        """Accept a clear direction change after a completed catalog search.
+
+        A customer commonly reacts to a rear-item list with "dianteiro" or
+        "dianteiro mesmo valor?".  It is a new query constrained by the last
+        proven application, not a residual language task.  Keep this narrow:
+        only side, position and axle can be changed without an active backend
+        question; family, vehicle and commercial preferences still require the
+        normal parsing path.
+        """
+
+        if (
+            conversation_state is None
+            or conversation_state.last_decision != "search"
+            or conversation_state.pending_slot is not None
+            or not conversation_state.criteria.part_query
+        ):
+            return False
+
+        current_values = current_criteria.model_dump(exclude_none=True)
+        explicit_directional_fields = {
+            field_name
+            for field_name in POST_SEARCH_DIRECTIONAL_REFINEMENT_FIELDS
+            if current_values.get(field_name) is not None
+        }
+        if not explicit_directional_fields:
+            return False
+
+        return all(
+            field_name in POST_SEARCH_DIRECTIONAL_REFINEMENT_FIELDS
+            for field_name in current_values
+        )
+
+    @staticmethod
+    def _merge_post_search_directional_refinement(
+        *,
+        current_criteria: SearchCriteria,
+        conversation_state: ConversationState | None,
+    ) -> SearchCriteria:
+        """Apply only explicit directional evidence to the completed search."""
+
+        if conversation_state is None:
+            return current_criteria
+        values = conversation_state.criteria.model_dump(exclude_none=False)
+        for field_name in POST_SEARCH_DIRECTIONAL_REFINEMENT_FIELDS:
+            value = getattr(current_criteria, field_name)
+            if value is not None:
+                values[field_name] = value
+        return SearchCriteria.model_validate(values)
+
+    def _has_new_explicit_part_family(
+        self,
+        *,
+        message_text: str,
+        current_criteria: SearchCriteria,
+        conversation_state: ConversationState | None,
+    ) -> bool:
+        """Recognize a catalog family that replaces a pending item's family."""
+        if not conversation_state or not conversation_state.pending_slot:
+            return False
+        previous = self._canonicalize_part_query(conversation_state.criteria.part_query)
+        current = self._canonicalize_part_query(current_criteria.part_query)
+        return bool(
+            previous
+            and current
+            and previous != current
+            and self._dictionary_extractor.has_exact_part_query_match(
+                message_text=message_text,
+                canonical_part_query=current,
+            )
+        )
 
     @staticmethod
     def _is_year_only_follow_up_answer(message_text: str) -> bool:

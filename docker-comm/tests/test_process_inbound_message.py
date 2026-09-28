@@ -1,7 +1,10 @@
 import asyncio
 import logging
 
+import httpx
+
 from app.config import Settings
+from app.core.domain.errors import AgentTimeoutError
 from app.core.domain.models import (
     AgentRequestPayload,
     AgentResponsePayload,
@@ -20,6 +23,45 @@ from app.core.domain.models import (
 )
 from app.core.usecases.process_inbound_message import ProcessInboundMessageUseCase
 from app.infra.agent_client_http import HttpAgentClient
+
+
+def test_http_agent_client_does_not_retry_timed_out_turn() -> None:
+    class _TimeoutHttpClient:
+        calls = 0
+
+        async def post(self, url, json, headers):
+            _ = url, json, headers
+            self.calls += 1
+            raise httpx.ReadTimeout("request timed out")
+
+        async def aclose(self) -> None:
+            return None
+
+    client = HttpAgentClient(
+        agent_url="http://agent.local/respond",
+        timeout_seconds=1.0,
+        retry_count=1,
+    )
+    fake_http = _TimeoutHttpClient()
+    client._client = fake_http
+    payload = AgentRequestPayload(
+        trace_id="trace-timeout",
+        conversation_id="conv-timeout",
+        channel=ChannelInfo(name="generic"),
+        message=IncomingMessage(text="oi"),
+        context=ConversationContext(last_messages=[]),
+        runtime=RuntimeInfo(locale="pt-BR", timezone="America/Sao_Paulo"),
+        business=BusinessInfo(branch_id=1),
+    )
+
+    try:
+        asyncio.run(client.send(payload=payload, trace_id="trace-timeout"))
+    except AgentTimeoutError:
+        pass
+    else:
+        raise AssertionError("Expected AgentTimeoutError")
+
+    assert fake_http.calls == 1
 
 
 class _FakeSessionStore:

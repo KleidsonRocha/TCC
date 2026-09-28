@@ -1,10 +1,24 @@
 # Progresso Do Projeto
 
-Estado em 21/09/2026. Historico de problemas, benchmarks e relatorios em
+Estado em 22/09/2026. Historico de problemas, benchmarks e relatorios em
 [HISTORICO.md](HISTORICO.md); pendencias e criterios de aceite em
 [TODO.md](TODO.md). Resultados locais nao encerram a validacao na VPS.
 
 ## Estado Atual
+
+- Reranking `application_corroboration_v1` aplicado no SQL real e no snapshot,
+  antes do limite; aliases de versao preservam JOY e SURF. Diagnosticos internos
+  identificam backend, criterios, evidencia e componentes do score.
+- Validacao local: 233 testes focados e 90/90 verificacoes golden aprovados;
+  replay de tres consultas produziu a mesma ordem no ERP quente e no snapshot.
+  Avaliacao comercial completa e calibracao continuam pendentes.
+- A latencia residual de `real_041` foi corrigida: os follow-ups direcionais
+  nao chamam a LLM depois de uma busca concluida. A reproducao completa 3/3
+  terminou entre 1,10 s e 1,57 s; a bateria longa continua pendente.
+- O relatorio consolidado de 22/09 registrou casos restantes de entidade,
+  estado, atributo comercial, acessorio e `no_match`. Eles foram movidos para
+  a Prioridade 4.5, fora do treinamento, preservando a bateria atual como
+  baseline pre-fine-tuning. A preparacao de QLoRA passa a ser o proximo bloco.
 
 - API `/respond` integra catalogo PostgreSQL, extracao deterministica,
   `deterministic_ask`, `deterministic_bypass` e LLM residual via Ollama.
@@ -239,3 +253,59 @@ altera a classificacao de prontidao comercial.
   follow-up de selecao de filtro de oleo e desambiguacao de coxim por posicao,
   versao e candidato. Esses smoke tests confirmam fluxo e infraestrutura; a
   avaliacao comercial rotulada de ranking continua pendente.
+
+## Fluxos De Desconhecimento E Cobertura Lexical Implementados Localmente Em 21/09/2026
+
+- Um `nao sei` respondido a um slot governado pendente deixa de cair na LLM ou
+  repetir a mesma pergunta: quando nao ha discriminador catalogado suficiente,
+  o backend preserva os criterios confirmados e encaminha ao atendimento
+  humano.
+- O alias curto `vela`/`velas` foi incluido no catalogo de velas de ignicao
+  automotivas. A extracao tambem preserva quantidade nua imediatamente antes
+  do alias, sem interpretar ano ou motor como quantidade.
+- Foram acrescentadas regressões unitarias e dois cenarios no dataset
+  estrutural: `radiador Gol 2010 -> nao sei a motorizacao` e `4 velas NGK para
+  Gol 2010 1.0`. A execucao da bateria permanece para a rodada conjunta de
+  validacao solicitada pelo usuario.
+
+## Instrumentacao E Desempate Conservador Do ERP Em 21/09/2026
+
+- A consulta agora registra, depois da identidade de familia/codigo, candidatos
+  brutos, rejeitados, filtrados e ranqueados. Rejeicoes distinguem refinamento
+  do item de falha de aplicacao, e resultados finais trazem `score_breakdown`.
+- O diagnostico fica nos logs e na fila interna de revisao, limitado a 50
+  candidatos por etapa; o chat continua recebendo apenas os itens permitidos
+  pelo contrato publico.
+- Aplicacao exata segue eliminatoria. A preferencia explicita por marca de
+  produto desempata candidatos; injecao, transmissao, complemento e atributos
+  comerciais permanecem com peso zero ate a rodada humana de ranking.
+- Foram adicionadas regressao de captura na fila e o caso ERP
+  `ranking_trace_preferred_brand_and_rejections`. A execucao dos novos testes e
+  da bateria foi adiada conforme solicitado pelo usuario.
+
+## Bateria Real Com Diagnostico Correlacionado Em 22/09/2026
+
+- A bateria passa a buscar a acao interna `search_diagnostics` na captura de
+  revisao pelo `trace_id` de cada turno. Pelo `docker-comm`, ela usa o id
+  devolvido pelo gateway, preservando a correlacao com o request real.
+- O JSON passa a conter a trilha completa de candidatos; o Markdown e a
+  comparacao humana mostram contagens, primeiro ranqueado e o estado da
+  captura. O contrato publico do chat continua sem diagnostico.
+- Foram adicionados testes unitarios para extracao da fila, correlacao do
+  trace do gateway e renderizacao do resumo. `12` testes de
+  `test_real_respond_battery.py` passaram em container.
+- Uma rodada integrada de `legacy_001` retornou HTTP 200 e gerou o resumo de
+  `310` candidatos brutos, `306` rejeitados, `4` filtrados e `4` ranqueados;
+  artefatos locais em `.tmp/eval/real_respond_battery_agent_20260922T111922434539Z.*`.
+
+## Troca De Familia Pendente E Regressoes Reais Em 22/09/2026
+
+- Uma familia nova, reconhecida diretamente no catalogo durante um follow-up,
+  agora substitui o item ativo antes de o proximo atributo ser aplicado. A
+  regressao de `real_004` cobre `polia -> rolamentos -> 2013`.
+- O catalogo recebeu aliases compostos para `bucha estabilizador` e `junta da
+  tampa de valvula`; as regressoes de `real_001` e `real_046` protegem a
+  decomposicao correta das familias. A extracao tambem reconhece
+  `dianteiras`/`traseiras`.
+- Seis testes focados passaram em container, incluindo a geracao reproduzivel
+  do dataset estrutural, sem executar a bateria longa.

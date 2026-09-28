@@ -11,6 +11,40 @@ historicos nao comprovam a qualidade da versao atual em producao.
 
 ## Marco E Abril: Baseline E Curadoria
 
+### 22/09/2026 - Reranking Local E Atualizacao Da Stack
+
+- Implementada corroboracao de ano, motor e versao antes do LIMIT, com
+  penalidades auditaveis para conflitos explicitos; aliases JOY e SURF passam
+  pelo catalogo. Pesos iniciais nao representam probabilidades calibradas.
+- Comparacao com baseline de 21/09: `real_036_t1`, B.47895 da 3a para a 1a
+  posicao; `real_041_t1`, AMD0358 da 4a para a 1a; `real_042_t2`, YM6160 da
+  1a para a 4a. Nos dois primeiros, tambem foi corrigida a extracao da versao.
+- ERP quente e snapshot produziram a mesma ordem nas tres consultas. A
+  verificacao registrou criterios, diagnostico e ordem antes/depois nos logs
+  locais; isso nao mede Top-1/Top-3 da populacao.
+- 233 testes focados aprovados; golden ampliado para 45 casos, com 90/90
+  verificacoes de contrato/SQL aprovadas. Fixtures de marca foram isoladas
+  para nao alterar as expectativas do conjunto original de auditoria.
+- Amostra API de seis turnos: quatro concluidos, `real_041_t2` e
+  `real_041_t3` excederam 90 s. A execucao esta registrada nos logs locais.
+- Backup PostgreSQL local validado por `pg_restore -l` antes da carga aditiva:
+  `.tmp/before_reranking_20260922.dump`; 2419 aliases de pecas e dois de versao
+  aplicados sem apagar volumes. Agente, gateway e interface reconstruidos
+  localmente. Nenhuma alteracao aplicada na VPS.
+- O smoke final de `real_036_t1` pela API do agente passou em 1,1 s, preservou
+  PARATI 2008/SURF e devolveu B.47895 no topo; artefato em
+  `.tmp/eval/real_036_reranking_20260922.json`.
+- Os follow-ups de `real_041` foram correlacionados: `t2` e `t3` levavam 140,6
+  s e 115,3 s no Ollama, embora a busca ERP fosse valida. O refinamento
+  direcional apos busca concluida passou a ser deterministico. Nova execucao
+  3/3: 1,34 s, 1,57 s e 1,10 s; artefato em
+  `.tmp/eval/real_041_followup_latency_20260922.json`.
+- O relatorio consolidado da bateria de 346 turnos registrou 341 respostas
+  estruturais, 35 listas e queda de empate total de 100% para 57,1%. As falhas
+  determinísticas restantes foram documentadas como divida pós-fine-tuning,
+  sem reabrir pesos ou gates de busca nesta etapa.
+
+
 | Data | Evidencia | Consequencia |
 | --- | --- | --- |
 | 25/03/2026 | Bateria real: 50 pedidos, 48 HTTP 200, 27 `request_info`, 17 `show_items`, 4 handoffs e 2 erros HTTP. Media 39,28 s; maximo 67,88 s. | Faltavam regras consistentes de familia, follow-up, ranking e tratamento de falhas. |
@@ -266,3 +300,66 @@ gabarito formal de compatibilidade ou disponibilidade.
   conversa: selecao de filtro de oleo para Corsa e desambiguacao de coxim da
   EcoSport por posicao, versao e candidato. A evidencia e beta de
   infraestrutura/fluxo, nao certificacao de compatibilidade comercial.
+
+## Continuidade Segura E Cobertura Lexical Em 21/09/2026
+
+- **Problema:** uma resposta explicita `nao sei` a uma pergunta de motor podia
+  ir para a LLM e voltar a perguntar a mesma motorizacao.
+- **Correcao local:** o estado pendente reconhece desconhecimento e encerra em
+  handoff deterministico, preservando os criterios que o cliente ja informou.
+  A regressao cobre `radiador Gol 2010 -> nao sei a motorizacao`.
+- **Problema:** a familia comercial curta `velas` nao era um alias catalogado,
+  e `4 velas NGK para Gol 2010 1.0` perdia a quantidade nua antes da familia.
+- **Correcao local:** aliases auditaveis de `vela` e `velas` foram adicionados
+  a velas de ignicao automotivas; quantidade, marca preferida e marca de
+  veiculo permanecem campos independentes. A regressao estrutural registra a
+  mensagem completa para a proxima rodada.
+
+## Instrumentacao De Busca E Politica De Desempate Em 21/09/2026
+
+- **Evidencia:** a avaliacao humana preliminar apontou empate total nos 20
+  rankings observados. A resposta final sozinha nao mostrava se a causa era
+  recuperacao, exclusao por aplicacao ou ordenacao.
+- **Correcao local:** `search_diagnostics` passou a registrar a amostra de
+  candidatos brutos, rejeitados, filtrados e ranqueados, seus motivos e o
+  `score_breakdown`; a captura fica limitada e segue apenas para log e revisao.
+- **Politica:** filtros de identidade e aplicacao continuam obrigatorios. A
+  marca comercial preferida e o unico desempate com evidencia explicita do
+  cliente; pesos para injecao, transmissao, complemento e atributos comerciais
+  ficam em zero ate a proxima avaliacao rotulada.
+- **Regressao pendente de execucao:** o golden case
+  `ranking_trace_preferred_brand_and_rejections` cobre candidato acessorio,
+  aplicacoes rejeitadas e preferencia NGK. Nenhum teste foi executado nesta
+  entrega, por solicitacao do usuario.
+
+## Correlacao Da Bateria Real Com A Captura De Revisao Em 22/09/2026
+
+- **Problema:** a bateria de respostas reais guardava o texto e os candidatos
+  publicos, mas nao a trilha interna usada pelo ERP. Assim, Top-1, Top-3,
+  rejeicoes e empates continuavam sem causa observavel no mesmo relatorio.
+- **Correcao local:** cada turno agora le a captura protegida por `trace_id` e
+  grava `search_diagnostics` no JSON gerado; os Markdown resumem contagens e
+  o primeiro item ranqueado. No caminho via gateway, a correlacao usa o id que
+  o `docker-comm` devolve.
+- **Limite:** a evidencia so aparece quando avaliador e catalogo compartilham
+  a rede da fila de revisao; `unavailable` indica que a coleta deve ser
+  repetida no ambiente integrado, nao uma falha comercial do atendimento.
+- **Validacao focal:** os 12 testes do executor passaram em container. Uma
+  execucao integrada de `legacy_001` registrou 310 candidatos brutos, 306
+  rejeitados, quatro filtrados e quatro ranqueados no artefato local, sem
+  expor essa trilha na resposta HTTP do chat.
+
+## Troca De Familia Durante Follow-Up Em 22/09/2026
+
+- **Problema:** com uma pergunta pendente para polia, a nova familia
+  `rolamentos` de `real_004` ainda podia deixar o proximo ano associado ao
+  item anterior. `real_001` e `real_046` tambem expunham termos compostos
+  incompletos no catalogo.
+- **Correcao local:** uma familia explicita, reconhecida por alias exato,
+  substitui o item ativo do `ConversationState`; o proximo atributo completa a
+  nova familia. `bucha estabilizador` e `junta da tampa de valvula` foram
+  cadastradas como aliases das familias existentes, e plurais direcionais sao
+  reconhecidos.
+- **Regressoes:** o dataset estrutural agora inclui `real_001_regression`,
+  `real_004_regression` e `real_046_regression`. Seis testes focados passaram
+  em container; a bateria completa permanece pendente da rodada conjunta.

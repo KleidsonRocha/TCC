@@ -8,6 +8,7 @@ from typing import Any
 
 DATASET_PATH = Path("docs/assets/datasets/battery_structural_respond_v2.json")
 REVIEW_PATH = Path("docs/assets/datasets/real_respond_battery_human_validation.md")
+MANUAL_VALIDATION_PATH = Path("docs/assets/datasets/erp_manual_type_validation_v1.json")
 
 
 def turn(turn_id: str, message: str, expect: dict[str, Any] | None = None,
@@ -436,8 +437,164 @@ def multi_item_follow_up_scenarios() -> list[dict[str, Any]]:
 def validation_scenarios() -> list[dict[str, Any]]:
     specs = [("", "1.0"), (" ", "1.0"), ("\t", "1.0"), ("Oi", "0.9"), ("radiador", "99.0")]
     return [scenario(f"invalid_{index:03d}", "contract_validation", "regression",
-                     [turn(f"invalid_{index:03d}_t1", message, {"status": 400}, version)])
+                    [turn(f"invalid_{index:03d}_t1", message, {"status": 400}, version)])
             for index, (message, version) in enumerate(specs, 1)]
+
+
+def follow_up_unknown_scenarios() -> list[dict[str, Any]]:
+    return [
+        scenario(
+            "follow_up_unknown_001",
+            "governed_follow_up_unknown",
+            "regression",
+            [
+                turn("follow_up_unknown_001_t1", "radiador Gol 2010", {
+                    "status": 200,
+                    "pre_search_path": "deterministic_ask",
+                    "question_key": "engine",
+                    "criteria_contains": {
+                        "part_query": "radiador",
+                        "vehicle_model": "Gol",
+                        "vehicle_year": 2010,
+                    },
+                    "used_tools_excludes": ["search_parts"],
+                }),
+                turn("follow_up_unknown_001_t2", "nao sei a motorizacao", {
+                    "status": 200,
+                    "pre_search_path": "deterministic_bypass",
+                    "handoff_required": True,
+                    "reply_contains": ["atendimento humano"],
+                    "reply_excludes": ["Qual a motorizacao"],
+                    "used_tools_excludes": ["search_parts", "pre_search_validator"],
+                }),
+            ],
+        )
+    ]
+
+
+def lexical_product_brand_scenarios() -> list[dict[str, Any]]:
+    return [
+        scenario(
+            "lexical_product_brand_001",
+            "catalog_lexical_coverage",
+            "regression",
+            [
+                turn("lexical_product_brand_001_t1", "4 velas NGK para Gol 2010 1.0", {
+                    "status": 200,
+                    "pre_search_path": "deterministic_bypass",
+                    "criteria_contains": {
+                        "part_query": "velas de ignicao automotivas",
+                        "quantity": 4,
+                        "preferred_product_brand": "NGK",
+                        "vehicle_model": "Gol",
+                        "vehicle_year": 2010,
+                        "engine": "1.0",
+                    },
+                    "used_tools_contains": ["search_parts"],
+                }),
+            ],
+        )
+    ]
+
+
+def real_conversation_regression_scenarios() -> list[dict[str, Any]]:
+    """Stable structural assertions distilled from real, anonymized turns."""
+    return [
+        scenario(
+            "real_001_regression",
+            "real_conversation_multi_item",
+            "regression",
+            [turn("real_001_regression_t1", "Bieleta diant ld e le, e bucha estabilizador diant Accord 2001", {
+                "status": 200,
+                "items_contains": [
+                    {"part_query": "bieletas", "vehicle_model": "Accord", "vehicle_year": 2001, "position": "front"},
+                    {"part_query": "buchas", "vehicle_model": "Accord", "vehicle_year": 2001, "position": "front"},
+                ],
+            })],
+        ),
+        scenario(
+            "real_004_regression",
+            "real_conversation_new_family_follow_up",
+            "smoke",
+            [
+                turn("real_004_regression_t1", "Teria polia da bomba d'agua do Focus 1.6 16v sigma", {
+                    "status": 200,
+                    "question_key": "vehicle_year",
+                }),
+                turn("real_004_regression_t2", "E os rolamentos das rodas dianteiras", {
+                    "status": 200,
+                    "question_key": "vehicle_year",
+                    "criteria_contains": {
+                        "part_query": "rolamentos",
+                        "vehicle_model": "Focus",
+                        "position": "front",
+                    },
+                }),
+                turn("real_004_regression_t3", "2013", {
+                    "status": 200,
+                    "criteria_contains": {
+                        "part_query": "rolamentos",
+                        "vehicle_model": "Focus",
+                        "vehicle_year": 2013,
+                        "position": "front",
+                    },
+                }),
+            ],
+        ),
+        scenario(
+            "real_046_regression",
+            "real_conversation_compound_family",
+            "regression",
+            [turn("real_046_regression_t1", "Junta da tampa de valvula da Strada 1.4 2013", {
+                "status": 200,
+                "criteria_contains": {
+                    "part_query": "juntas",
+                    "vehicle_model": "Strada",
+                    "vehicle_year": 2013,
+                    "engine": "1.4",
+                },
+                "items_contains": [
+                    {"part_query": "juntas", "vehicle_model": "Strada", "vehicle_year": 2013, "engine": "1.4"},
+                ],
+            })],
+        ),
+        scenario(
+            "erp_batentes_s10_1996_dianteiro",
+            "manual_erp_family_validation",
+            "smoke",
+            [
+                turn("erp_batentes_s10_1996_dianteiro_t1", "batente para S10 1996", {
+                    "status": 200,
+                    "question_key": "position",
+                    "criteria_contains": {
+                        "part_query": "batentes",
+                        "vehicle_model": "S10",
+                        "vehicle_year": 1996,
+                    },
+                }),
+                turn("erp_batentes_s10_1996_dianteiro_t2", "dianteiro", {
+                    "status": 200,
+                    "pre_search_path": "deterministic_bypass",
+                    "criteria_contains": {
+                        "part_query": "batentes",
+                        "vehicle_model": "S10",
+                        "vehicle_year": 1996,
+                        "position": "front",
+                    },
+                    "used_tools_contains": ["search_parts"],
+                    "reply_contains": ["Encontrei"],
+                }),
+            ],
+            review_reason=(
+                "Comparar os codigos encontrados com a busca manual no ERP; "
+                "ha itens da lista ERP que nao apareceram na resposta observada."
+            ),
+            validation_question=(
+                "A familia, aplicacao, posicao e cobertura de codigos da "
+                "resposta correspondem ao ERP?"
+            ),
+        ),
+    ]
 
 
 def build_document() -> dict[str, Any]:
@@ -447,6 +604,8 @@ def build_document() -> dict[str, Any]:
                  safety_resolution_scenarios() + multi_item_vehicle_context_scenarios() +
                  multi_item_gate_scenarios() +
                  multi_item_follow_up_scenarios() +
+                 follow_up_unknown_scenarios() + lexical_product_brand_scenarios() +
+                 real_conversation_regression_scenarios() +
                  validation_scenarios())
     return {
         "schema_version": "2.0", "name": "real_respond_battery_v2",
@@ -476,6 +635,29 @@ def render_review(document: dict[str, Any]) -> str:
             "  - resultado esperado aprovado: _preencher_",
             "",
         ])
+    if MANUAL_VALIDATION_PATH.exists():
+        manual_document = json.loads(MANUAL_VALIDATION_PATH.read_text(encoding="utf-8"))
+        manual_entries = manual_document.get("entries", [])
+        if manual_entries:
+            lines.extend([
+                "## Validacao manual por tipo contra o ERP",
+                "",
+                "Os casos progressivos e resultados ficam em `erp_manual_type_validation_v1.json`. "
+                "Nao promover exemplos para fine-tuning enquanto a revisao estiver pendente.",
+                "",
+            ])
+        for entry in manual_entries:
+            erp_codes = entry.get("erp_reference", {}).get("codes_observed", [])
+            assistant_codes = entry.get("assistant_result", {}).get("codes_observed", [])
+            missing_codes = entry.get("review", {}).get("codes_in_erp_list_not_in_assistant_result", [])
+            lines.extend([
+                f"- [ ] **{entry['id']}** — familia `{entry.get('part_type', '-')}`; "
+                f"IA retornou {len(assistant_codes)} codigo(s) e ERP listou {len(erp_codes)}.",
+                f"  - codigos da IA: {', '.join(f'`{code}`' for code in assistant_codes) or 'nenhum'}",
+                f"  - codigos ERP ausentes da IA: {', '.join(f'`{code}`' for code in missing_codes) or 'nenhum'}",
+                "  - fechar a comparacao de aplicacao e cobertura antes de promover o caso.",
+                "",
+            ])
     return "\n".join(lines)
 
 

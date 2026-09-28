@@ -730,3 +730,258 @@ Consequencia:
 - cada deploy relevante continua exigindo o backup manual documentado;
 - a automacao deixa de bloquear as proximas entregas e pode retornar ao
   backlog com criterios operacionais mensuraveis.
+
+## 34. Resposta Explicita De Desconhecimento Encerra O Follow-Up Sem Repeticao
+
+Decisao:
+
+- reconhecer respostas curtas de desconhecimento somente quando houver uma
+  pergunta governada ativa no `ConversationState`;
+- quando os dados atuais nao fornecerem outro discriminador catalogado que
+  permita uma busca segura, encaminhar ao atendimento humano imediatamente;
+- preservar os criterios ja confirmados e registrar o caminho como
+  deterministico, sem enviar `nao sei` para a LLM nem repetir a mesma pergunta.
+
+Motivo:
+
+- `nao sei a motorizacao` nao e evidencia para selecionar um motor e nao pode
+  liberar a busca de radiador para Gol 2010;
+- insistir no mesmo slot transforma uma ausencia declarada em ciclo de conversa
+  e delegar a decisao a LLM permitiria inventar uma restricao.
+
+Consequencia:
+
+- `radiador Gol 2010 -> nao sei a motorizacao` termina em handoff, mantendo a
+  aplicacao confirmada para o atendente;
+- a politica vale tambem para lado, posicao, eixo, versao, ano e tipo de coxim
+  quando forem o slot pendente.
+
+## 35. Alias Comercial E Marca Preferida Sao Evidencias Independentes
+
+Decisao:
+
+- governar `vela` e `velas` como aliases da familia catalogada `velas de
+  ignicao automotivas` em `pre_search_part_alias.csv`;
+- aceitar quantidade nua apenas quando ela preceder imediatamente um alias
+  exato de familia, mantendo ano, motor, cilindrada e outros numeros fora da
+  extracao de quantidade;
+- manter `preferred_product_brand` como preferencia de produto independente de
+  `vehicle_brand`.
+
+Motivo:
+
+- "4 velas NGK para Gol 2010 1.0" contem cinco evidencias distintas; perder
+  qualquer uma delas reduz a qualidade da busca ou confunde fabricante da peca
+  com a marca do veiculo;
+- aliases pertencem ao catalogo auditavel, em vez de a excecoes textuais do
+  runtime.
+
+Consequencia:
+
+- a mensagem preserva familia, quantidade `4`, preferencia `NGK`, modelo Gol,
+  ano 2010 e motor 1.0;
+- aliases mais especificos continuam vencendo o alias curto durante a
+  resolucao exata.
+
+## 36. Diagnostico De Ranking E Interno, Limitado E Reproduzivel
+
+Decisao:
+
+- registrar na consulta os candidatos que passaram pela identidade, os
+  rejeitados por refinamento do item ou aplicacao, os filtrados e os
+  ranqueados, com contagens e amostra limitada a 50 por etapa;
+- anexar `search_diagnostics` somente aos logs estruturados e a acao interna da
+  fila de revisao; ele nao altera o contrato publico de resposta;
+- expor no diagnostico o `score_breakdown` de cada candidato final, inclusive o
+  total e componentes ainda com peso zero.
+
+Motivo:
+
+- a bateria humana mostrou empates completos, mas sem saber quais candidatos
+  foram eliminados ou por que um entrou na lista nao seria possivel separar
+  falha de recuperacao, filtro ou ordenacao;
+- observar o inventario inteiro por requisicao adicionaria custo e risco de
+  indisponibilidade ao proprio caminho de busca.
+
+Consequencia:
+
+- revisoes futuras podem comparar a mesma consulta no ERP quente e no snapshot
+  sem inferir o caminho apenas pela resposta final;
+- o log de diagnostico permanece dado operacional sujeito aos mesmos cuidados
+  de acesso da fila de revisao.
+
+## 37. Desempate Conservador Precede Calibracao Rotulada
+
+Decisao:
+
+- identidade de familia e aplicacao na mesma linha continuam filtros
+  eliminatorios; aplicacao exata nao recebe bonus que possa compensar falha de
+  compatibilidade;
+- somente `preferred_product_brand`, quando informado pelo cliente, recebe o
+  desempate explicito atual; empates restantes usam titulo e codigo apenas para
+  ordem estavel;
+- manter injecao, transmissao, complemento e atributos comerciais em peso zero
+  ate que a bateria rotulada meca Top-1, Top-3, incompatibilidades e empates.
+
+Motivo:
+
+- o baseline de 139 turnos evidencia empates, mas nao fornece rotulos
+  suficientes para afirmar que qualquer atributo comercial melhora a escolha;
+- dar peso a texto presente no cadastro sem medicao poderia deslocar um item
+  compativel para cima apenas por metadado ruidoso.
+
+Consequencia:
+
+- o novo dataset fixa uma preferencia de marca e rejeicoes por aplicacao para
+  regressao;
+- a proxima bateria no ERP quente decide se algum peso adicional deve ser
+  promovido, e a calibracao publica de `score` continua pendente dessa medicao.
+
+## 38. Bateria Real Correlaciona Diagnostico Pelo Trace Da Captura Interna
+
+Decisao:
+
+- a bateria de respostas reais le `final_actions` da fila protegida
+  `pre_search_review_interaction` pelo `trace_id` de cada turno e extrai apenas
+  a acao interna `search_diagnostics`;
+- o alvo direto usa o id criado pela bateria; pelo `docker-comm`, usa o
+  `trace_id` gerado e devolvido pelo gateway;
+- os artefatos JSON mantem o diagnostico completo, enquanto os dois Markdown
+  mostram apenas o resumo operacional; indisponibilidade da fila e registrada
+  como evidencia, sem falhar a chamada do chat.
+
+Motivo:
+
+- a resposta publica mostra somente candidatos permitidos e nao permite
+  distinguir recuperacao, rejeicao de aplicacao e desempate;
+- a fila ja oferece persistencia protegida e correlacionada, evitando criar
+  endpoint diagnostico ou expor os candidatos internos ao usuario final.
+
+Consequencia:
+
+- a proxima anotacao de Top-1/Top-3 pode auditar o caminho real do ERP no
+  mesmo arquivo da bateria;
+- executar o avaliador fora da rede do catalogo produz `unavailable`, o que
+  exige repetir a coleta no ambiente integrado antes de concluir ranking.
+
+## 39. Corroboracao De Aplicacao No Reranking Real
+
+Decisao (22/09/2026):
+
+- aplicar `application_corroboration_v1` no SQL compartilhado pelo ERP e pelo
+  snapshot, antes do LIMIT; preservar filtros obrigatorios de identidade e
+  aplicacao na mesma linha estruturada;
+- complementar a base com ano corroborado (+0.04), motor explicito (+0.02),
+  versao solicitada corroborada (+0.02), conflito de ano (-0.16) e exclusao
+  explicita da versao (-0.16). Sao pesos heuristicos iniciais, nao calibrados;
+- anos exigem intervalos fechados de quatro digitos no segmento do modelo;
+  versoes podem aparecer em continuacoes do titulo, mas precisam primeiro
+  corresponder a aplicacao estruturada. Ausencia de evidencia e neutra;
+- consultas por codigo nao recebem esses ajustes. Nao inferir injecao ou
+  transmissao nem usar titulo para resgatar aplicacao rejeitada;
+- governar JOY/Onix e SURF/Parati por aliases de versao no catalogo, com carga
+  aditiva transacional para volumes existentes;
+- registrar backend, criterios, aplicacoes, motivos e componentes na captura
+  interna, preservando a ordem real dos candidatos no diagnostico.
+
+Motivo e limites:
+
+- o ERP associa `YM6160` a Corolla 2002/2008 apesar do titulo 1998/2002;
+  um score empatado nao demonstrava execucao de codigo antigo;
+- JOY e SURF eram perdidos antes da consulta. A comparacao destes casos inclui
+  tanto a preservacao da versao quanto o reranking, nao apenas troca de pesos;
+- esta decisao amplia o desempate apenas por marca da decisao 37. Os tres
+  casos investigados sustentam regressao local, nao ganho geral de Top-1/Top-3;
+- corrigir divergencias na origem e avaliar a mesma bateria rotulada continuam
+  pendentes. O reranking nao comprova compatibilidade comercial.
+
+## 40. Nova Familia Explicita Substitui O Item Pendente
+
+Decisao:
+
+- durante uma pergunta pendente, uma familia reconhecida por alias exato e
+  diferente da familia ativa substitui o item ativo; a proxima resposta passa
+  a completar a nova familia;
+- os dados de veiculo ja informados continuam como contexto da conversa. Se a
+  troca ocorrer enquanto o ano ainda e o campo pendente, o ano permanece a
+  proxima pergunta para que a nova aplicacao nao use um valor inexistente;
+- nomes compostos comerciais entram como aliases auditaveis da familia
+  catalogada, sem criar regras por frase no fluxo conversacional.
+
+Motivo:
+
+- em `real_004`, a pergunta pelo ano da polia nao podia fazer `2013` completar
+  a polia depois de o cliente trocar explicitamente para rolamentos;
+- `real_001` e `real_046` mostraram que separar `bucha estabilizador` ou
+  `junta da tampa de valvula` em palavras soltas perde a familia comercial que
+  o cliente informou.
+
+Consequencia:
+
+- `real_004` preserva Focus e a posicao dianteira, passa a perguntar o ano dos
+  rolamentos e associa `2013` a esse novo item;
+- `real_001` conserva bieleta e bucha estabilizador como duas familias, e
+  `real_046` reconhece junta da tampa de valvula como uma familia;
+- aliases novos exigem a carga normal do catalogo no ambiente onde serao
+  exercitados, pois um volume PostgreSQL ja inicializado nao relê o CSV em
+  tempo de execucao.
+
+## 41. Refinamento Direcional Apos Busca Encerrada Nao Usa LLM
+
+Decisao (22/09/2026):
+
+- quando uma busca concluida tiver criterios estruturados e o cliente informar
+  somente lado, posicao ou eixo, aplicar esse atributo ao criterio anterior e
+  pesquisar novamente pelo caminho deterministico;
+- a regra e limitada a atributos direcionais explicitos. Familia, veiculo,
+  motor, versao, marca preferida e texto comercial continuam no fluxo normal;
+- uma pergunta sobre valor nao cria confirmacao de preco: ela apenas pode
+  acompanhar um refinamento direcional, e a resposta continua pedindo a
+  confirmacao comercial na filial.
+
+Motivo:
+
+- em `real_041`, a primeira busca por amortecedor traseiro do Onix 2018 JOY
+  encerrou com quatro itens. `Dianteiro mesmo valor?` e `Preciso dianteiro`
+  tinham posicao explicita, mas sem slot pendente caiam no Ollama;
+- a fila correlacionada mostrou que o ERP nao era a causa: os dois calls de
+  LLM completaram em 140,6 s e 115,3 s, apesar de devolverem criterios validos.
+
+Consequencia:
+
+- ambos os follow-ups preservam familia, Onix, ano, JOY e quantidade, trocam
+  apenas a posicao para dianteira e chegam ao ERP sem inferencia residual;
+- a regressao parametrizada cobre as duas frases reais. Outros follow-ups que
+  nao tenham atributo direcional explicito continuam seguros no caminho usual.
+
+## 42. Divida Deterministica Observada Fica Fora Do Ciclo Atual De Fine-Tuning
+
+Decisao (22/09/2026):
+
+- registrar `real_004`, `real_043`, `real_045_t2`, `real_080_t3`, `real_032`
+  e `real_028` como divida deterministica para a Prioridade 4.5, sem bloquear
+  a preparacao e a execucao controlada de QLoRA;
+- congelar os artefatos da bateria atual como baseline pre-fine-tuning e manter
+  esses casos no conjunto de regressao posterior;
+- nao promover exemplos desses defeitos para o dataset de treinamento com a
+  expectativa de que a LLM corrija familia, estado, filtros ou atributos do
+  catalogo. Casos linguísticos revisados continuam elegiveis normalmente;
+- manter `confidence` como heuristica de fluxo e `score` como relevancia. A
+  calibracao numerica e a nova anotacao global de Top-1/Top-3 ficam para a
+  retomada da Prioridade 4.5.
+
+Motivo:
+
+- a bateria atual ja demonstra ganho pareado de reranking e reducao de
+  latencia deterministica; nao ha evidência de que pesos ou gates de busca
+  sejam o problema principal neste momento;
+- os casos restantes pertencem a camadas que o fine-tuning nao deve mascarar:
+  entidade, estado conversacional, atributo comercial, identidade de item e
+  interpretacao de rejeicoes.
+
+Consequencia:
+
+- o experimento de fine-tuning mede melhor a contribuicao da adaptacao de
+  linguagem, sem transformar divida de backend em falso ganho do modelo;
+- apos a comparacao baseline/candidato, a Prioridade 4.5 reabre esses casos
+  com os traces e rotulos humanos preservados.

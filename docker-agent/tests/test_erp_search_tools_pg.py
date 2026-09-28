@@ -64,6 +64,14 @@ def _settings() -> Settings:
 
 
 def test_postgres_erp_tools_maps_rows_to_part_items(monkeypatch: pytest.MonkeyPatch) -> None:
+    diagnostics = {
+        "raw_candidates_count": 3,
+        "rejected_candidates": [{"item_id": "CAP", "reason": "item_refinement_filter"}],
+        "ranked_candidates": [{
+            "item_id": "022.1505",
+            "score_breakdown": {"family": 0.32, "total": 0.88},
+        }],
+    }
     rows = [
         {
             "item_code": "022.1505",
@@ -78,8 +86,10 @@ def test_postgres_erp_tools_maps_rows_to_part_items(monkeypatch: pytest.MonkeyPa
                 "injections": [], "transmissions": ["MANUAL"],
             }],
             "vehicle_model_motor_names": "2.0 de outra aplicacao, ignorado",
+            "search_diagnostics": diagnostics,
         },
         {"item_code": "022.1553", "title": "COXIM AMORTECEDOR FORD ECOSPORT C/ROL.", "score": 0.81},
+        {"item_code": None, "title": None, "score": None, "search_diagnostics": diagnostics},
     ]
     cursor = _FakeCursor(rows)
 
@@ -108,6 +118,11 @@ def test_postgres_erp_tools_maps_rows_to_part_items(monkeypatch: pytest.MonkeyPa
     )
 
     assert [item.item_id for item in items] == ["022.1505", "022.1553"]
+    assert tools.get_last_search_diagnostics()["ranked_candidates"] == diagnostics["ranked_candidates"]
+    assert tools.get_last_search_diagnostics()["backend"] == "erp_postgres"
+    assert tools.get_last_search_diagnostics()["criteria"]["vehicle_year"] == 2008
+    tools.get_last_search_diagnostics()["raw_candidates_count"] = 0
+    assert tools.get_last_search_diagnostics()["raw_candidates_count"] == 3
     assert items[0].score == 0.88
     assert items[0].attributes == {
         "application": ["Ford Ecosport 2003 a 2012"],
@@ -125,6 +140,28 @@ def test_postgres_erp_tools_maps_rows_to_part_items(monkeypatch: pytest.MonkeyPa
     assert cursor.executed_params["vehicle_year"] == 2008
     assert cursor.executed_params["part_query_norm"] == "coxins"
     assert connect_kwargs["client_encoding"] == "UTF8"
+
+
+def test_search_sql_emits_internal_trace_and_conservative_score_breakdown() -> None:
+    sql, params = PostgresErpSearchTools._build_search_sql(
+        criteria=SearchCriteria(
+            part_query="radiador",
+            vehicle_model="Gol",
+            vehicle_year=2010,
+            engine="1.0",
+            preferred_product_brand="NGK",
+        ),
+        limit=10,
+    )
+
+    assert "identity_candidates AS MATERIALIZED" in sql
+    assert "rejected_candidates AS" in sql
+    assert "search_diagnostics" in sql
+    assert "score_breakdown" in sql
+    assert "'injection', 0.0" in sql
+    assert "'transmission', 0.0" in sql
+    assert params["application_filter_fields"] == ["vehicle_model", "vehicle_year", "engine"]
+    assert params["preferred_product_brand_bonus"] == 0.08
 
 
 def test_postgres_erp_tools_raises_service_unavailable_on_connection_error(
@@ -234,6 +271,17 @@ def test_curated_family_id_does_not_require_canonical_words_in_title() -> None:
     assert "family_head_pattern" not in eligible_clause
     assert params["family_group_0"] == 2
     assert params["family_subgroup_0"] == 1
+
+
+def test_batente_plural_family_identity_matches_singular_erp_title() -> None:
+    sql, params = PostgresErpSearchTools._build_search_sql(
+        criteria=SearchCriteria(part_query="batentes"),
+        family_ids=[(1, 3), (2, 5)],
+        limit=10,
+    )
+
+    assert "family_token_0" in sql
+    assert params["family_token_0"] == r"\mbatentes?\M"
 
 
 def test_coxim_family_rejects_non_coxim_titles_from_noisy_erp_subgroup() -> None:

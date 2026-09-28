@@ -135,6 +135,108 @@ def test_runner_extracts_ranked_candidates_from_show_items_action() -> None:
     ]
 
 
+def test_runner_extracts_protected_search_diagnostics_by_trace_id() -> None:
+    final_actions = [
+        {"type": "show_items", "items": [{"item_id": "public-1"}]},
+        {
+            "type": "search_diagnostics",
+            "items": [{
+                "item_index": 0,
+                "criteria": {"part_query": "radiador"},
+                "diagnostics": {
+                    "raw_candidates_count": 4,
+                    "rejected_candidates_count": 2,
+                    "filtered_candidates_count": 2,
+                    "ranked_candidates_count": 2,
+                    "ranked_candidates": [{
+                        "item_id": "RV-1",
+                        "score": 0.84,
+                        "score_breakdown": {"family": 0.32, "total": 0.84},
+                    }],
+                },
+            }],
+        },
+    ]
+
+    assert runner.extract_search_diagnostics(final_actions) == [final_actions[1]["items"][0]]
+
+    class Cursor:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_):
+            return False
+
+        def execute(self, query, params):
+            assert "WHERE trace_id = %s" in query
+            assert params == ("gateway-trace",)
+
+        def fetchone(self):
+            return (final_actions,)
+
+    class Connection:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_):
+            return False
+
+        def cursor(self):
+            return Cursor()
+
+    reader = runner.ReviewDiagnosticsReader(
+        conninfo="not-a-secret",
+        wait_s=0,
+        connect=lambda _: Connection(),
+    )
+
+    captured = reader.read("gateway-trace")
+
+    assert captured == {
+        "capture_status": "captured",
+        "trace_id": "gateway-trace",
+        "items": [final_actions[1]["items"][0]],
+    }
+
+
+def test_runner_uses_gateway_trace_and_renders_internal_search_summary() -> None:
+    assert runner.capture_trace_id("comm", "request-trace", {"trace_id": "gateway-trace"}) == "gateway-trace"
+    assert runner.capture_trace_id("agent", "request-trace", {"trace_id": "other"}) == "request-trace"
+
+    rows = [{
+        "scenario_id": "real_005",
+        "turn_id": "real_005_t1",
+        "category": "ranking",
+        "status_code": 200,
+        "elapsed_ms": 12.5,
+        "assertion_failures": [],
+        "search_diagnostics": {
+            "capture_status": "captured",
+            "trace_id": "gateway-trace",
+            "items": [{
+                "criteria": {"part_query": "radiador"},
+                "diagnostics": {
+                    "raw_candidates_count": 4,
+                    "rejected_candidates_count": 1,
+                    "filtered_candidates_count": 3,
+                    "ranked_candidates_count": 3,
+                    "ranked_candidates": [{
+                        "item_id": "RV-1",
+                        "score": 0.84,
+                        "score_breakdown": {"family": 0.32, "total": 0.84},
+                    }],
+                },
+            }],
+        },
+    }]
+
+    report = runner.render_markdown(rows, "battery")
+
+    assert "## Diagnostico interno da busca" in report
+    assert "4 | 1 | 3 | 3" in report
+    assert "`RV-1` (0.84); family=0.32" in report
+
+
 def test_runner_reports_assertion_failures_without_hiding_them() -> None:
     normalized = runner.normalize_response({
         "reply": {"text": "Qual lado?"},

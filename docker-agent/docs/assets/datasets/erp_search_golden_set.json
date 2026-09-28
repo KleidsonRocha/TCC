@@ -2,6 +2,39 @@
   "contract_version": 2,
   "description": "Busca SQL real: identidade da familia e filtros na mesma aplicacao. As mensagens sao pedidos automotivos; criteria representa a saida normalizada do pre-search.",
   "fixtures": {
+    "ranking_brand": {"candidates": [{"id": 1, "code": "AUD-REAL", "title": "RADIADOR GOL", "family": "radiador"}, {"id": 2, "code": "AUD-GOLF", "title": "RADIADOR GOLF NGK", "family": "radiador"}, {"id": 3, "code": "AUD-CROSS", "title": "RADIADOR GOL FOX NGK", "family": "radiador"}, {"id": 4, "code": "AUD-CAP", "title": "TAMPA DO RADIADOR GOL NGK", "family": "tampa do radiador"}, {"id": 5, "code": "AUD-NGK", "title": "RADIADOR GOL NGK", "family": "radiador"}, {"id": 6, "code": "AUD-OTHER", "title": "RADIADOR GOL BOSCH", "family": "radiador"}], "applications": [{"id": 11, "item": 1, "brand": "Volkswagen", "model": "Gol", "start": 2008, "end": 2012, "engines": ["1.0 L 8V FLEX"], "variants": ["Trend"], "injections": ["MPI"], "transmissions": ["Manual"]}, {"id": 12, "item": 1, "brand": "Ford", "model": "Fiesta", "start": 2000, "end": 2015, "engines": ["2.0"], "variants": ["GLX"], "injections": ["EFI"], "transmissions": ["Automatica"]}, {"id": 21, "item": 2, "brand": "Volkswagen", "model": "Golf", "start": 2008, "end": 2012, "engines": ["1.0"]}, {"id": 31, "item": 3, "brand": "Volkswagen", "model": "Gol", "start": 1995, "end": 1999, "engines": ["1.6"], "variants": ["GL"]}, {"id": 32, "item": 3, "brand": "Volkswagen", "model": "Fox", "start": 2010, "end": 2015, "engines": ["1.0"], "variants": ["Trend"]}, {"id": 41, "item": 4, "brand": "Volkswagen", "model": "Gol", "start": 2008, "end": 2012, "engines": ["1.0"]}, {"id": 51, "item": 5, "brand": "Volkswagen", "model": "Gol", "start": 2008, "end": 2012, "engines": ["1.0"], "injections": ["MPI"], "transmissions": ["Manual"]}, {"id": 61, "item": 6, "brand": "Volkswagen", "model": "Gol", "start": 2008, "end": 2012, "engines": ["1.0"], "injections": ["MPI"], "transmissions": ["Manual"]}]},
+    "ranking_corroboration": {
+      "candidates": [
+        {"id":9001,"code":"VALID-LONG","title":"BICO INJETOR COROLLA 1.8 2003/2008 - FIELDER 2004/2008","family":"bico injetor"},
+        {"id":9002,"code":"CONFLICT-SHORT","title":"BICO COROLLA 1.8 1998/2002 NGK","family":"bico injetor"},
+        {"id":9003,"code":"UNKNOWN","title":"BICO COROLLA","family":"bico injetor"},
+        {"id":9004,"code":"OTHER-MODEL-YEAR","title":"BICO COROLLA - FIELDER 2003/2008","family":"bico injetor"},
+        {"id":9005,"code":"WRONG-APPLICATION","title":"BICO COROLLA NGK 1.8 2003/2008","family":"bico injetor"}
+      ],
+      "applications": [
+        {"id":9001,"item":9001,"brand":"Toyota","model":"Corolla","start":2002,"end":2008,"engines":["1.8 L 16V"]},
+        {"id":9002,"item":9002,"brand":"Toyota","model":"Corolla","start":2002,"end":2008,"engines":["1.8 L 16V"]},
+        {"id":9003,"item":9003,"brand":"Toyota","model":"Corolla","start":2002,"end":2008,"engines":["1.8 L 16V"]},
+        {"id":9004,"item":9004,"brand":"Toyota","model":"Corolla","start":2002,"end":2008,"engines":["1.8 L 16V"]},
+        {"id":9005,"item":9005,"brand":"Toyota","model":"Corolla","start":1998,"end":2002,"engines":["1.8 L 16V"]}
+      ]
+    },
+    "ranking_requested_variant": {
+      "candidates": [
+        {"id":1,"code":"JOY-EXACT","title":"AMORTECEDOR ONIX 2012/2019 - PRISMA 2013/2019","family":"amortecedores suspensao"},
+        {"id":2,"code":"OTHER-VERSION","title":"AMORTECEDOR ONIX ACTIV 2016/2019","family":"amortecedores suspensao"},
+        {"id":3,"code":"JOY-OPEN","title":"AMORTECEDOR ONIX 2012/ - LT/JOY","family":"amortecedores suspensao"},
+        {"id":4,"code":"TITLE-ONLY-JOY","title":"AMORTECEDOR ONIX JOY 2012/2019","family":"amortecedores suspensao"},
+        {"id":5,"code":"JOY-EXCLUDED","title":"AMORTECEDOR ONIX 2012/2019 EXCETO JOY","family":"amortecedores suspensao"}
+      ],
+      "applications": [
+        {"id":1,"item":1,"brand":"Chevrolet","model":"Onix","start":2016,"end":2019,"variants":["JOY"]},
+        {"id":2,"item":2,"brand":"Chevrolet","model":"Onix","start":2016,"end":2019,"variants":["ACTIV"]},
+        {"id":3,"item":3,"brand":"Chevrolet","model":"Onix","start":2016,"end":2026,"variants":["JOY"]},
+        {"id":4,"item":4,"brand":"Chevrolet","model":"Onix","start":2016,"end":2019,"variants":["ACTIV"]},
+        {"id":5,"item":5,"brand":"Chevrolet","model":"Onix","start":2016,"end":2019,"variants":["JOY"]}
+      ]
+    },
     "audit": {
       "candidates": [
         {"id": 1, "code": "AUD-REAL", "title": "RADIADOR GOL", "family": "radiador"},
@@ -71,8 +104,12 @@
     }
   },
   "cases": [
+    {"id":"ranking_real_041_variant_and_year","fixture":"ranking_requested_variant","criteria":{"part_query":"amortecedores suspensao","vehicle_model":"Onix","vehicle_year":2018,"variant":"JOY"},"expected_ids":["JOY-EXACT","JOY-OPEN","JOY-EXCLUDED"],"expected_trace":{"score_breakdown":{"JOY-OPEN":{"title_variant_corroboration":0.02},"JOY-EXCLUDED":{"title_variant_corroboration":-0.16}}}},
+    {"id":"ranking_model_unknown_no_title_evidence","fixture":"ranking_corroboration","criteria":{"part_query":"bico injetor","vehicle_year":2003,"engine":"1.8"},"expected_ids":["UNKNOWN","CONFLICT-SHORT","OTHER-MODEL-YEAR","VALID-LONG"]},
+    {"id":"ranking_exact_code_not_penalized","fixture":"ranking_corroboration","criteria":{"part_code":"CONFLICT-SHORT"},"expected_ids":["CONFLICT-SHORT"],"expected_trace":{"score_breakdown":{"CONFLICT-SHORT":{"total":1.0,"title_year_corroboration":0.0}}}},
     {"id": "audit_only_real", "fixture": "audit", "message": "Radiador para Volkswagen Gol 2010 1.0", "criteria": {"part_query": "radiador", "vehicle_brand": "Volkswagen", "vehicle_model": "Gol", "vehicle_year": 2010, "engine": "1.0"}, "expected_ids": ["AUD-REAL"], "expected_attributes": {"AUD-REAL": {"application": ["Volkswagen Gol 2008 a 2012"], "engine": ["1.0 L 8V FLEX"], "variant": ["Trend"], "injection": ["MPI"], "transmission": ["Manual"]}}},
     {"id": "audit_ranking_limit", "fixture": "audit", "message": "Prefiro NGK, radiador Gol 2010 1.0", "criteria": {"part_query": "radiador", "vehicle_model": "Gol", "vehicle_year": 2010, "engine": "1.0", "preferred_product_brand": "NGK"}, "limit": 1, "expected_ids": ["AUD-REAL"]},
+    {"id": "ranking_trace_preferred_brand_and_rejections", "fixture": "ranking_brand", "message": "Radiador NGK para Gol 2010 1.0", "criteria": {"part_query": "radiador", "vehicle_brand": "Volkswagen", "vehicle_model": "Gol", "vehicle_year": 2010, "engine": "1.0", "preferred_product_brand": "NGK"}, "family_ids": [[1, 1], [1, 2], [1, 3], [1, 4], [1, 5], [1, 6]], "expected_ids": ["AUD-NGK", "AUD-REAL", "AUD-OTHER"], "expected_trace": {"counts": {"raw_candidates_count": 6, "rejected_candidates_count": 3, "filtered_candidates_count": 3, "ranked_candidates_count": 3}, "rejected_reasons": {"AUD-CAP": "item_refinement_filter", "AUD-CROSS": "application_filter", "AUD-GOLF": "application_filter"}, "filtered_candidate_ids": ["AUD-NGK", "AUD-OTHER", "AUD-REAL"], "ranked_candidate_ids": ["AUD-NGK", "AUD-REAL", "AUD-OTHER"], "score_breakdown": {"AUD-NGK": {"engine": 0.08, "preferred_product_brand": 0.08, "injection": 0.0, "transmission": 0.0, "total": 0.8}, "AUD-REAL": {"engine": 0.08, "preferred_product_brand": 0, "total": 0.72}}}},
     {"id": "golf_exact_positive", "fixture": "audit", "message": "Radiador Golf 2010 1.0", "criteria": {"part_query": "radiador", "vehicle_model": "Golf", "vehicle_year": 2010, "engine": "1.0"}, "expected_ids": ["AUD-GOLF"]},
     {"id": "model_not_prefix", "fixture": "audit", "message": "Radiador modelo Go", "criteria": {"part_query": "radiador", "vehicle_model": "Go"}, "expected_ids": []},
     {"id": "model_not_pattern", "fixture": "audit", "message": "Radiador modelo Gol%", "criteria": {"part_query": "radiador", "vehicle_model": "Gol%"}, "expected_ids": []},
@@ -108,6 +145,9 @@
     {"id": "missing_part_identity", "fixture": "accessories", "message": "Tenho um Gol 2010", "criteria": {"vehicle_model": "Gol", "vehicle_year": 2010}, "expected_ids": []},
     {"id": "catalog_specialization", "fixture": "accessories", "message": "Coxim amortecedor Gol 2010 1.0 dianteiro", "criteria": {"part_query": "coxim amortecedor", "vehicle_model": "Gol", "vehicle_year": 2010, "engine": "1.0", "position": "front"}, "family_ids": [[1,10],[1,11]], "expected_ids": ["SPECIALIZED-MOUNT"], "expected_attributes": {"SPECIALIZED-MOUNT": {"engine": ["1.0"]}}},
     {"id": "catalog_identity_cannot_match_other_group", "fixture": "accessories", "message": "Radiador Gol 2010", "criteria": {"part_query": "radiador", "vehicle_model": "Gol", "vehicle_year": 2010}, "family_ids": [[2,1]], "expected_ids": []},
-    {"id": "unmapped_catalog_identity_fails_closed", "fixture": "accessories", "message": "Kit radiador Gol 2010", "criteria": {"part_query": "radiador", "vehicle_model": "Gol", "vehicle_year": 2010}, "family_ids": [], "expected_ids": []}
+    {"id": "unmapped_catalog_identity_fails_closed", "fixture": "accessories", "message": "Kit radiador Gol 2010", "criteria": {"part_query": "radiador", "vehicle_model": "Gol", "vehicle_year": 2010}, "family_ids": [], "expected_ids": []},
+    {"id":"ranking_corroboration_before_limit","fixture":"ranking_corroboration","criteria":{"part_query":"bico injetor","vehicle_model":"Corolla","vehicle_year":2003,"engine":"1.8"},"limit":1,"expected_ids":["VALID-LONG"]},
+    {"id":"ranking_conflict_cannot_be_offset_by_brand","fixture":"ranking_corroboration","criteria":{"part_query":"bico injetor","vehicle_model":"Corolla","vehicle_year":2003,"engine":"1.8","preferred_product_brand":"NGK"},"expected_ids":["VALID-LONG","UNKNOWN","OTHER-MODEL-YEAR","CONFLICT-SHORT"],"expected_trace":{"score_breakdown":{"VALID-LONG":{"title_year_corroboration":0.04},"CONFLICT-SHORT":{"title_year_corroboration":-0.16},"OTHER-MODEL-YEAR":{"title_year_corroboration":0.0}},"ranked_candidate_ids":["VALID-LONG","UNKNOWN","OTHER-MODEL-YEAR","CONFLICT-SHORT"]}},
+    {"id":"ranking_no_year_no_year_evidence","fixture":"ranking_corroboration","criteria":{"part_query":"bico injetor","vehicle_model":"Corolla","engine":"1.8"},"expected_ids":["CONFLICT-SHORT","WRONG-APPLICATION","VALID-LONG","UNKNOWN","OTHER-MODEL-YEAR"]}
   ]
 }

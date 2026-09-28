@@ -132,7 +132,12 @@ def run_case(conn, case: dict, backend: str) -> dict:
     )
     for name in ("candidates", "applications"):
         sql = sql.replace(f"soccol.item_search_{name}", f"pg_temp.{backend}_{name}")
-    rows = conn.execute(sql, params).fetchall()
+    all_rows = conn.execute(sql, params).fetchall()
+    diagnostics = next(
+        (row.get("search_diagnostics") for row in all_rows if row.get("search_diagnostics")),
+        None,
+    )
+    rows = [row for row in all_rows if row["item_code"] is not None]
     ids = [row["item_code"] for row in rows]
     attributes = {row["item_code"]: PostgresErpSearchTools._build_disambiguation_attributes(row) for row in rows}
     attributes_ok = all(
@@ -140,8 +145,37 @@ def run_case(conn, case: dict, backend: str) -> dict:
         for code, fields in case.get("expected_attributes", {}).items()
         for key, expected in fields.items()
     )
-    return {"id": case["id"], "backend": backend, "passed": ids == case["expected_ids"] and attributes_ok,
-            "expected_ids": case["expected_ids"], "actual_ids": ids, "attributes": attributes}
+    trace = diagnostics if isinstance(diagnostics, dict) else {}
+    expected_trace = case.get("expected_trace", {})
+    rejected_reasons = {
+        row.get("item_id"): row.get("reason")
+        for row in trace.get("rejected_candidates", [])
+    }
+    score_breakdowns = {
+        row.get("item_id"): row.get("score_breakdown", {})
+        for row in trace.get("ranked_candidates", [])
+    }
+    trace_ok = all(trace.get(key) == expected for key, expected in expected_trace.get("counts", {}).items())
+    trace_ok = trace_ok and rejected_reasons == expected_trace.get("rejected_reasons", rejected_reasons)
+    trace_ok = trace_ok and [row.get("item_id") for row in trace.get("filtered_candidates", [])] == expected_trace.get(
+        "filtered_candidate_ids",
+        [row.get("item_id") for row in trace.get("filtered_candidates", [])],
+    )
+    trace_ok = trace_ok and [row.get("item_id") for row in trace.get("ranked_candidates", [])] == expected_trace.get(
+        "ranked_candidate_ids",
+        [row.get("item_id") for row in trace.get("ranked_candidates", [])],
+    )
+    trace_ok = trace_ok and all(
+        score_breakdowns.get(item_id, {}).get(component) == expected
+        for item_id, components in expected_trace.get("score_breakdown", {}).items()
+        for component, expected in components.items()
+    )
+    return {
+        "id": case["id"], "backend": backend,
+        "passed": ids == case["expected_ids"] and attributes_ok and trace_ok,
+        "expected_ids": case["expected_ids"], "actual_ids": ids,
+        "attributes": attributes, "trace": trace,
+    }
 
 
 def evaluate(integration_sql: Path | None = None) -> list[dict]:

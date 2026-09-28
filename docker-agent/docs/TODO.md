@@ -2,41 +2,18 @@
 
 Este arquivo contem somente trabalho pendente. Entregas concluidas, evidencias e decisoes ficam em [HISTORICO.md](HISTORICO.md), [PROGRESS.md](PROGRESS.md) e [DECISIONS.md](DECISIONS.md).
 
-Revisado em 21/09/2026. A ordem abaixo prioriza operacao segura, conversa, avaliacao comercial, fine-tuning e integracoes.
+Revisado em 22/09/2026. A ordem abaixo prioriza operacao segura, conversa, avaliacao comercial, fine-tuning e integracoes.
 
 ## Ordem De Execucao
 
 1. Proteger e estabilizar a VPS.
-2. Fechar os fluxos conversacionais restantes.
-3. Medir e corrigir ranking com rotulos humanos no ERP quente.
-4. Preparar e executar fine-tuning controlado em GPU.
-5. Integrar WhatsApp apos a beta estavel.
+2. Fechar os fluxos conversacionais que bloqueiam a seguranca do fluxo.
+3. Preparar e executar fine-tuning controlado em GPU.
+4. Integrar WhatsApp apos a beta estavel.
+5. Retomar a avaliacao comercial e a divida deterministica registrada na Prioridade 4.5.
 6. Avaliar recuperacao semantica e otimizacoes com dados reais.
 
 O backend e o catalogo permanecem a autoridade final. Caminhos deterministicos atendem fatos catalogados; a LLM trata linguagem residual e nunca libera busca sem gates e proveniencia.
-
-## Prioridade 1 - Fluxos Conversacionais Restantes
-
-- [ ] Dar continuidade util quando o cliente responder `nao sei`
-  - usar outro discriminador com evidencia ou oferecer atendimento humano; limitar repeticoes; cobrir `radiador Gol 2010 -> nao sei a motorizacao`.
-- [ ] Corrigir cobertura lexical de pecas e marcas comerciais
-  - reconhecer `4 velas NGK para Gol 2010 1.0`, preservando familia, quantidade e marca; governar aliases no catalogo e manter `preferred_product_brand` separado da marca do veiculo.
-- [ ] Confirmar familia em descricoes funcionais e sintomas
-  - nao fixar familia sem evidencia; perguntar com candidatos controlados ou fazer handoff.
-- [ ] Tratar pedido de vendedor e sintomas com motivo correto
-  - encaminhar pedido explicito sem inferencia desnecessaria; preservar dados do veiculo e nao tratar sintoma como familia inexistente.
-
-## Prioridade 2 - Ranking E Avaliacao Comercial
-
-- [ ] Instrumentar a busca com candidatos brutos, rejeitados, filtrados e ranqueados, seus motivos e `score_breakdown`.
-- [ ] Refinar desempates e pesos do ERP
-  - reduzir empates e priorizar aplicacao exata; revisar complemento, injecao, motor, transmissao e atributos comerciais somente com evidencia medida.
-- [ ] Reexecutar a bateria real no ERP quente com rotulos humanos
-  - medir top-1, top-3, candidatos incompativeis, empates e `no_match`; transformar correcoes em regressao sem regras por frase.
-- [ ] Calibrar `confidence` e `score` depois da avaliacao rotulada
-  - manter `confidence` como heuristica de fluxo e `score` como relevancia ate haver dados para calibracao.
-- [ ] Integrar estoque e preco por filial antes de respostas comerciais
-  - `branch_id` ainda nao filtra o SQL; confirmar explicitamente ate a integracao.
 
 ## Prioridade 3 - GPU E Fine-Tuning Controlado
 
@@ -57,6 +34,55 @@ O backend e o catalogo permanecem a autoridade final. Caminhos deterministicos a
 - [ ] Mapear telefone para origem, conversa persistente e filial.
 - [ ] Enviar pela API oficial da Meta, controlando duplicatas e reentregas.
 - [ ] Usar dominio estavel da VPS via Nginx e testar handoff, follow-up, multi-item e indisponibilidade sem expor servicos internos.
+
+
+## Prioridade 4.5 - Avaliacao Comercial E Divida Deterministica Pos-Fine-Tuning
+
+- [ ] Validar manualmente todos os tipos de peca contra o ERP antes de iniciar a rodada de correcoes
+  - variar modelos e anos de veiculos; registrar consulta, aplicacao, conversa,
+    codigos do ERP e codigos da IA em
+    `docs/assets/datasets/erp_manual_type_validation_v1.json`;
+  - comparar itens ausentes, extras e resultados vazios; fechar cada tipo com
+    validacao humana antes de alterar regra ou ranking;
+  - caso inicial `batentes_suspensao_s10_1996_dianteiro_001`: a conversa e a
+    aplicacao funcionam, mas o ERP mostrou nove codigos e a IA retornou cinco;
+    revisar os quatro codigos ausentes antes de fechar a cobertura do tipo.
+  - caso `atuador_embreagem_ecosport_2008_001`: a IA perguntou lado e nao
+    retornou itens; confirmar no ERP quais dos oito candidatos sao aplicaveis a
+    EcoSport 2008 e se atuadores de embreagem diferenciam lado.
+  - caso `bieleta_ecosport_sem_ano_timeout_e_retentativa_001`: a conversa refeita
+    sem ano perguntou ano e lado e retornou cinco candidatos; validar aplicacao
+    dos oito codigos ERP. A primeira tentativa expirou e fica registrada como
+    incidente transitorio de timeout, separado da avaliacao de cobertura.
+- [ ] Depois de validar todos os tipos, consolidar os erros recorrentes e corrigi-los no catalogo, extractor ou SQL; adicionar cada causa confirmada como regressao.
+- [ ] Reexecutar a bateria real no ERP quente com rotulos humanos
+  - medir top-1, top-3, candidatos incompativeis, empates e `no_match`; transformar correcoes em regressao sem regras por frase.
+  - comparar `application_corroboration_v1` com o baseline no mesmo conjunto;
+    os bonus de corroboracao sao heuristicas iniciais, ainda sem calibracao retida.
+- [ ] Revisar divergencias entre titulo e aplicacao cadastrada no ERP
+  - `YM6160` informa 1998/2002 no titulo, mas tem aplicacoes Corolla 2002/2008;
+    corrigir a origem com avaliador humano, sem usar reranking como correcao do cadastro.
+- [ ] Calibrar `confidence` e `score` depois da avaliacao rotulada
+  - manter `confidence` como heuristica de fluxo e `score` como relevancia ate haver dados para calibracao.
+- [ ] Integrar estoque e preco por filial antes de respostas comerciais
+  - `branch_id` ainda nao filtra o SQL; confirmar explicitamente ate a integracao.
+
+- [ ] Retomar os casos determinísticos observados na bateria de 22/09
+  - reproduzir `real_004` no commit que for avaliado antes de alterar a regra:
+    o relatorio encontrou retorno para `polia bomba de agua` apos `2013`,
+    embora a regressao local cubra a troca para rolamentos;
+  - normalizar `quadro de suspensao` de `real_043` sem deixar a busca nascer
+    como `amortecedores suspensao`;
+  - tratar o conflito comercial `com/sem atuador` de `real_045_t2` e separar
+    carburador de base/flange em `real_080_t3`;
+  - revisar `reason_fields` dos falsos `no_match` de `real_032` e `real_028`;
+    classificar empates como aceitaveis ou problemáticos antes de alterar pesos.
+
+Esses itens foram adiados para nao misturar defeitos de catalogo, entidade,
+estado e atributo comercial com o experimento de fine-tuning. Eles nao entram
+como alvo de treinamento nem como evidência de ganho do adapter; permanecem
+regressoes congeladas para a comparacao posterior.
+
 
 ## Prioridade 5 - Recuperacao Semantica E Operacao
 

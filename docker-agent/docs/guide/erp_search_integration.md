@@ -108,6 +108,46 @@ O ranking e o `LIMIT` operam depois da identidade e da aplicacao.
 outras marcas compativeis. Um acessorio com titulo muito parecido ou marca
 preferida nao entra na lista da peca solicitada.
 
+Cada consulta tambem produz `search_diagnostics` para log e fila interna de
+revisao. A trilha inicia depois do filtro de identidade de familia ou codigo,
+para que observabilidade nao enumere o inventario inteiro. Ela registra
+contagens e, no maximo, 50 candidatos brutos, rejeitados, filtrados e
+ranqueados. Rejeicoes informam se vieram de refinamento do item ou da
+aplicacao; cada resultado final traz `score_breakdown` e o total usado na
+ordenacao. O diagnostico nao pertence a resposta publica nem e garantia de
+encaixe comercial.
+
+A bateria `run_real_respond_battery` pode correlacionar essa captura ao seu
+turno por `trace_id` e copiar a evidencia para os artefatos locais em
+`.tmp/eval/`. Essa leitura ocorre diretamente na fila protegida de revisao;
+ela nao adiciona diagnostico ao contrato HTTP do chat.
+
+Aplicacao exata continua sendo requisito eliminatorio. Depois desse filtro,
+`application_corroboration_v1` compara o pedido com o segmento do titulo que
+nomeia o modelo solicitado. Intervalo fechado com anos de quatro digitos que
+inclui o ano solicitado soma `0.04`; intervalos explicitos que o contradizem
+subtraem `0.16`. Motor explicitamente pedido e presente no segmento soma `0.02`.
+Versao explicitamente pedida, ja comprovada pela aplicacao estruturada, soma
+`0.02` quando aparece no titulo (inclusive listas de versoes depois de ` - `).
+Uma exclusao explicita da versao (`exceto JOY`, por exemplo) subtrai `0.16`
+e e registrada como conflito de cadastro, mesmo havendo aplicacao estruturada.
+Segmentos separados por ` - ` de outros modelos, intervalos
+abreviados/abertos e segmentos com `exceto`, `menos` ou `sem` nao fornecem essa
+evidencia de ano. Sem modelo ou em busca por codigo, a corroboracao fica neutra.
+
+Esses ajustes sao uma heuristica inicial auditavel, nao pesos calibrados nem
+prova de encaixe. Titulo sozinho nunca inclui um produto rejeitado pela
+aplicacao estruturada. Uma contradicao rebaixa o candidato e fica registrada
+para revisao do cadastro; nao altera o ERP. A preferencia de marca conserva
+seu bonus de `0.08`. Empates restantes usam comprimento do titulo e codigo.
+Injecao e transmissao permanecem sem peso adicional; ausencia desses dados
+no pedido nao e motivo para favorecer uma configuracao especifica.
+
+O diagnostico informa `ranking_version`, `backend`, criterios, posicao real,
+aplicacoes que passaram pelo filtro, segmentos usados e componentes do score.
+A ordem de `ranked_candidates` e exatamente a ordem retornada ao consumidor,
+inclusive nos empates. A ordenacao ocorre antes do `LIMIT`.
+
 Esta camada retorna codigo, titulo, score e atributos de desambiguacao. Preco,
 estoque, tributacao e enriquecimento comercial continuam fora deste contrato.
 
@@ -164,12 +204,12 @@ O [golden set ERP](../assets/datasets/erp_search_golden_set.json) contem pedidos
 automotivos, criterios normalizados, fixtures adversariais e IDs esperados.
 O [avaliador](../../scripts/eval/evaluate_erp_search.py) instala fixtures do
 contrato em tabelas temporarias e repete os casos apos COPY de ida e volta com
-a projecao do exportador. Sao 38 casos em dois backends (76 verificacoes).
+a projecao do exportador. Sao 45 casos em dois backends (90 verificacoes).
 Nao modifica o ERP nem os dados permanentes locais.
 
 Para auditar tambem a proveniencia nas tabelas de origem, fornecer
 `--integration-sql .tmp/sql/erp_search_integration_candidates_runtime.sql`.
-Esse modo adiciona 38 verificacoes dos SELECTs marcados `BEGIN/END
+Esse modo adiciona 45 verificacoes dos SELECTs marcados `BEGIN/END
 CANDIDATES SELECT` e `BEGIN/END APPLICATIONS SELECT` no arquivo fornecido.
 As fixtures contaminam deliberadamente atributos globais do modelo, para
 detectar heranca indevida. Somente os SELECTs sao usados em tabelas temporarias;
@@ -180,6 +220,9 @@ O caso `audit_only_real` exige somente `AUD-REAL`, rejeitando `AUD-GOLF`,
 `AUD-CROSS` e `AUD-CAP`. Outros casos cobrem lacunas de anos, fim aberto,
 proveniencia de atributos, limites de motor, familia, acessorios, codigo,
 preferencia de marca e aplicacao antes do limite.
+`ranking_trace_preferred_brand_and_rejections` tambem verifica a trilha de
+candidatos e o desempate por marca preferida, sem atribuir peso especulativo a
+injecao ou transmissao.
 
 Esse golden set testa recuperacao SQL. O golden set de pre-search continua
 avaliando extracao e decisao conversacional separadamente.

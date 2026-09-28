@@ -3562,6 +3562,225 @@
       ]
     },
     {
+      "id": "follow_up_unknown_001",
+      "category": "governed_follow_up_unknown",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "follow_up_unknown_001_t1",
+          "message": "radiador Gol 2010",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "pre_search_path": "deterministic_ask",
+            "question_key": "engine",
+            "criteria_contains": {
+              "part_query": "radiador",
+              "vehicle_model": "Gol",
+              "vehicle_year": 2010
+            },
+            "used_tools_excludes": [
+              "search_parts"
+            ]
+          }
+        },
+        {
+          "id": "follow_up_unknown_001_t2",
+          "message": "nao sei a motorizacao",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "pre_search_path": "deterministic_bypass",
+            "handoff_required": true,
+            "reply_contains": [
+              "atendimento humano"
+            ],
+            "reply_excludes": [
+              "Qual a motorizacao"
+            ],
+            "used_tools_excludes": [
+              "search_parts",
+              "pre_search_validator"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "lexical_product_brand_001",
+      "category": "catalog_lexical_coverage",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "lexical_product_brand_001_t1",
+          "message": "4 velas NGK para Gol 2010 1.0",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "pre_search_path": "deterministic_bypass",
+            "criteria_contains": {
+              "part_query": "velas de ignicao automotivas",
+              "quantity": 4,
+              "preferred_product_brand": "NGK",
+              "vehicle_model": "Gol",
+              "vehicle_year": 2010,
+              "engine": "1.0"
+            },
+            "used_tools_contains": [
+              "search_parts"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "real_001_regression",
+      "category": "real_conversation_multi_item",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "real_001_regression_t1",
+          "message": "Bieleta diant ld e le, e bucha estabilizador diant Accord 2001",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "items_contains": [
+              {
+                "part_query": "bieletas",
+                "vehicle_model": "Accord",
+                "vehicle_year": 2001,
+                "position": "front"
+              },
+              {
+                "part_query": "buchas",
+                "vehicle_model": "Accord",
+                "vehicle_year": 2001,
+                "position": "front"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "real_004_regression",
+      "category": "real_conversation_new_family_follow_up",
+      "tier": "smoke",
+      "turns": [
+        {
+          "id": "real_004_regression_t1",
+          "message": "Teria polia da bomba d'agua do Focus 1.6 16v sigma",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "question_key": "vehicle_year"
+          }
+        },
+        {
+          "id": "real_004_regression_t2",
+          "message": "E os rolamentos das rodas dianteiras",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "question_key": "vehicle_year",
+            "criteria_contains": {
+              "part_query": "rolamentos",
+              "vehicle_model": "Focus",
+              "position": "front"
+            }
+          }
+        },
+        {
+          "id": "real_004_regression_t3",
+          "message": "2013",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "criteria_contains": {
+              "part_query": "rolamentos",
+              "vehicle_model": "Focus",
+              "vehicle_year": 2013,
+              "position": "front"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "real_046_regression",
+      "category": "real_conversation_compound_family",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "real_046_regression_t1",
+          "message": "Junta da tampa de valvula da Strada 1.4 2013",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "criteria_contains": {
+              "part_query": "juntas",
+              "vehicle_model": "Strada",
+              "vehicle_year": 2013,
+              "engine": "1.4"
+            },
+            "items_contains": [
+              {
+                "part_query": "juntas",
+                "vehicle_model": "Strada",
+                "vehicle_year": 2013,
+                "engine": "1.4"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "erp_batentes_s10_1996_dianteiro",
+      "category": "manual_erp_family_validation",
+      "tier": "smoke",
+      "turns": [
+        {
+          "id": "erp_batentes_s10_1996_dianteiro_t1",
+          "message": "batente para S10 1996",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "question_key": "position",
+            "criteria_contains": {
+              "part_query": "batentes",
+              "vehicle_model": "S10",
+              "vehicle_year": 1996
+            }
+          }
+        },
+        {
+          "id": "erp_batentes_s10_1996_dianteiro_t2",
+          "message": "dianteiro",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "pre_search_path": "deterministic_bypass",
+            "criteria_contains": {
+              "part_query": "batentes",
+              "vehicle_model": "S10",
+              "vehicle_year": 1996,
+              "position": "front"
+            },
+            "used_tools_contains": [
+              "search_parts"
+            ],
+            "reply_contains": [
+              "Encontrei"
+            ]
+          }
+        }
+      ],
+      "review_required": true,
+      "review_reason": "Comparar os codigos encontrados com a busca manual no ERP; ha itens da lista ERP que nao apareceram na resposta observada.",
+      "validation_question": "A familia, aplicacao, posicao e cobertura de codigos da resposta correspondem ao ERP?"
+    },
+    {
       "id": "invalid_001",
       "category": "contract_validation",
       "tier": "regression",

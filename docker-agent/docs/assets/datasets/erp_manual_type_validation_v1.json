@@ -1,0 +1,219 @@
+{
+  "schema_version": "1.0",
+  "name": "erp_manual_type_validation_v1",
+  "description": "Registro progressivo de validacao manual da busca da IA contra o ERP por tipo de peca.",
+  "status": "in_progress",
+  "usage": {
+    "purpose": "Comparar familia, criterios e codigos retornados pela IA com a pesquisa manual equivalente no ERP.",
+    "not_for_finetuning_until_human_review_complete": true,
+    "when_a_difference_is_found": "Registrar o caso e a evidencia; corrigir as regras depois que todos os tipos planejados forem validados."
+  },
+  "entries": [
+    {
+      "id": "batentes_suspensao_s10_1996_dianteiro_001",
+      "part_type": "batentes suspensao",
+      "validation_date": "2026-09-28",
+      "vehicle": {
+        "model": "S10",
+        "year": 1996,
+        "position": "front"
+      },
+      "conversation": [
+        {
+          "role": "user",
+          "text": "batente para S10 1996"
+        },
+        {
+          "role": "assistant",
+          "expected_question": "Dianteiro ou traseiro?"
+        },
+        {
+          "role": "user",
+          "text": "dianteiro"
+        }
+      ],
+      "erp_reference": {
+        "manual_query": "BATENTE SUSPENSÃO DIANTEIRA S10",
+        "codes_observed": [
+          "SK-317S",
+          "PV-74",
+          "044.2475",
+          "KT-30320",
+          "SP-3207",
+          "SP-3806",
+          "SK-326S",
+          "022.2566",
+          "044.1467"
+        ],
+        "application_checked": "S10, ano 1996",
+        "customer_confirmed_application": true
+      },
+      "assistant_result": {
+        "criteria": {
+          "part_query": "batentes",
+          "vehicle_model": "S10",
+          "vehicle_year": 1996,
+          "position": "front"
+        },
+        "codes_observed": [
+          "044.2475",
+          "SK-317S",
+          "044.1467",
+          "KT-30320",
+          "SK-326S"
+        ]
+      },
+      "review": {
+        "family_and_application_found": true,
+        "coverage_status": "pending_reconciliation",
+        "codes_in_erp_list_not_in_assistant_result": [
+          "PV-74",
+          "SP-3207",
+          "SP-3806",
+          "022.2566"
+        ],
+        "notes": "O usuario confirmou que os itens mostrados na pesquisa do ERP atendem a S10 1996. A IA encontrou itens relevantes, mas retornou cinco dos nove codigos observados no ERP; revisar a cobertura ao consolidar a validacao deste tipo."
+      }
+    },
+    {
+      "id": "atuador_embreagem_ecosport_2008_001",
+      "part_type": "atuador de embreagem",
+      "validation_date": "2026-09-28",
+      "vehicle": {
+        "model": "EcoSport",
+        "year": 2008
+      },
+      "conversation": [
+        {
+          "role": "user",
+          "text": "ATUADOR DE EMBREAGEM para ecosport 2008"
+        },
+        {
+          "role": "assistant",
+          "observed_question": "Esquerdo ou direito?"
+        },
+        {
+          "role": "user",
+          "text": "direito"
+        },
+        {
+          "role": "assistant",
+          "observed_result": "Nenhum item; criterios incluiram lado direito."
+        }
+      ],
+      "erp_reference": {
+        "manual_query": "ATUADOR DE EMBREAGEM ECOSPORT 2008",
+        "codes_observed": [
+          "YM64AA",
+          "510 0065 11",
+          "C-2707",
+          "C-2711",
+          "VKCHL-4750",
+          "510 0065 110",
+          "AH204750",
+          "620 310 330"
+        ],
+        "application_checked": "A tela mostra varias aplicacoes de EcoSport; o item selecionado YM64AA mostra anos 2003-2007 nas linhas visiveis, sem confirmar 2008.",
+        "customer_confirmed_application": false
+      },
+      "assistant_result": {
+        "criteria": {
+          "part_query": "atuador de embreagem",
+          "vehicle_model": "ECOSPORT",
+          "vehicle_year": 2008,
+          "side": "right"
+        },
+        "codes_observed": []
+      },
+      "review": {
+        "family_and_application_found": false,
+        "coverage_status": "pending_application_validation",
+        "suspected_issue": "O catalogo exige lado para atuador de embreagem; validar se a familia tem variacao direita/esquerda. A busca manual encontrou oito candidatos pela descricao, mas ainda e necessario conferir quais aplicacoes incluem EcoSport 2008.",
+        "codes_in_erp_list_not_in_assistant_result": [],
+        "notes": "Nao classificar ainda os oito itens como compativeis com 2008. Confirmar a aplicacao por item no ERP; registrar depois se a pergunta de lado e indevida e quais codigos devem ser retornados."
+      }
+    },
+    {
+      "id": "bieleta_ecosport_sem_ano_timeout_e_retentativa_001",
+      "part_type": "bieletas",
+      "validation_date": "2026-09-28",
+      "vehicle": {
+        "model": "EcoSport",
+        "year": 2008,
+        "side": "right"
+      },
+      "conversation": [
+        {
+          "role": "user",
+          "text": "bom dia quero bieleta para ecosport"
+        },
+        {
+          "role": "assistant",
+          "observed_question": "Qual o ano do veiculo?"
+        },
+        {
+          "role": "user",
+          "text": "2008"
+        },
+        {
+          "role": "assistant",
+          "observed_question": "Esquerdo ou direito?"
+        },
+        {
+          "role": "user",
+          "text": "direito"
+        },
+        {
+          "role": "assistant",
+          "observed_result": "Encontrou 5 opcoes compativeis no catalogo."
+        }
+      ],
+      "erp_reference": {
+        "manual_query": "BIELETA ECOSPORT 2008",
+        "codes_observed": [
+          "N-92001",
+          "SK-2532",
+          "JTSB0005",
+          "N-9200*A",
+          "N-92004",
+          "531.2121",
+          "KT-20069",
+          "ZM-37011458"
+        ],
+        "application_checked": "Tela do ERP mostra aplicacoes EcoSport em varios anos; a aplicacao por codigo ainda deve ser conferida antes de classificar todos os oito como compativeis com 2008.",
+        "customer_confirmed_application": false
+      },
+      "assistant_result": {
+        "criteria": {
+          "part_query": "bieletas",
+          "vehicle_model": "EcoSport",
+          "vehicle_year": 2008,
+          "side": "right"
+        },
+        "codes_observed": [
+          "KT-20069",
+          "ZM-37011458",
+          "531.2121",
+          "N-92004",
+          "N-92004*A"
+        ]
+      },
+      "transient_failure_observed": {
+        "initial_message": "bom dia quero bieletas para ecosport",
+        "result": "timed out",
+        "retry_context": "Apos refresh, a conversa foi refeita sem o ano; a IA pediu o ano, depois o lado, e retornou cinco opcoes.",
+        "runtime_log_observation": "O log inclui carregamento do modelo Qwen2.5 7B pelo Ollama e um aviso de parse de CPU cgroup para o valor max; o trecho nao contem erro de carregamento nem identifica a causa do timeout."
+      },
+      "review": {
+        "family_and_application_found": true,
+        "coverage_status": "pending_application_and_coverage_reconciliation",
+        "codes_in_erp_list_not_in_assistant_result": [
+          "N-92001",
+          "SK-2532",
+          "JTSB0005"
+        ],
+        "notes": "A repeticao apos refresh retornou cinco candidatos. Confirmar no ERP quais codigos atendem EcoSport 2008 antes de medir cobertura. O timeout isolado e registrado como falha transitoria; a diferenca de limites entre Ollama, docker-comm e Streamlit foi identificada como causa provavel e sera corrigida separadamente da busca."
+      }
+    }
+  ]
+}

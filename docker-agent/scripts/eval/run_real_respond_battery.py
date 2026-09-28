@@ -12,12 +12,124 @@ import urllib.request
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any, Callable, Iterable
 
 DEFAULT_DATASET = Path("docs/assets/datasets/battery_real_omnichannel_250.json")
 DEFAULT_OUTPUT_DIR = Path(".tmp/eval")
 DEFAULT_API_URLS = {"agent": "http://localhost:8001/respond", "comm": "http://localhost:8000/test/send"}
 TIER_RANK = {"smoke": 0, "regression": 1, "extended": 2}
+
+
+def extract_search_diagnostics(final_actions: Any) -> list[dict[str, Any]] | None:
+    """Extract the internal ERP trace from a persisted review interaction."""
+    if not isinstance(final_actions, list):
+        return None
+    for action in final_actions:
+        if not isinstance(action, dict) or action.get("type") != "search_diagnostics":
+            continue
+        items = action.get("items")
+        if isinstance(items, list):
+            return [item for item in items if isinstance(item, dict)]
+    return None
+
+
+class ReviewDiagnosticsReader:
+    """Read the protected review capture after a battery turn completes.
+
+    The evaluator is an internal operator tool. It reads only ``final_actions``
+    for one trace id, then keeps only the internal ``search_diagnostics`` action
+    in its generated artifacts. No diagnostic is sent back through the chat API.
+    """
+
+    def __init__(
+        self,
+        *,
+        conninfo: str,
+        wait_s: float,
+        connect: Callable[..., Any],
+        sleep: Callable[[float], None] = time.sleep,
+    ) -> None:
+        self._conninfo = conninfo
+        self._wait_s = max(0.0, wait_s)
+        self._connect = connect
+        self._sleep = sleep
+
+    def read(self, trace_id: str) -> dict[str, Any]:
+        deadline = time.monotonic() + self._wait_s
+        while True:
+            try:
+                final_actions = self._fetch_final_actions(trace_id)
+            except Exception:
+                return {
+                    "capture_status": "unavailable",
+                    "trace_id": trace_id,
+                    "items": [],
+                }
+            diagnostics = extract_search_diagnostics(final_actions)
+            if diagnostics is not None:
+                return {
+                    "capture_status": "captured",
+                    "trace_id": trace_id,
+                    "items": diagnostics,
+                }
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                return {
+                    "capture_status": "not_recorded",
+                    "trace_id": trace_id,
+                    "items": [],
+                }
+            self._sleep(min(0.1, remaining))
+
+    def _fetch_final_actions(self, trace_id: str) -> Any:
+        with self._connect(self._conninfo) as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT final_actions
+                    FROM pre_search_review_interaction
+                    WHERE trace_id = %s
+                    ORDER BY id DESC
+                    LIMIT 1
+                    """,
+                    (trace_id,),
+                )
+                row = cur.fetchone()
+        return row[0] if row else None
+
+
+def build_review_diagnostics_reader(wait_s: float) -> ReviewDiagnosticsReader | None:
+    """Build an optional reader from the local runtime settings.
+
+    A battery can target a remote API while running outside its catalog network.
+    In that case the report remains valid and marks the internal capture as
+    unavailable instead of failing the conversation execution.
+    """
+    try:
+        import psycopg
+
+        from app.config import Settings
+        from app.infra.postgres_conninfo import build_catalog_conninfo
+
+        settings = Settings()
+        if not settings.catalog_db_enabled or not settings.pre_search_review_capture_enabled:
+            return None
+        return ReviewDiagnosticsReader(
+            conninfo=build_catalog_conninfo(settings),
+            wait_s=wait_s,
+            connect=psycopg.connect,
+        )
+    except Exception:
+        return None
+
+
+def capture_trace_id(target: str, request_trace_id: str, body: Any) -> str:
+    """Use the gateway-generated id when the request went through docker-comm."""
+    if target == "comm" and isinstance(body, dict):
+        value = body.get("trace_id")
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    return request_trace_id
 
 
 @dataclass(frozen=True)
@@ -325,7 +437,59 @@ def render_markdown(rows: list[dict[str, Any]], name: str) -> str:
     for row in rows:
         result = "PASS" if not row["assertion_failures"] else "FAIL: " + "; ".join(row["assertion_failures"])
         lines.append(f"| `{row['scenario_id']}/{row['turn_id']}` | {row['category']} | {row['status_code']} | {row['elapsed_ms']} ms | {result} |")
+    lines.extend(render_search_diagnostics_markdown(rows))
     return "\n".join(lines) + "\n"
+
+
+def render_search_diagnostics_markdown(rows: list[dict[str, Any]]) -> list[str]:
+    """Render compact internal search evidence; complete details stay in JSON."""
+    diagnostic_rows: list[tuple[dict[str, Any], dict[str, Any]]] = []
+    unavailable = 0
+    for row in rows:
+        diagnostic = row.get("search_diagnostics")
+        if not isinstance(diagnostic, dict):
+            continue
+        if diagnostic.get("capture_status") != "captured":
+            unavailable += 1
+            continue
+        for item in diagnostic.get("items", []):
+            if isinstance(item, dict):
+                diagnostic_rows.append((row, item))
+    lines = ["", "## Diagnostico interno da busca", ""]
+    if not diagnostic_rows:
+        detail = "Nenhuma busca com diagnostico foi capturada."
+        if unavailable:
+            detail += f" {unavailable} turno(s) nao tiveram captura disponivel."
+        return lines + [detail]
+    lines.extend([
+        "O detalhamento completo de candidatos e componentes de score esta no JSON; esta tabela resume a trilha do ERP por item.",
+        "",
+        "| cenario/turno | item | brutos | rejeitados | filtrados | ranqueados | top ranqueado |",
+        "|---|---|---:|---:|---:|---:|---|",
+    ])
+    for row, item in diagnostic_rows:
+        trace = item.get("diagnostics") if isinstance(item.get("diagnostics"), dict) else {}
+        ranked = trace.get("ranked_candidates") if isinstance(trace.get("ranked_candidates"), list) else []
+        top = ranked[0] if ranked and isinstance(ranked[0], dict) else {}
+        code = str(top.get("item_id") or "")
+        score = top.get("score")
+        breakdown = top.get("score_breakdown") if isinstance(top.get("score_breakdown"), dict) else {}
+        components = ", ".join(
+            f"{key}={value}" for key, value in breakdown.items() if key != "total" and value
+        )
+        top_text = f"`{code}` ({score})" if code else "-"
+        if components:
+            top_text += f"; {components}"
+        criteria = item.get("criteria") if isinstance(item.get("criteria"), dict) else {}
+        part = str(criteria.get("part_query") or "-").replace("|", "\\|")
+        lines.append(
+            f"| `{row['scenario_id']}/{row['turn_id']}` | {part} | "
+            f"{trace.get('raw_candidates_count', 0)} | {trace.get('rejected_candidates_count', 0)} | "
+            f"{trace.get('filtered_candidates_count', 0)} | {trace.get('ranked_candidates_count', 0)} | {top_text} |"
+        )
+    if unavailable:
+        lines.extend(["", f"{unavailable} turno(s) nao tiveram captura interna disponivel."])
+    return lines
 
 
 def render_human_comparison(rows: list[dict[str, Any]], name: str) -> str:
@@ -340,14 +504,18 @@ def render_human_comparison(rows: list[dict[str, Any]], name: str) -> str:
         "",
         "> A resposta humana e uma referencia observacional. Ela pode incluir mensagens posteriores ao turno executado e nao e tratada automaticamente como gabarito semantico.",
         "",
-        "| cenario/turno | resposta da IA | resposta/referencia humana | caminho |",
-        "|---|---|---|---|",
+        "| cenario/turno | resposta da IA | resposta/referencia humana | caminho | diagnostico ERP |",
+        "|---|---|---|---|---|",
     ]
     for row in referenced:
         ai = str(row.get("summary", {}).get("reply_text", "")).replace("|", "\\|").replace("\n", "<br>")
         human = str(row["human_reference"]).replace("|", "\\|").replace("\n", "<br>")
         path = row.get("summary", {}).get("diagnostics", {}).get("pre_search_path", "")
-        lines.append(f"| `{row['scenario_id']}/{row['turn_id']}` | {ai} | {human} | `{path}` |")
+        diagnostic = row.get("search_diagnostics", {})
+        status = diagnostic.get("capture_status", "not_requested") if isinstance(diagnostic, dict) else "not_requested"
+        items = diagnostic.get("items", []) if isinstance(diagnostic, dict) else []
+        count = len(items) if isinstance(items, list) else 0
+        lines.append(f"| `{row['scenario_id']}/{row['turn_id']}` | {ai} | {human} | `{path}` | {status} ({count} item(ns)) |")
     if not referenced:
         lines.extend(["", "Nenhuma referencia humana foi encontrada nos turnos selecionados."])
     return "\n".join(lines) + "\n"
@@ -376,6 +544,17 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--output-json", type=Path)
     parser.add_argument("--output-md", type=Path)
     parser.add_argument("--output-comparison-md", type=Path)
+    parser.add_argument(
+        "--search-diagnostics-wait-s",
+        type=float,
+        default=0.0,
+        help="optional maximum retry wait for the protected review capture after each turn",
+    )
+    parser.add_argument(
+        "--no-search-diagnostics",
+        action="store_true",
+        help="do not read protected review captures into evaluation artifacts",
+    )
     parser.add_argument("--list", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--no-fail-on-assertion", action="store_true")
@@ -403,6 +582,9 @@ def main(argv: list[str] | None = None) -> int:
     output_comparison_md = args.output_comparison_md or output_comparison_md
     rows: list[dict[str, Any]] = []
     api_url, sequence = args.api_url or DEFAULT_API_URLS[args.target], 0
+    diagnostics_reader = (
+        None if args.no_search_diagnostics else build_review_diagnostics_reader(args.search_diagnostics_wait_s)
+    )
     run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
     for scenario in scenarios:
         history: list[dict[str, str]] = []
@@ -419,6 +601,15 @@ def main(argv: list[str] | None = None) -> int:
             except (urllib.error.URLError, http.client.HTTPException, TimeoutError) as exc:
                 status, body, elapsed = 0, {"error": str(exc)}, 0.0
                 normalized, failures = normalize_response(body), [f"transport: {exc}"]
+            review_trace_id = capture_trace_id(args.target, trace_id, body)
+            if diagnostics_reader is None:
+                search_diagnostics = {
+                    "capture_status": "not_requested",
+                    "trace_id": review_trace_id,
+                    "items": [],
+                }
+            else:
+                search_diagnostics = diagnostics_reader.read(review_trace_id)
             human_reference = turn.human_response or scenario.human_response_consolidated
             rows.append({"scenario_id": scenario.scenario_id, "turn_id": turn.turn_id,
                          "category": scenario.category, "tier": scenario.tier,
@@ -426,6 +617,7 @@ def main(argv: list[str] | None = None) -> int:
                          "legacy_case_ids": list(scenario.legacy_case_ids), "request": payload,
                          "status_code": status, "elapsed_ms": elapsed, "response": body,
                          "summary": normalized, "assertion_failures": failures,
+                         "search_diagnostics": search_diagnostics,
                          "human_reference": human_reference,
                          "human_response_messages": list(turn.human_response_messages or scenario.human_response_messages)})
             print(json.dumps({"progress": f"{sequence}/{total}", "scenario": scenario.scenario_id,

@@ -340,6 +340,7 @@ O `docker-agent` monta e devolve esse objeto. O `docker-comm` apenas valida o co
 | LLM retorna JSON invalido | fallback do conteudo bruto com seed | `ask`, `search` ou `handoff` defensivo | estado correspondente a decisao |
 | Alias exato e pedido completo | extractor, catalogo, regras e score | bypass da LLM e segue para busca | criterios validados |
 | Alias exato e pedido incompleto com pergunta governada | `deterministic_ask` | pergunta backend sem chamar a LLM | `pending_slot` e criterios preservados |
+| Nova familia exata durante pergunta pendente | troca do item ativo e revalidacao | pergunta o proximo dado que falta para a nova familia | novo `part_query`; dados de veiculo confirmados permanecem no estado |
 | Pedido explicitamente automotivo sem familia | `deterministic_ask` | pergunta qual peca o usuario precisa | `pending_slot = part_query` |
 | Typo seguro encontrado | fuzzy de `part_query` | segue para validacao e gate | familia canonica no criterio |
 | Descricao generica com candidatos | recuperacao semantica planejada | pergunta com opcoes | `semantic_disambiguation` pendente no Redis |

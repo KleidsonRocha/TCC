@@ -184,6 +184,42 @@ docker compose up -d --build
 
 ## Rodar Testes
 
+Os testes ficam em `tests/` e sao agrupados por area. `test_rules.py` cobre
+extracao e validacao deterministica; `test_respond.py` cobre o contrato HTTP e
+as conversas; os demais modulos cobrem integracoes e fluxos especificos. Cada
+funcao de teste precisa ter nome unico dentro do arquivo: uma definicao Python
+posterior com o mesmo nome substitui a anterior e impede sua coleta pelo pytest.
+
+Para verificar sintaxe sem executar os testes:
+
+```bash
+python -m compileall -q tests
+```
+
+Para inspecionar os casos coletados antes de executa-los:
+
+```bash
+pytest --collect-only -q tests
+```
+
+Para atualizar aliases em um banco existente sem apagar volumes, depois do
+backup manual e do build da imagem:
+
+```bash
+docker compose run --rm --no-deps docker-agent python -m scripts.catalog.apply_catalog_alias_updates
+docker compose run --rm --no-deps docker-agent python -m scripts.catalog.apply_catalog_alias_updates --apply
+docker compose up -d --build --no-deps --force-recreate docker-agent
+```
+
+Validacao SQL focada do ranking (tabelas temporarias, sem alterar o ERP):
+
+```bash
+docker compose exec docker-agent python -m scripts.eval.evaluate_erp_search --output .tmp/eval/erp_search_reranking_report.json
+```
+
+Se `.tmp` nao estiver montada, copie o relatorio do container com
+`docker cp docker-agent:/app/.tmp/eval/erp_search_reranking_report.json .tmp/eval/`.
+
 No Windows, o caminho mais direto e usar o wrapper de qualidade. Ele builda a imagem `docker-agent` e roda a suite dentro do container:
 
 ```powershell
@@ -337,6 +373,25 @@ Executar um cenario multi-turno pelo `docker-comm` e pelo Redis real:
 
 ```bash
 python scripts/eval/run_real_respond_battery.py --target comm --tier regression --scenario-id disambiguation_001
+```
+
+Por padrao, a bateria consulta a captura protegida em
+`pre_search_review_interaction` depois de cada turno e inclui
+`search_diagnostics` nos tres artefatos gerados. O JSON preserva os candidatos
+brutos, rejeitados, filtrados e ranqueados e o `score_breakdown`; o Markdown
+resume contagens e o primeiro ranqueado. A correlacao usa o `trace_id`: no
+alvo `agent`, o id enviado pela bateria; no alvo `comm`, o id gerado pelo
+gateway e devolvido na resposta. Isso e somente evidencia interna e nunca faz
+parte da resposta do chat.
+
+Se a bateria for executada fora da rede do catalogo, ela continua a rodar e
+marca a captura como `unavailable`. A gravacao ocorre antes da resposta HTTP,
+portanto a leitura padrao nao espera; use `--no-search-diagnostics` para uma
+rodada sem leitura da fila, ou habilite uma tentativa adicional em uma
+infraestrutura com replicacao:
+
+```bash
+python scripts/eval/run_real_respond_battery.py --tier regression --search-diagnostics-wait-s 2
 ```
 
 Se `API_KEY` estiver ativo no `docker-comm`, acrescente `--api-key <valor>`. Filtros por `--category` e `--scenario-id` aceitam repeticao ou valores separados por virgula. Cada rodada integrada usa um `conversation_id` unico para nao herdar estado Redis anterior. As saidas usam nomes unicos em `.tmp/eval/`; um relatorio versionado so e substituido quando `--output-json` ou `--output-md` for informado conscientemente.

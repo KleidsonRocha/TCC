@@ -31,3 +31,4 @@ class PreSearchCatalog:
     part_code_patterns: tuple[str, ...] = field(default_factory=tuple)
     known_group_terms: set[str] = field(default_factory=set)
     part_family_ids: dict[str, list[tuple[int, int]]] = field(default_factory=dict)
+    variant_aliases_by_model: dict[str, list[tuple[str, str]]] = field(default_factory=dict)

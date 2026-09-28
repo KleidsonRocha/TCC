@@ -13,7 +13,7 @@ import streamlit as st
 
 DEFAULT_COMM_API_URL = "http://docker-comm:8000"
 DEFAULT_SOURCE = "webchat"
-DEFAULT_TIMEOUT_SECONDS = 60.0
+DEFAULT_TIMEOUT_SECONDS = 300.0
 DEFAULT_REVIEW_API_URL = "http://docker-agent:8001"
 REVIEW_CRITERIA_FIELDS = (
     "part_query",

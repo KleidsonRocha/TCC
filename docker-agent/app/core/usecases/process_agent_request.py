@@ -195,6 +195,11 @@ class ProcessAgentRequestUseCase:
                 items=state_items,
                 criteria=pre_search.criteria,
                 incoming_state=incoming_state,
+                replace_active_part=self._has_new_explicit_part_family(
+                    query=query,
+                    criteria=pre_search.criteria,
+                    incoming_state=incoming_state,
+                ),
             )
             item_gates = await self._validate_items_for_search(
                 items=state_items,
@@ -336,6 +341,7 @@ class ProcessAgentRequestUseCase:
 
         item_criteria = state_items or [pre_search.criteria]
         item_results: list[ItemSearchResult] = []
+        search_diagnostics: list[dict[str, Any]] = []
         with timing.measure("search_parts"):
             for item_index, item_criteria_row in enumerate(item_criteria):
                 item_gate = item_gates[item_index] if item_gates else None
@@ -359,11 +365,17 @@ class ProcessAgentRequestUseCase:
                     continue
                 used_tools.append("search_parts")
                 try:
-                    found_items = await self._search_parts(
+                    found_items, item_diagnostics = await self._search_parts(
                         query=item_query,
                         branch_id=payload.business.branch_id,
                         criteria=item_criteria_row,
                     )
+                    if item_diagnostics is not None:
+                        search_diagnostics.append({
+                            "item_index": item_index,
+                            "criteria": item_criteria_row.model_dump(exclude_none=True),
+                            "diagnostics": item_diagnostics,
+                        })
                     item_results.append(ItemSearchResult(
                         item=item_criteria_row,
                         status="found" if found_items else "not_found",
@@ -492,6 +504,7 @@ class ProcessAgentRequestUseCase:
                     for index, row in enumerate(item_results)
                     if row.status == "error"
                 ],
+                "search_diagnostics": search_diagnostics,
                 "used_tools": used_tools,
                 "latency_ms": tool_trace.latency_ms,
                 "stage_latency_ms": tool_trace.stage_latency_ms,
@@ -516,6 +529,7 @@ class ProcessAgentRequestUseCase:
             pre_search=pre_search,
             result=result,
             search_query=search_query,
+            search_diagnostics=search_diagnostics,
         )
         return result
 
@@ -1403,6 +1417,7 @@ class ProcessAgentRequestUseCase:
         pre_search: PreSearchValidation,
         result: ProcessResult,
         search_query: str | None,
+        search_diagnostics: list[dict[str, Any]] | None = None,
         include_validator_audit: bool = True,
     ) -> None:
         try:
@@ -1416,6 +1431,13 @@ class ProcessAgentRequestUseCase:
                             item.model_dump(exclude_none=True)
                             for item in result.item_results
                         ],
+                    }
+                )
+            if search_diagnostics:
+                review_actions.append(
+                    {
+                        "type": "search_diagnostics",
+                        "items": search_diagnostics,
                     }
                 )
             await asyncio.to_thread(
@@ -1542,6 +1564,7 @@ class ProcessAgentRequestUseCase:
         items: list[SearchCriteria] | None,
         criteria: SearchCriteria,
         incoming_state: ConversationState | None,
+        replace_active_part: bool = False,
     ) -> list[SearchCriteria] | None:
         """Replace only the pending item after a short follow-up answer."""
         if not items or not incoming_state or incoming_state.active_item_index is None:
@@ -1560,11 +1583,36 @@ class ProcessAgentRequestUseCase:
         is_explicit_active_correction = (
             is_same_active_part and criteria != incoming_state.criteria
         )
-        if pending_value in (None, "", []) and not is_explicit_active_correction:
+        if (
+            pending_value in (None, "", [])
+            and not is_explicit_active_correction
+            and not replace_active_part
+        ):
             return items
         updated = list(items)
         updated[index] = criteria
         return updated
+
+    def _has_new_explicit_part_family(
+        self,
+        *,
+        query: str,
+        criteria: SearchCriteria,
+        incoming_state: ConversationState | None,
+    ) -> bool:
+        if not incoming_state or not incoming_state.pending_slot:
+            return False
+        previous = normalize_pre_search_text(incoming_state.criteria.part_query or "")
+        current = normalize_pre_search_text(criteria.part_query or "")
+        if not previous or not current or previous == current:
+            return False
+        matcher = getattr(self._pre_search_validator, "has_exact_part_query_match", None)
+        if not callable(matcher):
+            return False
+        try:
+            return bool(matcher(message_text=query, canonical_part_query=criteria.part_query))
+        except Exception:
+            return False
 
     @staticmethod
     def _first_incomplete_item_index(
@@ -1688,13 +1736,13 @@ class ProcessAgentRequestUseCase:
         query: str,
         branch_id: int,
         criteria: SearchCriteria,
-    ) -> list[Any]:
+    ) -> tuple[list[Any], dict[str, Any] | None]:
         timeout_s = max(self._settings.erp_search_timeout_ms / 1000, 0.1)
         try:
             async with self._erp_search_semaphore:
                 return await asyncio.wait_for(
                     asyncio.to_thread(
-                        self._tools.search_parts,
+                        self._search_parts_and_capture_diagnostics,
                         query=query,
                         branch_id=branch_id,
                         criteria=criteria,
@@ -1705,3 +1753,21 @@ class ProcessAgentRequestUseCase:
             raise SearchPartsServiceUnavailableError(
                 "Busca de pecas indisponivel: tempo limite excedido."
             ) from exc
+
+    def _search_parts_and_capture_diagnostics(
+        self,
+        *,
+        query: str,
+        branch_id: int,
+        criteria: SearchCriteria,
+    ) -> tuple[list[Any], dict[str, Any] | None]:
+        items = self._tools.search_parts(
+            query=query,
+            branch_id=branch_id,
+            criteria=criteria,
+        )
+        getter = getattr(self._tools, "get_last_search_diagnostics", None)
+        if not callable(getter):
+            return items, None
+        diagnostics = getter()
+        return items, diagnostics if isinstance(diagnostics, dict) else None

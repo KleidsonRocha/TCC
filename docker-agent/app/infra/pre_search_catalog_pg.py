@@ -62,6 +62,7 @@ class PostgresPreSearchCatalogProvider:
                 ) = self._load_part_rules(cur)
                 needs_title_identity = self._load_title_identity_rules(cur)
                 engine_by_model, engine_options_by_model = self._load_engine_options(cur)
+                variant_aliases_by_model = self._load_variant_aliases(cur)
                 criteria_weights, min_score_to_search = self._load_search_scoring(cur)
                 part_code_patterns = self._load_part_code_patterns(cur)
                 known_group_terms = self._load_known_group_terms(cur)
@@ -109,11 +110,23 @@ class PostgresPreSearchCatalogProvider:
             needs_title_identity=needs_title_identity,
             engine_by_model=engine_by_model,
             engine_options_by_model=engine_options_by_model,
+            variant_aliases_by_model=variant_aliases_by_model,
             criteria_weights=criteria_weights,
             min_score_to_search=min_score_to_search,
             part_code_patterns=part_code_patterns,
             known_group_terms=known_group_terms,
         )
+
+    @staticmethod
+    def _load_variant_aliases(cur) -> dict[str, list[tuple[str, str]]]:
+        cur.execute("SELECT to_regclass('public.pre_search_variant_alias')")
+        if cur.fetchone()[0] is None:
+            return {}
+        cur.execute("SELECT model_normalized, variant, alias_normalized FROM pre_search_variant_alias WHERE is_active ORDER BY model_normalized, variant, alias_normalized")
+        result: dict[str, list[tuple[str, str]]] = defaultdict(list)
+        for model, variant, alias in cur.fetchall():
+            result[str(model)].append((str(variant), str(alias)))
+        return dict(result)
 
     @staticmethod
     def _assert_not_empty(value: object, table_hint: str) -> None:
@@ -123,11 +136,26 @@ class PostgresPreSearchCatalogProvider:
     @staticmethod
     def _load_part_family_ids(cur: "psycopg.Cursor") -> dict[str, list[tuple[int, int]]]:
         cur.execute("""
-            SELECT pt.name_normalized, pg.source_group_code, pt.source_subgroup_code
-            FROM pre_search_part_type pt
-            JOIN pre_search_part_group pg ON pg.id = pt.part_group_id
-            WHERE pt.is_active AND pg.is_active
-                AND pg.source_group_code IS NOT NULL AND pt.source_subgroup_code IS NOT NULL
+            SELECT family_key, source_group_code, source_subgroup_code
+            FROM (
+                SELECT pt.name_normalized AS family_key,
+                    pg.source_group_code, pt.source_subgroup_code
+                FROM pre_search_part_type pt
+                JOIN pre_search_part_group pg ON pg.id = pt.part_group_id
+                WHERE pt.is_active AND pg.is_active
+                    AND pg.source_group_code IS NOT NULL
+                    AND pt.source_subgroup_code IS NOT NULL
+                UNION
+                SELECT pa.alias_normalized AS family_key,
+                    pg.source_group_code, pt.source_subgroup_code
+                FROM pre_search_part_alias pa
+                JOIN pre_search_part_type pt ON pt.id = pa.part_type_id
+                JOIN pre_search_part_group pg ON pg.id = pt.part_group_id
+                WHERE pa.is_active AND pt.is_active AND pg.is_active
+                    AND pg.source_group_code IS NOT NULL
+                    AND pt.source_subgroup_code IS NOT NULL
+            ) family_keys
+            WHERE family_key IS NOT NULL AND family_key <> ''
         """)
         identities: dict[str, list[tuple[int, int]]] = defaultdict(list)
         for name, group, subgroup in cur.fetchall():

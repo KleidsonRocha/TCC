@@ -2,8 +2,8 @@ import re
 import unicodedata
 
 
-_FRONT_DIRECTION_PATTERN = re.compile(r"\b(diant|dianteir[oa])\b")
-_REAR_DIRECTION_PATTERN = re.compile(r"\b(tras|traseir[oa])\b")
+_FRONT_DIRECTION_PATTERN = re.compile(r"\b(diant|dianteir[oa]s?)\b")
+_REAR_DIRECTION_PATTERN = re.compile(r"\b(tras|traseir[oa]s?)\b")
 
 
 def normalize_pre_search_text(value: str | None) -> str:

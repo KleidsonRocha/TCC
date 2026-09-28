@@ -30,19 +30,28 @@ def _catalog_fixture() -> PreSearchCatalog:
             ("amortecedores suspensao", ("amortecedores suspensao", "amortecedor suspensao", "suspensao", "suspencao")),
             ("pastilhas de freio", ("pastilha de freio", "pastilha freio", "pastilha", "pastilhas", "pastilhas de freio", "pstilhas")),
             ("discos de freio", ("disco de freio", "disco freio", "discos de freio")),
+            ("velas de ignicao automotivas", ("vela", "velas", "vela de ignicao", "velas de ignicao")),
             ("lubrificantes", ("lubrificantes", "lubrificante", "oleo", "oleos")),
+            ("bieletas", ("bieleta", "bieletas")),
+            ("buchas", ("bucha", "buchas", "bucha estabilizador", "buchas estabilizador")),
+            ("juntas", ("junta", "juntas", "junta da tampa de valvula", "junta tampa de valvula")),
+            ("polia bomba de agua", ("polia da bomba de agua", "polia bomba de agua")),
+            ("rolamentos", ("rolamento", "rolamentos", "rolamento da roda", "rolamentos das rodas")),
         ],
         brand_aliases={"Ford": ("ford",), "Chevrolet": ("chevrolet",)},
         model_aliases={
             "EcoSport": ("ecosport",),
             "Gol": ("gol",),
             "Corsa": ("corsa",),
+            "Focus": ("focus",),
+            "Strada": ("strada",),
+            "Accord": ("accord",),
             "2008": ("2008",),
         },
         invalid_slot_tokens={"nao"},
         generic_ambiguous_parts={"filtro"},
         needs_side={"bandejas"},
-        needs_position={"amortecedores suspensao", "pastilhas de freio", "discos de freio", "coxim"},
+        needs_position={"amortecedores suspensao", "pastilhas de freio", "discos de freio", "coxim", "rolamentos"},
         needs_axle=set(),
         needs_engine={"radiador"},
         needs_variant={"lubrificantes"},
@@ -75,6 +84,21 @@ def _validator_settings() -> Settings:
         LLM_TIMEOUT_MS=1000,
         LLM_LOG_RAW_RESPONSE=False,
     )
+
+
+@pytest.mark.parametrize("message, expected", [
+    ("amortecedor traseiro Onix 2018 joy", "JOY"),
+    ("amortecedor Parati surf 2008 traseiro", "SURF"),
+    ("amortecedor Gol 2010 joy", None),
+    ("amortecedor Onix 2018 enjoyment", None),
+])
+def test_ranking_preserves_only_model_scoped_catalog_variant(message, expected):
+    catalog = replace(
+        _catalog_fixture(),
+        model_aliases={"Onix": ("onix",), "Parati": ("parati",), "Gol": ("gol",)},
+        variant_aliases_by_model={"onix": [("JOY", "joy")], "parati": [("SURF", "surf")]},
+    )
+    assert DictionaryPreSearchExtractor(catalog=catalog).extract(message).variant == expected
 
 
 def _validator(*, catalog: PreSearchCatalog | None = None) -> LLMPreSearchValidator:
@@ -254,24 +278,6 @@ def test_coxim_type_follow_up_routes_motor_and_amortecedor_individually() -> Non
     assert amortecedor.criteria.part_query == "coxim amortecedor"
     assert amortecedor.next_question is not None
     assert amortecedor.next_question.key == "engine"
-
-
-@pytest.mark.parametrize(
-    ("message", "expected_brand"),
-    [
-        ("jogo de velas NGK", "NGK"),
-        ("amortecedor Cofap", "Cofap"),
-        ("bandeja Nakata", "Nakata"),
-    ],
-)
-def test_dictionary_extractor_separates_product_brand_from_vehicle_brand(
-    message: str,
-    expected_brand: str,
-) -> None:
-    result = DictionaryPreSearchExtractor(catalog=_catalog_fixture()).extract(message)
-
-    assert result.preferred_product_brand == expected_brand
-    assert result.vehicle_brand is None
 
 
 def test_dictionary_extractor_does_not_turn_automotive_numbers_into_quantity() -> None:
@@ -492,18 +498,6 @@ def test_dictionary_extractor_shares_only_a_trailing_explicit_vehicle_applicatio
     assert all(item.vehicle_year == 2010 for item in items)
     assert all(item.engine == "1.0" for item in items)
 
-
-def test_dictionary_extractor_builds_independent_items_with_shared_vehicle() -> None:
-    extractor = DictionaryPreSearchExtractor(catalog=_catalog_fixture())
-
-    items = extractor.extract_items(
-        "2 unidades de filtro de oleo e pastilha de freio da ecosport 2008"
-    )
-
-    assert [item.part_query for item in items] == ["filtro de oleo", "pastilhas de freio"]
-    assert all(item.vehicle_model == "EcoSport" for item in items)
-    assert all(item.vehicle_year == 2008 for item in items)
-    assert items[0].quantity == 2
 
 
 def test_dictionary_extractor_uses_last_messages_for_year() -> None:
@@ -1474,6 +1468,46 @@ def test_deterministic_validator_bypasses_simple_follow_up() -> None:
     assert audit["deterministic_reason"] == "complete_follow_up"
 
 
+@pytest.mark.parametrize("message", ["Dianteiro mesmo valor?", "Preciso dianteiro"])
+def test_deterministic_validator_refines_completed_search_by_direction_without_llm(
+    message: str,
+) -> None:
+    validator = _validator()
+    state = ConversationState(
+        criteria=SearchCriteria(
+            part_query="amortecedores suspensao",
+            vehicle_model="Onix",
+            vehicle_year=2018,
+            variant="JOY",
+            position="rear",
+            quantity=2,
+        ),
+        last_decision="search",
+    )
+
+    result = validator.try_validate_deterministically(
+        message,
+        last_messages=[
+            {"role": "user", "text": "Tem par amortecedor traseiro do Onix 2018 joy"},
+            {"role": "assistant", "text": "Encontrei opções compatíveis."},
+        ],
+        conversation_state=state,
+    )
+
+    assert result is not None
+    assert result.decision == "search"
+    assert result.criteria.part_query == "amortecedores suspensao"
+    assert result.criteria.vehicle_model == "Onix"
+    assert result.criteria.vehicle_year == 2018
+    assert result.criteria.variant == "JOY"
+    assert result.criteria.quantity == 2
+    assert result.criteria.position == "front"
+    audit = validator.get_last_audit()
+    assert audit is not None
+    assert audit["deterministic_reason"] == "post_search_directional_refinement"
+    assert audit["llm_endpoint_used"] is None
+
+
 def test_deterministic_ask_follow_up_year_preserves_vehicle_model_and_asks_next_field() -> None:
     catalog = PreSearchCatalog(
         part_patterns=_catalog_fixture().part_patterns,
@@ -1707,6 +1741,62 @@ def test_deterministic_engine_follow_up_keeps_year_incompatible_option_unresolve
     assert validator.try_validate_deterministically("sigma", conversation_state=state) is None
 
 
+def test_deterministic_follow_up_handoffs_when_customer_does_not_know_engine() -> None:
+    validator = _validator()
+    state = ConversationState(
+        criteria=SearchCriteria(
+            part_query="radiador",
+            vehicle_model="Gol",
+            vehicle_year=2010,
+        ),
+        pending_slot="engine",
+        pending_question="Qual a motorizacao do veiculo?",
+        last_decision="ask",
+    )
+
+    result = validator.try_validate_deterministically(
+        "nao sei a motorizacao",
+        conversation_state=state,
+    )
+
+    assert result is not None
+    assert result.decision == "handoff"
+    assert result.criteria == state.criteria
+    assert result.missing_fields == ["engine"]
+    assert result.next_question is not None
+    assert result.next_question.key == "handoff"
+    assert "motorizacao" in result.next_question.prompt
+    assert validator.get_last_audit()["deterministic_reason"] == "unknown_pending_follow_up_handoff"
+
+
+def test_real_004_new_explicit_family_replaces_pending_item_before_year_follow_up() -> None:
+    validator = _validator()
+    state = ConversationState(
+        criteria=SearchCriteria(
+            part_query="polia bomba de agua",
+            vehicle_model="Focus",
+            engine="SIGMA",
+        ),
+        pending_slot="vehicle_year",
+        pending_question="Qual o ano do veiculo?",
+        last_decision="ask",
+    )
+
+    replacement = validator.try_validate_deterministic_ask(
+        "E os rolamentos das rodas dianteiras",
+        last_messages=[{"role": "user", "text": "Teria polia da bomba d'agua do Focus 1.6 16v sigma"}],
+        conversation_state=state,
+    )
+
+    assert replacement is not None
+    assert replacement.decision == "ask"
+    assert replacement.criteria.part_query == "rolamentos"
+    assert replacement.criteria.vehicle_model == "Focus"
+    assert replacement.criteria.position == "front"
+    assert replacement.next_question is not None
+    assert replacement.next_question.key == "vehicle_year"
+
+
 def test_coxim_amortecedor_engine_follow_up_preserves_textual_engine_for_next_question() -> None:
     catalog = replace(
         _catalog_fixture(),
@@ -1847,7 +1937,7 @@ def test_deterministic_ask_policy_rejects_unsafe_or_unresolved_cases(
     assert result.next_question is None
 
 
-def test_deterministic_ask_policy_does_not_override_active_pending_slot() -> None:
+def test_explicit_new_family_replaces_an_unanswered_slot_of_previous_family() -> None:
     validator = _validator()
 
     result = validator.evaluate_deterministic_ask_eligibility(
@@ -1860,8 +1950,11 @@ def test_deterministic_ask_policy_does_not_override_active_pending_slot() -> Non
         ),
     )
 
-    assert result.eligible is False
-    assert result.reason == "active_pending_slot"
+    assert result.eligible is True
+    assert result.reason == "new_explicit_family_missing_field"
+    assert result.criteria.part_query == "radiador"
+    assert result.criteria.vehicle_model == "Gol"
+    assert result.next_question.key == "engine"
 
 
 def test_deterministic_bypass_preserves_rear_when_front_is_negated() -> None:

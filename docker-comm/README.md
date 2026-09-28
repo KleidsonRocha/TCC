@@ -169,8 +169,8 @@ como `COMM_API_KEY` no container.
 - Validacao de `text` vazio retornando HTTP 400
 - Namespacing interno de conversa por origem (`source:conversation_id`)
 - Montagem do payload no contrato tecnico v1.0
-- Retry minimo em timeout/502/503 para chamada ao agent
-- Timeout controlado para agent (retorno 504)
+- Retry minimo em falhas de conexao/502/503; chamadas expiradas nao sao reenviadas para evitar duplicar turnos ainda em processamento
+- Timeout configuravel de 270 s para o agent, acima do limite de 240 s do Ollama
 - Falha do agent (5xx/indisponivel) retorna 502 com mensagem padrao
 - Persistencia de historico curto no Redis (`HISTORY_LIMIT`)
 - Persistencia retrocompativel de `result_disambiguation` dentro do mesmo `ConversationState` e da mesma chave `conv:{conversation_id}:state`

@@ -371,6 +371,10 @@ cd_grupo,cd_subgrupo,alias
 4,1,buxas
 4,1,buchas suspensao
 4,1,bucha suspensao
+4,1,bucha estabilizador
+4,1,buchas estabilizador
+4,1,bucha da barra estabilizadora
+4,1,buchas da barra estabilizadora
 4,1,buchas borracha
 4,1,bucha borracha
 4,2,coxins
@@ -499,6 +503,10 @@ cd_grupo,cd_subgrupo,alias
 6,12,junta cardan
 6,12,juntas diferencial
 6,12,junta diferencial
+6,12,junta tampa de valvula
+6,12,junta da tampa de valvula
+6,12,juntas tampa de valvula
+6,12,juntas da tampa de valvula
 6,12,juntas autopeca
 6,13,reparos
 6,13,reparo
@@ -988,6 +996,8 @@ cd_grupo,cd_subgrupo,alias
 2,5,btentes suspensao
 2,5,batentes suspensao amortecedor
 2,5,batente suspensao amortecedor
+2,5,batente
+2,5,batentes
 4,5,suporte motor e cambio
 4,5,suporte motor cambio
 4,5,suportes motor e cambio
@@ -2122,6 +2132,8 @@ cd_grupo,cd_subgrupo,alias
 21,3,velas ignicao automotivas
 21,3,vela de ignicao automotivas
 21,3,vela ignicao automotivas
+21,3,vela
+21,3,velas
 21,3,velas de igncao automotivas
 21,3,velas de ignicao automotivas transmissao
 21,3,vela de ignicao automotiva transmissao

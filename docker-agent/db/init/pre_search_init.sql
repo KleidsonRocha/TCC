@@ -809,6 +809,22 @@ END;
 $$ LANGUAGE plpgsql;
 
 SELECT pre_search_load_catalog_from_csv();
+-- BEGIN VARIANT ALIAS SCHEMA
+CREATE TABLE IF NOT EXISTS pre_search_variant_alias (
+    model_normalized TEXT NOT NULL,
+    variant TEXT NOT NULL,
+    alias_normalized TEXT NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    PRIMARY KEY (model_normalized, alias_normalized)
+);
+-- END VARIANT ALIAS SCHEMA
+CREATE TEMP TABLE stg_variant_alias (model_normalized TEXT, variant TEXT, alias_normalized TEXT);
+COPY stg_variant_alias FROM '/docker-entrypoint-initdb.d/csv/pre_search_variant_alias.csv'
+    WITH (FORMAT csv, HEADER true, ENCODING 'UTF8');
+INSERT INTO pre_search_variant_alias (model_normalized, variant, alias_normalized)
+SELECT model_normalized, variant, alias_normalized FROM stg_variant_alias
+ON CONFLICT (model_normalized, alias_normalized) DO UPDATE SET variant = EXCLUDED.variant, is_active = TRUE;
+DROP TABLE stg_variant_alias;
 DROP FUNCTION pre_search_load_catalog_from_csv(TEXT);
 DROP FUNCTION pre_search_normalize_text(TEXT);
 

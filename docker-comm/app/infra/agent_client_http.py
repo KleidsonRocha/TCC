@@ -36,8 +36,8 @@ class HttpAgentClient(AgentClient):
                     headers=headers,
                 )
             except httpx.TimeoutException as exc:
-                if attempt < self._max_attempts - 1:
-                    continue
+                # The agent may still be processing this turn after the client
+                # times out. Retrying can submit the same conversation turn twice.
                 raise AgentTimeoutError("Timeout while calling docker-agent.") from exc
             except httpx.RequestError as exc:
                 if attempt < self._max_attempts - 1:

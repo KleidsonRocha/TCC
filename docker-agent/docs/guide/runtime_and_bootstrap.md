@@ -57,6 +57,10 @@ Os dados de bootstrap ficam em:
 Uso pratico:
 - `db/init/csv/` contem os seeds reais consumidos pelo banco
 - `pre_search_part_alias.csv` concentra cobertura lexical curada
+- `pre_search_variant_alias.csv` concentra aliases de versao por modelo;
+  o bootstrap os grava em `pre_search_variant_alias`. A extracao preserva
+  versoes explicitas como Onix JOY e Parati SURF e a busca valida a aplicacao
+  na mesma linha de modelo/ano, sem inferir ano pelo alias.
 - `vehicle_model_brand.csv` e a fonte curada da relacao modelo→montadora; o
   bootstrap liga cada registro correspondente em `pre_search_model.brand_id`
   ao registro de `pre_search_brand`
@@ -74,6 +78,12 @@ docker compose exec -T --user postgres presearch-db sh -c \
   'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" \
   -f /docker-entrypoint-initdb.d/pre_search_init.sql'
 ```
+
+Para aplicar somente os aliases versionados de peca e versao em volume
+existente, use `python -m scripts.catalog.apply_catalog_alias_updates` para
+validar com rollback e depois repita com `--apply`. O script usa o schema do
+SQL consolidado, atualiza em transacao e preserva catalogo restante, snapshot,
+fila, datasets e estados. Reinicie o agente para reler o catalogo.
 
 Antes de ampliar o seed, gere a fila de revisao sem atribuir marcas por
 heuristica:

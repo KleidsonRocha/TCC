@@ -95,7 +95,7 @@ Marque cada item depois de testar no Streamlit e registre a resposta esperada qu
   - resultado esperado aprovado: _preencher_
 
 - [ ] **disambiguation_009 — result_disambiguation**
-  - conversa: `radiador ecosport 2008 zetec rocam` → `a primeira`
+  - conversa: `radiador ecosport 2008 1.6 zetec rocam` → `a primeira`
   - por que revisar: A selecao depende dos atributos e candidatos atuais do ERP.
   - validar: As opcoes apresentadas distinguem produtos de forma compreensivel e a resposta final escolhe o item correto?
   - resultado esperado aprovado: _preencher_
@@ -171,3 +171,29 @@ Marque cada item depois de testar no Streamlit e registre a resposta esperada qu
   - por que revisar: Descricao funcional, sintoma ou politica de handoff nao possui uma unica resposta objetiva.
   - validar: A resposta e segura, nao confirma familia por fuzzy inseguro e pergunta ou transfere no momento correto?
   - resultado esperado aprovado: _preencher_
+
+- [ ] **erp_batentes_s10_1996_dianteiro — manual_erp_family_validation**
+  - conversa: `batente para S10 1996` → `dianteiro`
+  - por que revisar: Comparar os codigos encontrados com a busca manual no ERP; ha itens da lista ERP que nao apareceram na resposta observada.
+  - validar: A familia, aplicacao, posicao e cobertura de codigos da resposta correspondem ao ERP?
+  - resultado esperado aprovado: _preencher_
+
+## Validacao manual por tipo contra o ERP
+
+Os casos progressivos e resultados ficam em `erp_manual_type_validation_v1.json`. Nao promover exemplos para fine-tuning enquanto a revisao estiver pendente.
+
+- [ ] **batentes_suspensao_s10_1996_dianteiro_001** — familia `batentes suspensao`; IA retornou 5 codigo(s) e ERP listou 9.
+  - codigos da IA: `044.2475`, `SK-317S`, `044.1467`, `KT-30320`, `SK-326S`
+  - codigos ERP ausentes da IA: `PV-74`, `SP-3207`, `SP-3806`, `022.2566`
+  - fechar a comparacao de aplicacao e cobertura antes de promover o caso.
+
+- [ ] **atuador_embreagem_ecosport_2008_001** — familia `atuador de embreagem`; IA retornou 0 codigo(s) e ERP listou 8.
+  - codigos da IA: nenhum
+  - codigos ERP ausentes da IA: nenhum
+  - fechar a comparacao de aplicacao e cobertura antes de promover o caso.
+
+- [ ] **bieleta_ecosport_sem_ano_timeout_e_retentativa_001** — familia `bieletas`; a conversa sem ano perguntou ano e lado, e depois retornou 5 opcoes; ERP listou 8 codigos.
+  - codigos da IA: `KT-20069`, `ZM-37011458`, `531.2121`, `N-92004`, `N-92004*A`
+  - codigos ERP observados: `N-92001`, `SK-2532`, `JTSB0005`, `N-9200*A`, `N-92004`, `531.2121`, `KT-20069`, `ZM-37011458`
+  - validar aplicacao de cada codigo para EcoSport 2008 antes de classificar itens ausentes.
+  - registrar o timeout da primeira tentativa plural separadamente; depois de refresh, a conversa refeita com "bieleta" funcionou.

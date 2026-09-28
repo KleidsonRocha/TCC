@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     history_limit: int = Field(6, alias="HISTORY_LIMIT")
     session_ttl_seconds: int = Field(86400, alias="SESSION_TTL_SECONDS")
 
-    agent_timeout_seconds: float = Field(20.0, alias="AGENT_TIMEOUT_SECONDS")
+    agent_timeout_seconds: float = Field(270.0, alias="AGENT_TIMEOUT_SECONDS")
     agent_retry_count: int = Field(1, alias="AGENT_RETRY_COUNT")
     agent_gateway_api_key: str | None = Field(None, alias="AGENT_GATEWAY_API_KEY")
 

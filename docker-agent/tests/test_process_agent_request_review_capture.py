@@ -228,7 +228,20 @@ def test_process_agent_request_passes_structured_criteria_to_search_tools() -> N
         def get_last_audit(self) -> dict:
             return {}
 
-    tools = _SpyTools()
+    class _DiagnosticTools(_SpyTools):
+        def get_last_search_diagnostics(self) -> dict:
+            return {
+                "raw_candidates_count": 2,
+                "rejected_candidates": [{
+                    "item_id": "CXM-WRONG", "reason": "application_filter",
+                }],
+                "ranked_candidates": [{
+                    "item_id": "CXM-101",
+                    "score_breakdown": {"engine": 0.08, "total": 0.72},
+                }],
+            }
+
+    tools = _DiagnosticTools()
     recorder = _SpyRecorder()
     use_case = ProcessAgentRequestUseCase(
         tools=tools,
@@ -275,6 +288,14 @@ def test_process_agent_request_passes_structured_criteria_to_search_tools() -> N
         "vehicle_model": "Ecosport",
         "vehicle_year": 2008,
         "engine": "1.6",
+    }
+    diagnostics = next(
+        action for action in recorder.calls[0]["final_actions"]
+        if action["type"] == "search_diagnostics"
+    )
+    assert diagnostics["items"][0]["diagnostics"]["ranked_candidates"][0]["score_breakdown"] == {
+        "engine": 0.08,
+        "total": 0.72,
     }
 
 
@@ -480,6 +501,38 @@ def test_multi_item_correction_replaces_only_the_active_item() -> None:
     assert updated[1].vehicle_model == "Corsa"
     assert updated[1].vehicle_year == 2012
     assert updated[1].side is None
+
+
+def test_multi_item_new_explicit_family_replaces_the_active_pending_item() -> None:
+    items = [
+        SearchCriteria(part_query="radiador", vehicle_model="Gol", vehicle_year=2010, engine="1.0"),
+        SearchCriteria(part_query="polia bomba de agua", vehicle_model="Focus", engine="SIGMA"),
+    ]
+    state = ConversationState(
+        criteria=items[1],
+        items=items,
+        active_item_index=1,
+        pending_slot="vehicle_year",
+        last_decision="ask",
+    )
+
+    updated = ProcessAgentRequestUseCase._apply_active_item_follow_up(
+        items=items,
+        criteria=SearchCriteria(
+            part_query="rolamentos",
+            vehicle_model="Focus",
+            engine="SIGMA",
+            position="front",
+        ),
+        incoming_state=state,
+        replace_active_part=True,
+    )
+
+    assert updated is not None
+    assert updated[0] == items[0]
+    assert updated[1].part_query == "rolamentos"
+    assert updated[1].vehicle_model == "Focus"
+    assert updated[1].position == "front"
 
 
 def test_multi_item_negation_removes_only_the_active_item_without_new_search() -> None:

@@ -8,6 +8,7 @@ import pytest
 CATALOG_CSV_DIR = Path("db/init/csv")
 PART_RULE_PATH = CATALOG_CSV_DIR / "pre_search_part_rule.csv"
 SUBGROUP_PATH = CATALOG_CSV_DIR / "subgrupo.csv"
+PART_ALIAS_PATH = CATALOG_CSV_DIR / "pre_search_part_alias.csv"
 
 AUDITED_FILTER_FAMILIES = {
     "filtro de ar condicionado",
@@ -32,11 +33,14 @@ REQUIRED_RULE_EXPECTATIONS = (
     ("coxins", "needs_position"),
     ("lubrificantes", "needs_variant"),
     ("pastilhas de freio", "needs_position"),
+    ("batentes", "needs_position"),
 )
 
 NON_REQUIRED_RULE_EXPECTATIONS = (
     ("coxins", "needs_axle"),
     ("pastilhas de freio", "needs_engine"),
+    ("batentes", "needs_side"),
+    ("batentes", "needs_axle"),
 )
 
 
@@ -127,3 +131,14 @@ def test_audited_families_do_not_require_an_unsupported_discriminator(
 
     for rule in matching_rules:
         assert not _as_bool(rule[field]), f"{family}: {field}"
+
+
+def test_batente_aliases_include_the_suspension_subgroup() -> None:
+    with PART_ALIAS_PATH.open(encoding="utf-8", newline="") as file:
+        aliases = {
+            (row["cd_grupo"], row["cd_subgrupo"], row["alias"])
+            for row in csv.DictReader(file)
+        }
+
+    assert ("2", "5", "batente") in aliases
+    assert ("2", "5", "batentes") in aliases

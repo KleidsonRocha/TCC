@@ -1,5 +1,8 @@
 import logging
 import re
+from contextvars import ContextVar
+from copy import deepcopy
+from typing import Any
 
 from app.config import Settings
 from app.core.domain.errors import SearchPartsServiceUnavailableError
@@ -40,6 +43,10 @@ class FallbackErpSearchTools(ToolsPort):
         self._primary = primary
         self._fallback = fallback
         self._logger = logger
+        self._last_search_diagnostics: ContextVar[dict[str, Any] | None] = ContextVar(
+            "fallback_erp_search_diagnostics",
+            default=None,
+        )
 
     def search_parts(
         self,
@@ -48,11 +55,13 @@ class FallbackErpSearchTools(ToolsPort):
         criteria: SearchCriteria | None = None,
     ) -> list[PartItem]:
         try:
-            return self._primary.search_parts(
+            items = self._primary.search_parts(
                 query=query,
                 branch_id=branch_id,
                 criteria=criteria,
             )
+            self._capture_diagnostics(self._primary)
+            return items
         except SearchPartsServiceUnavailableError:
             self._logger.warning(
                 "erp_search_primary_failed_using_fallback",
@@ -63,11 +72,27 @@ class FallbackErpSearchTools(ToolsPort):
                 },
                 exc_info=True,
             )
-            return self._fallback.search_parts(
+            items = self._fallback.search_parts(
                 query=query,
                 branch_id=branch_id,
                 criteria=criteria,
             )
+            self._capture_diagnostics(self._fallback)
+            return items
+
+    def _capture_diagnostics(self, tools: ToolsPort) -> None:
+        getter = getattr(tools, "get_last_search_diagnostics", None)
+        if not callable(getter):
+            self._last_search_diagnostics.set(None)
+            return
+        diagnostics = getter()
+        self._last_search_diagnostics.set(
+            deepcopy(diagnostics) if isinstance(diagnostics, dict) else None
+        )
+
+    def get_last_search_diagnostics(self) -> dict[str, Any] | None:
+        diagnostics = self._last_search_diagnostics.get()
+        return deepcopy(diagnostics) if diagnostics is not None else None
 
 
 class PostgresErpSearchTools(ToolsPort):
@@ -88,6 +113,10 @@ class PostgresErpSearchTools(ToolsPort):
         self._backend_name = backend_name
         self._family_ids = catalog.part_family_ids if catalog else None
         self._needs_title_identity = catalog.needs_title_identity if catalog else set()
+        self._last_search_diagnostics: ContextVar[dict[str, Any] | None] = ContextVar(
+            f"{backend_name}_search_diagnostics",
+            default=None,
+        )
 
     def search_parts(
         self,
@@ -144,6 +173,20 @@ class PostgresErpSearchTools(ToolsPort):
                 "Busca de pecas indisponivel: nao foi possivel consultar o ERP."
             ) from exc
 
+        diagnostics: dict[str, Any] | None = None
+        item_rows = []
+        for row in rows:
+            trace = row.get("search_diagnostics")
+            if diagnostics is None and isinstance(trace, dict):
+                diagnostics = trace
+            if row.get("item_code") is not None:
+                item_rows.append(row)
+
+        if diagnostics is not None:
+            diagnostics = deepcopy(diagnostics)
+            diagnostics["backend"] = self._backend_name
+            diagnostics["criteria"] = resolved_criteria.model_dump(exclude_none=True)
+
         items = [
             PartItem(
                 item_id=str(row["item_code"]),
@@ -151,8 +194,9 @@ class PostgresErpSearchTools(ToolsPort):
                 score=max(0.0, min(float(row["score"]), 1.0)),
                 attributes=self._build_disambiguation_attributes(row),
             )
-            for row in rows
+            for row in item_rows
         ]
+        self._last_search_diagnostics.set(deepcopy(diagnostics))
 
         self._logger.info(
             "erp_search_query_finished",
@@ -162,9 +206,14 @@ class PostgresErpSearchTools(ToolsPort):
                 "query": query,
                 "criteria": resolved_criteria.model_dump(exclude_none=True),
                 "results_count": len(items),
+                "search_diagnostics": diagnostics,
             },
         )
         return items
+
+    def get_last_search_diagnostics(self) -> dict[str, Any] | None:
+        diagnostics = self._last_search_diagnostics.get()
+        return deepcopy(diagnostics) if diagnostics is not None else None
 
     @staticmethod
     def _resolve_criteria(query: str, criteria: SearchCriteria | None) -> SearchCriteria:
