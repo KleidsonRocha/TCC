@@ -79,6 +79,26 @@ CREATE TABLE IF NOT EXISTS pre_search_part_alias (
     UNIQUE (part_type_id, alias_normalized)
 );
 
+-- Curated ERP subgroup scopes for families whose source subgroup differs from
+-- the catalog's primary classification. The search layer still validates the
+-- item's title against the canonical family when multiple scopes are present.
+CREATE TABLE IF NOT EXISTS pre_search_part_family_scope (
+    family_key TEXT NOT NULL,
+    source_group_code INTEGER NOT NULL,
+    source_subgroup_code INTEGER NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_by TEXT NOT NULL DEFAULT 'seed',
+    PRIMARY KEY (family_key, source_group_code, source_subgroup_code)
+);
+
+INSERT INTO pre_search_part_family_scope (family_key, source_group_code, source_subgroup_code, updated_by)
+VALUES ('batentes', 2, 6, 'seed_csv'),
+       ('atuador de embreagem', 10, 5, 'seed_csv'),
+       ('eletroventilador', 9, 27, 'seed_csv')
+ON CONFLICT (family_key, source_group_code, source_subgroup_code)
+DO UPDATE SET is_active=TRUE, updated_at=NOW(), updated_by='seed_csv';
+
 CREATE TABLE IF NOT EXISTS pre_search_part_rule (
     part_type_id BIGINT PRIMARY KEY REFERENCES pre_search_part_type(id) ON DELETE CASCADE,
     is_generic BOOLEAN NOT NULL DEFAULT FALSE,

@@ -135,7 +135,16 @@ class PostgresPreSearchCatalogProvider:
 
     @staticmethod
     def _load_part_family_ids(cur: "psycopg.Cursor") -> dict[str, list[tuple[int, int]]]:
-        cur.execute("""
+        cur.execute("SELECT to_regclass('public.pre_search_part_family_scope')")
+        has_curated_scopes = cur.fetchone()[0] is not None
+        scope_union = """
+                UNION
+                SELECT scope.family_key,
+                    scope.source_group_code, scope.source_subgroup_code
+                FROM pre_search_part_family_scope scope
+                WHERE scope.is_active
+        """ if has_curated_scopes else ""
+        cur.execute(f"""
             SELECT family_key, source_group_code, source_subgroup_code
             FROM (
                 SELECT pt.name_normalized AS family_key,
@@ -154,6 +163,7 @@ class PostgresPreSearchCatalogProvider:
                 WHERE pa.is_active AND pt.is_active AND pg.is_active
                     AND pg.source_group_code IS NOT NULL
                     AND pt.source_subgroup_code IS NOT NULL
+                {scope_union}
             ) family_keys
             WHERE family_key IS NOT NULL AND family_key <> ''
         """)

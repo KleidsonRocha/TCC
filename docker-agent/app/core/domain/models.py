@@ -5,6 +5,9 @@ from pydantic import BaseModel, Field
 from app.core.domain.pre_search import SearchCriteria
 
 
+MAX_ITEMS_PER_CONVERSATION_STATE = 10
+
+
 class PartItem(BaseModel):
     item_id: str = Field(max_length=128)
     title: str = Field(max_length=1_000)
@@ -59,7 +62,10 @@ class ConversationState(BaseModel):
     criteria: SearchCriteria = Field(default_factory=SearchCriteria)
     # `criteria` remains the active/legacy item. `items` carries the complete
     # request when the customer mentions more than one part.
-    items: list[SearchCriteria] | None = Field(default=None, max_length=10)
+    items: list[SearchCriteria] | None = Field(
+        default=None,
+        max_length=MAX_ITEMS_PER_CONVERSATION_STATE,
+    )
     # Index of the single item that owns pending_slot.  It prevents a short
     # follow-up such as "esquerda" from changing every item in a request.
     active_item_index: int | None = Field(default=None, ge=0)

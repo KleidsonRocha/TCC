@@ -613,6 +613,82 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             self._set_deterministic_safety_audit(safety_result)
             return safety_result
 
+        normalized_message = normalize_pre_search_text(message_text)
+        clutch_dictionary_criteria = self._canonicalize_criteria_part_query(
+            self._dictionary_extractor.extract(message_text, last_messages=[])
+        )
+        is_generic_clutch_request = (
+            "embreagem" in normalized_message
+            and clutch_dictionary_criteria.part_query is None
+        )
+        if is_generic_clutch_request:
+            clutch_criteria = clutch_dictionary_criteria
+            if conversation_state is not None:
+                clutch_criteria = self._merge_dictionary_with_conversation_state(
+                    dictionary_criteria=clutch_criteria,
+                    conversation_state=conversation_state,
+                )
+            repeated_generic_answer = bool(
+                conversation_state
+                and conversation_state.pending_slot == "part_query"
+                and conversation_state.pending_question
+                and "componente da embreagem" in normalize_pre_search_text(
+                    conversation_state.pending_question
+                )
+                and normalized_message.strip() in {"embreagem", "a embreagem"}
+            )
+            if repeated_generic_answer:
+                reason = "generic_clutch_repeat_handoff"
+                self._last_audit_info.set({
+                    "llm_endpoint_used": None,
+                    "llm_raw_content": None,
+                    "llm_output_valid": None,
+                    "llm_parse_error": None,
+                    "llm_fallback_used": None,
+                    "llm_decision_raw": None,
+                    "pre_search_path": "deterministic_ask",
+                    "deterministic_reason": reason,
+                    "missing_fields": ["part_query"],
+                    "next_question_key": None,
+                })
+                return PreSearchValidation(
+                    decision="handoff",
+                    criteria=clutch_criteria,
+                    missing_fields=["part_query"],
+                    confidence=0.6,
+                )
+            next_question = NextQuestion(
+                key="part_query",
+                prompt="Qual componente da embreagem voce precisa?",
+                options=[
+                    "Kit de embreagem",
+                    "Disco",
+                    "Plato",
+                    "Atuador ou cilindro",
+                    "Rolamento",
+                    "Outro componente",
+                ],
+            )
+            self._last_audit_info.set({
+                "llm_endpoint_used": None,
+                "llm_raw_content": None,
+                "llm_output_valid": None,
+                "llm_parse_error": None,
+                "llm_fallback_used": None,
+                "llm_decision_raw": None,
+                "pre_search_path": "deterministic_ask",
+                "deterministic_reason": "generic_clutch_component_clarification",
+                "missing_fields": ["part_query"],
+                "next_question_key": "part_query",
+            })
+            return PreSearchValidation(
+                decision="ask",
+                criteria=clutch_criteria,
+                missing_fields=["part_query"],
+                next_question=next_question,
+                confidence=0.99,
+            )
+
         eligibility = self.evaluate_deterministic_ask_eligibility(
             message_text,
             last_messages=last_messages,

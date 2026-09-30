@@ -65,14 +65,25 @@
       },
       "review": {
         "family_and_application_found": true,
-        "coverage_status": "pending_reconciliation",
+        "coverage_status": "one_confirmed_valid_candidate_missing_pending_customer_reconciliation",
         "codes_in_erp_list_not_in_assistant_result": [
           "PV-74",
           "SP-3207",
           "SP-3806",
           "022.2566"
         ],
-        "notes": "O usuario confirmou que os itens mostrados na pesquisa do ERP atendem a S10 1996. A IA encontrou itens relevantes, mas retornou cinco dos nove codigos observados no ERP; revisar a cobertura ao consolidar a validacao deste tipo."
+        "erp_application_audit": {
+          "SP-3207": "Aplicacao estruturada confirma S10 1995-2003; titulo e batente superior. Candidato valido ausente na IA; ERP o classifica no subgrupo 2/6 DIVERSOS.",
+          "PV-74": "Busca por codigo e aplicacao S10 1996 dianteira nao confirmadas.",
+          "SP-3806": "Busca por codigo/aplicacao S10 1996 nao confirmada; cadastro esta no subgrupo COXINS.",
+          "022.2566": "Titulo/aplicacao correspondem a Nova S10 2014+/Trailblazer, nao S10 1996."
+        },
+        "codes_in_erp_list_not_in_assistant_result": ["PV-74", "SP-3207"],
+        "corrected_search_codes": ["SP-3207", "044.2475", "SK-317S", "044.1467", "KT-30320", "SK-326S"],
+        "application_confirmed_from_erp_ui": ["PV-74", "SP-3207"],
+        "incompatible_or_unconfirmed_erp_candidates": ["SP-3806", "022.2566"],
+        "sql_search_view_missing_confirmed_ui_candidate": ["PV-74"],
+        "notes": "A tela do ERP mostra explicitamente PV-74 com aplicacao S10 1995-2000 e descricao dianteira, portanto e aplicavel a S10 1996. O backend SQL nao retorna PV-74 nem na busca por codigo, o que aponta para ausencia/desatualizacao em item_search_candidates ou item_search_applications; o escopo de familia nao resolve esse dado ausente. SP-3207 foi encontrado apos adicionar o subgrupo 2/6. SP-3806 e 022.2566 nao foram confirmados para S10 1996 e parecem corresponder a outras aplicacoes. Reconciliar a origem SQL com o ERP antes de fechar cobertura."
       }
     },
     {
@@ -113,7 +124,7 @@
           "AH204750",
           "620 310 330"
         ],
-        "application_checked": "A tela mostra varias aplicacoes de EcoSport; o item selecionado YM64AA mostra anos 2003-2007 nas linhas visiveis, sem confirmar 2008.",
+        "application_checked": "Busca corrigida no ERP retornou sete candidatos para EcoSport 2008: YM64AA, 510 0065 11, C-2707, C-2711, VKCH-4750, 510 0065 110 e AH204750. 620 310 330 nao apareceu. A referencia anotada na tela ERP foi VKCHL-4750; o resultado estruturado do backend traz VKCH-4750, divergencia a reconciliar.",
         "customer_confirmed_application": false
       },
       "assistant_result": {
@@ -126,11 +137,13 @@
         "codes_observed": []
       },
       "review": {
-        "family_and_application_found": false,
-        "coverage_status": "pending_application_validation",
-        "suspected_issue": "O catalogo exige lado para atuador de embreagem; validar se a familia tem variacao direita/esquerda. A busca manual encontrou oito candidatos pela descricao, mas ainda e necessario conferir quais aplicacoes incluem EcoSport 2008.",
-        "codes_in_erp_list_not_in_assistant_result": [],
-        "notes": "Nao classificar ainda os oito itens como compativeis com 2008. Confirmar a aplicacao por item no ERP; registrar depois se a pergunta de lado e indevida e quais codigos devem ser retornados."
+        "family_and_application_found": true,
+        "coverage_status": "seven_candidates_returned_code_reference_discrepancy_and_one_unmatched",
+        "confirmed_erp_applicable_codes": ["YM64AA", "510 0065 11", "C-2707", "C-2711", "VKCH-4750", "510 0065 110", "AH204750"],
+        "unconfirmed_codes": ["VKCHL-4750", "620 310 330"],
+        "codes_in_erp_list_not_in_assistant_result": ["YM64AA", "510 0065 11", "C-2707", "C-2711", "VKCHL-4750", "510 0065 110", "AH204750"],
+        "corrected_search_codes": ["VKCH-4750", "510 0065 110", "AH204750", "C-2707", "C-2711", "510 0065 11", "YM64AA"],
+        "notes": "Atuadores hidraulicos de embreagem nao diferenciam lado; removida a exigencia. A busca corrigida retorna sete candidatos. YM64AA esta no subgrupo ERP 10/5 apesar do titulo explicitar atuador de embreagem; um escopo curado recupera esse item. O codigo VKCHL-4750 anotado na tela diverge do VKCH-4750 retornado no backend, e 620 310 330 nao foi encontrado; manter para reconciliacao humana."
       }
     },
     {
@@ -180,7 +193,7 @@
           "KT-20069",
           "ZM-37011458"
         ],
-        "application_checked": "Tela do ERP mostra aplicacoes EcoSport em varios anos; a aplicacao por codigo ainda deve ser conferida antes de classificar todos os oito como compativeis com 2008.",
+        "application_checked": "Busca ERP individual por codigo/modelo/ano confirmou aplicacao EcoSport 2008 para os oito codigos, incluindo N-92001, SK-2532 e JTSB0005, que o filtro por lado havia rejeitado por o titulo usar LD/LE.",
         "customer_confirmed_application": false
       },
       "assistant_result": {
@@ -206,13 +219,265 @@
       },
       "review": {
         "family_and_application_found": true,
-        "coverage_status": "pending_application_and_coverage_reconciliation",
-        "codes_in_erp_list_not_in_assistant_result": [
+        "coverage_status": "eight_erp_codes_application_confirmed_direction_filter_removed",
+        "confirmed_applicable_codes_missing_from_assistant": [
           "N-92001",
           "SK-2532",
           "JTSB0005"
         ],
-        "notes": "A repeticao apos refresh retornou cinco candidatos. Confirmar no ERP quais codigos atendem EcoSport 2008 antes de medir cobertura. O timeout isolado e registrado como falha transitoria; a diferenca de limites entre Ollama, docker-comm e Streamlit foi identificada como causa provavel e sera corrigida separadamente da busca."
+        "codes_in_erp_list_not_in_assistant_result": ["N-92001", "SK-2532", "JTSB0005"],
+        "notes": "Os tres itens ausentes foram confirmados para EcoSport 2008; seus titulos usam LD/LE, atendendo ambos os lados. A exigencia de lado foi removida; como o ERP mistura bieletas dianteiras e traseiras, confirmar posicao se o cliente especificar o eixo. O timeout isolado permanece incidente transitorio separado da cobertura."
+        ,"corrected_search_codes": ["KT-20069", "N-92001", "SK-2532", "JTSB0005", "ZM-37011458", "531.2121", "N-92004", "N-92004*A"]
+      }
+    },
+    {
+      "id": "tensor_corrente_doblo_2010_etorq_001",
+      "part_type": "tensor da corrente de distribuicao",
+      "validation_date": "2026-09-28",
+      "vehicle": {
+        "model": "Doblo",
+        "year": 2010,
+        "engine": "1.8 16V E-TORQ"
+      },
+      "conversation": [
+        {
+          "role": "user",
+          "text": "CORRENTE TENSOR doblo 2010"
+        },
+        {
+          "role": "assistant",
+          "observed_question": "Qual a motorizacao do veiculo?",
+          "options": ["E-TORQ", "FIASA", "FIRE", "POWERTRAIN"]
+        },
+        {
+          "role": "user",
+          "text": "E-TORQ"
+        },
+        {
+          "role": "assistant",
+          "observed_result": "Encontrou TENSIONADOR DA CORRENTE DISTRIBUICAO FIAT DOBLO/LINEA/PALIO/SIENA/STRADA 1.6/1.8 16V - E.TORQ, codigo KD4504."
+        }
+      ],
+      "erp_reference": {
+        "manual_query": "CORRENTE TENSOR",
+        "codes_observed": ["KD4504"],
+        "visible_result_count": 10,
+        "application_checked": "Produto KD4504 selecionado; aba Produto Veiculos mostra FIAT DOBLO, anos 2010-2015, motor 1.8 16V SOHC L4 E-TORQ.",
+        "customer_confirmed_application": true
+      },
+      "assistant_result": {
+        "criteria": {
+          "part_query": "tensor da corrente de distribuicao",
+          "vehicle_model": "Doblo",
+          "vehicle_year": 2010,
+          "engine": "E-TORQ"
+        },
+        "codes_observed": ["KD4504"]
+      },
+      "review": {
+        "family_and_application_found": true,
+        "coverage_status": "one_match_confirmed_full_ten_candidate_list_still_pending",
+        "codes_in_erp_list_not_in_assistant_result": [],
+        "notes": "O codigo KD4504 foi confirmado na busca do ERP e sua aplicacao visivel atende Doblo 2010 1.8 16V E-TORQ. O ERP indicou dez resultados, mas os outros codigos nao estao registrados nesta evidencia; comparar a lista completa antes de concluir cobertura."
+      }
+    },
+    {
+      "id": "cruzeta_f250_familia_ausente_001",
+      "part_type": "cruzetas cardan",
+      "validation_date": "2026-09-28",
+      "vehicle": {
+        "model": "F-250"
+      },
+      "conversation": [
+        {
+          "role": "user",
+          "text": "cruzeta f-250"
+        },
+        {
+          "role": "assistant",
+          "observed_result": "Essa familia de peca nao esta no catalogo para pesquisa automatica. Vou encaminhar para atendimento humano."
+        }
+      ],
+      "erp_reference": {
+        "manual_query": "CRUZETA",
+        "erp_subgroup": "CRUZETAS CARDAN",
+        "visible_result_count": 293,
+        "codes_observed": ["5-641X", "5-641X*A", "801010"],
+        "application_checked": "Busca estruturada para cruzeta/F-250/1998 retornou 5-641X, 5-641X*A e 801010; os dois primeiros mostram aplicacao F-250 1998-2003. A tela original tinha 293 resultados e nao foi integralmente reconciliada.",
+        "customer_confirmed_application": true
+      },
+      "assistant_result": {
+        "criteria": {
+          "part_query": "cruzeta",
+          "vehicle_model": "F-250"
+        },
+        "codes_observed": [],
+        "handoff": true
+      },
+      "review": {
+        "family_and_application_found": true,
+        "coverage_status": "family_alias_added_three_candidates_found_full_erp_list_and_engine_pending",
+        "codes_in_erp_list_not_in_assistant_result": ["5-641X", "5-641X*A"],
+        "corrected_search_codes": ["5-641X", "5-641X*A", "801010"],
+        "notes": "A causa confirmada era a ausencia do alias singular cruzeta; adicionado a familia CRUZETAS CARDAN. Busca estruturada de verificacao retornou tres candidatos. Precisamos do ano/motor/versao do pedido original e comparar a lista completa de 293 resultados antes de fechar cobertura."
+      }
+    },
+    {
+      "id": "dobradica_f1000_1992_49l_001",
+      "part_type": "dobradicas",
+      "validation_date": "2026-09-28",
+      "vehicle": {
+        "model": "F-1000",
+        "year": 1992,
+        "engine": "4.9 L 12V SOHC L6"
+      },
+      "conversation": [
+        {
+          "role": "user",
+          "text": "dobradica f-1000"
+        },
+        {
+          "role": "assistant",
+          "observed_question": "Qual o ano do veiculo?"
+        },
+        {
+          "role": "user",
+          "text": "1992"
+        },
+        {
+          "role": "assistant",
+          "observed_question": "Qual a motorizacao do veiculo?",
+          "options": ["3.9 L 8V L4", "4.9 L 12V SOHC L6", "E-MAX", "HS", "HSD", "SERIE 10 / X10", "SERIE 229"]
+        },
+        {
+          "role": "user",
+          "text": "4.9 L 12V SOHC L6"
+        },
+        {
+          "role": "assistant",
+          "observed_result": "Encontrei DOBRADICA CAPO FORD F-1000/4000 93/ - DIREITO, codigo UNI-30354."
+        }
+      ],
+      "erp_reference": {
+        "manual_query": "DOBRADICA",
+        "visible_result_count": 22,
+        "codes_observed": ["UNI-30354"],
+        "application_checked": "Item UNI-30354 selecionado: DOBRADICA CAPO FORD F-1000/4000 93/ - DIREITO. Aba Produto Veiculos mostra FORD F-1000 anos 1992-1995, motor 4.9 L 12V SOHC L6 E-MAX; complemento LWB na linha visivel.",
+        "customer_confirmed_application": true
+      },
+      "assistant_result": {
+        "criteria": {
+          "part_query": "dobradicas",
+          "vehicle_model": "F-1000",
+          "vehicle_year": 1992,
+          "engine": "4.9 L 12V SOHC L6"
+        },
+        "codes_observed": ["UNI-30354"]
+      },
+      "review": {
+        "family_and_application_found": true,
+        "coverage_status": "observed_match_confirmed_full_22_candidate_comparison_pending",
+        "codes_in_erp_list_not_in_assistant_result": [],
+        "notes": "A IA e o item selecionado no ERP coincidem no codigo UNI-30354 e a aplicacao visivel inclui F-1000 1992 com motor 4.9 L 12V. A busca ERP indicou 22 resultados; somente o codigo selecionado foi comparado, sem afirmar que todos os demais sejam compativeis."
+      }
+    },
+    {
+      "id": "eletroventilador_corolla_2009_001",
+      "part_type": "eletroventilador",
+      "validation_date": "2026-09-28",
+      "vehicle": {
+        "brand": "Toyota",
+        "model": "Corolla",
+        "year": 2009
+      },
+      "conversation": [
+        {
+          "role": "user",
+          "text": "coe meu chapa voce tem eletroventilador para corolla 2009?"
+        },
+        {
+          "role": "assistant",
+          "observed_result": "Encontrei ELETROVENTILADOR TOYOTA COROLLA 1.8/2.0 2009/2017 - COM AR CONDICIONADO SEM DEFLETOR, codigo GE1045."
+        }
+      ],
+      "erp_reference": {
+        "manual_query": "ELETROVENTILADOR COROLLA 2009",
+        "visible_result_count": 2,
+        "codes_observed": ["BAU-100127E", "GE1045"],
+        "application_checked": "Consultas ERP por codigo confirmaram aplicacao Corolla 2009 tanto para BAU-100127E (2009-2010 e 2009-2014) quanto para GE1045 (aplicacoes iniciando em 2008/2009).",
+        "customer_confirmed_application": true
+      },
+      "assistant_result": {
+        "criteria": {
+          "part_query": "eletroventilador",
+          "vehicle_brand": "Toyota",
+          "vehicle_model": "Corolla",
+          "vehicle_year": 2009
+        },
+        "codes_observed": ["GE1045"]
+      },
+      "review": {
+        "family_and_application_found": true,
+        "coverage_status": "both_erp_codes_application_confirmed_second_code_missing_from_assistant",
+        "codes_in_erp_list_not_in_assistant_result": ["BAU-100127E"],
+        "notes": "Os dois resultados ERP sao aplicaveis a Corolla 2009. BAU-100127E estava classificado em DIVERSOS 9/27 e nao era recuperado no escopo principal; adicionado escopo curado de eletroventilador com validacao por titulo."
+        ,"corrected_search_codes": ["BAU-100127E", "GE1045"]
+      }
+    },
+    {
+      "id": "embreagem_palio_1995_clarificacao_repetida_001",
+      "part_type": "embreagem generica / familia nao resolvida",
+      "validation_date": "2026-09-28",
+      "vehicle": {
+        "model": "Palio",
+        "year": 1995
+      },
+      "conversation": [
+        {
+          "role": "user",
+          "text": "quero uma embreagem para o palio 1995"
+        },
+        {
+          "role": "assistant",
+          "observed_question": "Qual peca voce precisa?"
+        },
+        {
+          "role": "user",
+          "text": "embreagem"
+        },
+        {
+          "role": "assistant",
+          "observed_question": "Qual peca voce precisa?"
+        }
+      ],
+      "erp_reference": {
+        "manual_query": null,
+        "codes_observed": [],
+        "application_checked": "Ainda nao foi feita ou registrada uma comparacao no ERP para um componente especifico de embreagem.",
+        "customer_confirmed_application": false
+      },
+      "assistant_result": {
+        "criteria": {
+          "vehicle_model": "PALIO",
+          "vehicle_year": 1995
+        },
+        "codes_observed": [],
+        "repeated_question": true
+      },
+      "runtime_evidence": {
+        "first_turn_latency_ms": 41700.29,
+        "second_turn_latency_ms": 39854.84,
+        "first_llm_raw_part_query": "embreagem",
+        "second_llm_raw_part_query": "embreagem",
+        "final_validation_missing_fields": ["part_query"],
+        "interpretation": "O modelo extraiu o termo generico, mas a validacao/canonicalizacao nao o reconheceu como familia catalogada; o turno seguinte repetiu a mesma pergunta."
+      },
+      "review": {
+        "family_and_application_found": true,
+        "coverage_status": "clarification_rule_added_erp_validation_pending_component_choice",
+        "codes_in_erp_list_not_in_assistant_result": [],
+        "clarification_added": "Qual componente da embreagem voce precisa? Opcoes: Kit de embreagem, Disco, Plato, Atuador ou cilindro, Rolamento, Outro componente.",
+        "notes": "Termo generico agora dispara pergunta deterministica com opcoes; se a resposta continuar apenas 'embreagem', encaminha para atendimento humano em vez de repetir indefinidamente. A comparacao ERP permanece pendente ate escolha do componente."
       }
     }
   ]

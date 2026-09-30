@@ -184,11 +184,28 @@ def _send_message(*, text: str) -> dict[str, Any]:
     started_at = time.perf_counter()
     try:
         with httpx.Client(timeout=DEFAULT_TIMEOUT_SECONDS) as client:
-            response = client.post(
-                f"{base_url}/test/send",
-                json=payload,
-                headers=_headers(),
-            )
+            while True:
+                response = client.post(
+                    f"{base_url}/test/send",
+                    json=payload,
+                    headers=_headers(),
+                )
+                if response.is_error:
+                    break
+                try:
+                    current_body = response.json()
+                except ValueError:
+                    break
+                if not isinstance(current_body, dict) or current_body.get("status") != "processing":
+                    break
+                if time.perf_counter() - started_at >= DEFAULT_TIMEOUT_SECONDS:
+                    return {
+                        "ok": False,
+                        "latency_ms": round((time.perf_counter() - started_at) * 1000, 2),
+                        "status_code": response.status_code,
+                        "error": "O atendimento ainda esta processando. Tente novamente em instantes.",
+                    }
+                time.sleep(1)
         latency_ms = round((time.perf_counter() - started_at) * 1000, 2)
     except httpx.HTTPError as exc:
         return {

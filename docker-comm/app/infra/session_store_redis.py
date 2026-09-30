@@ -12,6 +12,10 @@ class RedisSessionStore(SessionStore):
         self._redis = redis
         self._settings = settings
 
+    @property
+    def redis(self) -> Redis:
+        return self._redis
+
     @classmethod
     def from_url(cls, redis_url: str, settings: Settings) -> "RedisSessionStore":
         redis = Redis.from_url(redis_url, decode_responses=True)

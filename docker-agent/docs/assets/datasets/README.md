@@ -1,79 +1,75 @@
-# Datasets De Avaliacao
+# Datasets de avaliacao
 
-Esta pasta concentra os datasets usados para avaliar, comparar e expandir o comportamento do pre-search.
+Os arquivos deste diretorio servem a etapas diferentes do ciclo de validacao do agente. Eles podem ser agrupados por finalidade, mas nao devem ser fundidos em um unico conjunto: formato, criterio de sucesso, origem e consumidor variam.
 
-## Papel De Cada Arquivo
+## Inventario por finalidade
 
-- `pre_search_eval_dataset_mvp.json`
-  Conjunto pequeno e rapido para avaliacao funcional direta.
-- `pre_search_num_predict_golden_set.json`
-- `erp_search_golden_set.json`: 38 pedidos automotivos e fixtures de identidade/aplicacao,
-  consumidos por `scripts.eval.evaluate_erp_search` e pelas regressoes PostgreSQL
-  Golden set usado em benchmark e promocao de modelo.
-- `battery_structural_respond_v2.json`
-  Bateria estrutural multi-turno do endpoint, com niveis cumulativos `smoke`, `regression` e `extended`.
-- `battery_real_omnichannel_250.json`
-  Bateria de conversas reais omnichannel, com 250 cenarios selecionados.
-- `real_respond_battery_human_validation.md`
-  Checklist dos casos cujo resultado comercial, discriminador ou politica ainda precisa de aprovacao humana.
+### Pre-search e parametros do LLM
 
-## Estrategia Recomendada
+- [`pre_search_eval_dataset_mvp.json`](pre_search_eval_dataset_mvp.json) — conjunto curto de 20 pedidos para avaliar a extracao e as perguntas do pre-search.
+- [`pre_search_num_predict_golden_set.json`](pre_search_num_predict_golden_set.json) — conjunto de 25 casos usado no benchmark do parametro `num_predict` e na avaliacao golden do pre-search.
 
-### Fase 1
+Os dois arquivos usam registros de entrada/expectativa semelhantes, mas tem papeis de avaliacao diferentes e consumidores proprios. Devem permanecer separados enquanto o relatorio e o benchmark os selecionarem independentemente.
 
-- `MVP`: `80-150` casos
-- foco em smoke test, regressao rapida e revisao manual curta
+### Busca SQL do ERP
 
-### Fase 2
+- [`erp_search_golden_set.json`](erp_search_golden_set.json) — 45 casos e seis grupos de fixtures para identidade da peca, aplicacao do veiculo, filtros e ranking da busca SQL. E consumido pelo avaliador ERP e pelas regressoes PostgreSQL.
+- [`erp_manual_type_validation_v1.json`](erp_manual_type_validation_v1.json) — caderno progressivo de oito validacoes manuais, com conversa, consulta ERP, aplicacoes conferidas e divergencias. Esta em andamento e nao e um golden set executavel.
 
-- `golden set`: `200-400` casos
-- foco em promocao de modelo, benchmark e comparacao mais estavel
+O golden set ERP testa regras e resultados controlados; a validacao manual registra evidencias comerciais reais e itens ainda pendentes. Manter separados evita transformar observacoes parciais em expectativas aprovadas.
 
-### Fase 3
+### Endpoint de conversa `respond`
 
-- corpus maior: `1000+` casos
-- foco em mineracao de falhas, long tail e analise offline
-- nao precisa ser o conjunto padrao de benchmark de toda execucao
+- [`battery_structural_respond_v2.json`](battery_structural_respond_v2.json) — 151 cenarios multi-turno com niveis cumulativos `smoke`, `regression` e `extended`, usados em testes estruturais e de integracao.
+- [`battery_real_omnichannel_250.json`](battery_real_omnichannel_250.json) — 250 cenarios derivados de conversas reais omnichannel. Expectativas comerciais ou semanticas ficam sujeitas a revisao humana; os cenarios nao aprovados nao devem ser tratados como rotulos golden.
 
-## De Onde Tirar Casos
+As duas baterias compartilham a ideia de cenario multi-turno, mas diferem na origem e no nivel de aprovacao. A bateria real nao deve ser incorporada automaticamente a estrutural: isso mudaria a confiabilidade dos resultados de CI.
 
-Prioridade recomendada:
+### Ranking real anotado por humanos
 
-1. logs e fila de revisao do proprio sistema
-2. casos manuais de alta ambiguidade do negocio
-3. fontes publicas para ampliar vocabulario e formulacoes
+- [`real_respond_ranking_annotations_v1.json`](real_respond_ranking_annotations_v1.json) — ficha independente de anotacao manual de compatibilidade ERP por consulta e item. O arquivo inicial tem 143 consultas capturadas na execucao local de 29/09/2026; todos os rótulos estao pendentes e **nao** formam um gabarito ainda.
 
-Importante:
-- internet deve complementar, nao substituir, os casos reais do seu fluxo
-- casos auto-gerados entram como rascunho e exigem revisao antes de virar gold
+Cada registro usa `scenario_id`, `turn_id` e `item_index` para identificar uma consulta, inclusive quando uma mensagem gera buscas para varias pecas. Revise a aplicacao no ERP sem usar o ranking da IA para decidir compatibilidade. Preencha todos os codigos tecnicamente compativeis, os codigos preferidos/confirmados pelo vendedor, incompatibilidades comprovadas e grupos de codigos equivalentes. Marque `evaluable: true` somente quando houver evidencia suficiente. Para um no-match confirmado, use `expected_no_match: true` e deixe `compatible_item_ids` vazio.
 
-## Links Publicos Para Pesquisa
+Gere a ficha uma vez a partir da execucao-base e preencha os rotulos. Para comparar outra execucao, informe o mesmo arquivo de anotacoes nos dois runs:
 
-- OpenAI eval best practices:
-  https://developers.openai.com/api/docs/guides/evaluation-best-practices
-- Dynabench:
-  https://nlp.cs.ucl.ac.uk/publications/2021-04-dynabench/
-- GDPval:
-  https://cdn.openai.com/pdf/d5eb7428-c4e9-4a33-bd86-86dd4bcf12ce/GDPval.pdf?_bhlid=032d03cdc21c768f9824f9841b613c0b57764ca3
+```powershell
+$baseRun = ".tmp/eval/arquivo_base.json"
+$currentRun = ".tmp/eval/arquivo_atual.json"
+python -m scripts.eval.build_real_ranking_annotation_template --run $baseRun --output docs/assets/datasets/real_respond_ranking_annotations_v1.json
+python -m scripts.eval.evaluate_real_ranking --run $currentRun --compare-run $baseRun --annotations docs/assets/datasets/real_respond_ranking_annotations_v1.json --output .tmp/eval/ranking_comparison.md
+```
 
-## Automacao E Curadoria
+O gerador recusa sobrescrever um arquivo existente. Para adicionar uma coorte nova, escolha outro caminho e depois consolide apenas as anotacoes revisadas. Para uma comparacao pareada, use a mesma ficha e as mesmas chaves nos dois JSONs de execucao. O avaliador mede compatibilidade Top-1/Top-3, preferencia/confirmacao Top-1, candidatos incompativeis no Top-3 e no-match. Empate aceitavel so conta como equivalencia da preferencia quando foi anotado; nao transforma sozinho um codigo em compativel.
 
-No estado atual do repositorio, os datasets oficiais ficam curados e versionados:
+O baseline historico de 40,0% Top-1 e 68,8% Top-3 nao tem os 20 rankings originais arquivados por consulta neste repositorio. Sem recuperar esses resultados e suas chaves, a anotacao nova mede uma baseline nova e nao permite afirmar ganho direto sobre aqueles percentuais.
 
-- `pre_search_eval_dataset_mvp.json`
-- `pre_search_num_predict_golden_set.json`
-- `battery_structural_respond_v2.json`
-- `battery_real_omnichannel_250.json`
+## Convencao de nomes e metadados
 
-A geracao automatica de candidatos foi retirada do fluxo versionado por dois motivos:
+Os nomes atuais usam `snake_case` e, em geral, indicam dominio e finalidade. Ainda nao existe uma convencao formal uniforme. Para novos arquivos, usar:
 
-- os rascunhos ainda exigiam revisao semantica forte antes de virar benchmark oficial
-- o objetivo do repositorio e manter apenas os datasets realmente usados na avaliacao atual
+`<dominio>_<finalidade>[_<origem>]_v<major>.json`
 
-Se a expansao automatica voltar no futuro, a recomendacao e:
+Usar metadados no proprio arquivo para descrever versao de schema, quantidade, status de curadoria, origem e consumidores. A versao no nome indica mudanca incompatível do dataset, nao cada edicao de conteudo. Evitar incluir quantidade no nome, pois ela muda com a curadoria.
 
-- gerar candidatos fora do versionamento
-- revisar manualmente os casos promovidos
-- versionar apenas o que entrar de fato no MVP ou no golden set
+Pontos atuais a harmonizar em uma migracao futura:
 
-A bateria omnichannel real e uma excecao controlada: os cenarios dependentes do negocio ficam explicitamente marcados com `review_required`. O gerador estrutural nao inventa a resposta comercial nem promove esses casos ao golden set.
+- `battery_structural_respond_v2.json` tem ordem diferente dos outros nomes de bateria e metadado interno `real_respond_battery_v2`; escolher uma forma canonica quando for feita migracao de caminhos.
+- `battery_real_omnichannel_250.json` embute a quantidade no nome e usa ordem diferente do campo interno `real_omnichannel_battery_250`.
+- Os dois arquivos `pre_search_*.json` sao arrays sem envelope de metadados, enquanto as baterias e o dataset manual tem objeto raiz com nome/versao/status.
+- `erp_search_golden_set.json` usa `contract_version` e nao tem `name` nem `schema_version`, diferente dos outros objetos-raiz.
+
+Os caminhos existentes estao referenciados por scripts, testes e documentacao; manter os nomes atuais ate uma migracao coordenada atualizar esses consumidores.
+
+## Curadoria e promocao
+
+1. Casos coletados ou gerados entram como candidatos e recebem origem e contexto.
+2. Casos manuais precisam de revisao da aplicacao no ERP e do resultado esperado.
+3. Somente casos aprovados viram expectativas golden ou regressao automatizada.
+4. Incidentes de infraestrutura, como timeout, ficam registrados separados da qualidade de cobertura.
+
+A bateria omnichannel pode conter casos marcados `review_required`; eles servem para exploracao e revisao, nao como verdade comercial aprovada. O caderno ERP fica fora do treinamento ate a revisao humana estar concluida.
+
+## Comandos e consumidores
+
+Consulte [`scripts/README.md`](../../../scripts/README.md), [`operational_commands.md`](../../guide/operational_commands.md) e [`erp_search_integration.md`](../../guide/erp_search_integration.md) para executar os avaliadores. A lista de alteracoes pendentes de validacao manual fica em [`docs/TODO.md`](../../TODO.md).

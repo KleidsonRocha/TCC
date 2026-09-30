@@ -1,3 +1,4 @@
+import asyncio
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -9,6 +10,7 @@ from app.core.usecases.process_inbound_message import ProcessInboundMessageUseCa
 from app.infra.agent_client_http import HttpAgentClient
 from app.infra.logger import configure_logging, get_logger
 from app.infra.session_store_redis import RedisSessionStore
+from app.infra.turn_store_redis import RedisTurnStore
 
 
 def create_app(settings_override: Settings | None = None) -> FastAPI:
@@ -35,6 +37,8 @@ def create_app(settings_override: Settings | None = None) -> FastAPI:
         app.state.settings = settings
         app.state.logger = logger
         app.state.session_store = session_store
+        app.state.turn_store = RedisTurnStore(session_store.redis)
+        app.state.turn_tasks = set()
         app.state.agent_client = agent_client
         app.state.process_use_case = use_case
 
@@ -49,6 +53,10 @@ def create_app(settings_override: Settings | None = None) -> FastAPI:
         try:
             yield
         finally:
+            for task in app.state.turn_tasks:
+                task.cancel()
+            if app.state.turn_tasks:
+                await asyncio.gather(*app.state.turn_tasks, return_exceptions=True)
             await agent_client.close()
             await session_store.close()
             logger.info("service_stopped", extra={"service": settings.app_name})

@@ -375,6 +375,50 @@ def test_process_agent_request_searches_only_multi_items_that_pass_their_gate() 
     assert result.item_results[1].item.engine is None
 
 
+def test_multi_item_request_over_state_limit_asks_customer_to_split_without_searching() -> None:
+    class _OversizedMultiItemValidator:
+        def validate(self, message_text: str, *, last_messages=None, conversation_state=None) -> PreSearchValidation:
+            return PreSearchValidation(
+                decision="search",
+                criteria=SearchCriteria(part_query="correia", vehicle_model="Gol", vehicle_year=2010),
+                items=[SearchCriteria(part_query=f"peca {index}") for index in range(11)],
+                missing_fields=[],
+                confidence=0.95,
+            )
+
+        def get_last_audit(self) -> dict:
+            return {}
+
+    tools = _SpyTools()
+    use_case = ProcessAgentRequestUseCase(
+        tools=tools,
+        pre_search_validator=_OversizedMultiItemValidator(),
+        settings=Settings(APP_ENV="test", PRE_SEARCH_DETERMINISTIC_BYPASS_ENABLED=False),
+        logger=logging.getLogger("test"),
+        review_recorder=_SpyRecorder(),
+    )
+    payload = AgentRequestV1.model_validate(
+        {
+            "schema_version": "1.0",
+            "trace_id": "trace-multi-item-limit",
+            "conversation_id": "conv-multi-item-limit",
+            "message": {"text": "Preciso de onze pecas para o Gol 2010"},
+            "business": {"branch_id": 1},
+            "context": {"last_messages": []},
+        }
+    )
+
+    result = asyncio.run(use_case.execute(payload))
+
+    assert tools.calls == []
+    assert "ate 10 pecas por vez" in result.reply_text
+    assert result.handoff.required is False
+    assert result.actions == [{"type": "request_info", "key": "part_query", "prompt": result.reply_text}]
+    assert result.conversation_state is not None
+    assert result.conversation_state.items is None
+    assert result.conversation_state.pending_slot == "part_query"
+
+
 def test_multi_item_follow_up_updates_only_the_active_item_and_reuses_sibling_result() -> None:
     class _MultiItemFollowUpValidator:
         def validate(self, message_text: str, *, last_messages=None, conversation_state=None) -> PreSearchValidation:

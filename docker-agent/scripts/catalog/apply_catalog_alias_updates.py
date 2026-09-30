@@ -18,7 +18,57 @@ def apply_updates(conn, root: Path) -> dict[str, int]:
     sql = (root / "pre_search_init.sql").read_text(encoding="utf-8")
     schema = sql.split("-- BEGIN VARIANT ALIAS SCHEMA", 1)[1].split("-- END VARIANT ALIAS SCHEMA", 1)[0]
     conn.execute(schema)
-    counts = {"part_aliases": 0, "variant_aliases": 0}
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS pre_search_part_family_scope (
+            family_key TEXT NOT NULL,
+            source_group_code INTEGER NOT NULL,
+            source_subgroup_code INTEGER NOT NULL,
+            is_active BOOLEAN NOT NULL DEFAULT TRUE,
+            updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            updated_by TEXT NOT NULL DEFAULT 'seed',
+            PRIMARY KEY (family_key, source_group_code, source_subgroup_code)
+        )
+    """)
+    counts = {"part_aliases": 0, "variant_aliases": 0, "family_scopes": 0, "part_rules": 0}
+    for family, group, subgroup in (
+        ("batentes", 2, 6),
+        ("atuador de embreagem", 10, 5),
+        ("eletroventilador", 9, 27),
+    ):
+        conn.execute(
+            """INSERT INTO pre_search_part_family_scope
+               (family_key, source_group_code, source_subgroup_code, updated_by)
+               VALUES (%s,%s,%s,'seed_csv') ON CONFLICT
+               (family_key, source_group_code, source_subgroup_code)
+               DO UPDATE SET is_active=TRUE,updated_at=NOW(),updated_by='seed_csv'""",
+            (family, group, subgroup),
+        )
+        counts["family_scopes"] += 1
+    with (root / "csv/pre_search_part_rule.csv").open(encoding="utf-8", newline="") as source:
+        for row in csv.DictReader(source, delimiter=";"):
+            conn.execute(
+                """INSERT INTO pre_search_part_rule
+                   (part_type_id,is_generic,needs_side,needs_position,needs_axle,needs_engine,needs_variant,updated_by)
+                   SELECT pt.id,%s,%s,%s,%s,%s,%s,'seed_csv'
+                   FROM pre_search_part_type pt JOIN pre_search_part_group pg ON pg.id=pt.part_group_id
+                   WHERE pg.source_group_code=%s AND pt.source_subgroup_code=%s
+                   ON CONFLICT (part_type_id) DO UPDATE SET
+                     is_generic=EXCLUDED.is_generic,needs_side=EXCLUDED.needs_side,
+                     needs_position=EXCLUDED.needs_position,needs_axle=EXCLUDED.needs_axle,
+                     needs_engine=EXCLUDED.needs_engine,needs_variant=EXCLUDED.needs_variant,
+                     updated_at=NOW(),updated_by='seed_csv'""",
+                (
+                    row["is_generic"].lower() == "true",
+                    row["needs_side"].lower() == "true",
+                    row["needs_position"].lower() == "true",
+                    row["needs_axle"].lower() == "true",
+                    row["needs_engine"].lower() == "true",
+                    row["needs_variant"].lower() == "true",
+                    int(row["cd_grupo"]),
+                    int(row["part_type_id"]),
+                ),
+            )
+            counts["part_rules"] += 1
     with (root / "csv/pre_search_part_alias.csv").open(encoding="utf-8", newline="") as source:
         for row in csv.DictReader(source):
             target = conn.execute(

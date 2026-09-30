@@ -27,6 +27,8 @@ NON_DIRECTIONAL_RULE_EXPECTATIONS = (
     ("bico injetor", "needs_side"),
     ("lubrificantes", "needs_axle"),
     ("velas de ignicao automotivas", "needs_side"),
+    ("bieletas", "needs_side"),
+    ("atuador de embreagem", "needs_side"),
 )
 
 REQUIRED_RULE_EXPECTATIONS = (
@@ -142,3 +144,19 @@ def test_batente_aliases_include_the_suspension_subgroup() -> None:
 
     assert ("2", "5", "batente") in aliases
     assert ("2", "5", "batentes") in aliases
+
+
+def test_cruzeta_singular_maps_to_cardan_cross_joint_family() -> None:
+    with PART_ALIAS_PATH.open(encoding="utf-8", newline="") as file:
+        aliases = {
+            (row["cd_grupo"], row["cd_subgrupo"], row["alias"])
+            for row in csv.DictReader(file)
+        }
+    assert ("6", "7", "cruzeta") in aliases
+
+
+def test_curated_erp_scopes_cover_observed_misclassified_candidates() -> None:
+    sql = Path("db/init/pre_search_init.sql").read_text(encoding="utf-8")
+    assert "('batentes', 2, 6, 'seed_csv')" in sql
+    assert "('atuador de embreagem', 10, 5, 'seed_csv')" in sql
+    assert "('eletroventilador', 9, 27, 'seed_csv')" in sql

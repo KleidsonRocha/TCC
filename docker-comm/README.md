@@ -98,12 +98,113 @@ Response:
 {
   "conversation_id": "conv-001",
   "trace_id": "uuid",
+  "status": "completed",
+  "stage": "more_info",
   "reply": "Encontrei 2 opcoes. Voce sabe se e 1.6 ou 2.0?",
-  "actions": [],
+  "actions": [{ "type": "request_info", "key": "engine", "prompt": "Voce sabe se e 1.6 ou 2.0?" }],
+  "items": [],
+  "items_text": "",
   "handoff": { "required": false, "reason": null },
   "confidence": 0.82
 }
 ```
+
+O mesmo `POST /test/send` tambem recupera uma solicitacao em andamento ou
+concluida. Use o mesmo `source`, `conversation_id`, `branch_id` e `text` em cada
+repeticao. O `conversation_id` precisa vir da sala da Convert e permanecer
+estavel; se for omitido, a API gera um novo ID e nao consegue reconhecer a
+repeticao. A chave inclui o texto com espacos e maiusculas normalizados.
+
+O servidor inicia uma unica chamada ao agent e espera ate `TURN_WAIT_SECONDS`
+(35 s por padrao). Se ainda nao houver resposta, devolve HTTP 200:
+
+```json
+{
+  "conversation_id": "conv-001",
+  "trace_id": "uuid-da-primeira-chamada",
+  "status": "processing",
+  "stage": null,
+  "reply": "",
+  "actions": [],
+  "items": [],
+  "items_text": "",
+  "handoff": { "required": false, "reason": null },
+  "confidence": 0.0
+}
+```
+
+O processamento continua apos a resposta HTTP ou desconexao do cliente. Um
+POST repetido aguarda novamente ate 35 s; se o resultado ja estiver pronto,
+retorna a resposta original imediatamente, com o mesmo `trace_id`. O resultado
+fica disponivel por `TURN_RESULT_TTL_SECONDS` (300 s por padrao) apos a
+conclusao. O bloqueio de processamento usa uma concessao renovada no Redis;
+se o processo morrer, a concessao expira e uma nova chamada pode reiniciar o
+trabalho. Falhas do agent retornam o mesmo erro HTTP armazenado durante a
+janela de retencao.
+
+Na Convert, trate `status=processing` antes de enviar `reply`: aguarde e repita
+o POST com os mesmos dados. Envie `reply` apenas quando `status=completed`.
+Um timeout de 40 s no bloco HTTP pode continuar como caminho de recuperacao.
+Sem um identificador proprio da mensagem, dois textos iguais na mesma sala e
+filial enviados dentro da janela de 5 minutos podem compartilhar o resultado.
+
+### Etapa conversacional para a Convert
+
+`status` informa se o processamento terminou. `stage` informa o proximo passo
+somente quando `status=completed`. Em `processing`, `stage=null`, `reply` e
+`items_text` vazios. A precedencia para um resultado concluido e:
+
+1. `transfer_to_human` se `handoff.required=true`, mesmo com outras acoes;
+2. `more_info` se houver `request_info`, inclusive junto com `show_items`;
+3. `mostrar_produtos` se houver `show_items` sem os casos anteriores;
+4. `fallback` quando nao houver nenhuma dessas acoes.
+
+O retorno preserva `actions` integralmente. `items` reune os objetos das acoes
+`show_items`, com `item_id`, `title` e `score` quando fornecidos pelo agent.
+`items_text` apresenta os codigos e descricoes em linhas numeradas, pronto
+para um bloco de mensagem simples. Exemplo:
+
+```json
+{
+  "status": "completed",
+  "stage": "mostrar_produtos",
+  "reply": "Encontrei 2 opcoes. Preco e estoque precisam ser confirmados.",
+  "actions": [{"type": "show_items", "items": [
+    {"item_id": "ABC123", "title": "Pastilha de freio dianteira", "score": 0.91},
+    {"item_id": "DEF456", "title": "Pastilha de freio dianteira", "score": 0.87}
+  ]}],
+  "items": [
+    {"item_id": "ABC123", "title": "Pastilha de freio dianteira", "score": 0.91},
+    {"item_id": "DEF456", "title": "Pastilha de freio dianteira", "score": 0.87}
+  ],
+  "items_text": "1. ABC123 - Pastilha de freio dianteira\n2. DEF456 - Pastilha de freio dianteira"
+}
+```
+
+No bloco HTTP da Convert, mapeie `$.status` para `$statusProcesso`, `$.stage`
+para `$estado_ia`, `$.reply` para `$resposta_ia` e `$.items_text` para uma
+variavel como `$itens_ia`. Se a interface permitir acessar listas, `$.items`
+e `$.actions` continuam disponiveis; por exemplo `$.items[0].item_id`.
+
+Roteamento sugerido:
+
+1. `processing` -> aguardar 30 s -> repetir o mesmo POST, sem enviar mensagem;
+2. `completed` -> enviar `$resposta_ia` -> validar `$estado_ia`;
+3. `more_info` -> se `$itens_ia` nao estiver vazio, apresentar os candidatos
+   para escolha; depois aguardar nova mensagem do cliente e iniciar novo turno
+   com o mesmo `conversation_id` e o novo `text`;
+4. `mostrar_produtos` -> enviar `$itens_ia` se houver itens e seguir o fluxo de
+   apresentacao, sem repetir a requisicao anterior;
+5. `transfer_to_human` -> transferir para o departamento humano, sem aguardar
+   outra mensagem para o agent;
+6. `fallback` -> caminho de contingencia, como transferencia humana.
+
+O caminho `Falhou` do HTTP e a excecao das condicoes tambem devem seguir a
+contingencia. O timeout de 40 s pode aguardar e repetir o mesmo POST. O
+`conversation_id` deve ser preenchido com o `room_id` da Convert e permanecer
+igual durante a conversa; na repeticao do mesmo turno, `text` tambem deve ser
+identico. A apresentacao de `items_text` nao confirma preco, estoque ou
+compatibilidade alem do que o agent informou.
 
 ## Interface Streamlit
 

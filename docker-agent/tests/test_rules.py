@@ -41,6 +41,7 @@ def _catalog_fixture() -> PreSearchCatalog:
         brand_aliases={"Ford": ("ford",), "Chevrolet": ("chevrolet",)},
         model_aliases={
             "EcoSport": ("ecosport",),
+            "Palio": ("palio",),
             "Gol": ("gol",),
             "Corsa": ("corsa",),
             "Focus": ("focus",),
@@ -1549,6 +1550,48 @@ def test_deterministic_ask_follow_up_year_preserves_vehicle_model_and_asks_next_
     audit = validator.get_last_audit()
     assert audit is not None
     assert audit["deterministic_reason"] == "complete_follow_up_missing_field"
+
+
+def test_generic_clutch_request_asks_component_without_calling_llm() -> None:
+    validator = _validator(catalog=_catalog_fixture())
+
+    result = validator.try_validate_deterministic_ask(
+        "quero uma embreagem para o palio 1995"
+    )
+
+    assert result is not None
+    assert result.decision == "ask"
+    assert result.criteria.vehicle_model == "Palio"
+    assert result.criteria.vehicle_year == 1995
+    assert result.criteria.part_query is None
+    assert result.next_question is not None
+    assert result.next_question.key == "part_query"
+    assert "componente da embreagem" in result.next_question.prompt
+    assert "Kit de embreagem" in (result.next_question.options or [])
+    audit = validator.get_last_audit()
+    assert audit is not None
+    assert audit["llm_endpoint_used"] is None
+
+
+def test_repeated_generic_clutch_answer_hands_off_instead_of_repeating_question() -> None:
+    validator = _validator(catalog=_catalog_fixture())
+
+    result = validator.try_validate_deterministic_ask(
+        "embreagem",
+        conversation_state=ConversationState(
+            criteria=SearchCriteria(vehicle_model="Palio", vehicle_year=1995),
+            pending_slot="part_query",
+            pending_question="Qual componente da embreagem voce precisa?",
+            last_decision="ask",
+        ),
+    )
+
+    assert result is not None
+    assert result.decision == "handoff"
+    assert result.criteria.vehicle_model == "Palio"
+    audit = validator.get_last_audit()
+    assert audit is not None
+    assert audit["deterministic_reason"] == "generic_clutch_repeat_handoff"
 
 
 def test_deterministic_validator_uses_direction_answer_for_pending_coxim_position() -> None:

@@ -20,6 +20,7 @@ from app.core.domain.models import (
     ConversationState,
     HandoffInfo,
     ItemSearchResult,
+    MAX_ITEMS_PER_CONVERSATION_STATE,
     ProcessResult,
     ResultCandidateState,
     ResultDisambiguationState,
@@ -201,6 +202,46 @@ class ProcessAgentRequestUseCase:
                     incoming_state=incoming_state,
                 ),
             )
+            if state_items and len(state_items) > MAX_ITEMS_PER_CONVERSATION_STATE:
+                prompt = (
+                    f"Consigo pesquisar ate {MAX_ITEMS_PER_CONVERSATION_STATE} pecas por vez, "
+                    f"mas identifiquei {len(state_items)} nessa mensagem. "
+                    f"Divida a lista e envie no maximo {MAX_ITEMS_PER_CONVERSATION_STATE} pecas por mensagem."
+                )
+                current_state = ConversationState(
+                    criteria=pre_search.criteria,
+                    pending_slot="part_query",
+                    pending_question=prompt,
+                    last_decision="ask",
+                )
+                result = ProcessResult(
+                    reply_text=prompt,
+                    actions=[{"type": "request_info", "key": "part_query", "prompt": prompt}],
+                    handoff=HandoffInfo(required=False, reason=None),
+                    confidence=0.99,
+                    tool_trace=timing.build_tool_trace(
+                        used_tools=used_tools,
+                        pre_search_path=pre_search_path,
+                    ),
+                    conversation_state=current_state,
+                )
+                self._logger.warning(
+                    "multi_item_limit_exceeded",
+                    extra={
+                        "trace_id": payload.trace_id,
+                        "conversation_id": payload.conversation_id,
+                        "item_count": len(state_items),
+                        "item_limit": MAX_ITEMS_PER_CONVERSATION_STATE,
+                    },
+                )
+                await self._record_review_case(
+                    payload=payload,
+                    last_messages=last_messages,
+                    pre_search=pre_search,
+                    result=result,
+                    search_query=None,
+                )
+                return result
             item_gates = await self._validate_items_for_search(
                 items=state_items,
                 message_text=query,

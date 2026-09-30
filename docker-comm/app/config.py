@@ -26,6 +26,10 @@ class Settings(BaseSettings):
     agent_retry_count: int = Field(1, alias="AGENT_RETRY_COUNT")
     agent_gateway_api_key: str | None = Field(None, alias="AGENT_GATEWAY_API_KEY")
 
+    turn_wait_seconds: float = Field(35.0, gt=0, lt=40, alias="TURN_WAIT_SECONDS")
+    turn_result_ttl_seconds: int = Field(300, ge=1, alias="TURN_RESULT_TTL_SECONDS")
+    turn_lease_seconds: int = Field(60, ge=5, alias="TURN_LEASE_SECONDS")
+
     enable_test_endpoint: bool = Field(True, alias="ENABLE_TEST_ENDPOINT")
     api_key: str | None = Field(None, alias="API_KEY")
 
