@@ -338,9 +338,7 @@ def _render_actions(actions: list[dict[str, Any]] | None) -> None:
                 },
             )
         elif action_type == "request_info":
-            options = action.get("options")
-            if isinstance(options, list) and options:
-                st.caption("Opcoes sugeridas: " + " | ".join(str(option) for option in options))
+            continue
         else:
             with st.expander(f"Acao: {action_type or 'desconhecida'}"):
                 st.json(action)

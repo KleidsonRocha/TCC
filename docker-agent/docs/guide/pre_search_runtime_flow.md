@@ -227,6 +227,11 @@ O contrato definido libera elegibilidade somente quando:
 
 Em ambos os casos, `missing_fields`, `NextQuestion` e opcoes precisam ser integralmente governados pelo backend. Quando varios campos faltarem, a ordem e `part_query`, modelo, ano, motor, lado, posicao, eixo e variante.
 
+Se a pergunta pendente for o modelo e a resposta contiver apenas um ano de
+quatro digitos, o backend guarda esse numero como `vehicle_year` e pergunta
+novamente pelo modelo. Um alias numerico de modelo, como `2008`, nao libera a
+busca nesse contexto sem esclarecimento do cliente.
+
 Continuam obrigatoriamente no caminho da LLM:
 
 - fuzzy sem alias exato

@@ -171,6 +171,9 @@ somente quando `status=completed`. Em `processing`, `stage=null`, `reply` e
 
 O retorno preserva `actions` integralmente. `items` reune os objetos das acoes
 `show_items`, com `item_id`, `title` e `score` quando fornecidos pelo agent.
+Quando `request_info` trouxer `options`, o `reply` inclui uma linha
+`Opcoes sugeridas: ...`, para a Convert mostrar as alternativas no mesmo bloco
+que envia `$resposta_ia`.
 `items_text` apresenta os codigos e descricoes em linhas numeradas, pronto
 para um bloco de mensagem simples. Exemplo:
 

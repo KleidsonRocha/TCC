@@ -613,6 +613,13 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             self._set_deterministic_safety_audit(safety_result)
             return safety_result
 
+        year_answer = self._year_answer_to_model_question(
+            message_text=message_text,
+            conversation_state=conversation_state,
+        )
+        if year_answer is not None:
+            return year_answer
+
         normalized_message = normalize_pre_search_text(message_text)
         clutch_dictionary_criteria = self._canonicalize_criteria_part_query(
             self._dictionary_extractor.extract(message_text, last_messages=[])
@@ -774,6 +781,11 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         conversation_state: ConversationState | None = None,
     ) -> PreSearchValidation | None:
         self._last_audit_info.set(None)
+        if self._year_answer_to_model_question(
+            message_text=message_text,
+            conversation_state=conversation_state,
+        ) is not None:
+            return None
         context = last_messages or []
         current_criteria = self._normalize_pending_follow_up_current_criteria(
             message_text=message_text,
@@ -1142,6 +1154,37 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         normalized = normalize_pre_search_text(message_text)
         return bool(re.fullmatch(r"(?:ano\s+)?(?:19\d{2}|20\d{2})", normalized))
 
+    def _year_answer_to_model_question(
+        self,
+        *,
+        message_text: str,
+        conversation_state: ConversationState | None,
+    ) -> PreSearchValidation | None:
+        if (
+            conversation_state is None
+            or conversation_state.last_decision != "ask"
+            or conversation_state.pending_slot != "vehicle_model"
+            or not self._is_year_only_follow_up_answer(message_text)
+        ):
+            return None
+        year = self._parse_year(message_text)
+        if year is None:
+            return None
+        criteria = conversation_state.criteria.model_copy(
+            update={"vehicle_model": None, "vehicle_year": year}
+        )
+        question = NextQuestion(
+            key="vehicle_model",
+            prompt=f"Entendi {year} como ano. Qual o modelo do veiculo?",
+        )
+        return PreSearchValidation(
+            decision="ask",
+            criteria=criteria,
+            missing_fields=["vehicle_model"],
+            next_question=question,
+            confidence=0.99,
+        )
+
     @staticmethod
     def _is_direction_only_follow_up_answer(message_text: str) -> bool:
         normalized = normalize_pre_search_text(message_text)
@@ -1467,6 +1510,12 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             ),
             conversation_state=conversation_state,
         )
+        year_answer = self._year_answer_to_model_question(
+            message_text=message_text,
+            conversation_state=conversation_state,
+        )
+        if year_answer is not None:
+            return year_answer
         safety_result = self._request_safety_confirmation(
             message_text=message_text,
             criteria=current_message_criteria,

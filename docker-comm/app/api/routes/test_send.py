@@ -19,7 +19,7 @@ from app.core.domain.rules import (
     normalize_source,
     validate_text,
 )
-from app.core.domain.response_stage import presentation_items, presentation_text, response_stage
+from app.core.domain.response_stage import presentation_items, presentation_text, reply_with_options, response_stage
 from app.core.usecases.process_inbound_message import ProcessInboundMessageUseCase
 from app.infra.turn_store_redis import RedisTurnStore, turn_key
 
@@ -89,7 +89,7 @@ async def _process_turn(
                 trace_id=trace_id,
                 status="completed",
                 stage=response_stage(handoff=result.handoff, actions=result.actions),
-                reply=result.reply,
+                reply=reply_with_options(result.reply, result.actions),
                 actions=result.actions,
                 items=items,
                 items_text=presentation_text(items),

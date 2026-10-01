@@ -35,3 +35,19 @@ def presentation_text(items: list[dict[str, Any]]) -> str:
         if description:
             lines.append(f"{index}. {description}")
     return "\n".join(lines)
+
+
+def reply_with_options(reply: str, actions: list[dict[str, Any]]) -> str:
+    option_groups: list[str] = []
+    for action in actions:
+        if not isinstance(action, dict) or action.get("type") != "request_info":
+            continue
+        options = action.get("options")
+        if not isinstance(options, list):
+            continue
+        values = [str(option).strip() for option in options if str(option).strip()]
+        if values:
+            option_groups.append(" | ".join(values))
+    if not option_groups:
+        return reply
+    return "\n".join([reply.rstrip(), *[f"Opcoes sugeridas: {group}" for group in option_groups]])
