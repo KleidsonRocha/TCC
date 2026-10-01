@@ -24,6 +24,22 @@ class RedisTurnStore:
     def _result_key(self, key: str) -> str:
         return f"{key}:result"
 
+    def _trace_key(self, trace_id: str) -> str:
+        return f"turn:trace:{trace_id}"
+
+    async def bind_trace(
+        self, trace_id: str, key: str, conversation_id: str, source: str, ttl_seconds: int
+    ) -> None:
+        await self._redis.set(
+            self._trace_key(trace_id),
+            json.dumps({"key": key, "conversation_id": conversation_id, "source": source}),
+            ex=ttl_seconds,
+        )
+
+    async def get_trace(self, trace_id: str) -> dict | None:
+        raw = await self._redis.get(self._trace_key(trace_id))
+        return json.loads(raw) if raw is not None else None
+
     async def get_result(self, key: str) -> dict | None:
         raw = await self._redis.get(self._result_key(key))
         if raw is None:

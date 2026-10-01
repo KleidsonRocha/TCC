@@ -167,28 +167,53 @@ async def send_test_message(
     if not settings.enable_test_endpoint:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Endpoint disabled.")
 
-    try:
-        validate_text(payload.text)
-    except InvalidMessageError as exc:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
-
-    source = normalize_source(payload.source)
-    conversation_id = (payload.conversation_id or "").strip() or str(uuid4())
-    internal_conversation_id = build_internal_conversation_id(source, conversation_id)
-    branch_id, _ = normalize_branch_id(payload.branch_id, settings.default_branch_id)
-    key = turn_key(
-        source=source,
-        conversation_id=internal_conversation_id,
-        branch_id=branch_id,
-        text=payload.text,
-    )
     store: RedisTurnStore = request.app.state.turn_store
     logger = request.app.state.logger
+    incoming_conversation_id = (payload.conversation_id or "").strip()
+    requested_trace_id = (payload.trace_id or "").strip()
+    text = payload.text or ""
+    poll_only = bool(requested_trace_id)
+    if poll_only:
+        trace = await store.get_trace(requested_trace_id)
+        if trace is None:
+            raise HTTPException(status_code=404, detail="Turno nao encontrado ou expirado.")
+        key = trace["key"]
+        conversation_id = trace["conversation_id"]
+        source = trace["source"]
+        internal_conversation_id = build_internal_conversation_id(source, conversation_id)
+        branch_id = None
+    else:
+        source = normalize_source(payload.source)
+        try:
+            validate_text(text)
+        except InvalidMessageError as exc:
+            logger.warning(
+                "test_send_invalid_text",
+                extra={
+                    "conversation_id": incoming_conversation_id or None,
+                    "conversation_id_provided": bool(incoming_conversation_id),
+                    "source": source,
+                    "text_length": len(text),
+                    "text_blank": not bool(text.strip()),
+                    "endpoint": "/test/send",
+                    "http_status": 400,
+                },
+            )
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+        conversation_id = incoming_conversation_id or str(uuid4())
+        internal_conversation_id = build_internal_conversation_id(source, conversation_id)
+        branch_id, _ = normalize_branch_id(payload.branch_id, settings.default_branch_id)
+        key = turn_key(
+            source=source,
+            conversation_id=internal_conversation_id,
+            branch_id=branch_id,
+            text=text,
+        )
     request.state.conversation_id = conversation_id
     request.state.internal_conversation_id = internal_conversation_id
     started_at = time.perf_counter()
     deadline = asyncio.get_running_loop().time() + settings.turn_wait_seconds
-    trace_id: str | None = None
+    trace_id: str | None = requested_trace_id or None
     result_source = "processing"
     http_status = 200
     try:
@@ -206,6 +231,8 @@ async def send_test_message(
 
             owner = await store.get_owner(key)
             if owner is None:
+                if poll_only:
+                    raise HTTPException(status_code=409, detail="Turno interrompido ou expirado; reenvie a mensagem original.")
                 candidate_trace_id = str(uuid4())
                 if await store.claim(key, candidate_trace_id, settings.turn_lease_seconds):
                     # A previous worker may finish between the first cache read
@@ -216,6 +243,19 @@ async def send_test_message(
                         continue
                     trace_id = candidate_trace_id
                     result_source = "started"
+                    try:
+                        await store.bind_trace(
+                            trace_id,
+                            key,
+                            conversation_id,
+                            source,
+                            settings.turn_result_ttl_seconds
+                            + int(settings.agent_timeout_seconds) * (settings.agent_retry_count + 1)
+                            + settings.turn_lease_seconds,
+                        )
+                    except Exception:
+                        await store.release(key, trace_id)
+                        raise
                     _start_worker(
                         request.app,
                         store=store,
@@ -224,7 +264,7 @@ async def send_test_message(
                         source=source,
                         conversation_id=conversation_id,
                         internal_conversation_id=internal_conversation_id,
-                        text=payload.text,
+                        text=text,
                         branch_id=branch_id,
                         use_case=use_case,
                         settings=settings,
@@ -251,8 +291,11 @@ async def send_test_message(
             extra={
                 "trace_id": trace_id,
                 "conversation_id": conversation_id,
+                "conversation_id_provided": bool(incoming_conversation_id),
+                "poll_by_trace": poll_only,
                 "internal_conversation_id": internal_conversation_id,
                 "source": source,
+                "text_length": len(text),
                 "endpoint": "/test/send",
                 "latency_ms": round((time.perf_counter() - started_at) * 1000, 2),
                 "http_status": http_status,

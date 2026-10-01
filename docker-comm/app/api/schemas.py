@@ -10,7 +10,8 @@ class TestSendRequest(BaseModel):
     __test__ = False
     source: str | None = None
     conversation_id: str | None = None
-    text: str
+    text: str | None = None
+    trace_id: str | None = None
     branch_id: int | None = None
 
 

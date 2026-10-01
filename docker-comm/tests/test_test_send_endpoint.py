@@ -15,6 +15,19 @@ class FakeTurnStore:
     def __init__(self) -> None:
         self.owners: dict[str, str] = {}
         self.results: dict[str, dict] = {}
+        self.traces: dict[str, dict] = {}
+
+    async def bind_trace(
+        self, trace_id: str, key: str, conversation_id: str, source: str, ttl_seconds: int
+    ) -> None:
+        self.traces[trace_id] = {
+            "key": key,
+            "conversation_id": conversation_id,
+            "source": source,
+        }
+
+    async def get_trace(self, trace_id: str) -> dict | None:
+        return self.traces.get(trace_id)
 
     async def get_result(self, key: str) -> dict | None:
         return self.results.get(key)

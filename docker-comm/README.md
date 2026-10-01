@@ -113,7 +113,16 @@ O mesmo `POST /test/send` tambem recupera uma solicitacao em andamento ou
 concluida. Use o mesmo `source`, `conversation_id`, `branch_id` e `text` em cada
 repeticao. O `conversation_id` precisa vir da sala da Convert e permanecer
 estavel; se for omitido, a API gera um novo ID e nao consegue reconhecer a
-repeticao. A chave inclui o texto com espacos e maiusculas normalizados.
+repeticao pelo texto. A chave inclui o texto com espacos e maiusculas normalizados.
+
+Quando a Convert nao preserva `$last_message` apos a espera, mapeie tambem
+`$.trace_id` para uma variavel (por exemplo, `$turno_ia`). No POST de repeticao,
+envie `{"trace_id":"$turno_ia"}`. O endpoint consulta o turno ja iniciado sem
+precisar de `text`, `conversation_id`, `source` ou `branch_id`; mesmo que o
+`room_id` mude, devolve o `conversation_id` original. Uma repeticao por
+`trace_id` nunca inicia um novo processamento. Se o turno expirou, a API
+devolve 404; se foi interrompido antes de concluir, devolve 409. A primeira
+chamada de cada nova mensagem deve enviar o texto e omitir `trace_id`.
 
 O servidor inicia uma unica chamada ao agent e espera ate `TURN_WAIT_SECONDS`
 (35 s por padrao). Se ainda nao houver resposta, devolve HTTP 200:
@@ -134,7 +143,8 @@ O servidor inicia uma unica chamada ao agent e espera ate `TURN_WAIT_SECONDS`
 ```
 
 O processamento continua apos a resposta HTTP ou desconexao do cliente. Um
-POST repetido aguarda novamente ate 35 s; se o resultado ja estiver pronto,
+POST repetido pelo mesmo texto ou pelo `trace_id` aguarda novamente ate 35 s;
+se o resultado ja estiver pronto,
 retorna a resposta original imediatamente, com o mesmo `trace_id`. O resultado
 fica disponivel por `TURN_RESULT_TTL_SECONDS` (300 s por padrao) apos a
 conclusao. O bloqueio de processamento usa uma concessao renovada no Redis;
@@ -182,13 +192,14 @@ para um bloco de mensagem simples. Exemplo:
 ```
 
 No bloco HTTP da Convert, mapeie `$.status` para `$statusProcesso`, `$.stage`
-para `$estado_ia`, `$.reply` para `$resposta_ia` e `$.items_text` para uma
-variavel como `$itens_ia`. Se a interface permitir acessar listas, `$.items`
+para `$estado_ia`, `$.reply` para `$resposta_ia`, `$.items_text` para uma
+variavel como `$itens_ia` e `$.trace_id` para `$turno_ia`. Se a interface
+permitir acessar listas, `$.items`
 e `$.actions` continuam disponiveis; por exemplo `$.items[0].item_id`.
 
 Roteamento sugerido:
 
-1. `processing` -> aguardar 30 s -> repetir o mesmo POST, sem enviar mensagem;
+1. `processing` -> aguardar 30 s -> repetir o POST com `$turno_ia`, sem enviar mensagem;
 2. `completed` -> enviar `$resposta_ia` -> validar `$estado_ia`;
 3. `more_info` -> se `$itens_ia` nao estiver vazio, apresentar os candidatos
    para escolha; depois aguardar nova mensagem do cliente e iniciar novo turno
@@ -200,11 +211,18 @@ Roteamento sugerido:
 6. `fallback` -> caminho de contingencia, como transferencia humana.
 
 O caminho `Falhou` do HTTP e a excecao das condicoes tambem devem seguir a
-contingencia. O timeout de 40 s pode aguardar e repetir o mesmo POST. O
+contingencia. O timeout de 40 s pode aguardar e repetir pelo `trace_id` se ele
+ja foi recebido; caso contrario, repita com os dados originais. O
 `conversation_id` deve ser preenchido com o `room_id` da Convert e permanecer
-igual durante a conversa; na repeticao do mesmo turno, `text` tambem deve ser
-identico. A apresentacao de `items_text` nao confirma preco, estoque ou
+igual para preservar o historico entre mensagens. A apresentacao de
+`items_text` nao confirma preco, estoque ou
 compatibilidade alem do que o agent informou.
+
+Para diagnosticar repeticoes, `test_send_processed` registra o `conversation_id`,
+se ele foi informado e o comprimento de `text`. Uma chamada com texto vazio ou
+apenas espacos registra `test_send_invalid_text` com os mesmos identificadores,
+`text_length` e `text_blank`, antes de devolver HTTP 400. O conteudo da mensagem
+e a chave de API nao sao registrados nesses eventos.
 
 ## Interface Streamlit
 
