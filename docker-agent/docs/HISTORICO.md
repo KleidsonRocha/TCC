@@ -363,3 +363,61 @@ gabarito formal de compatibilidade ou disponibilidade.
 - **Regressoes:** o dataset estrutural agora inclui `real_001_regression`,
   `real_004_regression` e `real_046_regression`. Seis testes focados passaram
   em container; a bateria completa permanece pendente da rodada conjunta.
+
+## Recuperacao De Turno Apos Espera HTTP Em 30/09 E 01/10/2026
+
+- **Problema:** a Convert encerra o bloco HTTP apos 40 s; repetir uma chamada
+  com `$last_message` pode enviar texto vazio ou um `room_id` diferente.
+- **Entrega:** `docker-comm` identifica a primeira solicitacao por origem,
+  conversa, filial e texto normalizado. Um worker continua a chamada ao agente
+  apos o encerramento da conexao. O Redis guarda o estado do turno, uma concessao
+  renovavel e a resposta final por 300 s; chamadas repetidas consultam o mesmo
+  turno sem atualizar o historico novamente. Depois de ate 35 s de espera,
+  uma chamada ainda pendente devolve `status=processing` e `trace_id`.
+- **Recuperacao:** a Convert pode repetir `POST /test/send` apenas com
+  `trace_id`, sem depender de `$last_message` ou do `room_id` atual. O endpoint
+  recupera o identificador original da conversa e nunca inicia novo trabalho
+  nesse modo. Um turno expirado devolve 404; um turno interrompido, 409.
+- **Evidencia operacional:** em 30/09, a chamada HTTP de teste retornou 200;
+  os logs da VPS registraram `test_send_turn_finished` e
+  `test_send_processed` com o mesmo trace e `result_source=cached`. Em 01/10,
+  o fluxo publicado na Convert entregou perguntas, opcoes sugeridas e listas
+  de produtos em conversas de radiador Gol 2010, coxim EcoSport 2008 e
+  pastilha Onix 2018. Esses testes nao encerram a matriz da Categoria 1C.
+- **Limite conhecido:** sem ID unico da mensagem fornecido pela Convert, duas
+  mensagens iguais na mesma conversa e filial dentro dos cinco minutos podem
+  compartilhar a chave. A validacao de concorrencia, reinicio, expiracao e
+  handoff permanece no [TODO.md](TODO.md).
+
+## Contrato De Etapa E Apresentacao Na Convert Em 01/10/2026
+
+- **Entrega no gateway:** `status` separa espera de conclusao. Em resultado
+  concluido, `stage` indica `transfer_to_human`, `more_info`,
+  `mostrar_produtos` ou `fallback`; `items_text` apresenta codigos e titulos
+  numerados, e `actions` e `items` continuam disponiveis no JSON.
+- **Entrega na mensagem:** opcoes de `request_info` sao acrescentadas ao
+  `reply` como `Opcoes sugeridas`, para aparecer no bloco de mensagem da
+  Convert. Isso foi observado no canal interno em 01/10, junto com listas de
+  produtos para as consultas de radiador, coxim e pastilha.
+- **Pendente:** confirmar na Convert todas as saidas de `stage`, inclusive
+  transferencia humana e contingencia, conforme as Categorias 1B e 1C do
+  [TODO.md](TODO.md).
+
+## Anos Do Catalogo E Follow-Up De Motor Corrigidos Na VPS Em 01/10/2026
+
+- **Falha observada:** `ZETEC ROCAM`, oferecido como opcao para radiador da
+  EcoSport 2008, repetia a pergunta de motorizacao. Os dois turnos tinham o
+  mesmo `conversation_id`; o segundo caiu na LLM e voltou com `engine` ausente.
+- **Causa:** as quatro linhas desse motor na VPS tinham `year_from=20` e
+  `year_to=20`. A auditoria encontrou ano inicial invalido nas 10.834 linhas
+  de motores. O CSV montado na VPS tinha datas completas, o SQL versionado
+  extrai quatro digitos e o banco local tinha zero anos invalidos.
+- **Correcao operacional:** backup do banco e recriacao dos volumes da stack.
+  O novo PostgreSQL registrou 10.834 motores, zero anos iniciais ou finais
+  invalidos. O warm-up do `qwen2.5:7b` concluiu e `ollama ps` mostrou o modelo
+  residente com `UNTIL Forever`.
+- **Reteste no canal Navi:** em conversa nova, `radiador da EcoSport 2008` levou
+  a pergunta de motor; `ZETEC ROCAM` avancou para a busca e devolveu tres
+  itens, sem repetir a pergunta. O teste comprova o fluxo, nao a compatibilidade
+  comercial individual dos tres itens. A filtragem das opcoes de motor por ano
+  continua no [TODO.md](TODO.md).

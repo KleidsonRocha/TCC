@@ -426,6 +426,11 @@ O `docker-agent` monta e devolve esse objeto. O `docker-comm` apenas valida o co
 
 9. Busca no ERP
    So depois do gate o sistema monta a query textual e chama `search_parts`.
+   Quando lado ou posicao estiverem preenchidos e a consulta retornar zero
+   produtos, repete uma vez sem ambos, preservando os demais filtros. Se
+   recuperar candidatos, a resposta informa a ampliacao e pede confirmacao
+   da direcao; os criterios originais permanecem no estado. Detalhes e
+   diagnostico em [integracao ERP](erp_search_integration.md).
 
 10. Telemetria por etapa
    O contrato retorna `tool_trace.pre_search_path` com `deterministic_bypass`, `deterministic_ask` ou `llm` e `tool_trace.stage_latency_ms` separado em `pre_search_validator`, `search_parts` quando executado e `response_assembly`.

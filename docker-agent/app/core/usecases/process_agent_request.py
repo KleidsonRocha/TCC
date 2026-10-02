@@ -493,9 +493,14 @@ class ProcessAgentRequestUseCase:
                 actions = [list_action]
                 confidence = 0.85
             else:
+                relaxed_fields = {
+                    field
+                    for trace in search_diagnostics
+                    for field in trace["diagnostics"].get("directional_fallback", {}).get("relaxed_fields", [])
+                }
                 known_fields = [
                     field for field in ("engine", "variant", "side", "position")
-                    if getattr(pre_search.criteria, field, None)
+                    if getattr(pre_search.criteria, field, None) and field not in relaxed_fields
                 ]
                 if pre_search.criteria.vehicle_model and pre_search.criteria.vehicle_year:
                     known_fields.append("application")
@@ -513,6 +518,23 @@ class ProcessAgentRequestUseCase:
                     result_disambiguation=disambiguation,
                 )
                 confidence = 0.82
+
+            for trace in search_diagnostics:
+                fallback = trace["diagnostics"].get("directional_fallback")
+                if fallback and fallback.get("results_count", 0) > 0:
+                    fields = " e ".join(
+                        {"side": "lado", "position": "posição"}[field]
+                        for field in fallback["relaxed_fields"]
+                    )
+                    label = (
+                        f"Para a peça {trace['item_index'] + 1}, "
+                        if len(item_results) > 1 else ""
+                    )
+                    reply_text = (
+                        f"{label}a busca com {fields} não trouxe resultados. "
+                        f"Ampliei a pesquisa; confirme {fields} dos candidatos antes de escolher.\n"
+                        + reply_text
+                    )
 
             locale = self._settings.default_locale
             timezone = self._settings.default_timezone

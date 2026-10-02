@@ -1,5 +1,22 @@
 # Registro De Decisoes Tecnicas
 
+## Fallback Direcional Condicional Em 02/10/2026
+
+- Pesquisar primeiro com todos os criterios validados. Quando nao houver
+  produtos e existir `side` ou `position`, executar uma unica tentativa no
+  mesmo backend sem esses dois campos; preservar os demais filtros.
+- Nao alterar o pedido original nem somar pesos dos campos retirados no
+  ranking ampliado. Manter o prazo externo existente para a busca completa.
+- Registrar a tentativa estrita e os criterios efetivos em
+  `directional_fallback`, somente no diagnostico interno.
+- Avisar ao cliente que a pesquisa foi ampliada e pedir confirmacao de
+  lado/posicao. Permitir desambiguacao por esses campos quando necessario.
+
+Motivo: descricoes incompletas ou abreviadas no ERP podem gerar falsos
+negativos nos filtros direcionais. Uma segunda consulta condicional amplia
+a recuperacao sem duplicar toda busca, sem LLM adicional e sem tratar os
+resultados ampliados como prova da direcao solicitada.
+
 Este documento concentra os motivos das escolhas principais do projeto. O objetivo e evitar que a justificativa fique espalhada entre backlog, relatorios e historico de execucao.
 
 ## 1. Catalogo deterministico no Postgres como fonte de verdade
@@ -985,3 +1002,56 @@ Consequencia:
   linguagem, sem transformar divida de backend em falso ganho do modelo;
 - apos a comparacao baseline/candidato, a Prioridade 4.5 reabre esses casos
   com os traces e rotulos humanos preservados.
+
+## 43. Recuperacao De Turno Da Convert Usa Chave Temporaria E `trace_id`
+
+Decisao (30/09/2026, ajustada em 01/10/2026):
+
+- a primeira chamada ao `POST /test/send` envia origem, conversa, filial e
+  texto; o gateway usa esses campos normalizados para evitar trabalho duplicado
+  durante a janela de retencao;
+- o processamento continua no servidor quando a espera HTTP termina. O Redis
+  guarda a concessao do worker e o resultado por cinco minutos. Depois de
+  35 s sem resultado, o gateway retorna `processing` com `trace_id`;
+- a repeticao do turno pela Convert usa somente `trace_id`. Essa consulta nao
+  depende do ultimo texto nem do identificador atual da sala e nao abre um
+  novo processamento. `status` controla a espera; `stage` so deve orientar o
+  caminho conversacional quando o status for `completed`.
+
+Motivo:
+
+- o bloco HTTP da Convert tem limite de 40 s, e o texto da mensagem ou o ID da
+  sala podem mudar apos o bloco `Aguardar`. O trace da primeira chamada e a
+  referencia estavel para consultar seu resultado.
+
+Consequencia:
+
+- respostas concluidas podem ser recuperadas sem repetir a inferencia nem
+  gravar o mesmo turno de conversa novamente;
+- sem ID unico da mensagem de origem, textos iguais na mesma conversa e filial
+  dentro da janela ainda podem compartilhar uma chave. A Categoria 1C do
+  [TODO.md](TODO.md) conserva a validacao completa desse fluxo.
+
+## 44. Status De Processamento E Etapa Conversacional Sao Independentes
+
+Decisao (01/10/2026):
+
+- `status=processing` indica que a Convert deve esperar e consultar o mesmo
+  turno; somente `status=completed` permite enviar `reply` e usar `stage`;
+- para um turno concluido, `handoff.required` prevalece como
+  `transfer_to_human`; `request_info` produz `more_info`, mesmo junto com
+  candidatos; `show_items` produz `mostrar_produtos` quando nao houver
+  handoff nem pergunta; os demais casos seguem por `fallback`;
+- conservar `actions` e `items` estruturados e oferecer `items_text` e as
+  opcoes sugeridas no `reply` para os blocos de mensagem da Convert.
+
+Motivo:
+
+- conclusao do processamento e proximo passo do atendimento sao decisoes
+  diferentes. A Convert precisa distingui-las para nao enviar resposta vazia
+  durante a espera nem perder perguntas ou produtos na apresentacao.
+
+Consequencia:
+
+- o gateway fornece o contrato; o roteamento completo e o handoff ainda
+  precisam de validacao no fluxo publicado, registrada no [TODO.md](TODO.md).

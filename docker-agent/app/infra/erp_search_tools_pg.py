@@ -130,6 +130,13 @@ class PostgresErpSearchTools(ToolsPort):
             )
 
         resolved_criteria = self._resolve_criteria(query=query, criteria=criteria)
+        self._last_search_diagnostics.set(None)
+        effective_criteria = resolved_criteria
+        relaxed_fields = [
+            field for field in ("side", "position")
+            if getattr(resolved_criteria, field) is not None
+        ]
+        strict_diagnostics = None
         family_ids = (
             self._family_ids.get(normalize_pre_search_text(resolved_criteria.part_query), [])
             if self._family_ids is not None else None
@@ -159,6 +166,25 @@ class PostgresErpSearchTools(ToolsPort):
                 with conn.cursor() as cur:
                     cur.execute(sql, params)
                     rows = cur.fetchall()
+                    # The trace-only row is not a product. Retry once only
+                    # when directional refinements yielded no actual items.
+                    if relaxed_fields and not any(row.get("item_code") is not None for row in rows):
+                        strict_diagnostics = next(
+                            (deepcopy(row["search_diagnostics"]) for row in rows
+                             if isinstance(row.get("search_diagnostics"), dict)),
+                            None,
+                        )
+                        effective_criteria = resolved_criteria.model_copy(
+                            update={field: None for field in relaxed_fields},
+                        )
+                        sql, params = self._build_search_sql(
+                            criteria=effective_criteria,
+                            limit=self._result_limit,
+                            family_ids=family_ids,
+                            require_family_title_identity=canonical_part in self._needs_title_identity,
+                        )
+                        cur.execute(sql, params)
+                        rows = cur.fetchall()
         except Exception as exc:  # pragma: no cover - exercised with monkeypatch in tests
             self._logger.exception(
                 "erp_search_query_failed",
@@ -182,10 +208,18 @@ class PostgresErpSearchTools(ToolsPort):
             if row.get("item_code") is not None:
                 item_rows.append(row)
 
-        if diagnostics is not None:
-            diagnostics = deepcopy(diagnostics)
+        if diagnostics is not None or effective_criteria is not resolved_criteria:
+            diagnostics = deepcopy(diagnostics) if diagnostics is not None else {}
             diagnostics["backend"] = self._backend_name
-            diagnostics["criteria"] = resolved_criteria.model_dump(exclude_none=True)
+            diagnostics["criteria"] = effective_criteria.model_dump(exclude_none=True)
+            if effective_criteria is not resolved_criteria:
+                diagnostics["directional_fallback"] = {
+                    "relaxed_fields": relaxed_fields,
+                    "requested_criteria": resolved_criteria.model_dump(exclude_none=True),
+                    "strict_results_count": 0,
+                    "strict_search_diagnostics": strict_diagnostics,
+                    "results_count": len(item_rows),
+                }
 
         items = [
             PartItem(

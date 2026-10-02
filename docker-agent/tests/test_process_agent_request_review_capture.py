@@ -1,5 +1,6 @@
 import logging
 import asyncio
+import pytest
 
 from app.api.schemas.contract_v1 import AgentRequestV1
 from app.config import Settings
@@ -14,6 +15,43 @@ from app.core.domain.models import (
 from app.core.domain.pre_search import NextQuestion, PreSearchValidation, SearchCriteria
 from app.core.ports.tools import ToolsPort
 from app.core.usecases.process_agent_request import ProcessAgentRequestUseCase
+
+
+@pytest.mark.parametrize("count", [0, 1, 2, 12])
+def test_directional_fallback_notice_preserves_request_and_allows_side_disambiguation(count):
+    criteria = SearchCriteria(part_query="bieletas", vehicle_model="S10", vehicle_year=2009, side="right")
+
+    class Validator:
+        def validate(self, *args, **kwargs):
+            return PreSearchValidation(decision="search", criteria=criteria, confidence=0.95)
+
+    class Tools:
+        def search_parts(self, *args, **kwargs):
+            return [PartItem(
+                item_id=f"B-{index}", title=f"Bieleta {index}", score=0.64,
+                attributes={"side": ["Esquerdo" if index % 2 else "Direito"]},
+            ) for index in range(count)]
+
+        def get_last_search_diagnostics(self):
+            return {"directional_fallback": {"relaxed_fields": ["side"], "results_count": count}}
+
+    recorder = _SpyRecorder()
+    use_case = ProcessAgentRequestUseCase(
+        tools=Tools(), pre_search_validator=Validator(), settings=Settings(APP_ENV="test"),
+        logger=logging.getLogger("test"), review_recorder=recorder,
+    )
+    payload = AgentRequestV1.model_validate({
+        "schema_version": "1.0", "trace_id": "fallback-trace", "conversation_id": "fallback-conv",
+        "message": {"text": "bieleta S10 2009 direita"}, "business": {"branch_id": 1},
+        "channel": {"name": "whatsapp"}, "context": {"last_messages": []},
+    })
+    result = asyncio.run(use_case.execute(payload))
+    assert ("Ampliei a pesquisa" in result.reply_text) == bool(count)
+    assert result.conversation_state.criteria.side == "right"
+    if count > 10:
+        assert result.conversation_state.result_disambiguation.question_key == "side"
+    capture = next(action for action in recorder.calls[0]["final_actions"] if action["type"] == "search_diagnostics")
+    assert capture["items"][0]["diagnostics"]["directional_fallback"]["results_count"] == count
 
 
 class _StubValidator:

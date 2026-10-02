@@ -1,11 +1,38 @@
 # Progresso Do Projeto
 
-Estado em 22/09/2026. Historico de problemas, benchmarks e relatorios em
+## Fallback De Lado E Posicao Implementado Localmente Em 02/10/2026
+
+- Consulta com `side` ou `position` que retorna zero produtos repete uma vez
+  sem ambos. Familia/codigo, acessorios, aplicacao veicular, eixo e marca
+  preferida permanecem iguais. Erro continua sendo indisponibilidade.
+- Criterios originais permanecem no estado. Diagnosticos guardam tentativa
+  estrita, campos retirados e resultado ampliado; a resposta pede confirmacao
+  da direcao, inclusive quando a lista tem somente um candidato.
+- Desambiguacao pode perguntar por lado/posicao retirados, quando separarem
+  os candidatos. Nenhuma chamada adicional de LLM ou migracao de banco.
+- Validacao local: 103 testes focados aprovados e 90/90 verificacoes SQL
+  golden aprovadas no PostgreSQL. O teste de estrutura do golden set tem
+  falha preexistente: tres casos de ranking sem `message` (fora desta mudanca).
+- Atualizacao do `docker-agent` e reteste dos tres codigos de bieleta no Omni
+  da VPS permanecem pendentes. O fallback nao altera `accessory_identity` e
+  nao garante recuperar um item rejeitado por essa regra ou pela aplicacao.
+
+Estado em 01/10/2026. Historico de problemas, benchmarks e relatorios em
 [HISTORICO.md](HISTORICO.md); pendencias e criterios de aceite em
-[TODO.md](TODO.md). Resultados locais nao encerram a validacao na VPS.
+[TODO.md](TODO.md). Os testes na VPS confirmam caminhos funcionais, mas nao
+encerram a validacao completa da Convert nem a avaliacao comercial.
 
 ## Estado Atual
 
+- A recuperacao de turno por `trace_id` foi implantada no `docker-comm`.
+  A Convert recebeu respostas e listas de produtos em testes do canal interno
+  em 01/10; roteamento completo, timeout, expiracao, concorrencia e handoff
+  continuam nas Categorias 1B e 1C do [TODO.md](TODO.md).
+- O catalogo da VPS foi recriado em 01/10 apos detectar anos invalidos em
+  todos os registros de motor. O banco novo tem 10.834 motores e zero anos
+  invalidos; a resposta `ZETEC ROCAM` para EcoSport 2008 avancou para a busca
+  e retornou tres candidatos no canal Navi. Filtrar as opcoes sugeridas pelo
+  ano continua pendente.
 - Reranking `application_corroboration_v1` aplicado no SQL real e no snapshot,
   antes do limite; aliases de versao preservam JOY e SURF. Diagnosticos internos
   identificam backend, criterios, evidencia e componentes do score.

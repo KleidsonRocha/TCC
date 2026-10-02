@@ -47,6 +47,107 @@ class _FakeConnection:
         return False
 
 
+class _SequenceCursor(_FakeCursor):
+    def __init__(self, responses):
+        super().__init__([])
+        self.responses = iter(responses)
+        self.calls = []
+
+    def execute(self, sql, params):
+        super().execute(sql, params)
+        self.calls.append((sql, params))
+        response = next(self.responses)
+        if isinstance(response, Exception):
+            raise response
+        self.rows = response
+
+
+@pytest.mark.parametrize("directions", [
+    {"side": "right"}, {"position": "front"},
+    {"side": "right", "position": "front"},
+])
+@pytest.mark.parametrize("recovered", [True, False])
+def test_directional_fallback_retries_once_preserving_other_criteria(
+    monkeypatch, directions, recovered,
+):
+    strict_trace = {"raw_candidates_count": 3, "ranked_candidates_count": 0}
+    relaxed_trace = {"ranked_candidates_count": int(recovered)}
+    relaxed_rows = [{"item_code": None, "search_diagnostics": relaxed_trace}]
+    if recovered:
+        relaxed_rows.append({"item_code": "531.2124", "title": "BIELETA S10 LD/LE", "score": 0.64})
+    cursor = _SequenceCursor([
+        [{"item_code": None, "search_diagnostics": strict_trace}], relaxed_rows,
+    ])
+    monkeypatch.setattr(erp_search_tools_pg, "psycopg", type("Driver", (), {
+        "connect": staticmethod(lambda *args, **kwargs: _FakeConnection(cursor)),
+    }))
+    monkeypatch.setattr(erp_search_tools_pg, "dict_row", object())
+    criteria = SearchCriteria(
+        part_query="bieletas", vehicle_brand="Chevrolet", vehicle_model="S10",
+        vehicle_year=2009, engine="2.4", variant="LT", axle="front",
+        preferred_product_brand="Nakata", quantity=2, **directions,
+    )
+    before = criteria.model_dump()
+    tools = PostgresErpSearchTools(settings=_settings(), logger=logging.getLogger("test"))
+    items = tools.search_parts("bieleta S10", 1, criteria)
+
+    assert [item.item_id for item in items] == (["531.2124"] if recovered else [])
+    assert len(cursor.calls) == 2
+    strict_sql, strict_params = cursor.calls[0]
+    relaxed_sql, relaxed_params = cursor.calls[1]
+    for field in directions:
+        assert f"%({field}_like)s" in strict_sql
+        assert f"%({field}_like)s" not in relaxed_sql
+        assert relaxed_params["score_" + field] == 0
+    for key in ("part_query_norm", "vehicle_brand_norm", "vehicle_model_norm", "vehicle_year",
+                "engine_norm", "variant_norm", "axle_like", "accessory_head_pattern",
+                "preferred_product_brand_like", "limit"):
+        assert relaxed_params[key] == strict_params[key]
+    assert criteria.model_dump() == before
+    diagnostics = tools.get_last_search_diagnostics()
+    fallback = diagnostics["directional_fallback"]
+    assert fallback["relaxed_fields"] == list(directions)
+    assert fallback["requested_criteria"] == criteria.model_dump(exclude_none=True)
+    assert fallback["strict_search_diagnostics"] == strict_trace
+    assert fallback["results_count"] == int(recovered)
+    assert "side" not in diagnostics["criteria"]
+    assert "position" not in diagnostics["criteria"]
+
+
+@pytest.mark.parametrize("criteria,rows", [
+    (SearchCriteria(part_query="bieletas", side="right"),
+     [{"item_code": "OK", "title": "BIELETA DIREITA", "score": 0.7}]),
+    (SearchCriteria(part_query="bieletas"), []),
+    (SearchCriteria(part_query="bieletas", axle="front"), []),
+])
+def test_directional_fallback_does_not_repeat_success_or_non_directional_search(monkeypatch, criteria, rows):
+    cursor = _SequenceCursor([rows])
+    monkeypatch.setattr(erp_search_tools_pg, "psycopg", type("Driver", (), {
+        "connect": staticmethod(lambda *args, **kwargs: _FakeConnection(cursor)),
+    }))
+    monkeypatch.setattr(erp_search_tools_pg, "dict_row", object())
+    tools = PostgresErpSearchTools(settings=_settings(), logger=logging.getLogger("test"))
+    tools.search_parts("bieleta", 1, criteria)
+    assert len(cursor.calls) == 1
+
+
+@pytest.mark.parametrize("responses", [
+    [RuntimeError("strict query failed")],
+    [[], RuntimeError("relaxed query failed")],
+])
+def test_directional_fallback_preserves_service_unavailable_on_query_error(monkeypatch, responses):
+    cursor = _SequenceCursor(responses)
+    monkeypatch.setattr(erp_search_tools_pg, "psycopg", type("Driver", (), {
+        "connect": staticmethod(lambda *args, **kwargs: _FakeConnection(cursor)),
+    }))
+    monkeypatch.setattr(erp_search_tools_pg, "dict_row", object())
+    tools = PostgresErpSearchTools(settings=_settings(), logger=logging.getLogger("test"))
+    with pytest.raises(SearchPartsServiceUnavailableError):
+        tools.search_parts("bieleta", 1, SearchCriteria(part_query="bieletas", side="right"))
+    assert len(cursor.calls) == len(responses)
+    assert tools.get_last_search_diagnostics() is None
+
+
 def _settings() -> Settings:
     return Settings(
         APP_ENV="test",

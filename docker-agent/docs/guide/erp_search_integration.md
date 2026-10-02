@@ -64,6 +64,24 @@ criterios fornecidos. Pedido sem identidade de peca ou codigo nao enumera o
 estoque. Lado, posicao e eixo usam o nome completo e o titulo do proprio item,
 pois o titulo abreviado pode omitir a direcao presente no nome completo.
 
+Quando a consulta com `side` ou `position` nao retorna produtos, o runtime
+repete uma unica vez no mesmo backend sem esses dois refinamentos. Identidade
+de familia/codigo, bloqueio de acessorios, aplicacao veicular, eixo e preferencia
+de marca permanecem iguais. Uma linha apenas de diagnostico nao conta como
+produto; erro de consulta continua sendo indisponibilidade, nao resultado vazio.
+O fallback nao adiciona chamada de LLM nem altera os criterios do cliente no
+estado conversacional. O prazo externo de busca existente continua valendo
+para as duas tentativas juntas.
+
+O diagnostico da segunda tentativa registra os criterios efetivos e
+`directional_fallback`: campos retirados, pedido original, trilha da tentativa
+estrita e quantidade recuperada. Ao recuperar candidatos, a resposta informa
+que a pesquisa foi ampliada e pede confirmacao de lado/posicao. A lista pode
+incluir outra direcao, pois esses filtros foram retirados; o fallback nao prova
+que todos os candidatos atendam a direcao solicitada. Na desambiguacao, campos
+retirados continuam elegiveis para uma pergunta que separe os candidatos.
+Esse comportamento vale para ERP quente e snapshot local, sem mudar suas views.
+
 ## Aplicacao Veicular E Proveniencia
 
 Cada linha de `item_search_applications` preserva:
