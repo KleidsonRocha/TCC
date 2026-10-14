@@ -17,17 +17,25 @@
   da VPS permanecem pendentes. O fallback nao altera `accessory_identity` e
   nao garante recuperar um item rejeitado por essa regra ou pela aplicacao.
 
-Estado em 01/10/2026. Historico de problemas, benchmarks e relatorios em
+Estado em 02/10/2026. Historico de problemas, benchmarks e relatorios em
 [HISTORICO.md](HISTORICO.md); pendencias e criterios de aceite em
-[TODO.md](TODO.md). Os testes na VPS confirmam caminhos funcionais, mas nao
-encerram a validacao completa da Convert nem a avaliacao comercial.
+[TODO.md](TODO.md). As Categorias 1B e 1C da integracao com a Convert foram
+encerradas por confirmacao do usuario em 02/10. A avaliacao comercial permanece
+separada e pendente.
 
 ## Estado Atual
 
+- A Prioridade 4 de integracao com WhatsApp foi encerrada em 02/10 por
+  confirmacao do usuario: o sistema interno Omni/Convert faz a conexao com o
+  canal e integra o atendimento ao TCC. A entrega adotou esse intermediario;
+  webhook proprio e cliente direto da Meta deixam de ser requisitos do escopo.
+  Responsabilidades e aceite registrados em [DECISIONS.md](DECISIONS.md) e
+  [HISTORICO.md](HISTORICO.md).
 - A recuperacao de turno por `trace_id` foi implantada no `docker-comm`.
-  A Convert recebeu respostas e listas de produtos em testes do canal interno
-  em 01/10; roteamento completo, timeout, expiracao, concorrencia e handoff
-  continuam nas Categorias 1B e 1C do [TODO.md](TODO.md).
+  O usuario confirmou em 02/10 a conclusao do roteamento por `stage` (1B) e
+  da validacao ponta a ponta (1C) na VPS/Convert, incluindo os cenarios
+  controlados anteriormente testados. Escopo e origem da confirmacao em
+  [HISTORICO.md](HISTORICO.md); contrato mantido em [DECISIONS.md](DECISIONS.md).
 - O catalogo da VPS foi recriado em 01/10 apos detectar anos invalidos em
   todos os registros de motor. O banco novo tem 10.834 motores e zero anos
   invalidos; a resposta `ZETEC ROCAM` para EcoSport 2008 avancou para a busca

@@ -1029,8 +1029,9 @@ Consequencia:
 - respostas concluidas podem ser recuperadas sem repetir a inferencia nem
   gravar o mesmo turno de conversa novamente;
 - sem ID unico da mensagem de origem, textos iguais na mesma conversa e filial
-  dentro da janela ainda podem compartilhar uma chave. A Categoria 1C do
-  [TODO.md](TODO.md) conserva a validacao completa desse fluxo.
+  dentro da janela ainda podem compartilhar uma chave. A validacao da
+  Categoria 1C foi encerrada por confirmacao do usuario em 02/10/2026 e
+  registrada no [HISTORICO.md](HISTORICO.md); esse limite de identidade permanece.
 
 ## 44. Status De Processamento E Etapa Conversacional Sao Independentes
 
@@ -1053,5 +1054,50 @@ Motivo:
 
 Consequencia:
 
-- o gateway fornece o contrato; o roteamento completo e o handoff ainda
-  precisam de validacao no fluxo publicado, registrada no [TODO.md](TODO.md).
+- o gateway fornece o contrato, e o roteamento completo e o handoff no fluxo
+  publicado foram aceitos pelo usuario em 02/10/2026, encerrando as Categorias
+  1B e 1C. O registro da validacao fica no [HISTORICO.md](HISTORICO.md).
+
+### Encerramento Das Categorias 1B E 1C Em 02/10/2026
+
+- Manter `$.stage` mapeado para `$estado_ia` e as saidas `more_info`,
+  `mostrar_produtos`, `transfer_to_human` e `fallback` no fluxo publicado.
+- Enquanto `status=processing`, aguardar e consultar o mesmo `trace_id`;
+  enviar `$resposta_ia` e avaliar a etapa somente depois de `completed`.
+- Apresentar `$itens_ia` quando houver produtos e encerrar as perguntas
+  automaticas quando o usuario for transferido ao atendimento humano.
+- Aceitar a confirmacao do usuario sobre a validacao ponta a ponta e os
+  cenarios controlados ja testados como encerramento operacional dessas
+  categorias. A confirmacao nao representa nova execucao automatizada pelo
+  agente nem conclui a avaliacao comercial ou as demais pendencias do produto.
+
+## 45. Integracao Do Canal Pelo Sistema Interno Omni/Convert
+
+Decisao (02/10/2026):
+
+- Adotar o sistema interno Omni/Convert como intermediario da conexao com o
+  canal WhatsApp, conforme implementacao e equivalencia funcional confirmadas
+  pelo usuario, encerrando a Prioridade 4 do backlog original.
+- Manter a conexao ao canal e o transporte de mensagens sob responsabilidade
+  do sistema interno. O TCC recebe origem, identificador da conversa e filial
+  pelo contrato HTTP existente; conserva historico/estado e devolve resposta,
+  produtos, perguntas e sinalizacao de handoff.
+- Usar o identificador estavel da conversa fornecido pelo intermediario,
+  preservando a persistencia existente no Redis. Nao exigir que o TCC receba
+  diretamente o telefone para identificar a sessao.
+- Retirar do escopo atual o webhook `POST /webhooks/whatsapp` e o envio direto
+  pela API da Meta no `docker-comm`. Esses componentes eram uma proposta de
+  implementacao e foram substituidos pela conexao existente no sistema interno.
+
+Motivo:
+
+- O objetivo e integrar o atendimento ao canal; a infraestrutura interna ja
+  atende a essa funcao, sem exigir um segundo conector no TCC.
+
+Consequencia:
+
+- A entrega fica registrada como integracao via Omni/Convert. O aceite se
+  baseia na confirmacao do usuario e na validacao operacional ja encerrada
+  nas Categorias 1B e 1C. Este registro nao afirma implementacao de cliente
+  Meta no repositorio nem auditoria das regras internas de transporte,
+  duplicatas e reentregas do intermediario.

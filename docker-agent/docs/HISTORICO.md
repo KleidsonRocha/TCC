@@ -383,7 +383,8 @@ gabarito formal de compatibilidade ou disponibilidade.
   `test_send_processed` com o mesmo trace e `result_source=cached`. Em 01/10,
   o fluxo publicado na Convert entregou perguntas, opcoes sugeridas e listas
   de produtos em conversas de radiador Gol 2010, coxim EcoSport 2008 e
-  pastilha Onix 2018. Esses testes nao encerram a matriz da Categoria 1C.
+  pastilha Onix 2018. Naquela data, esses testes ainda nao encerravam a matriz
+  da Categoria 1C; o encerramento foi confirmado pelo usuario em 02/10/2026.
 - **Limite conhecido:** sem ID unico da mensagem fornecido pela Convert, duas
   mensagens iguais na mesma conversa e filial dentro dos cinco minutos podem
   compartilhar a chave. A validacao de concorrencia, reinicio, expiracao e
@@ -399,9 +400,51 @@ gabarito formal de compatibilidade ou disponibilidade.
   `reply` como `Opcoes sugeridas`, para aparecer no bloco de mensagem da
   Convert. Isso foi observado no canal interno em 01/10, junto com listas de
   produtos para as consultas de radiador, coxim e pastilha.
-- **Pendente:** confirmar na Convert todas as saidas de `stage`, inclusive
-  transferencia humana e contingencia, conforme as Categorias 1B e 1C do
-  [TODO.md](TODO.md).
+- **Pendente em 01/10:** confirmar na Convert todas as saidas de `stage`,
+  inclusive transferencia humana e contingencia. As Categorias 1B e 1C foram
+  encerradas por confirmacao do usuario em 02/10/2026, conforme registro abaixo.
+
+## Categorias 1B E 1C Concluidas Na VPS/Convert Em 02/10/2026
+
+- **Aceite:** o usuario informou que a integracao foi resolvida e solicitou
+  retirar as duas categorias do TODO. O encerramento se baseia nos testes
+  realizados pelo usuario na VPS/Omni/Convert e em sua confirmacao dos cenarios
+  controlados; nao houve nova execucao de testes pelo agente nesta atualizacao.
+- **Categoria 1B:** roteamento de `$.stage` para `$estado_ia` no fluxo publicado,
+  com `more_info`, `mostrar_produtos`, `transfer_to_human` e `fallback`;
+  espera/consulta por `trace_id` enquanto `processing`, envio da resposta
+  somente em `completed`, apresentacao dos produtos e transferencia humana
+  sem continuar perguntas automaticas.
+- **Categoria 1C:** validacao ponta a ponta aceita pelo usuario. O escopo
+  encerrado inclui chamadas repetidas concorrentes, repeticao durante o
+  processamento, recuperacao do resultado pronto, expiracao de cinco minutos,
+  falha/timeout do agente, reinicio durante processamento, atualizacao unica
+  do historico, handoff e mensagens diferentes na mesma conversa; inclui
+  tambem espera inicial, novas consultas em `processing`, entrega final,
+  etapas conversacionais e limite de tentativas/expiracao na Convert.
+- **Evidencia discutida:** o relato dos logs de oito turnos registra HTTP 200
+  e resultado armazenado, com continuidade da mesma conversa em tres turnos
+  e respostas de cerca de 1 a 3,5 segundos. Essa amostra cobre o caminho rapido;
+  os cenarios controlados restantes sao registrados pela confirmacao do usuario.
+- **Consequencia:** Categorias 1B e 1C removidas do backlog ativo; preparacao
+  de fine-tuning controlado em GPU passa a ser o proximo bloco. Contrato e
+  justificativa permanecem em [DECISIONS.md](DECISIONS.md).
+
+## Prioridade 4 Concluida Via Sistema Interno Em 02/10/2026
+
+- **Escopo original:** integrar WhatsApp com webhook proprio, identificacao
+  por telefone e envio direto pela API da Meta no `docker-comm`.
+- **Entrega adotada:** o usuario esclareceu que montou uma integracao
+  funcionalmente equivalente usando o sistema interno Omni/Convert para
+  conectar o canal. Esse intermediario cuida do transporte; o TCC usa o
+  contrato HTTP, conversa persistente, filial e respostas estruturadas.
+- **Aceite:** Prioridade 4 encerrada pela confirmacao do usuario, em conjunto
+  com a validacao operacional das Categorias 1B e 1C. Nao houve nova execucao
+  de testes nem auditoria do conector interno nesta atualizacao documental.
+- **Consequencia:** removida a prioridade do TODO. Webhook proprio e cliente
+  direto da Meta foram substituidos pelo caminho via sistema interno;
+  a escolha e suas responsabilidades ficam na decisao 45 de
+  [DECISIONS.md](DECISIONS.md).
 
 ## Anos Do Catalogo E Follow-Up De Motor Corrigidos Na VPS Em 01/10/2026
 
