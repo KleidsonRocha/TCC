@@ -1,5 +1,29 @@
 # Progresso Do Projeto
 
+## Complemento Do Reteste No Canal Em 19/10/2026
+
+- Usuario confirmou a implantacao da VPS no commit 2095596, com catalogo
+  aplicado e health/ready aprovados; Clio retornou SK-813 no Omni/Convert.
+  Isso nao encerra o aceite: S10/Gol com `semieixo` tiveram handoff incorreto
+  e FH 460 2016 recebeu sugestao `D13K460`, recusada ao responder.
+- [x] Mapear `semieixo`/`semieixos` para `semi eixo`, sem ampliar scopes nem
+  substituir a identidade explicita `semieixo diferencial`. Curadoria agora
+  possui 45 decisoes. Mensagens naturais exatas adicionadas a bateria.
+- [x] Filtrar sugestoes de motor pelos intervalos do modelo/ano, como na
+  aceitacao do follow-up. D13K460, registrado desde 2023, nao e sugerido para
+  FH 460 2016. Sem intervalo compativel, nao reintroduzir opcoes de outros anos.
+  Cobertos anos limite, intervalos repetidos/abertos, ausencia de ano e EcoSport.
+- Confirmado no catalogo local real com atualizador em transacao revertida:
+  S10/Gol passam a pedir versao sem LLM, preservando veiculo e ABS negativo;
+  FH 460 2016 oferece somente D 13 C 460. Bateria: 170 cenarios/208 turnos.
+  Evidencias em `.tmp/eval/channel_alias_engine_results_20261019.json` e
+  `.tmp/eval/channel_alias_engine_20261019.xml`.
+- Regressao final: **604 testes aprovados, nenhum ignorado**, incluindo SQL
+  no PostgreSQL local e reproducibilidade da bateria. Uma advertencia de
+  depreciacao Starlette/AnyIO permanece. Verificacao de diff sem erros.
+- Complemento ainda nao implantado na VPS; o `no_match` da caixa de bateria
+  nao comprova indisponibilidade geral ou compatibilidade comercial.
+
 ## Limpeza Inicial Do Repositorio Em 19/10/2026
 
 - Retirados do versionamento dois relatos antigos de marco em `Documents/`

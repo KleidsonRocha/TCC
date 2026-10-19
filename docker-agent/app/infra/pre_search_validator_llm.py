@@ -2519,7 +2519,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
 
         options: list[str] | None = None
         if field_name == "engine":
-            options = self._engine_options_for_model(criteria.vehicle_model)
+            options = self._engine_options_for_model(criteria.vehicle_model, criteria.vehicle_year)
         elif field_name == "side":
             options = ["Esquerdo", "Direito", "Nao sei"]
         elif field_name in {"position", "axle"}:
@@ -3361,8 +3361,21 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             vehicle_year=vehicle_year,
         )
 
-    def _engine_options_for_model(self, model_name: str | None) -> list[str]:
-        key = str(model_name or "").strip().lower()
+    def _engine_options_for_model(
+        self, model_name: str | None, vehicle_year: int | None = None,
+    ) -> list[str]:
+        key = normalize_pre_search_text(model_name)
+        details = self._engine_options_by_model.get(key, [])
+        if details:
+            options = list(dict.fromkeys(
+                option for option, start, end in details
+                if vehicle_year is None or (
+                    (start is None or vehicle_year >= start)
+                    and (end is None or vehicle_year <= end)
+                )
+            ))
+            # Do not reintroduce model-wide options when no interval fits.
+            return options or ["Nao sei"]
         return self._engine_by_model.get(key, ["1.0", "1.6", "2.0", "Nao sei"])
 
     @staticmethod

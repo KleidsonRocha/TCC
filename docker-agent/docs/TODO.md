@@ -18,7 +18,7 @@ O backend e o catalogo permanecem a autoridade final. Caminhos deterministicos a
   - Basear os lotes na [auditoria dos 371 casos do modelo base](../.tmp/eval/base_categories_review_20261019/analysis.md), com consulta somente leitura ao ERP e sondas no banco congelado. Ha 337 casos com referencia, mas 314 codigos distintos e 347 pedidos iniciais distintos. Separar pedidos naturais, titulos de catalogo adversariais, contradicoes e repeticoes de categoria/subcategoria.
   - Validar referencias de componente divergente, kits e classificacoes ERP; preservar a bateria original e versionar expectativas revisadas, sem promocao automatica a golden ou treino. Os 34 suspeitos nao sao uma taxa confirmada de falso negativo.
 - [ ] Atualizar a VPS e validar o canal externo Omni/Convert com o lote de 19/10/2026.
-  - Implantacao inicial restrita ao Docker local, conforme solicitado. Levar agente e gateway juntos, aplicar o atualizador transacional de catalogo e retestar Clio/Palio/S10, versoes completas e motor do FH 460; preservar volumes. Curadoria e refinamentos locais documentados em [PROGRESS.md](PROGRESS.md#curadoria-e-refinamentos-no-docker-local-em-19102026).
+  - Usuario confirmou por saidas da VPS a implantacao no commit 2095596, catalogo com 19 conceitos/43 decisoes e prontidao de catalogo/ERP/inferencia. Clio retornou SK-813 no canal. Reteste revelou falta do alias `semieixo` e sugestao de motor de outro ano no FH 460; correcoes adicionais locais em PROGRESS.md. Publicar esse complemento (45 decisoes), aplicar catalogo/recriar agente e retestar S10/Gol/FH, Palio e contradicoes antes de encerrar o aceite. Preservar volumes.
 - [ ] Reexecutar bateria revisada e controles positivos/negativos no mesmo snapshot apos cada lote.
   - Incluir os 133 casos antes rotulados coerentes, revisando expectativas quando houver contradicao/identidade incorreta; preservar cobertura e os 27 golden. Medir precisao dos itens, familias curadas atendidas, conclusao, loops, handoffs adequados, divergencias e latencia. Nao declarar ganho por retirar filtros indiscriminadamente ou apresentar mais itens.
 - [ ] Revisar nove subcategorias do grupo ERP 24 ausentes do catalogo ativo.
@@ -29,9 +29,6 @@ O backend e o catalogo permanecem a autoridade final. Caminhos deterministicos a
   - Rebuild do `docker-agent`; validar `quero o oleo 5w40`, `5W-40`, outro
     grau e codigo `TEX-3117`. Verificacoes locais em `PROGRESS.md`.
 
-- [ ] Filtrar as opcoes sugeridas de motorizacao pelo ano informado.
-  - No reteste da EcoSport 2008 em 01/10/2026, a pergunta ofereceu `DRAGON` e `SIGMA`; o CSV versionado so registra `DRAGON` a partir de 2017 e `SIGMA` a partir de 2012 para esse modelo.
-  - A aceitacao da resposta ja considera os intervalos, mas `_engine_options_for_model` apresenta todas as opcoes do modelo. Aplicar o mesmo criterio de ano a exibicao e cobrir a pergunta e a resposta com regressao.
 - [ ] Montar prova semantica separada para descricoes genericas
   - dataset curado por familia, baseline de recuperacao, embeddings em portugues, score/margem/proveniencia, feature flag e modo shadow; embedding nunca libera busca ERP sozinho.
 - [ ] Otimizar com telemetria real

@@ -46,6 +46,9 @@ Em resposta curta a `pending_slot=variant|engine`, usar o modelo/ano e o item
 ativo do estado. `4X4` em uma versao e `460` em um motor nao corrigem o modelo.
 Opcoes textuais sao resolvidas no catalogo contextual; valores adicionais ou
 versoes desconhecidas exigem prova pela ferramenta de busca na mesma aplicacao.
+As opcoes de motor mostradas na pergunta tambem respeitam o ano: basta um
+intervalo compativel, com limites inclusivos. Sem intervalo valido, nao oferecer
+motores de outro ano; sem ano informado, manter as opcoes do modelo.
 O valor integral comprovado permanece no estado, sem ser reextraido do historico
 como outra versao. Novo pedido completo ou correcao explicita prevalecem.
 

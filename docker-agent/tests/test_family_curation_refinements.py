@@ -285,3 +285,58 @@ def test_legacy_variant_abs_is_not_reinterpreted_as_positive_abs(catalog):
     clean=validator._canonicalize_criteria_part_query(old)
     assert clean.variant is None and clean.abs is False
     assert old.variant=='ABS'
+
+
+@pytest.mark.parametrize('message,model,year,abs_value', [
+    ('Quero semieixo esquerdo do eixo dianteiro para S10 2017 2.5','S10',2017,None),
+    ('Quero semieixo esquerdo sem ABS para Gol 2003 1.0','Gol',2003,False),
+    ('Quero semieixos para S10 2017 2.5','S10',2017,None),
+])
+def test_channel_joined_semieixo_is_resolved_without_llm(catalog,message,model,year,abs_value):
+    validator=LLMPreSearchValidator(settings=Settings(CATALOG_DB_ENABLED=False),
+        logger=logging.getLogger('curation'),catalog=catalog)
+    validator._post_chat_or_generate=lambda **kw: pytest.fail('known spelling reached LLM')
+    result=(validator.try_validate_deterministically(message)
+            or validator.try_validate_deterministic_ask(message))
+    assert result is not None
+    assert result.decision!='handoff'
+    assert result.criteria.part_query=='semi eixo'
+    assert result.criteria.vehicle_model==model and result.criteria.vehicle_year==year
+    assert result.criteria.abs is abs_value
+
+
+@pytest.mark.parametrize('year,expected', [
+    (2011,['Nao sei']), (2012,['D 13 C 460']), (2016,['D 13 C 460']),
+    (2023,['D 13 C 460','D13K460']), (None,['D 13 C 460','D13K460']),
+])
+def test_suggested_engine_options_obey_year_and_can_be_accepted(catalog,year,expected):
+    catalog.engine_by_model['fh 460']=['D 13 C 460','D13K460']
+    catalog.engine_options_by_model['fh 460']=[
+        ('D 13 C 460',2012,2016),('D 13 C 460',2016,None),
+        ('D13K460',2023,None),('D13K460',2023,None)]
+    validator=LLMPreSearchValidator(settings=Settings(CATALOG_DB_ENABLED=False),
+        logger=logging.getLogger('curation'),catalog=catalog)
+    question=validator._build_default_next_question(criteria=SearchCriteria(
+        part_query='caixa de bateria',vehicle_model='FH 460',vehicle_year=year),missing_fields=['engine'])
+    assert question.options==expected
+    for option in question.options:
+        if option!='Nao sei':
+            assert validator._match_pending_engine_option(message_text=option,
+                vehicle_model='FH 460',vehicle_year=year)==option
+
+
+def test_ecosport_2008_does_not_suggest_future_engines(catalog):
+    catalog.engine_by_model['ecosport']=['ZETEC ROCAM','SIGMA','DRAGON']
+    catalog.engine_options_by_model['ecosport']=[
+        ('ZETEC ROCAM',2003,2012),('SIGMA',2012,None),('DRAGON',2017,None)]
+    validator=LLMPreSearchValidator(settings=Settings(CATALOG_DB_ENABLED=False),
+        logger=logging.getLogger('curation'),catalog=catalog)
+    assert validator._engine_options_for_model('EcoSport',2008)==['ZETEC ROCAM']
+
+
+@pytest.mark.parametrize('message', ['semieixo diferencial para Gol 2010', 'semieixos diferencial para Gol 2010'])
+def test_joined_spelling_does_not_replace_explicit_differential_component(catalog,message):
+    from dataclasses import replace
+    catalog=replace(catalog,part_patterns=catalog.part_patterns+[
+        ('semieixo diferencial',('semieixo diferencial','semieixos diferencial'))])
+    assert DictionaryPreSearchExtractor(catalog=catalog).extract(message).part_query=='semieixo diferencial'

@@ -8,7 +8,7 @@ O runtime fica em `app/`. Os scripts sao ferramentas de avaliacao, operacao do c
 
 - `generate_eval_report.py` combina a avaliacao MVP, o benchmark golden e o sweep de `LLM_NUM_PREDICT`; pode incluir resultados de bateria ja executada.
 - `run_real_respond_battery.py` executa cenarios contra `POST /respond` e grava os resultados em `.tmp/eval/`.
-- `build_real_respond_battery_dataset.py` regenera os 168 cenarios/206 turnos
+- `build_real_respond_battery_dataset.py` regenera os 170 cenarios/208 turnos
   estruturais, incluindo os oito `audit_identity_*`/`audit_follow_up_*` de
   19/10/2026. Essa geracao nao altera a comparacao congelada nem aprova rotulos
   comerciais. Regressao sem LLM em `tests/test_request_identity_follow_up.py`.

@@ -9,6 +9,15 @@ Os numeros abaixo pertencem as versoes e ambientes indicados. HTTP 200,
 assertions estruturais e acerto comercial sao medidas diferentes. Resultados
 historicos nao comprovam a qualidade da versao atual em producao.
 
+## Reteste Da VPS Revela Grafia E Sugestao De Motor Em 19/10/2026
+
+Depois do deploy confirmado pelo usuario, Clio retornou SK-813, mas as mensagens
+com `semieixo` tiveram handoff: o alias conhecido era `semi eixo`. Incluidas as
+formas juntas singular/plural, preservando a familia diferencial especializada.
+O FH 460 2016 recebeu sugestao D13K460 (catalogado a partir de 2023), recusada
+ao responder. Corrigida a exibicao por intervalo de ano, sem afrouxar a validacao
+da resposta. Aceite do canal permanece aberto ate publicar/retestar o complemento.
+
 ## Limpeza Documental Em 19/10/2026
 
 Retiradas do versionamento a analise de estrutura de 13/03 e o relato de

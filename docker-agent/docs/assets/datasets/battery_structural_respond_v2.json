@@ -3965,7 +3965,10 @@
           "schema_version": "1.0",
           "expect": {
             "status": 200,
-            "question_key": "engine"
+            "question_key": "engine",
+            "reply_excludes": [
+              "D13K460"
+            ]
           }
         },
         {
@@ -4067,6 +4070,58 @@
               "abs": false,
               "variant": null
             }
+          }
+        }
+      ]
+    },
+    {
+      "id": "curation_joined_s10",
+      "category": "curated_identity_refinements",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "curation_joined_s10_t1",
+          "message": "Quero semieixo esquerdo do eixo dianteiro para S10 2017 2.5",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "criteria_contains": {
+              "part_query": "semi eixo",
+              "vehicle_model": "S10",
+              "vehicle_year": 2017,
+              "engine": "2.5",
+              "side": "left",
+              "axle": "front"
+            },
+            "used_tools_excludes": [
+              "pre_search_validator"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "curation_joined_without_abs",
+      "category": "curated_identity_refinements",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "curation_joined_without_abs_t1",
+          "message": "Quero semieixo esquerdo sem ABS para Gol 2003 1.0",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "criteria_contains": {
+              "part_query": "semi eixo",
+              "abs": false,
+              "vehicle_model": "Gol",
+              "vehicle_year": 2003,
+              "engine": "1.0",
+              "side": "left"
+            },
+            "used_tools_excludes": [
+              "pre_search_validator"
+            ]
           }
         }
       ]

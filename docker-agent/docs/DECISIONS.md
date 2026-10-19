@@ -1243,3 +1243,20 @@ Alcance operacional: implantacao inicial na stack Docker local, autorizada
 pelo usuario; atualizacao da VPS e teste externo no Omni/Convert ficam para a
 etapa seguinte. Testes estruturais nao certificam referencias comerciais nem
 ganho global nas 371 conversas. Evidencias em [PROGRESS.md](PROGRESS.md).
+
+## 49. Grafia De Semieixo E Sugestoes De Motor Por Ano
+
+Decisao (19/10/2026), apos reteste do usuario no Omni/Convert:
+
+- Resolver as grafias `semieixo` e `semieixos` deterministicamente para a mesma
+  familia `semi eixo`, com decisoes de alias versionadas. Nao unir a familia
+  diferencial nem alterar scopes/requisitos de busca.
+- Mostrar apenas motores com ao menos um intervalo valido para modelo/ano,
+  aceitando limites inclusivos e intervalos abertos, como no follow-up. Sem ano,
+  manter opcoes do modelo; com intervalos conhecidos sem opcao valida, mostrar
+  apenas `Nao sei`, sem voltar a sugerir motores de outro ano. Catalogos legados
+  sem intervalos conservam as opcoes existentes.
+- Nao aceitar D13K460 para FH 460 2016 apenas porque foi sugerido por erro;
+  corrigir a pergunta. A prova contextual e a busca final mantem seus filtros.
+- Deploy inicial da VPS confirmado pelo usuario; complemento depende de nova
+  publicacao e reteste. Nao promover os casos observados automaticamente a treino.

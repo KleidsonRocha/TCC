@@ -20,7 +20,7 @@ O golden set ERP testa regras e resultados controlados; a validacao manual regis
 
 ### Endpoint de conversa `respond`
 
-- [`battery_structural_respond_v2.json`](battery_structural_respond_v2.json) — 168 cenarios/206 turnos com niveis cumulativos `smoke`, `regression` e `extended`, usados em testes estruturais e de integracao.
+- [`battery_structural_respond_v2.json`](battery_structural_respond_v2.json) — 170 cenarios/208 turnos com niveis cumulativos `smoke`, `regression` e `extended`, usados em testes estruturais e de integracao. Inclui as mensagens reais com `semieixo` e a exclusao de motor de outro ano na pergunta do FH 460.
 - [`battery_real_omnichannel_250.json`](battery_real_omnichannel_250.json) — 250 cenarios derivados de conversas reais omnichannel. Expectativas comerciais ou semanticas ficam sujeitas a revisao humana; os cenarios nao aprovados nao devem ser tratados como rotulos golden.
 
 As duas baterias compartilham a ideia de cenario multi-turno, mas diferem na origem e no nivel de aprovacao. A bateria real nao deve ser incorporada automaticamente a estrutural: isso mudaria a confiabilidade dos resultados de CI.

@@ -465,7 +465,7 @@ def audited_identity_follow_up_scenarios() -> list[dict[str, Any]]:
                 "question_key_excludes":["variant"],"used_tools_contains":["search_parts"]}),
         ]))
     rows.append(scenario("audit_follow_up_truck", "audited_textual_engine", "regression", [
-        turn("audit_follow_up_truck_t1", "caixa de bateria para FH 460 2016", {"status":200,"question_key":"engine"}),
+        turn("audit_follow_up_truck_t1", "caixa de bateria para FH 460 2016", {"status":200,"question_key":"engine","reply_excludes":["D13K460"]}),
         turn("audit_follow_up_truck_t2", "12.8 L 24V SOHC L6 D 13 C 460", {
             "status":200,"criteria_contains":{"vehicle_model":"FH 460","engine":"12.8 L 24V SOHC L6 D 13 C 460"},
             "question_key_excludes":["engine"],"used_tools_contains":["search_parts"],
@@ -489,6 +489,8 @@ def family_refinement_scenarios() -> list[dict[str, Any]]:
         ('ventilador','eletro ventilador para GOL 2010 motor 1.0',{'part_query':'eletroventilador'}),
         ('kit','kit amortecedor para CLIO 2004 motor 1.6 dianteiro',{'part_query':'kit amortecedor','vehicle_model':'CLIO','vehicle_year':2004}),
         ('without_abs','semi eixo sem ABS para GOL 2003 motor 1.0 direito',{'part_query':'semi eixo','abs':False,'variant':None}),
+        ('joined_s10','Quero semieixo esquerdo do eixo dianteiro para S10 2017 2.5',{'part_query':'semi eixo','vehicle_model':'S10','vehicle_year':2017,'engine':'2.5','side':'left','axle':'front'}),
+        ('joined_without_abs','Quero semieixo esquerdo sem ABS para Gol 2003 1.0',{'part_query':'semi eixo','abs':False,'vehicle_model':'Gol','vehicle_year':2003,'engine':'1.0','side':'left'}),
         ('with_abs','semi eixo com ABS para GOL 2003 motor 1.0 direito',{'abs':True,'variant':None}),
         ('manual_pump','bomba manual para A3 2016 motor 1.4',{'part_query':'bomba manual','transmission':None,'variant':None}),
         ('typed','radiador para GOL 2010 motor 1.0 flex cambio manual',{'fuel':'flex','transmission':'manual','variant':None}),
@@ -497,6 +499,8 @@ def family_refinement_scenarios() -> list[dict[str, Any]]:
         expect={'status':200,'criteria_contains':criteria}
         if key=='kit':
             expect['used_tools_contains']=['search_parts']
+        if key.startswith('joined_'):
+            expect['used_tools_excludes']=['pre_search_validator']
         rows.append(scenario(case_id,'curated_identity_refinements','regression',[
             turn(case_id+'_t1',message,expect)]))
     for key,message in [('ambiguous','batente para GOL 2010'),('repair','kit reparo amortecedor para GOL 2010')]:
