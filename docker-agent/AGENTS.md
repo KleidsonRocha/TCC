@@ -32,7 +32,7 @@ Antes de propor ou aplicar qualquer alteracao:
 
 - `docs/HISTORICO.md` registra problemas anteriores, experimentos e motivos de regressoes. Consulte as secoes relacionadas ao caso; resultados antigos nao comprovam a versao atual.
 - Para estrutura e escopo do gateway, use `../docker-comm/README.md` e `../docker-comm/docs/guia_execucao_e_implementacao.md`. Os rascunhos iniciais foram retirados do versionamento.
-- `../Documents/` conserva o material academico. As analises antigas de implementacao foram retiradas do versionamento; o historico tecnico vigente esta em `docs/HISTORICO.md`.
+- `../.tmp/Documents/` conserva material academico e relatorios apenas locais, sem exigencia de existencia em clones novos. O historico tecnico vigente esta em `docs/HISTORICO.md`.
 - Siga referencias dos documentos relevantes ate os contratos, scripts e dados que sustentam a mudanca. Se uma leitura for truncada, leia os trechos restantes pertinentes.
 - Diferencie comportamento implementado, comportamento testado localmente, implantacao confirmada e funcionalidade planejada. Diagramas com `planejado`, exemplos de configuracao e arquivos de trainer nao provam entrega operacional.
 - Se documentos e codigo divergirem, identifique a divergencia, confira a decisao mais recente e a evidencia executavel. Nao copie uma regra antiga nem altere o contrato silenciosamente; reconcilie a documentacao afetada no escopo da tarefa.

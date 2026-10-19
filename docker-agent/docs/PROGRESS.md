@@ -1,5 +1,28 @@
 # Progresso Do Projeto
 
+## Material Local Movido Para Tmp Em 19/10/2026
+
+- A pedido do usuario, a pasta `Documents/` da raiz foi movida integralmente
+  para `.tmp/Documents/`, tambem na raiz. PDF, diagrama, relatorios, ZIPs e
+  evidencias locais preservados; os dois arquivos academicos restantes foram
+  retirados do versionamento. Conteudo fora do Git, sem reescrever seu historico.
+- README, AGENTS e localizacao do relatorio ajustados. A documentacao vigente
+  em `docker-agent/docs/` e os artefatos congelados em `fine_tuning_gpu/`
+  permanecem nos seus locais.
+
+## Relatorio Comparativo Do Experimento LoRA Em 19/10/2026
+
+- Produzido relatorio em HTML e Markdown com parametros efetivos, splits,
+  metodologia pareada, resultados, limites, caminhos dos testes e reproducao.
+  Entrega local em `.tmp/Documents/relatorio_comparativo_qwen_20261019/` na raiz e ZIP
+  correspondente, ignorados pelo Git para preservar a limpeza do repositorio.
+- Conferidos os 796 JSONs individuais, classificacoes, contagens de turnos,
+  medias de categoria, aprovacoes golden, hashes das entradas e do adapter.
+  Pacote inclui conversas, buscas, chamadas e tempos, sem duplicar pesos,
+  checkpoints ou dump de banco. Evidencias congeladas originais intactas.
+- Esta entrega consolida o experimento existente, sem nova inferencia ou treino;
+  as correcoes posteriores do backend/canal nao sao ganhos atribuidos ao adapter.
+
 ## Complemento Do Reteste No Canal Em 19/10/2026
 
 - Usuario confirmou a implantacao da VPS no commit 2095596, com catalogo
@@ -21,8 +44,20 @@
 - Regressao final: **604 testes aprovados, nenhum ignorado**, incluindo SQL
   no PostgreSQL local e reproducibilidade da bateria. Uma advertencia de
   depreciacao Starlette/AnyIO permanece. Verificacao de diff sem erros.
-- Complemento ainda nao implantado na VPS; o `no_match` da caixa de bateria
-  nao comprova indisponibilidade geral ou compatibilidade comercial.
+- [x] Reteste do complemento no Omni/Convert observado nos prints enviados
+  pelo usuario em 19/10/2026, entre 15:35 e 15:37:
+  - S10 2017 2.5: reconheceu `semieixo`, pediu versao, aceitou
+    `LTZ 2.5 FLEX 4X4 CD AT` e apresentou KJH0309.
+  - Gol 2003 1.0 sem ABS: reconheceu a familia, pediu versao e, apos
+    `nao sei`, encaminhou ao humano sem repetir a pergunta.
+  - FH 460 2016: sugeriu somente `D 13 C 460`, aceitou a resposta e
+    concluiu em `no_match`, sem apresentar a presilha incorreta.
+  Evidencia visual do canal; hash do novo deploy, trace_ids e estado interno
+  nao foram enviados neste reteste. O print do Gol nao audita o filtro ABS
+  interno; sua preservacao permanece coberta pelos testes locais.
+- Aceite parcial confirmado nesses tres fluxos. O `no_match` da caixa de
+  bateria nao comprova indisponibilidade geral ou compatibilidade comercial.
+  Palio/ELX RST III e contradicoes no canal continuam no TODO.
 
 ## Limpeza Inicial Do Repositorio Em 19/10/2026
 

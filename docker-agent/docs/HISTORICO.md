@@ -9,6 +9,13 @@ Os numeros abaixo pertencem as versoes e ambientes indicados. HTTP 200,
 assertions estruturais e acerto comercial sao medidas diferentes. Resultados
 historicos nao comprovam a qualidade da versao atual em producao.
 
+## Material Academico E Relatorios Mantidos Localmente Em 19/10/2026
+
+A pedido do usuario, `Documents/` foi movido para `.tmp/Documents/` na raiz,
+com 942 arquivos preservados. PDF e diagrama academicos tambem sairam do
+versionamento; os relatorios e ZIPs ja ignorados acompanharam a mudanca.
+O historico Git permanece intacto e os guias atuais seguem versionados.
+
 ## Reteste Da VPS Revela Grafia E Sugestao De Motor Em 19/10/2026
 
 Depois do deploy confirmado pelo usuario, Clio retornou SK-813, mas as mensagens
@@ -16,7 +23,12 @@ com `semieixo` tiveram handoff: o alias conhecido era `semi eixo`. Incluidas as
 formas juntas singular/plural, preservando a familia diferencial especializada.
 O FH 460 2016 recebeu sugestao D13K460 (catalogado a partir de 2023), recusada
 ao responder. Corrigida a exibicao por intervalo de ano, sem afrouxar a validacao
-da resposta. Aceite do canal permanece aberto ate publicar/retestar o complemento.
+da resposta. Apos o complemento, prints do usuario (19/10, 15:35-15:37)
+mostraram S10 com versao integral retornando KJH0309; Gol com `nao sei`
+encaminhando sem loop; FH oferecendo apenas D 13 C 460, aceitando a resposta
+e concluindo sem resultado, sem apresentar a presilha. Aceite parcial desses
+tres fluxos, sem auditoria dos trace_ids/filtros internos ou garantia comercial.
+Palio e contradicoes ainda exigem reteste externo.
 
 ## Limpeza Documental Em 19/10/2026
 

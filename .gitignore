@@ -1,5 +1,5 @@
-/Documents/comparacao_qwen_original_vs_finetuning_*.zip
-/Documents/comparacao_qwen_original_vs_finetuning_*.zip.sha256
+# Documents are local artifacts; their current location is .tmp/Documents/.
+/Documents/
 
 # Local generated artifacts and editor caches.
 **/.tmp/
@@ -14,7 +14,5 @@ Thumbs.db
 .DS_Store
 
 # Superseded documents kept locally; current guides are versioned under docs/.
-/Documents/analise_estrutura_entregue_2026-03-13.md
-/Documents/historico_problemas_e_solucoes_2026-03-17.md
 /docker-comm/docs/estrutura.md
 /docker-comm/docs/esqueleto.md

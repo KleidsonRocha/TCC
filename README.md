@@ -11,7 +11,7 @@ Este arquivo e o ponto de entrada para instalar e rodar tudo em outra maquina.
 
 - [Mapa da documentacao do agente](docker-agent/docs/README.md): guias atuais, decisoes, progresso e historico tecnico.
 - [Guia do gateway](docker-comm/docs/guia_execucao_e_implementacao.md): execucao e integracao do canal.
-- `Documents/`: texto e diagrama academicos do TCC.
+- `.tmp/Documents/`: material academico e relatorios locais, fora do versionamento.
 
 Codigo, testes, datasets de avaliacao, seeds e snapshot de contingencia fazem
 parte do repositorio para permitir reproducao. Pesos de modelos, backups,
