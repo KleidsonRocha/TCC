@@ -7,6 +7,17 @@ Este repositorio contem a stack do TCC dividida em dois servicos principais:
 
 Este arquivo e o ponto de entrada para instalar e rodar tudo em outra maquina.
 
+## Documentacao E Arquivos Versionados
+
+- [Mapa da documentacao do agente](docker-agent/docs/README.md): guias atuais, decisoes, progresso e historico tecnico.
+- [Guia do gateway](docker-comm/docs/guia_execucao_e_implementacao.md): execucao e integracao do canal.
+- `Documents/`: texto e diagrama academicos do TCC.
+
+Codigo, testes, datasets de avaliacao, seeds e snapshot de contingencia fazem
+parte do repositorio para permitir reproducao. Pesos de modelos, backups,
+relatorios de execucao e analises substituidas ficam locais e ignorados pelo Git.
+O snapshot comprimido e versionado via Git LFS; preserve `.gitattributes`.
+
 ## Requisitos
 
 Para rodar o projeto via Docker:

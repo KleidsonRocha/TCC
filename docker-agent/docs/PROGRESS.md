@@ -1,5 +1,15 @@
 # Progresso Do Projeto
 
+## Limpeza Inicial Do Repositorio Em 19/10/2026
+
+- Retirados do versionamento dois relatos antigos de marco em `Documents/`
+  e os rascunhos `estrutura.md`/`esqueleto.md` do gateway, com copias locais
+  preservadas. Guias atuais, decisoes e historico consolidado continuam como
+  referencias; README e AGENTS ajustados.
+- Ignore da raiz protege temporarios, caches e os documentos substituidos.
+  Codigo, testes, datasets, snapshot LFS e material academico preservados.
+  Limpeza documental, sem alteracao de runtime, banco ou reescrita do historico Git.
+
 ## Curadoria E Refinamentos No Docker Local Em 19/10/2026
 
 - [x] Curar identidades, aliases, composicao e requisitos por familia.

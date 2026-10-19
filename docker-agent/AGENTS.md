@@ -31,8 +31,8 @@ Antes de propor ou aplicar qualquer alteracao:
 ### Outras Documentacoes E Divergencias
 
 - `docs/HISTORICO.md` registra problemas anteriores, experimentos e motivos de regressoes. Consulte as secoes relacionadas ao caso; resultados antigos nao comprovam a versao atual.
-- `../docker-comm/docs/estrutura.md` e `../docker-comm/docs/esqueleto.md` descrevem estrutura e escopo inicial do gateway. Podem conter caminhos, limites e propostas anteriores a integracao atual; confira-os contra codigo, README e decisoes vigentes.
-- `../Documents/` contem analises e relatos antigos. Use-os como contexto quando relacionados a tarefa, sem transformar recomendacoes antigas em requisitos atuais.
+- Para estrutura e escopo do gateway, use `../docker-comm/README.md` e `../docker-comm/docs/guia_execucao_e_implementacao.md`. Os rascunhos iniciais foram retirados do versionamento.
+- `../Documents/` conserva o material academico. As analises antigas de implementacao foram retiradas do versionamento; o historico tecnico vigente esta em `docs/HISTORICO.md`.
 - Siga referencias dos documentos relevantes ate os contratos, scripts e dados que sustentam a mudanca. Se uma leitura for truncada, leia os trechos restantes pertinentes.
 - Diferencie comportamento implementado, comportamento testado localmente, implantacao confirmada e funcionalidade planejada. Diagramas com `planejado`, exemplos de configuracao e arquivos de trainer nao provam entrega operacional.
 - Se documentos e codigo divergirem, identifique a divergencia, confira a decisao mais recente e a evidencia executavel. Nao copie uma regra antiga nem altere o contrato silenciosamente; reconcilie a documentacao afetada no escopo da tarefa.

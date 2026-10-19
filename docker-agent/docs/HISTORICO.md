@@ -9,6 +9,15 @@ Os numeros abaixo pertencem as versoes e ambientes indicados. HTTP 200,
 assertions estruturais e acerto comercial sao medidas diferentes. Resultados
 historicos nao comprovam a qualidade da versao atual em producao.
 
+## Limpeza Documental Em 19/10/2026
+
+Retiradas do versionamento a analise de estrutura de 13/03 e o relato de
+problemas de 17/03 em `Documents/`, alem dos rascunhos iniciais do gateway
+`estrutura.md` e `esqueleto.md`. Esses textos descreviam interfaces superadas
+e repetiam informacoes dos guias atuais e deste historico. Copias locais
+preservadas e ignoradas; arquivos continuam recuperaveis no historico Git.
+Codigo, testes, datasets, snapshots e material academico foram mantidos.
+
 ## Correcao De Identidade E Follow-Up De 19/10/2026
 
 No lote seguinte, curadoria de aliases/scopes e refinamentos tipados foram
