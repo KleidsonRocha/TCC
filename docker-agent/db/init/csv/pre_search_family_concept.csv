@@ -1,0 +1,20 @@
+family_key;source_families;aliases;title_pattern;generic_ambiguous_parts;needs_side;needs_position;needs_axle;needs_engine;needs_variant
+trizetas;trizeta;trizeta|trizetas;\mtrizetas?\M;false;;;;;
+eletroventilador;;eletro ventilador|eletroventilador;\meletro\s*ventilador(?:es)?\M;;;;;;
+junta de diferencial;;junta diferencial|juntas diferencial;\mjuntas?\M.*\mdiferencial\M;;;;;;
+retentor de diferencial;;retentor diferencial|retentores diferencial;\mretentor(?:es)?\M.*\mdiferencial\M;;;;;;
+rolamento diferencial;;rolamento diferencial|rolamentos diferencial;\mrolamentos?\M.*\mdiferencial\M;;;;;;
+reparo cilindro mestre;;reparo cilindro mestre;^reparos?\s+.*cilindro.*\mmestre\M;;;;;;
+kit amortecedor;;kit amortecedor|kit amortecedores|kit de amortecedor;^kit\s+(?:(?:de|do)\s+)?amortecedor(?:es)?\M;false;false;true;false;true;false
+kit dobradica;;kit dobradica|kit de dobradica|kit dobradicas;^kit\s+(?:(?:de|do)\s+)?dobradicas?\M;false;true;false;false;false;false
+tapa po cilindro de roda;;tapa po cilindro roda|tapa-po cilindro roda;^tapa[- ]?po\s+cilindro\s+(?:de\s+)?roda\M;false;false;false;false;true;false
+arruelas;;;;;false;;false;;
+correia de comando;;;;;false;;false;;
+cabos de velas;;;;;false;;false;;
+velas de ignicao para motos;;;;;false;;false;;
+bucha carroceria;bucha;bucha carroceria|buchas carroceria;\mbuchas?\M;false;;;;;
+batente carroceria;;batente carroceria|batentes carroceria;\mbatentes?\M;false;false;false;false;false;false
+pino de eixo;;pino eixo|pinos eixo|pino suspensao|pinos suspensao;\mpinos?\M;false;true;false;true;false;false
+pino de combustivel;;pino combustivel|pinos combustivel|pino injecao|pinos injecao;\mpinos?\M;false;false;false;false;true;false
+pino de freio;;pino freio|pinos freio|pino freios|pinos freios;\mpinos?\M;false;true;false;false;false;false
+caixa de bateria;;caixa de bateria|caixa bateria;^caixas?\s+(?:(?:de|da)\s+)?bateria\M;;;;;;

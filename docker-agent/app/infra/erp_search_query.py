@@ -43,10 +43,67 @@ def _family_head_pattern(part_query: str) -> str | None:
     return r"\m" + re.escape(head) + r"\M"
 
 
+def _application_predicates(criteria, normalized, params, has_application_variant):
+    application_filters = []
+    for key in ("vehicle_brand", "vehicle_model"):
+        if normalized[key]:
+            application_filters.append(f"{_identity('a.' + key)} = %({key}_norm)s")
+    if criteria.vehicle_year is not None:
+        application_filters.append(
+            "(a.year_start IS NOT NULL AND a.year_start <= %(vehicle_year)s "
+            "AND ((a.year_open_end IS TRUE AND a.year_end IS NULL) "
+            "OR (a.year_open_end IS FALSE AND a.year_end >= %(vehicle_year)s)))"
+        )
+    if normalized["engine"]:
+        # A displacement can be a token in '1.0 L 8V FLEX'; never in '11.0'.
+        params["engine_pattern"] = (
+            r"(^|[^[:alnum:].])" + re.escape(normalized["engine"])
+            + r"([^[:alnum:].]|$)"
+        )
+        application_filters.append(
+            "EXISTS (SELECT 1 FROM unnest(a.engines) AS engine_name "
+            f"WHERE {_identity('engine_name')} ~ %(engine_pattern)s)"
+        )
+    if has_application_variant:
+        application_filters.append(
+            "EXISTS (SELECT 1 FROM unnest(a.variants) AS variant_name "
+            f"WHERE {_identity('variant_name')} = %(variant_norm)s)"
+        )
+    if criteria.fuel:
+        params['fuel_pattern'] = r'\m' + re.escape(criteria.fuel) + r'\M'
+        engine_constraint = f" AND {_identity('fuel_engine')} ~ %(engine_pattern)s" if normalized['engine'] else ''
+        variant_constraint = f" AND {_identity('fuel_variant')} = %(variant_norm)s" if has_application_variant else ''
+        application_filters.append('(EXISTS (SELECT 1 FROM unnest(a.engines) AS fuel_engine '
+            f"WHERE {_identity('fuel_engine')} ~ %(fuel_pattern)s{engine_constraint}) "
+            'OR EXISTS (SELECT 1 FROM unnest(a.variants) AS fuel_variant '
+            f"WHERE {_identity('fuel_variant')} ~ %(fuel_pattern)s{variant_constraint}))")
+    if criteria.transmission:
+        patterns = {'manual': r'\m(?:manual|mt|mecanica|mecanico)\M',
+                    'automatico': r'\m(?:automatic[oa]|at)\M', 'dualogic': r'\mdualogic\M'}
+        params['transmission_pattern'] = patterns[criteria.transmission]
+        application_filters.append('EXISTS (SELECT 1 FROM unnest(a.transmissions || a.variants) AS transmission_value '
+            f"WHERE {_identity('transmission_value')} ~ %(transmission_pattern)s)")
+    return application_filters
+
+
+def build_follow_up_option_sql(criteria: SearchCriteria):
+    """Validate a vehicle fact, independently of product availability."""
+    normalized = {key: normalize_pre_search_text(getattr(criteria, key)) or None
+                  for key in ('vehicle_brand', 'vehicle_model', 'engine', 'variant')}
+    params = {key + '_norm': value for key, value in normalized.items()}
+    params.update(vehicle_year=criteria.vehicle_year, limit=1)
+    filters = _application_predicates(criteria, normalized, params, bool(normalized['variant']))
+    if not criteria.vehicle_model or not criteria.vehicle_year:
+        filters.append('FALSE')
+    sql = 'SELECT TRUE AS option_exists FROM soccol.item_search_applications a WHERE '
+    return sql + ' AND '.join(filters) + ' LIMIT %(limit)s', params
+
+
 def build_search_sql(
     *, criteria: SearchCriteria, limit: int,
     family_ids: list[tuple[int, int]] | None = None,
     require_family_title_identity: bool = False,
+    family_title_pattern: str | None = None,
 ) -> tuple[str, dict[str, object]]:
     """No title, aggregate year envelope or model-wide attribute proves fitment."""
     normalized = {
@@ -59,6 +116,13 @@ def build_search_sql(
             "variant": criteria.variant,
         }.items()
     }
+    # The existing variant field also carries lubricant viscosity. It is a
+    # product specification, not a vehicle-application variant such as JOY.
+    oil_viscosity = (
+        re.fullmatch(r"(\d{1,2})\s*w\s*-?\s*(\d{2})", normalized["variant"] or "")
+        if normalized["part_query"] == "lubrificantes" else None
+    )
+    has_application_variant = bool(normalized["variant"] and oil_viscosity is None)
     params: dict[str, object] = {
         **{key + "_norm": value for key, value in normalized.items()},
         "part_query": normalized["part_query"],
@@ -83,7 +147,7 @@ def build_search_sql(
                 identities.append(f"(cd_grupo = %(family_group_{index})s AND cd_subgrupo = %(family_subgroup_{index})s)")
             identity_filters.append("(" + " OR ".join(identities or ["FALSE"]) + ")")
             family_head_pattern = _family_head_pattern(normalized["part_query"])
-            if require_family_title_identity and family_head_pattern:
+            if require_family_title_identity and family_head_pattern and not family_title_pattern:
                 params["family_head_pattern"] = family_head_pattern
                 identity_filters.append(
                     f"{_identity('candidate_title')} ~ %(family_head_pattern)s"
@@ -92,7 +156,10 @@ def build_search_sql(
             # identity.  When a specialized family spans several broad ERP
             # subgroups, require its canonical words in the title as a second
             # identity proof (for example, coxim de amortecedor vs. motor).
-            if len(family_ids) > 1:
+            if family_title_pattern:
+                params['curated_title_pattern'] = family_title_pattern
+                identity_filters.append(f"{_identity('candidate_title')} ~ %(curated_title_pattern)s")
+            elif len(family_ids) > 1:
                 title_filters = []
                 for index, token in enumerate(normalized["part_query"].split()):
                     if token in {"de", "do", "da", "dos", "das", "e"}:
@@ -106,7 +173,7 @@ def build_search_sql(
                     )
                 identity_filters.append("(" + " AND ".join(title_filters or ["FALSE"]) + ")")
         # A wrongly classified accessory cannot masquerade as the main part.
-        accessory_heads = ("tampa", "tampas", "kit", "kits", "mangueira", "mangueiras", "suporte", "suportes", "reparo", "reparos")
+        accessory_heads = ("tampa", "tampas", "kit", "kits", "mangueira", "mangueiras", "suporte", "suportes", "reparo", "reparos", "conjunto", "conjuntos")
         requested_words = set(normalized["part_query"].split())
         blocked_heads = [head for head in accessory_heads if head not in requested_words and head.rstrip('s') not in {word.rstrip('s') for word in requested_words}]
         if blocked_heads:
@@ -118,6 +185,21 @@ def build_search_sql(
             "OR lower(cd_original) = %(part_code_norm)s "
             "OR lower(cd_fabricante) = %(part_code_norm)s)"
         )
+    if oil_viscosity is not None:
+        params["oil_viscosity_pattern"] = (
+            r"\m" + oil_viscosity.group(1) + r"\s*w\s*-?\s*"
+            + oil_viscosity.group(2) + r"\M"
+        )
+        product_description = _identity("concat_ws(' ', nm_item, candidate_title)")
+        item_refinement_filters.append(f"{product_description} ~ %(oil_viscosity_pattern)s")
+    if criteria.abs is not None:
+        description = _identity("concat_ws(' ', nm_item, candidate_title)")
+        params['without_abs_pattern'] = r'\m(?:sem|s\s*/)\s*abs\M'
+        params['abs_pattern'] = r'\mabs\M'
+        item_refinement_filters.append(
+            f"({description} ~ %(abs_pattern)s AND {description} !~ %(without_abs_pattern)s)"
+            if criteria.abs else f"{description} ~ %(without_abs_pattern)s"
+        )
     # The full item name can contain direction omitted from its display title.
     # Neither field contains another vehicle's application text.
     for key, fragment in {
@@ -128,36 +210,21 @@ def build_search_sql(
         params["has_" + key] = bool(fragment)
         if fragment:
             params[key + "_like"] = "%" + fragment + "%"
-            item_refinement_filters.append(f"concat_ws(' ', nm_item, candidate_title) ILIKE %({key}_like)s")
+            patterns = {
+                'side': {'left': r'\m(?:le|esq|esquerd[oa]s?)\M', 'right': r'\m(?:ld|dir|direit[oa]s?)\M'},
+                'position': {'front': r'\m(?:diant|dianteir[oa]s?)\M', 'rear': r'\m(?:tras|traseir[oa]s?)\M'},
+                'axle': {'front': r'\meixo\s+(?:diant|dianteir[oa]s?)\M', 'rear': r'\meixo\s+(?:tras|traseir[oa]s?)\M'},
+            }
+            params[key + '_pattern'] = patterns[key][getattr(criteria, key)]
+            description = _identity("concat_ws(' ', nm_item, candidate_title)")
+            item_refinement_filters.append(f"{description} ~ %({key}_pattern)s")
     # An empty or vehicle-only request must not enumerate the inventory.
     if not (normalized["part_query"] or criteria.part_code):
         identity_filters.append("FALSE")
 
-    application_filters = ["a.id_item = c.id_item"]
-    for key in ("vehicle_brand", "vehicle_model"):
-        if normalized[key]:
-            application_filters.append(f"{_identity('a.' + key)} = %({key}_norm)s")
-    if criteria.vehicle_year is not None:
-        application_filters.append(
-            "(a.year_start IS NOT NULL AND a.year_start <= %(vehicle_year)s "
-            "AND ((a.year_open_end IS TRUE AND a.year_end IS NULL) "
-            "OR (a.year_open_end IS FALSE AND a.year_end >= %(vehicle_year)s)))"
-        )
-    if normalized["engine"]:
-        # A displacement can be a token in '1.0 L 8V FLEX'; never in '11.0'.
-        params["engine_pattern"] = (
-            r"(^|[^[:alnum:].])" + re.escape(normalized["engine"])
-            + r"([^[:alnum:].]|$)"
-        )
-        application_filters.append(
-            "EXISTS (SELECT 1 FROM unnest(a.engines) AS engine_name "
-            f"WHERE {_identity('engine_name')} ~ %(engine_pattern)s)"
-        )
-    if normalized["variant"]:
-        application_filters.append(
-            "EXISTS (SELECT 1 FROM unnest(a.variants) AS variant_name "
-            f"WHERE {_identity('variant_name')} = %(variant_norm)s)"
-        )
+    application_filters = ["a.id_item = c.id_item"] + _application_predicates(
+        criteria, normalized, params, has_application_variant,
+    )
     engine_values = (
         "ARRAY(SELECT engine_name FROM unnest(a.engines) AS engine_name "
         f"WHERE {_identity('engine_name')} ~ %(engine_pattern)s)"
@@ -166,7 +233,7 @@ def build_search_sql(
     variant_values = (
         "ARRAY(SELECT variant_name FROM unnest(a.variants) AS variant_name "
         f"WHERE {_identity('variant_name')} = %(variant_norm)s)"
-        if normalized["variant"] else "a.variants"
+        if has_application_variant else "a.variants"
     )
     needs_application = len(application_filters) > 1
     preferred_brand = (criteria.preferred_product_brand or "").strip()
@@ -199,15 +266,17 @@ def build_search_sql(
         r"(^|[^[:alnum:].])" + re.escape(normalized["engine"] or "") + r"([^[:alnum:].]|$)"
     )
     params["ranking_evidence_enabled"] = bool(normalized["vehicle_model"] and not criteria.part_code)
-    params["ranking_has_variant"] = bool(normalized["variant"])
+    params["ranking_has_variant"] = has_application_variant
     params["ranking_has_engine"] = bool(normalized["engine"])
     params["trace_limit"] = min(max(int(limit), 1), 50)
     params["item_refinement_fields"] = [
         key for key, value in (
             ("accessory_identity", bool(blocked_heads)),
+            ("variant", oil_viscosity is not None),
             ("side", bool(criteria.side)),
             ("position", bool(criteria.position)),
             ("axle", bool(criteria.axle)),
+            ('abs', criteria.abs is not None),
         ) if value
     ]
     params["application_filter_fields"] = [
@@ -216,7 +285,9 @@ def build_search_sql(
             ("vehicle_model", bool(normalized["vehicle_model"])),
             ("vehicle_year", criteria.vehicle_year is not None),
             ("engine", bool(normalized["engine"])),
-            ("variant", bool(normalized["variant"])),
+            ("variant", has_application_variant),
+            ('fuel', criteria.fuel is not None),
+            ('transmission', criteria.transmission is not None),
         ) if value
     ]
     # All ranking terms apply only after identity and application predicates pass.

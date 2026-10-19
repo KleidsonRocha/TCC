@@ -8,6 +8,12 @@ O runtime fica em `app/`. Os scripts sao ferramentas de avaliacao, operacao do c
 
 - `generate_eval_report.py` combina a avaliacao MVP, o benchmark golden e o sweep de `LLM_NUM_PREDICT`; pode incluir resultados de bateria ja executada.
 - `run_real_respond_battery.py` executa cenarios contra `POST /respond` e grava os resultados em `.tmp/eval/`.
+- `build_real_respond_battery_dataset.py` regenera os 168 cenarios/206 turnos
+  estruturais, incluindo os oito `audit_identity_*`/`audit_follow_up_*` de
+  19/10/2026. Essa geracao nao altera a comparacao congelada nem aprova rotulos
+  comerciais. Regressao sem LLM em `tests/test_request_identity_follow_up.py`.
+  O lote de curadoria acrescenta nove `curation_*`; controles SQL e de atributos
+  tipados ficam em `tests/test_family_curation_refinements.py`.
 
 ```powershell
 python -m scripts.eval.generate_eval_report
@@ -25,7 +31,7 @@ python -m scripts.eval.generate_eval_report --skip-mvp-eval --skip-golden-benchm
 - `evaluate_pre_search.py`: roda apenas a avaliacao do dataset MVP.
 - `benchmark_llm_num_predict.py`: benchmark isolado para `LLM_NUM_PREDICT`.
 - `benchmark_pre_search_latency.py`: mede caminhos LLM/deterministicos e diagnostica warmup, idle e `LLM_KEEP_ALIVE`.
-- `evaluate_erp_search.py`: avalia **45 casos** e fixtures de identidade/aplicacao. `--integration-sql <arquivo-local>` adiciona auditoria dos SELECTs de origem.
+- `evaluate_erp_search.py`: avalia **52 casos** e fixtures de identidade/aplicacao e viscosidade de lubrificantes. `--integration-sql <arquivo-local>` adiciona auditoria dos SELECTs de origem.
 - `build_real_ranking_annotation_template.py`: cria uma ficha JSON por consulta capturada, sem rotulos de verdade e sem sobrescrever ficha existente.
 - `evaluate_real_ranking.py`: calcula Top-1/Top-3 de compatibilidade, preferencia confirmada, incompatibilidades e no-match usando rotulos humanos e um JSON de execucao da bateria real.
 - `build_part_family_coverage_dataset.py` e `evaluate_part_family_coverage.py`: geram casos temporarios a partir dos aliases do catalogo e avaliam a cobertura do extractor. O builder e importado pelos testes; nao e uma fonte de golden rotulado.
@@ -34,6 +40,41 @@ python -m scripts.eval.generate_eval_report --skip-mvp-eval --skip-golden-benchm
 python -m scripts.eval.evaluate_erp_search
 python -m scripts.eval.evaluate_part_family_coverage
 ```
+
+### Cobertura Conversacional Por Categoria/Subcategoria
+
+- `evaluate_category_search.py`: gera uma pergunta por categoria/subcategoria
+  ativa do catalogo e responde perguntas incrementais com dados de um item e
+  sua aplicacao na fonte ERP (ou snapshot, identificado no relatorio).
+- Executa o use case real em processo isolado com o checkout atual; nao testa
+  transporte WhatsApp/Redis nem substitui a API em execucao. A captura para a
+  fila de treinamento e desabilitada. Consultas de referencia sao somente leitura.
+- Salva `cases.json`, `report.json`, `report.md` e `report.html` filtravel em
+  `.tmp/eval/category_search/<data>/`, incluindo referencia, todos os turnos,
+  produtos apresentados e diagnosticos de busca.
+- Julgamentos automaticos sao triagem para revisao humana: coerencia com
+  cadastro nao certifica encaixe comercial. Uma referencia por subcategoria
+  nao demonstra recuperacao de todos os itens; a selecao examina ate 20 itens
+  por subcategoria e pode nao encontrar uma aplicacao com todos os dados.
+
+```bash
+python -m scripts.eval.evaluate_category_search --reference-queries
+python -m scripts.eval.evaluate_category_search --reference-queries --include-unmapped-source
+python -m scripts.eval.evaluate_category_search --case-id sub-17-2 --case-id group-2
+```
+
+`--reference-queries` gera pedidos com alias e dados conhecidos de um item real,
+sem codigo; o modo sem flag comeca apenas pelo nome da categoria/subcategoria.
+Os protocolos sao identificados no relatorio. Retomada usa `--resume-dir`;
+`--include-unmapped-source` inclui grupos/subgrupos com produtos no ERP ausentes
+do catalogo ativo, sem alterar o catalogo. `consolidate_category_search.py`
+combina execucoes completas sem IDs duplicados e recupera confirmacoes textuais
+de um unico item somente quando o codigo consta da busca registrada.
+Com `--watch`, o consolidator salva uma versao parcial revisada e aguarda
+o fim das baterias para substitui-la pelo resultado completo no mesmo local.
+Tambem gera `questions.md` com todas as perguntas e referencias planejadas.
+`--retry-errors` preserva e repete erros operacionais. A fila residual tem
+agendamento proprio no avaliador e nao representa benchmark de carga da API.
 
 ### Manutencao da bateria versionada
 

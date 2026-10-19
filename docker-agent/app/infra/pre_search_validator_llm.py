@@ -6,7 +6,7 @@ from copy import deepcopy
 from contextvars import ContextVar
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 import httpx
 
@@ -265,6 +265,10 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         for part_query, score in RUNTIME_MIN_SCORE_TO_SEARCH_BY_PART.items():
             self._min_score_to_search_by_part.setdefault(part_query, score)
         self._dictionary_extractor = DictionaryPreSearchExtractor(catalog=catalog)
+        self._variant_aliases_by_model = dict(catalog.variant_aliases_by_model)
+        self._follow_up_resolver: Callable[..., str | None] | None = None
+        self._follow_up_proofs: ContextVar[dict | None] = ContextVar("follow_up_proofs", default=None)
+        self._follow_up_unavailable: ContextVar[bool] = ContextVar("follow_up_unavailable", default=False)
         self._apply_runtime_search_rule_overrides()
         self._last_audit_info: ContextVar[dict[str, Any] | None] = ContextVar(
             "pre_search_last_audit_info",
@@ -276,6 +280,40 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         if audit_info is None:
             return None
         return deepcopy(audit_info)
+
+    def set_follow_up_resolver(self, resolver: Callable[..., str | None]) -> None:
+        """Bind the existing search port; calls run in the validator worker."""
+        self._follow_up_resolver = resolver
+
+    def begin_validation_request(self) -> None:
+        # A fresh mutable container belongs to one async request. Worker calls
+        # share this container through copy_context, never a cross-user cache.
+        self._follow_up_proofs.set({})
+
+    def prepare_follow_up(self, message_text: str, *, conversation_state: ConversationState) -> None:
+        self._normalize_pending_follow_up_current_criteria(
+            message_text=message_text,
+            criteria=self._dictionary_extractor.extract(message_text, last_messages=[]),
+            conversation_state=conversation_state,
+        )
+
+    def _prove_follow_up(self, criteria: SearchCriteria, field: str, value: str) -> str | None:
+        cache = self._follow_up_proofs.get()
+        key = (criteria.model_dump_json(), field, value)
+        if cache is not None and key in cache:
+            result, unavailable = cache[key]
+        else:
+            result, unavailable = None, False
+            if self._follow_up_resolver is not None:
+                try:
+                    result = self._follow_up_resolver(criteria=criteria, field=field, value=value)
+                except Exception:
+                    unavailable = True
+                    self._logger.warning("pre_search_follow_up_option_unavailable", exc_info=True)
+            if cache is not None:
+                cache[key] = (result, unavailable)
+        self._follow_up_unavailable.set(unavailable)
+        return result
 
     def runtime_diagnostics(self) -> dict[str, Any]:
         return {
@@ -608,6 +646,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         safety_result = self._request_safety_confirmation(
             message_text=message_text,
             criteria=self._dictionary_extractor.extract(message_text, last_messages=[]),
+            conversation_state=conversation_state,
         )
         if safety_result is not None:
             self._set_deterministic_safety_audit(safety_result)
@@ -805,6 +844,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         if self._request_safety_confirmation(
             message_text=message_text,
             criteria=current_criteria,
+            conversation_state=conversation_state,
         ) is not None:
             return None
         unknown_follow_up = self._build_unknown_follow_up_handoff(
@@ -1221,6 +1261,62 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
 
         pending_slot = str(conversation_state.pending_slot or "").strip()
         values = criteria.model_dump(exclude_none=False)
+        self._follow_up_unavailable.set(False)
+        if self._dictionary_extractor.ambiguous_part_alias(message_text):
+            return criteria
+
+        if pending_slot in {"engine", "variant"}:
+            previous = self._canonicalize_criteria_part_query(conversation_state.criteria)
+            intent = self._dictionary_extractor.resolve_request_intent(message_text)
+            normalized = normalize_pre_search_text(message_text)
+            new_family = criteria.part_query and criteria.part_query != previous.part_query
+            explicit_request = criteria.part_query and (criteria.vehicle_model or criteria.vehicle_year)
+            explicit_correction = re.search(
+                r"\b(?:corrija|corrigindo|correcao|na verdade|troque|modelo\s+(?:e|correto))\b", normalized,
+            )
+            if not intent.unresolved_reason and not new_family and not explicit_request and not explicit_correction:
+                typed_reply = normalized in {'flex','diesel','gasolina','etanol','com abs','sem abs','s/abs',
+                    'cambio manual','cambio automatico','transmissao manual','transmissao automatica'}
+                if typed_reply:
+                    updates={field:getattr(criteria,field) for field in ('fuel','transmission','abs')
+                             if getattr(criteria,field) is not None}
+                    if normalized in {'flex','diesel','gasolina','etanol'}:
+                        updates['fuel']=normalized
+                    return previous.model_copy(update={**updates,'part_code':None})
+                resolved = None
+                if pending_slot == "engine":
+                    resolved = self._match_pending_engine_option(
+                        message_text=message_text, vehicle_model=previous.vehicle_model,
+                        vehicle_year=previous.vehicle_year,
+                    )
+                    if (resolved and normalized != normalize_pre_search_text(resolved)
+                            and re.match(r"^[1-9][0-9]?\.\d\b", normalized)):
+                        # A catalog engine code alone does not prove the
+                        # displacement supplied with it. Validate the full
+                        # application value instead of silently shortening it.
+                        resolved = None
+                elif previous.variant and normalized == normalize_pre_search_text(previous.variant):
+                    resolved = previous.variant
+                elif previous.part_query == "lubrificantes" and re.fullmatch(r"\d{1,2}\s*w\s*-?\s*\d{2}", normalized):
+                    resolved = criteria.variant
+                else:
+                    aliases = self._variant_aliases_by_model.get(normalize_pre_search_text(previous.vehicle_model), [])
+                    options = {variant for variant, alias in aliases if normalized == normalize_pre_search_text(alias)}
+                    if len(options) == 1:
+                        resolved = next(iter(options))
+                # Raw short text is accepted only after an exact application
+                # proof. A substring such as FLEX is not the supplied version.
+                if resolved is None and self._follow_up_resolver is not None and self._build_unknown_follow_up_handoff(message_text=message_text, conversation_state=conversation_state) is None:
+                    resolved = self._prove_follow_up(previous, pending_slot, message_text.strip())
+                if resolved is not None:
+                    return previous.model_copy(update={pending_slot: resolved, "part_code": None})
+                if pending_slot == "variant" or (pending_slot == "engine" and not re.fullmatch(r"[1-9][0-9]?\.[0-9]", normalized)):
+                    # Reject incidental matches (4X4/model, FLEX/variant) in
+                    # an unproved answer; explicit corrections stay separate.
+                    values = previous.model_dump(exclude_none=False)
+                    values[pending_slot] = None
+                    values["part_code"] = None
+                    return SearchCriteria.model_validate(values)
 
         if (
             pending_slot == "vehicle_year"
@@ -1248,12 +1344,12 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             engine = self._match_pending_engine_option(
                 message_text=message_text,
                 vehicle_model=(
-                    values.get("vehicle_model")
-                    or conversation_state.criteria.vehicle_model
+                    conversation_state.criteria.vehicle_model
+                    or values.get("vehicle_model")
                 ),
                 vehicle_year=(
-                    values.get("vehicle_year")
-                    or conversation_state.criteria.vehicle_year
+                    conversation_state.criteria.vehicle_year
+                    or values.get("vehicle_year")
                 ),
             )
             if engine is not None:
@@ -1363,7 +1459,9 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             pending_slot in SearchCriteria.model_fields
             and getattr(current_criteria, pending_slot, None) not in (None, "", [])
         ):
-            values[pending_slot] = getattr(current_criteria, pending_slot)
+            for field, value in current_criteria.model_dump(exclude_none=False).items():
+                if value not in (None, "", []):
+                    values[field] = value
 
         return SearchCriteria.model_validate(values)
 
@@ -1400,6 +1498,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         *,
         message_text: str,
         criteria: SearchCriteria,
+        conversation_state: ConversationState | None = None,
     ) -> PreSearchValidation | None:
         """Stop before a search when a negative or vehicle identity is unclear."""
         intent = self._dictionary_extractor.resolve_request_intent(message_text)
@@ -1410,12 +1509,55 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
                 missing_fields=["intent_resolution"],
                 next_question=NextQuestion(
                     key="intent_resolution",
-                    prompt=(
+                    prompt=("Encontrei direcoes conflitantes para a mesma peca. Qual lado ou posicao devo considerar?" if intent.unresolved_reason == "contradictory_direction" else
                         "Entendi uma negacao ou correcao. Qual peca e qual aplicacao "
                         "devo considerar para pesquisar?"
                     ),
                 ),
                 confidence=0.99,
+            )
+
+        ambiguous = self._dictionary_extractor.ambiguous_part_alias(message_text)
+        if ambiguous and not criteria.part_code:
+            return PreSearchValidation(decision='ask', criteria=criteria,
+                missing_fields=['part_query'], confidence=0.99,
+                next_question=NextQuestion(key='part_query',
+                    prompt=f'Qual o componente e a funcao de "{ambiguous}"? Esse nome identifica pecas diferentes.'))
+
+        if conversation_state and conversation_state.last_decision == "ask" and conversation_state.pending_slot in {"engine", "variant"}:
+            raw = self._dictionary_extractor.extract(message_text, last_messages=[])
+            normalized = normalize_pre_search_text(message_text)
+            # A new complete request/correction still owns its explicit facts.
+            if (
+                not raw.part_query
+                and not re.search(r"\b(?:corrija|corrigindo|correcao|na verdade|troque|modelo)\b", normalized)
+                and self._build_unknown_follow_up_handoff(message_text=message_text, conversation_state=conversation_state) is None
+            ):
+                current = self._normalize_pending_follow_up_current_criteria(
+                    message_text=message_text, criteria=raw, conversation_state=conversation_state,
+                )
+                slot = conversation_state.pending_slot
+                if getattr(current, slot) is None:
+                    unavailable = self._follow_up_unavailable.get()
+                    prompt = (
+                        "Nao consegui verificar essa opcao agora. Vou encaminhar para atendimento humano."
+                        if unavailable else
+                        "Nao consegui confirmar essa opcao para a aplicacao informada. "
+                        + ("Qual a versao completa?" if slot == "variant" else "Qual a motorizacao completa?")
+                    )
+                    return PreSearchValidation(
+                        decision="handoff" if unavailable else "ask",
+                        criteria=current, missing_fields=[slot],
+                        next_question=NextQuestion(key=slot, prompt=prompt), confidence=0.99,
+                    )
+
+        if self._dictionary_extractor.needs_component_confirmation(criteria.part_query) and not criteria.part_code:
+            return PreSearchValidation(
+                decision="ask", criteria=criteria, missing_fields=["part_query"],
+                next_question=NextQuestion(
+                    key="part_query",
+                    prompt=f'Entendi o componente "{criteria.part_query}". Confirme o componente ou informe seu codigo; nao vou substitui-lo pela peca principal.',
+                ), confidence=0.99,
             )
 
         expected_brands = self._expected_brands_for_model(criteria.vehicle_model)
@@ -1519,6 +1661,7 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
         safety_result = self._request_safety_confirmation(
             message_text=message_text,
             criteria=current_message_criteria,
+            conversation_state=conversation_state,
         )
         if safety_result is not None:
             self._set_deterministic_safety_audit(safety_result)
@@ -1920,9 +2063,15 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
 
         state_values = conversation_state.criteria.model_dump(exclude_none=False)
         merged_values = dictionary_criteria.model_dump(exclude_none=False)
+        vehicle_changed = (dictionary_criteria.vehicle_model and conversation_state.criteria.vehicle_model
+                           and dictionary_criteria.vehicle_model != conversation_state.criteria.vehicle_model)
+        component_changed = (dictionary_criteria.part_query and conversation_state.criteria.part_query
+                             and dictionary_criteria.part_query != conversation_state.criteria.part_query)
 
         for key, state_value in state_values.items():
             if key == "part_code":
+                continue
+            if (key in {'fuel','transmission'} and vehicle_changed) or (key == 'abs' and component_changed):
                 continue
             current_value = merged_values.get(key)
             if current_value is None or current_value == "" or current_value == []:
@@ -1975,6 +2124,12 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             fallback=dictionary_criteria.part_query,
         )
         merged_criteria["part_code"] = dictionary_criteria.part_code
+        for field in ('fuel', 'transmission', 'abs'):
+            merged_criteria[field] = getattr(dictionary_criteria, field)
+        if (normalize_pre_search_text(merged_criteria.get('variant')) in
+                {'abs', 'sem abs', 'manual', 'automatico', 'dualogic', 'gasolina', 'etanol', 'diesel', 'flex'}
+                and dictionary_criteria.variant is None):
+            merged_criteria['variant'] = None
 
         criteria_model = SearchCriteria.model_validate(merged_criteria)
         deterministic_items = self._dictionary_extractor.extract_items(message_text)
@@ -2884,6 +3039,9 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
                         "position": {"anyOf": [{"type": "string"}, {"type": "null"}]},
                         "axle": {"anyOf": [{"type": "string"}, {"type": "null"}]},
                         "variant": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+                        "fuel": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+                        "transmission": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+                        "abs": {"anyOf": [{"type": "boolean"}, {"type": "null"}]},
                         "quantity": {"anyOf": [{"type": "integer"}, {"type": "null"}]},
                     },
                     "additionalProperties": False,
@@ -2955,6 +3113,9 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             "position": position,
             "axle": axle,
             "variant": variant,
+            "fuel": criteria.get('fuel') if criteria.get('fuel') in {'gasolina','etanol','diesel','flex'} else None,
+            "transmission": criteria.get('transmission') if criteria.get('transmission') in {'manual','automatico','dualogic'} else None,
+            "abs": criteria.get('abs') if isinstance(criteria.get('abs'), bool) else None,
             "quantity": quantity,
         }
 
@@ -3006,11 +3167,17 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
 
     def _canonicalize_criteria_part_query(self, criteria: SearchCriteria) -> SearchCriteria:
         canonical_part_query = self._canonicalize_part_query(criteria.part_query)
-        if canonical_part_query == criteria.part_query:
+        legacy_variant = normalize_pre_search_text(criteria.variant) in {
+            'abs','sem abs','manual','automatico','dualogic','gasolina','etanol','diesel','flex'}
+        if canonical_part_query == criteria.part_query and not legacy_variant:
             return criteria
 
         values = criteria.model_dump(exclude_none=False)
         values["part_query"] = canonical_part_query
+        if legacy_variant:
+            # Older runtimes overloaded this field, including SEM ABS -> ABS.
+            # Only typed evidence from customer text can restore that fact.
+            values['variant'] = None
         return SearchCriteria.model_validate(values)
 
     @staticmethod
@@ -3204,7 +3371,8 @@ class LLMPreSearchValidator(PreSearchValidatorPort):
             "Voce valida pre-busca de autopecas e retorna somente JSON. "
             "Campos obrigatorios no JSON final: decision, criteria, missing_fields, next_question, confidence. "
             "decision deve ser: search, ask ou handoff. "
-            "criteria usa apenas: part_query, part_code, preferred_product_brand, vehicle_brand, vehicle_model, vehicle_year, engine, side, position, axle, variant, quantity. "
+            "criteria usa apenas: part_query, part_code, preferred_product_brand, vehicle_brand, vehicle_model, vehicle_year, engine, side, position, axle, variant, fuel, transmission, abs, quantity. "
+            "variant e a versao veicular (ou viscosidade do oleo); fuel e combustivel, transmission e cambio, abs e booleano. Nao confunda bomba manual com cambio manual. "
             "preferred_product_brand e a marca comercial desejada da peca, como NGK, Nakata ou Cofap; nao confunda com vehicle_brand. Ela e preferencia de ranking, nunca filtro obrigatorio: outras marcas compativeis continuam validas. "
             "Uma mensagem pode pedir uma ou varias pecas. Para duas ou mais familias independentes, preencha tambem items como uma lista de criteria, um objeto por peca, preservando quantity e os filtros especificos; nunca descarte as pecas extras. "
             "part_query deve ser uma familia canonica do catalogo; nao use plural, sinonimo ou typo quando existir forma canonica. "

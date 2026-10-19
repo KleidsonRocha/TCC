@@ -1,5 +1,22 @@
 # Integracao De Pesquisa Com O ERP
 
+## Prova Contextual De Resposta De Follow-Up
+
+`ToolsPort.resolve_follow_up_value` verifica internamente versao/motor textual
+quando a resposta nao e resolvida pelo catalogo contextual. Reutiliza o SQL v2
+com modelo, ano e atributos veiculares na mesma aplicacao; muda apenas o
+campo pendente. A consulta retorna existencia de uma opcao veicular, nao um
+produto. Assim, falta da peca correta nao invalida um motor ou versao conhecido.
+Conexao somente leitura e `statement_timeout` existente. Identidade, lado,
+posicao e demais filtros da peca continuam obrigatorios na busca final;
+comprovar o valor veicular nao comprova disponibilidade ou compatibilidade da peca.
+
+Indisponibilidade levanta erro tecnico e permite o fallback de fonte configurado;
+zero evidencia retorna `None` e pede esclarecimento. Se ambas as fontes falham,
+o validador encaminha. A chamada roda em worker sob o semaforo ERP e e
+reutilizada somente dentro da mesma requisicao. Nenhum DDL ou escrita no ERP
+e necessario. A busca final continua separada e sujeita aos gates existentes.
+
 ## Resultados E Alcance Comercial
 
 O runtime apresenta diretamente ate 10 candidatos. A consulta padrao busca
@@ -43,6 +60,15 @@ projeta as colunas explicitamente, mesmo se a view externa mudar sua ordem.
 
 ## Identidade Antes Do Ranking
 
+Os scopes adicionais sao carregados do CSV de curadoria, sem unir familias
+porque compartilham um alias. Quando existe `family_title_pattern`, a pesquisa
+exige esse padrao completo dentro do scope aprovado. Assim, liberar
+`kit amortecedor` em `4/4` nao libera outros produtos de DIVERSOS, kits de
+reparo ou amortecedores avulsos. Eletroventilador/trizeta aceitam seus scopes
+curados com identidade comprovada; o avaliador usa o mesmo catalogo e rejeita
+outro componente. A prova contextual valida o dado veicular separadamente;
+somente a busca final pode apresentar produtos sujeitos a esse filtro.
+
 `part_query` deve ser a familia canonica resolvida pelo catalogo. O runtime usa
 os codigos de grupo/subgrupo de origem preservados em `part_family_ids`. Exige
 tambem igualdade com `part_family` ou, nas especializacoes curadas de subgrupos
@@ -83,6 +109,42 @@ retirados continuam elegiveis para uma pergunta que separe os candidatos.
 Esse comportamento vale para ERP quente e snapshot local, sem mudar suas views.
 
 ## Aplicacao Veicular E Proveniencia
+
+### Refinamentos Tipados
+
+`fuel` aceita gasolina/etanol/diesel/flex, `transmission` aceita
+manual/automatico/dualogic e `abs` e booleano opcional. Combustivel usa tokens
+estruturados de `engines`/`variants`: quando motor/versao sao informados, a
+entrada correspondente precisa conter o combustivel, sem empresta-lo de outro
+motor ou versao da lista. Cambio usa `transmissions`/`variants` da
+mesma linha de aplicacao que satisfaz modelo/ano/motor/versao. Texto do titulo
+nao comprova esses atributos veiculares. Se a fonte nao documenta o valor,
+ele nao e presumido.
+
+ABS e atributo do produto: `false` exige marcacao SEM ABS/S/ABS no nome/titulo;
+`true` exige ABS sem a marcacao negativa. Um titulo sem informacao nao satisfaz
+nenhuma das duas restricoes. Filtros de ABS, combustivel e cambio permanecem
+na tentativa direcional ampliada. LD/LE, ESQ/DIR, DIANT/TRAS usam palavras
+completas, e o eixo requer o contexto `eixo`, sem se confundir com posicao.
+O ranking e seus pesos permanecem iguais.
+
+### Viscosidade De Lubrificantes No Contrato Existente
+
+Para `part_query = lubrificantes`, um `variant` no formato de viscosidade,
+como `5W40`, `5W-40` ou `5 W 40`, filtra `nm_item`/`candidate_title` do produto,
+em vez de `item_search_applications.variants`. Limites de palavra impedem
+confundir `5W40` com `15W40`, `5W30` ou um codigo que contenha essa sequencia.
+
+Nao ha campo novo, migracao, alteracao das views ou exigencia de aplicacao
+veicular na busca geral por viscosidade. Familia e demais criterios
+explicitamente fornecidos continuam obrigatorios; modelo/ano/motor, quando
+informados, conservam seus filtros na mesma aplicacao. Codigo exato continua
+sendo codigo exato. Outras familias e valores de `variant` fora desse formato
+preservam o filtro de versao veicular.
+
+O extractor normaliza as formas aceitas para `5W40`. Os diagnosticos registram
+a especificacao como refinamento do item, sem corroboracao de versao veicular
+no ranking.
 
 Cada linha de `item_search_applications` preserva:
 
@@ -222,12 +284,12 @@ O [golden set ERP](../assets/datasets/erp_search_golden_set.json) contem pedidos
 automotivos, criterios normalizados, fixtures adversariais e IDs esperados.
 O [avaliador](../../scripts/eval/evaluate_erp_search.py) instala fixtures do
 contrato em tabelas temporarias e repete os casos apos COPY de ida e volta com
-a projecao do exportador. Sao 45 casos em dois backends (90 verificacoes).
+a projecao do exportador. Sao 52 casos em dois backends (104 verificacoes).
 Nao modifica o ERP nem os dados permanentes locais.
 
 Para auditar tambem a proveniencia nas tabelas de origem, fornecer
 `--integration-sql .tmp/sql/erp_search_integration_candidates_runtime.sql`.
-Esse modo adiciona 45 verificacoes dos SELECTs marcados `BEGIN/END
+Esse modo adiciona 52 verificacoes dos SELECTs marcados `BEGIN/END
 CANDIDATES SELECT` e `BEGIN/END APPLICATIONS SELECT` no arquivo fornecido.
 As fixtures contaminam deliberadamente atributos globais do modelo, para
 detectar heranca indevida. Somente os SELECTs sao usados em tabelas temporarias;

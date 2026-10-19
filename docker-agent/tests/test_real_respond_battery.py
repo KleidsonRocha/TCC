@@ -264,6 +264,18 @@ def test_builder_is_reproducible_and_matches_versioned_dataset() -> None:
     assert built == versioned
 
 
+def test_category_audit_identity_and_contextual_options_remain_in_structural_battery():
+    _, scenarios = runner.load_scenarios(DATASET_PATH)
+    by_id = {scenario.scenario_id:scenario for scenario in scenarios}
+    expected = {'audit_identity_polia', 'audit_identity_rolamento', 'audit_identity_clio',
+                'audit_identity_tapa_po', 'audit_identity_conflict', 'audit_follow_up_s10',
+                'audit_follow_up_palio', 'audit_follow_up_truck'}
+    assert expected <= set(by_id)
+    assert by_id['audit_identity_conflict'].turns[0].expect['used_tools_excludes']==['search_parts','pre_search_validator']
+    for key in ['audit_follow_up_s10','audit_follow_up_palio','audit_follow_up_truck']:
+        assert len(by_id[key].turns)==2
+
+
 def test_default_output_is_unique_and_outside_versioned_reports() -> None:
     first = runner.default_output_paths("agent")
     second = runner.default_output_paths("agent")

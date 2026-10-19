@@ -92,13 +92,6 @@ CREATE TABLE IF NOT EXISTS pre_search_part_family_scope (
     PRIMARY KEY (family_key, source_group_code, source_subgroup_code)
 );
 
-INSERT INTO pre_search_part_family_scope (family_key, source_group_code, source_subgroup_code, updated_by)
-VALUES ('batentes', 2, 6, 'seed_csv'),
-       ('atuador de embreagem', 10, 5, 'seed_csv'),
-       ('eletroventilador', 9, 27, 'seed_csv')
-ON CONFLICT (family_key, source_group_code, source_subgroup_code)
-DO UPDATE SET is_active=TRUE, updated_at=NOW(), updated_by='seed_csv';
-
 CREATE TABLE IF NOT EXISTS pre_search_part_rule (
     part_type_id BIGINT PRIMARY KEY REFERENCES pre_search_part_type(id) ON DELETE CASCADE,
     is_generic BOOLEAN NOT NULL DEFAULT FALSE,
@@ -112,6 +105,28 @@ CREATE TABLE IF NOT EXISTS pre_search_part_rule (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_by TEXT NOT NULL DEFAULT 'seed'
 );
+
+-- BEGIN FAMILY CURATION SCHEMA
+CREATE TABLE IF NOT EXISTS pre_search_family_concept (
+    family_key TEXT PRIMARY KEY,
+    source_families TEXT[] NOT NULL DEFAULT '{}',
+    aliases TEXT[] NOT NULL DEFAULT '{}',
+    title_pattern TEXT,
+    generic_ambiguous_parts BOOLEAN,
+    needs_side BOOLEAN,
+    needs_position BOOLEAN,
+    needs_axle BOOLEAN,
+    needs_engine BOOLEAN,
+    needs_variant BOOLEAN,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE
+);
+CREATE TABLE IF NOT EXISTS pre_search_alias_decision (
+    alias_normalized TEXT PRIMARY KEY,
+    family_key TEXT,
+    reason TEXT NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE
+);
+-- END FAMILY CURATION SCHEMA
 
 ALTER TABLE pre_search_part_rule
     ADD COLUMN IF NOT EXISTS needs_title_identity BOOLEAN NOT NULL DEFAULT FALSE;
@@ -1400,6 +1415,40 @@ ALTER TABLE pre_search_fine_tuning_run
 
 ALTER TABLE pre_search_fine_tuning_run
     ADD COLUMN IF NOT EXISTS promotion_applied_at TIMESTAMPTZ NULL;
+
+-- Seed the same versioned curation applied transactionally to existing volumes.
+BEGIN;
+CREATE TEMP TABLE stg_family_concept (
+    family_key TEXT, source_families TEXT, aliases TEXT, title_pattern TEXT,
+    generic_ambiguous_parts BOOLEAN, needs_side BOOLEAN, needs_position BOOLEAN,
+    needs_axle BOOLEAN, needs_engine BOOLEAN, needs_variant BOOLEAN
+) ON COMMIT DROP;
+COPY stg_family_concept FROM '/docker-entrypoint-initdb.d/csv/pre_search_family_concept.csv'
+    WITH (FORMAT CSV, HEADER TRUE, DELIMITER ';', ENCODING 'UTF8');
+INSERT INTO pre_search_family_concept
+SELECT family_key, COALESCE(string_to_array(source_families,'|'),'{}'),
+    COALESCE(string_to_array(aliases,'|'),'{}'), title_pattern,
+    generic_ambiguous_parts,needs_side,needs_position,needs_axle,needs_engine,needs_variant,TRUE
+FROM stg_family_concept
+ON CONFLICT (family_key) DO UPDATE SET source_families=EXCLUDED.source_families,
+    aliases=EXCLUDED.aliases,title_pattern=EXCLUDED.title_pattern,
+    generic_ambiguous_parts=EXCLUDED.generic_ambiguous_parts,needs_side=EXCLUDED.needs_side,
+    needs_position=EXCLUDED.needs_position,needs_axle=EXCLUDED.needs_axle,
+    needs_engine=EXCLUDED.needs_engine,needs_variant=EXCLUDED.needs_variant,is_active=TRUE;
+CREATE TEMP TABLE stg_alias_decision (alias_normalized TEXT,family_key TEXT,reason TEXT) ON COMMIT DROP;
+COPY stg_alias_decision FROM '/docker-entrypoint-initdb.d/csv/pre_search_alias_decision.csv'
+    WITH (FORMAT CSV, HEADER TRUE, ENCODING 'UTF8');
+INSERT INTO pre_search_alias_decision
+SELECT alias_normalized,family_key,reason,TRUE FROM stg_alias_decision
+ON CONFLICT (alias_normalized) DO UPDATE SET family_key=EXCLUDED.family_key,reason=EXCLUDED.reason,is_active=TRUE;
+CREATE TEMP TABLE stg_family_scope (family_key TEXT,source_group_code INT,source_subgroup_code INT) ON COMMIT DROP;
+COPY stg_family_scope FROM '/docker-entrypoint-initdb.d/csv/pre_search_family_scope.csv'
+    WITH (FORMAT CSV, HEADER TRUE, ENCODING 'UTF8');
+INSERT INTO pre_search_part_family_scope (family_key,source_group_code,source_subgroup_code,updated_by)
+SELECT family_key,source_group_code,source_subgroup_code,'seed_csv' FROM stg_family_scope
+ON CONFLICT (family_key,source_group_code,source_subgroup_code)
+DO UPDATE SET is_active=TRUE,updated_at=NOW(),updated_by='seed_csv';
+COMMIT;
 
 -- BEGIN ERP FALLBACK V2
 -- Shared by fresh database initialization and scripts.erp.install_search_snapshot.

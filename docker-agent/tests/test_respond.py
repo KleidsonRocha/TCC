@@ -548,6 +548,7 @@ def test_respond_uses_deterministic_ask_without_calling_llm() -> None:
             "position": None,
             "axle": None,
             "variant": None,
+            "fuel": None, "transmission": None, "abs": None,
                 "quantity": None,
             },
             "items": None,

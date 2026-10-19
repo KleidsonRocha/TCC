@@ -58,6 +58,9 @@ RESULT_DISAMBIGUATION_FILTER_FIELDS = (
     "position",
     "axle",
     "variant",
+    "fuel",
+    "transmission",
+    "abs",
 )
 
 
@@ -109,6 +112,10 @@ class ProcessAgentRequestUseCase:
         self._settings = settings
         self._logger = logger
         self._review_recorder = review_recorder
+        bind_resolver = getattr(pre_search_validator, "set_follow_up_resolver", None)
+        resolver = getattr(tools, "resolve_follow_up_value", None)
+        if callable(bind_resolver) and callable(resolver):
+            bind_resolver(resolver)
         self._llm_semaphore = asyncio.Semaphore(
             max(1, settings.llm_max_concurrent_requests)
         )
@@ -987,6 +994,21 @@ class ProcessAgentRequestUseCase:
         last_messages: list[dict[str, str]],
         incoming_state: ConversationState | None,
     ) -> tuple[PreSearchValidation, str, list[str]]:
+        begin_request = getattr(self._pre_search_validator, "begin_validation_request", None)
+        if callable(begin_request):
+            begin_request()
+        prepare_follow_up = getattr(self._pre_search_validator, "prepare_follow_up", None)
+        if (
+            callable(prepare_follow_up) and incoming_state is not None
+            and incoming_state.last_decision == "ask"
+            and incoming_state.pending_slot in {"engine", "variant"}
+        ):
+            # Bound the optional source proof by the same ERP concurrency
+            # limit. Later validator paths reuse only this request's proof.
+            async with self._erp_search_semaphore:
+                await self._run_validator_call(
+                    prepare_follow_up, query, conversation_state=incoming_state,
+                )
         deterministic_validator = getattr(
             self._pre_search_validator,
             "try_validate_deterministically",
@@ -1097,6 +1119,9 @@ class ProcessAgentRequestUseCase:
             "dianteiro" if criteria.position == "front" else "traseiro" if criteria.position == "rear" else None,
             "eixo dianteiro" if criteria.axle == "front" else "eixo traseiro" if criteria.axle == "rear" else None,
             criteria.variant,
+            criteria.fuel,
+            criteria.transmission,
+            ('com ABS' if criteria.abs else 'sem ABS') if criteria.abs is not None else None,
         ]
         return " ".join(token for token in tokens if token)
 
@@ -1256,6 +1281,7 @@ class ProcessAgentRequestUseCase:
             "position",
             "axle",
             "variant",
+            "fuel", "transmission", "abs",
         ):
             value = getattr(criteria, field_name, None)
             if value in (None, "", []):
@@ -1285,6 +1311,7 @@ class ProcessAgentRequestUseCase:
             "position",
             "axle",
             "variant",
+            "fuel", "transmission", "abs",
         ):
             previous_value = getattr(incoming_state.criteria, field_name, None)
             current_value = getattr(criteria, field_name, None)
@@ -1314,6 +1341,7 @@ class ProcessAgentRequestUseCase:
             "position": "posicao",
             "axle": "eixo",
             "variant": "versao",
+            "fuel": "combustivel", "transmission": "cambio", "abs": "ABS",
         }.get(field_name, field_name)
 
     @staticmethod

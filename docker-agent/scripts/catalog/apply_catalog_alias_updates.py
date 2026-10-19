@@ -30,11 +30,31 @@ def apply_updates(conn, root: Path) -> dict[str, int]:
         )
     """)
     counts = {"part_aliases": 0, "variant_aliases": 0, "family_scopes": 0, "part_rules": 0}
-    for family, group, subgroup in (
-        ("batentes", 2, 6),
-        ("atuador de embreagem", 10, 5),
-        ("eletroventilador", 9, 27),
-    ):
+    curation_schema = sql.split('-- BEGIN FAMILY CURATION SCHEMA', 1)[1].split('-- END FAMILY CURATION SCHEMA', 1)[0]
+    conn.execute(curation_schema)
+    with (root / 'csv/pre_search_family_concept.csv').open(encoding='utf-8', newline='') as source:
+        for row in csv.DictReader(source, delimiter=';'):
+            columns = list(row)
+            values = []
+            for key, value in row.items():
+                if key in {'source_families', 'aliases'}:
+                    value = value.split('|') if value else []
+                elif key.startswith('needs_') or key == 'generic_ambiguous_parts':
+                    value = value.lower() == 'true' if value else None
+                values.append(value or None if key == 'title_pattern' else value)
+            conn.execute('INSERT INTO pre_search_family_concept (' + ','.join(columns) + ') VALUES ('
+                + ','.join(['%s'] * len(columns)) + ') ON CONFLICT (family_key) DO UPDATE SET '
+                + ','.join(key+'=EXCLUDED.'+key for key in columns if key != 'family_key') + ',is_active=TRUE', values)
+    with (root / 'csv/pre_search_alias_decision.csv').open(encoding='utf-8', newline='') as source:
+        for row in csv.DictReader(source):
+            conn.execute('''INSERT INTO pre_search_alias_decision (alias_normalized,family_key,reason)
+                VALUES (%s,%s,%s) ON CONFLICT (alias_normalized) DO UPDATE SET
+                family_key=EXCLUDED.family_key,reason=EXCLUDED.reason,is_active=TRUE''',
+                (row['alias_normalized'], row['family_key'] or None, row['reason']))
+    with (root / 'csv/pre_search_family_scope.csv').open(encoding='utf-8', newline='') as source:
+        scope_rows = list(csv.DictReader(source))
+    for row in scope_rows:
+        family, group, subgroup = row['family_key'], int(row['source_group_code']), int(row['source_subgroup_code'])
         conn.execute(
             """INSERT INTO pre_search_part_family_scope
                (family_key, source_group_code, source_subgroup_code, updated_by)

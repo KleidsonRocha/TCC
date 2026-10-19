@@ -1,5 +1,20 @@
 # Registro De Decisoes Tecnicas
 
+## Viscosidade De Oleo Sem Ampliar O Payload Em 14/10/2026
+
+- Manter viscosidade em `SearchCriteria.variant`, sem adicionar campo ao
+  contrato de comunicacao, estado ou dataset de treinamento.
+- Interpretar o valor como especificacao do produto somente para a familia
+  `lubrificantes` e formato completo de viscosidade. Buscar no nome e titulo
+  do item, com limites de palavra e tolerancia a espacos/hifen.
+- Preservar demais filtros, codigos exatos e versoes veiculares de outras
+  familias. Registrar viscosidade como refinamento do item, sem corroboracao
+  de versao veicular no ranking.
+
+Motivo: `TEX-3117` tem `5W40` na descricao, mas `TODOS` na versao de sua
+aplicacao no snapshot. O filtro anterior confundia especificacao de oleo com
+versao de veiculo. A correcao pertence a busca deterministica, nao ao treino.
+
 ## Fallback Direcional Condicional Em 02/10/2026
 
 - Pesquisar primeiro com todos os criterios validados. Quando nao houver
@@ -1101,3 +1116,130 @@ Consequencia:
   nas Categorias 1B e 1C. Este registro nao afirma implementacao de cliente
   Meta no repositorio nem auditoria das regras internas de transporte,
   duplicatas e reentregas do intermediario.
+
+## 46. Adiar Nova Adaptacao Do Modelo Apos O Experimento LoRA
+
+Decisao (19/10/2026), por orientacao do usuario:
+
+- Considerar concluido o experimento de treino LoRA em BF16 de
+  `Qwen/Qwen2.5-7B-Instruct`, com comparacao e preservacao dos artefatos.
+  Esta execucao nao usou QLoRA 4-bit.
+- Manter o modelo ativo e adiar novos treinos, publicacao/validacao do
+  adapter no Ollama e a arquitetura de Ollama remoto em GPU com fallback.
+  Esses requisitos pendentes passam a Hipoteses Adiadas no [TODO.md](TODO.md),
+  sem declarar como concluidas funcionalidades nao implementadas.
+- Retomar avaliacao comercial e correcoes deterministicas de catalogo,
+  perguntas, filtros e busca. Esta ordem substitui a prioridade anterior
+  de preparar fine-tuning como proximo bloco.
+
+Fundamento:
+
+- Na configuracao avaliada, o adapter nao trouxe ganho global: golden isolado
+  de 27/27 para 24/27, mais JSON incompleto sob 220 tokens (23/80 para 44/80)
+  e maior tempo medio por turno de categorias (2,900 s para 3,435 s).
+  Ganhos pontuais nao justificaram promocao. Evidencias e limites estao em
+  [HISTORICO.md](HISTORICO.md#experimento-lora-em-gpu-de-19102026).
+- A comparacao foi entre original e adapter no mesmo motor Transformers/PEFT
+  BF16. O resultado nao prova que toda adaptacao futura seria ineficaz, nem
+  mede diretamente a versao quantizada do Ollama.
+
+Condicoes para eventual retomada:
+
+- Demonstrar uma lacuna residual da LLM com exemplos revisados e criterio
+  de ganho definido, depois de separar causas de backend/catalogo.
+- Endurecer benchmark e proteger splits independentes; tratar a sobreposicao
+  exata de seis mensagens golden com o treino e ampliar a cobertura residual.
+- Concluir paridade/versionamento de payload, prompt, estado e regras;
+  auditar mascara de perda e truncamento antes de outro treino.
+- Validar importacao/execucao no Ollama em candidato separado do ativo,
+  com comparacao controlada, criterios de promocao e rollback documentados.
+  O pacote local preservado permite retomar sem arquivos da VPS antiga.
+
+## 47. Preservar Identidade E Governar Follow-Up Pelo Contexto
+
+Decisao (19/10/2026):
+
+- O backend preserva a identidade composta da peca e a aplicacao explicitamente
+  pedida. Modelos/anos no titulo sao contexto; a clausula de aplicacao prevalece.
+  Aliases internos nao dividem polia/bomba ou rolamento/amortecedor em pedidos
+  independentes. Cada item conserva seus proprios fatos veiculares.
+- Contradicao de direcao na mesma peca e negacao nao representavel interrompem
+  a busca para confirmacao. Um componente protegido sem identidade catalogada
+  pede esclarecimento; nao se amplia automaticamente para a familia interna.
+- Uma resposta curta de versao/motor textual preenche o `pending_slot` do item
+  ativo. Opcoes do catalogo sao interpretadas pelo modelo/ano anterior; versoes
+  desconhecidas e valores textuais adicionais usam prova na mesma aplicacao,
+  conservando identidade, ano, motor e demais filtros. Correcao explicita ou
+  novo pedido completo continuam prevalecendo sobre o estado anterior.
+- Reutilizar `ToolsPort` e o SQL do contrato v2 para a prova contextual: somente
+  leitura, timeout existente, limite de um produto, sem relaxamento direcional.
+  O valor integral comprovado e salvo em `ConversationState`; nao criar store,
+  schema publico ou lista paralela de versoes. Codigo de motor isolado nao
+  comprova um deslocamento adicional informado pelo cliente.
+- Executar a prova em worker sob o limite de concorrencia ERP e reutiliza-la
+  apenas na mesma requisicao. Zero evidencia pede esclarecimento; falha de
+  fonte usa o fallback por indisponibilidade e, se necessario, handoff. Zero
+  resultados nao aciona outra fonte como tentativa de aprovar uma opcao.
+
+Motivo e alcance:
+
+- As falhas reproduzidas eram de extracao/contexto, anteriores ao ranking;
+  novo treino nao corrige sua causa. A LLM permanece responsavel pela linguagem
+  residual, com fatos explicitos e gates do backend prevalecendo na saida.
+- Os controles estruturais e no snapshot comprovam as invariantes deste lote;
+  nao comprovam curadoria de kits/aliases, referencias comerciais ou ganho
+  global nas 371 conversas. Esses trabalhos e a implantacao continuam pendentes.
+  Evidencias e conclusao local em [PROGRESS.md](PROGRESS.md#identidade-e-follow-up-concluidos-localmente-em-19102026).
+
+## 48. Curadoria De Familias E Refinamentos Tipados
+
+Decisao (19/10/2026):
+
+- Refinar a prova da decisao 47: consultar existencia da opcao veicular na
+  mesma aplicacao, separadamente da disponibilidade/identidade do produto.
+  O FH 460 revelou uma presilha classificada como caixa de bateria. Excluir
+  essa identidade incorreta da busca final sem voltar a perguntar o motor
+  comprovado. Essa prova nao retorna produtos nem autoriza sua apresentacao.
+
+- Versionar conceitos, decisoes de alias e scopes nos CSVs
+  `pre_search_family_concept.csv`, `pre_search_alias_decision.csv` e
+  `pre_search_family_scope.csv`. O bootstrap e o atualizador transacional
+  alimentam as mesmas tabelas do catalogo. Manter a classificacao original ERP.
+- Revisar os 21 aliases conflitantes com 43 decisoes, incluindo qualificadores
+  e erros de escrita relacionados. Unificar trizeta/trizetas; separar bucha de
+  carroceria, batentes de carroceria/suspensao e pinos de freio/eixo/combustivel.
+  Quinze formas genericas ou vagas permanecem ambiguas e pedem funcao/componente.
+  Colisao nova tambem pede esclarecimento, sem desempate pela ordem do dicionario.
+- Um alias nao amplia scopes de outra familia. Scopes adicionais precisam de
+  registro explicito. Componentes especializados em subgrupos amplos exigem
+  classificacao permitida e padrao completo de identidade no titulo: kit de
+  amortecedor, kit de dobradica e tapa-po de cilindro sao identidades proprias.
+  Reparo, conjunto e peca avulsa nao se tornam equivalentes automaticamente;
+  composicao desconhecida pede confirmacao. O bloqueio global de acessorios
+  continua aplicado as pecas principais.
+- O avaliador reconhece scopes curados de eletroventilador/trizeta, verificando
+  componente e aplicacao. Diferenca de subgrupo isolada nao comprova erro;
+  titulo semelhante sem scope permitido tambem nao comprova acerto.
+- A auditoria dos 86 handoffs por lado/eixo consulta o ERP somente leitura.
+  Retirar exigencia direcional padrao apenas de arruelas, correia de comando,
+  cabos de velas e velas de ignicao para motos. Manter exigencias nas demais
+  familias quando a revisao nao comprovar que sao dispensaveis. Direcao explicita
+  continua filtrando mesmo quando nao e obrigatoria; versao exigida nao e
+  satisfeita por combustivel ou ABS.
+- Acrescentar `fuel`, `transmission` e `abs` opcionais a SearchCriteria e ao
+  estado do gateway, mantendo contrato v1.0 e Redis existentes. `variant`
+  representa versao veicular ou viscosidade de lubrificante; nao transportar
+  ABS/combustivel/cambio nesse campo. `False` e evidencia negativa, nao ausencia.
+- Combustivel e cambio precisam de evidencia estruturada na mesma aplicacao;
+  ABS usa marcacao explicita do proprio produto. Ausencia de ABS no titulo nao
+  comprova produto sem ABS. Abreviacoes direcionais usam limites de palavra;
+  posicao e eixo permanecem distintos. Nao alterar pesos de ranking neste lote.
+- A resposta da LLM nao pode inventar refinamento tipado. Follow-up parcial
+  conserva o atributo informado e continua pedindo a versao completa quando
+  necessaria. Novo veiculo/componente nao herda restricoes tipadas de outro.
+  Gateway conserva tambem o item ativo e resultados por item do estado existente.
+
+Alcance operacional: implantacao inicial na stack Docker local, autorizada
+pelo usuario; atualizacao da VPS e teste externo no Omni/Convert ficam para a
+etapa seguinte. Testes estruturais nao certificam referencias comerciais nem
+ganho global nas 371 conversas. Evidencias em [PROGRESS.md](PROGRESS.md).

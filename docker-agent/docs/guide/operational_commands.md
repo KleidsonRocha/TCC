@@ -396,6 +396,83 @@ python scripts/eval/run_real_respond_battery.py --tier regression --search-diagn
 
 Se `API_KEY` estiver ativo no `docker-comm`, acrescente `--api-key <valor>`. Filtros por `--category` e `--scenario-id` aceitam repeticao ou valores separados por virgula. Cada rodada integrada usa um `conversation_id` unico para nao herdar estado Redis anterior. As saidas usam nomes unicos em `.tmp/eval/`; um relatorio versionado so e substituido quando `--output-json` ou `--output-md` for informado conscientemente.
 
+## Avaliar Todas As Categorias Com Conversas Incrementais
+
+No diretorio `docker-agent`, executar em ambiente com dependencias, catalogo,
+fonte ERP/snapshot e Ollama configurados:
+
+```bash
+python -m scripts.eval.evaluate_category_search --reference-queries
+python -m scripts.eval.evaluate_category_search --reference-queries --include-unmapped-source
+```
+
+No PowerShell, para testar os arquivos locais sem rebuild/deploy da API:
+
+```powershell
+docker compose run --rm --no-deps -T -v "${PWD}:/app" docker-agent python -m scripts.eval.evaluate_category_search --reference-queries
+```
+
+O comando usa as categorias/subcategorias ativas do catalogo e o use case real
+em processo isolado. Preserva estado/historico entre turnos e responde somente
+com dados da referencia; quando o atributo nao existe, responde `nao sei`.
+Nao grava a bateria na fila de revisao/treinamento nem altera ERP ou modelo.
+O agendamento permite quatro conversas em andamento por padrao, mas compartilha
+limites globais de ate duas inferencias e quatro buscas (respeitando limites
+menores configurados). Assim, espera pela LLM nao bloqueia casos deterministicos.
+`--concurrency 1` serializa; `--concurrency 32` amplia apenas a fila de casos.
+`--max-turns` limita cada conversa (padrao oito).
+
+`--reference-queries` usa um alias nao ambiguo da familia e os dados conhecidos
+de um item real no pedido inicial, sem informar seu codigo. Lubrificantes
+usam apenas familia e viscosidade. Sem essa flag, a pergunta inicial usa apenas
+o nome da categoria/subcategoria, permitindo avaliar complementacao desde o
+inicio. Os dois modos sao protocolos diferentes, identificados no relatorio.
+O agendamento isola a fila residual no avaliador; os tempos desta bateria nao
+constituem um benchmark de carga da API de producao.
+
+Para executar um caso, usar `--case-id sub-17-2` ou `--case-id group-2`.
+`--limit` restringe a quantidade; `--samples` controla quantos itens da fonte
+sao examinados por subcategoria. Cada execucao cria pasta nova; um
+`--output-dir` explicito deve apontar para diretorio ainda inexistente.
+Para retomar uma bateria interrompida sem repetir casos concluidos, use
+`--resume-dir .tmp/eval/category_search/<data>`. O avaliador conserva as
+referencias de `cases.json` e registra a retomada no relatorio; mantenha
+modelo, dados e codigo de runtime iguais entre os trechos da execucao.
+`--retry-errors` repete somente erros operacionais ao retomar e conserva os
+registros anteriores em `previous_error_attempts`.
+
+`--include-unmapped-source` tambem prepara casos de grupos/subgrupos com itens
+na fonte, mas ausentes do catalogo ativo, sem modificar o catalogo.
+Para reunir baterias completas com IDs distintos, usar:
+
+```bash
+python -m scripts.eval.consolidate_category_search --run-dir .tmp/eval/bateria_principal --run-dir .tmp/eval/bateria_complementar --output-dir .tmp/eval/auditoria_consolidada
+```
+
+A consolidacao preserva os turnos e recupera confirmacoes textuais de item unico
+apenas se o codigo tambem foi retornado pela busca registrada. Os itens
+recuperados passam pela mesma verificacao independente da fonte. A ferramenta
+recusa execucoes incompletas e IDs repetidos.
+
+Para uma bateria longa, acrescente `--watch` ao consolidator: ele salva um
+relatorio parcial revisado e permanece aguardando as entradas terminarem.
+Quando todas terminam, substitui os arquivos gerados pelo relatorio completo
+no mesmo diretorio. A versao parcial nao recebe `finished_at` e informa o
+numero concluido frente ao planejado. O processo precisa continuar ativo;
+se a maquina/Docker for desligada, retome primeiro o avaliador.
+
+Os relatorios HTML/JSON/Markdown em `.tmp/eval/category_search/` registram
+fonte, modelo, hashes do codigo, quantidade de itens cadastrados, item de
+referencia, perguntas/respostas, criterios e produtos apresentados. Use o
+HTML para filtrar categoria, codigo ou resultado e abrir as conversas.
+
+Separar suspeitas de falso negativo, itens fora da subcategoria/aplicacao,
+categorias sem itens na fonte, falhas operacionais, conversa nao concluida e
+handoff por atributo desconhecido. Esses rotulos exigem revisao humana e nao
+devem virar golden nem treino automaticamente. O teste cobre uma conversa
+por entrada, nao todos os produtos ou todas as aplicacoes, e nao valida o
+transporte pelo gateway/WhatsApp.
+
 ## Ciclo De Fine-Tuning
 
 Buildar a imagem de treino:
@@ -458,7 +535,74 @@ python scripts/training/package_pre_search_ollama_model.py \
   --create-via-docker
 ```
 
+## Regressao De Identidade E Follow-Up
+
+Para curadoria/refinamentos, incluir tambem
+`tests/test_family_curation_refinements.py` e executar a suite do gateway com
+`RUN_REDIS_INTEGRATION=1`. O estado possui campos novos opcionais, portanto
+atualizar agente e gateway no mesmo lote.
+
+No checkout corrigido, executar sem alterar o agente ativo:
+
+```powershell
+docker compose run --rm --no-deps -v "${PWD}:/app" docker-agent python -m pytest -q tests/test_request_identity_follow_up.py tests/test_erp_search_tools_pg.py tests/test_real_respond_battery.py
+python -m scripts.eval.build_real_respond_battery_dataset
+python -m scripts.eval.run_real_respond_battery --dataset docs/assets/datasets/battery_structural_respond_v2.json --tier extended --dry-run
+```
+
+Os testes usam dados controlados. Para os controles SQL com tabelas temporarias
+e rollback, usar somente PostgreSQL local de testes, nunca credenciais do ERP:
+
+```powershell
+docker compose run --rm --no-deps -e ERP_SEARCH_TEST_POSTGRES=1 -v "${PWD}:/app" docker-agent python -m pytest -q
+```
+
+A verificacao de 19/10/2026 no snapshot e a conclusao local estao em
+[PROGRESS.md](../PROGRESS.md#identidade-e-follow-up-concluidos-localmente-em-19102026).
+O snapshot congelado esta em modo somente leitura e nao serve para criar as
+tabelas temporarias do golden. O lote posterior de curadoria foi implantado no
+Docker local; VPS e canal externo ainda exigem implantacao/reteste conforme
+[PROGRESS.md](../PROGRESS.md#curadoria-e-refinamentos-no-docker-local-em-19102026).
+Nao recriar volumes para aplicar mudancas de Python.
+
 ## Comandos Comuns De Recuperacao
+
+### Atualizacao Controlada De Curadoria Em Volume Existente
+
+Salvar antes um dump custom das tabelas `pre_search_part_alias`,
+`pre_search_part_rule`, `pre_search_part_family_scope` e
+`pre_search_variant_alias`, e guardar as imagens anteriores com tags de rollback.
+O dump desta entrega fica em `.tmp/eval/family_refinements_20261019/catalog_before.dump`.
+O manifesto dessa pasta registra hashes e imagens. Fila, datasets e snapshot
+nao participam da atualizacao; nao executar `down -v` nem o bootstrap completo.
+
+```powershell
+docker compose build docker-agent
+docker compose run --rm --no-deps docker-agent python -m scripts.catalog.apply_catalog_alias_updates
+docker compose run --rm --no-deps docker-agent python -m scripts.catalog.apply_catalog_alias_updates --apply
+docker compose up -d --no-deps --force-recreate docker-agent
+```
+
+Na pasta `docker-comm`, construir/recriar somente o gateway:
+
+```powershell
+docker compose build docker-comm
+docker compose up -d --no-deps --force-recreate docker-comm
+```
+
+Conferir `/health`, `/ready` do agente e `/health` do gateway; executar conversas
+com origem/IDs exclusivos por `/test/send`, aguardando `completed` com o mesmo
+`trace_id`. Verificar estado/historico Redis, versao completa, ABS falso e item
+ativo. Esse teste local do gateway nao representa entrega no Omni/Convert externo.
+
+Rollback: selecionar o dump e as tags correspondentes ao mesmo lote; restaurar
+somente as quatro tabelas de catalogo, em transacao, e desativar os registros
+das duas tabelas de curadoria criadas neste lote. Recriar agente/gateway usando
+as imagens anteriores, sem rebuild, e repetir health/ready e controles. Nao
+restaurar fila/datasets/snapshot ou apagar Redis para desfazer esta mudanca.
+O backup do agente foi recuperado por export/import porque a imagem anterior
+tinha metadados incompletos no Docker; o rootfs e a tag de rollback foram
+preservados localmente e o import foi verificado, sem carregar credenciais.
 
 Recriar a stack inteira e os volumes:
 

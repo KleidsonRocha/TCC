@@ -1,5 +1,27 @@
 [
   {
+    "id": "search_oil_viscosity_5w40",
+    "message.text": "quero o oleo 5w40",
+    "context.last_messages": [],
+    "expected": {
+      "decision": "search",
+      "criteria": {"part_query": "lubrificantes", "variant": "5W40", "part_code": null},
+      "missing_fields_contains": [],
+      "next_question_key": null
+    }
+  },
+  {
+    "id": "search_oil_viscosity_hyphen",
+    "message.text": "quero oleo 5W-40",
+    "context.last_messages": [],
+    "expected": {
+      "decision": "search",
+      "criteria": {"part_query": "lubrificantes", "variant": "5W40", "part_code": null},
+      "missing_fields_contains": [],
+      "next_question_key": null
+    }
+  },
+  {
     "id": "ask_no_part",
     "message.text": "preciso de uma peca",
     "context.last_messages": [],

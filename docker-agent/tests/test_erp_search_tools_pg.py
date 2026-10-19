@@ -62,6 +62,61 @@ class _SequenceCursor(_FakeCursor):
         self.rows = response
 
 
+@pytest.mark.parametrize('available', [True, False])
+def test_contextual_follow_up_proof_is_read_only_exact_and_does_not_relax(monkeypatch, available):
+    cursor = _SequenceCursor([[{'option_exists': available}]])
+    options=[]
+    def connect(*args, **kwargs):
+        options.append(kwargs['options'])
+        return _FakeConnection(cursor)
+    monkeypatch.setattr(erp_search_tools_pg, 'psycopg', type('Driver', (), {'connect': staticmethod(connect)}))
+    monkeypatch.setattr(erp_search_tools_pg, 'dict_row', object())
+    criteria=SearchCriteria(part_query='semi eixo', vehicle_model='S10',vehicle_year=2017,engine='2.5',side='left',axle='front')
+    tools=PostgresErpSearchTools(settings=_settings(),logger=logging.getLogger('test'))
+    value='LTZ 2.5 FLEX 4X4 CD AT'
+    result=tools.resolve_follow_up_value(criteria=criteria,field='variant',value=value)
+    assert result==(value if available else None)
+    assert len(cursor.calls)==1
+    sql,params=cursor.calls[0]
+    assert params['vehicle_model_norm']=='s10' and params['vehicle_year']==2017
+    assert params['engine_norm']=='2.5' and params['variant_norm']==value.lower()
+    assert criteria.side=='left' and criteria.axle=='front'
+    assert params['limit']==1
+    assert 'item_search_candidates' not in sql and 'variant_name' in sql
+    assert 'item_search_applications' in sql
+    assert 'default_transaction_read_only=on' in options[0]
+    assert criteria.variant is None
+
+
+def test_contextual_follow_up_failure_uses_existing_source_fallback():
+    class Source:
+        def __init__(self,fail):self.fail=fail;self.calls=0
+        def resolve_follow_up_value(self,**kw):
+            self.calls+=1
+            if self.fail:raise SearchPartsServiceUnavailableError('unavailable')
+            return kw['value']
+    primary,fallback=Source(True),Source(False)
+    tools=FallbackErpSearchTools(primary=primary,fallback=fallback,logger=logging.getLogger('test'))
+    assert tools.resolve_follow_up_value(criteria=SearchCriteria(),field='variant',value='ELX RST III')=='ELX RST III'
+    assert primary.calls==fallback.calls==1
+
+
+def test_contextual_follow_up_zero_is_not_source_failure():
+    class Source:
+        def __init__(self):self.calls=0
+        def resolve_follow_up_value(self,**kw):self.calls+=1;return None
+    primary,fallback=Source(),Source()
+    tools=FallbackErpSearchTools(primary=primary,fallback=fallback,logger=logging.getLogger('test'))
+    assert tools.resolve_follow_up_value(criteria=SearchCriteria(),field='variant',value='unknown') is None
+    assert primary.calls==1 and fallback.calls==0
+
+
+@pytest.mark.parametrize('field,value', [('vehicle_model','4X4'),('variant','x'*201),('engine','')])
+def test_contextual_follow_up_rejects_unsupported_or_unbounded_input(field,value):
+    tools=PostgresErpSearchTools(settings=_settings(),logger=logging.getLogger('test'))
+    assert tools.resolve_follow_up_value(criteria=SearchCriteria(),field=field,value=value) is None
+
+
 @pytest.mark.parametrize("directions", [
     {"side": "right"}, {"position": "front"},
     {"side": "right", "position": "front"},
@@ -96,8 +151,8 @@ def test_directional_fallback_retries_once_preserving_other_criteria(
     strict_sql, strict_params = cursor.calls[0]
     relaxed_sql, relaxed_params = cursor.calls[1]
     for field in directions:
-        assert f"%({field}_like)s" in strict_sql
-        assert f"%({field}_like)s" not in relaxed_sql
+        assert f"%({field}_pattern)s" in strict_sql
+        assert f"%({field}_pattern)s" not in relaxed_sql
         assert relaxed_params["score_" + field] == 0
     for key in ("part_query_norm", "vehicle_brand_norm", "vehicle_model_norm", "vehicle_year",
                 "engine_norm", "variant_norm", "axle_like", "accessory_head_pattern",
@@ -241,6 +296,45 @@ def test_postgres_erp_tools_maps_rows_to_part_items(monkeypatch: pytest.MonkeyPa
     assert cursor.executed_params["vehicle_year"] == 2008
     assert cursor.executed_params["part_query_norm"] == "coxins"
     assert connect_kwargs["client_encoding"] == "UTF8"
+
+
+@pytest.mark.parametrize("viscosity", ["5W40", "5w-40", "5 W 40"])
+def test_oil_viscosity_filters_product_without_requiring_vehicle_application(viscosity):
+    sql, params = PostgresErpSearchTools._build_search_sql(
+        criteria=SearchCriteria(part_query="lubrificantes", variant=viscosity), limit=10,
+    )
+    assert "%(oil_viscosity_pattern)s" in sql
+    assert "unnest(a.variants) AS variant_name" not in sql
+    assert "WHERE matched.applications IS NOT NULL" not in sql
+    assert params["application_filter_fields"] == []
+    assert "variant" in params["item_refinement_fields"]
+    assert params["ranking_has_variant"] is False
+    assert params["part_code_norm"] is None
+
+
+@pytest.mark.parametrize("family,variant", [
+    ("amortecedores suspensao", "JOY"), ("radiador", "5W40"), ("lubrificantes", "GLX"),
+])
+def test_non_viscosity_variants_still_require_vehicle_application(family, variant):
+    sql, params = PostgresErpSearchTools._build_search_sql(
+        criteria=SearchCriteria(part_query=family, variant=variant), limit=10,
+    )
+    assert "oil_viscosity_pattern" not in params
+    assert "unnest(a.variants) AS variant_name" in sql
+    assert "WHERE matched.applications IS NOT NULL" in sql
+    assert params["application_filter_fields"] == ["variant"]
+
+
+def test_oil_viscosity_preserves_explicit_vehicle_and_code_filters():
+    sql, params = PostgresErpSearchTools._build_search_sql(
+        criteria=SearchCriteria(part_query="lubrificantes", variant="5W40",
+                                vehicle_model="Gol", vehicle_year=2010, part_code="TEX-3117"),
+        limit=10,
+    )
+    assert "lower(cd_item) = %(part_code_norm)s" in sql
+    assert "WHERE matched.applications IS NOT NULL" in sql
+    assert params["part_code_norm"] == "tex-3117"
+    assert params["application_filter_fields"] == ["vehicle_model", "vehicle_year"]
 
 
 def test_search_sql_emits_internal_trace_and_conservative_score_breakdown() -> None:
@@ -415,7 +509,7 @@ def test_position_is_filtered_as_dianteiro_not_as_eixo_dianteiro() -> None:
     )
 
     where_clause = sql.split("), matched_items AS (", 1)[0]
-    assert "position_like" in where_clause
+    assert "position_pattern" in where_clause
     assert "axle_like" not in where_clause
     assert params["position_like"] == "%dianteir%"
     assert params["has_axle"] is False

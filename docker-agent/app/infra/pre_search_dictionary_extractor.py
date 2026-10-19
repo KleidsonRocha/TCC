@@ -49,7 +49,11 @@ class DictionaryPreSearchExtractor:
     _SINGLE_TOKEN_FUZZY_GAP = 0.05
     _MULTI_TOKEN_FUZZY_GAP = 0.03
     _COMPOSITE_PART_PATTERNS = (
-        (r"\bpolia(?:s)?\s+(?:da|de)?\s*bomba\s+(?:d(?:a|e)?['\s]+)?agua\b", "polia bomba de agua"),
+        (r'\bkit\s+(?:de\s+)?reparo\s+(?:d[eo]\s+)?amortecedor\b', 'kit reparo amortecedor'),
+        (r'\bconjunto\s+(?:d[eo]\s+)?amortecedor\b', 'conjunto amortecedor'),
+        (r"\bpolia(?:s)?\s+(?:\d{1,2}pk\s+)?(?:da\s+|de\s+)?bomba\s+(?:d(?:a|e)?['\s]+)?agua\b", "polia bomba de agua"),
+        (r"\btapa[- ]?po\s+(?:(?:do|de)\s+)?cilindro\s+(?:de\s+)?roda\b", "tapa po cilindro de roda"),
+        (r"\brolamentos?\s+(?:(?:do|de)\s+)?amortecedor(?:es)?\b", "rolamento de suspensao"),
         (r"\bkit\s+corrente\s+(?:da|de)?\s*bomba\s+(?:de\s+)?oleo\b", "kit corrente bomba de oleo"),
         (r"\bjunta\s+(?:do|da|de)?\s*cabecote\b", "junta do cabecote"),
         (r"\baditivo\s+(?:do|para\s+o)?\s*radiador\b", "aditivo radiador"),
@@ -63,6 +67,7 @@ class DictionaryPreSearchExtractor:
 
     def __init__(self, *, catalog: PreSearchCatalog) -> None:
         self._part_patterns = list(catalog.part_patterns)
+        self._ambiguous_part_aliases = set(catalog.ambiguous_part_aliases)
         self._brand_aliases = dict(catalog.brand_aliases)
         self._model_aliases = dict(catalog.model_aliases)
         self._variant_aliases_by_model = dict(catalog.variant_aliases_by_model)
@@ -105,7 +110,7 @@ class DictionaryPreSearchExtractor:
             normalized,
         )
         if replacement:
-            return RequestIntent(text=replacement.group(1).strip())
+            return self.resolve_request_intent(replacement.group(1).strip())
 
         # A direction negated after an affirmative direction is resolved by
         # _extract_position; it is not a negative part request.
@@ -116,21 +121,65 @@ class DictionaryPreSearchExtractor:
         ).strip()
         if re.search(r"\bnao\s+(?:quero|preciso|procuro|busco)\b", without_directions):
             return RequestIntent(text=normalized, unresolved_reason="unresolved_negation")
+        if re.search(r'\bcom\s+abs\b', normalized) and re.search(r'\bsem\s+abs\b', normalized):
+            return RequestIntent(text=normalized, unresolved_reason='contradictory_attribute')
+        if (
+            without_directions not in {"nao sei", "nao", "nao tenho certeza"}
+            and re.search(r"\b(?:nao\s+e\s+\S+|nao\s+\d{1,2}\.\d)\b", without_directions)
+        ):
+            return RequestIntent(text=normalized, unresolved_reason="unresolved_negation")
         correction = re.search(
             r"\b(?:corrija|corrigindo|correcao)\b\s*[,;:-]?\s*(?:e\s+)?(.+)$",
             normalized,
         )
         if correction and correction.group(1).strip():
-            return RequestIntent(text=correction.group(1).strip())
+            return self.resolve_request_intent(correction.group(1).strip())
         if re.search(r"\b(?:corrija|corrigindo|correcao)\b", normalized):
             return RequestIntent(text=normalized, unresolved_reason="unresolved_correction")
+        # Different items can legitimately have different directions. Check
+        # each explicit item span, rather than flattening the whole request.
+        spans = self._part_spans(normalized)
+        segments = [normalized[a[0]:b[0]] for a, b in zip(spans, spans[1:])]
+        segments.append(normalized[spans[-1][0]:] if spans else normalized)
+        for segment in segments:
+            affirmative = re.sub(
+                r"\bnao\s+(?:e\s+)?(?:diant|tras|esq|dir|dianteir[oa]s?|traseir[oa]s?|esquerd[oa]s?|direit[oa]s?)\b",
+                "", segment,
+            )
+            if (
+                re.search(r"\b(?:diant|dianteir[oa]s?)\b", affirmative)
+                and re.search(r"\b(?:tras|traseir[oa]s?)\b", affirmative)
+            ) or (
+                re.search(r"\besquerd[oa]s?\b", affirmative)
+                and re.search(r"\bdireit[oa]s?\b", affirmative)
+            ):
+                return RequestIntent(text=normalized, unresolved_reason="contradictory_direction")
         return RequestIntent(text=normalized)
 
     def canonicalize_part_query(self, value: str | None) -> str | None:
         normalized_value = normalize_pre_search_text(value)
         if not normalized_value:
             return None
+        if normalized_value in {key for key, _ in self._part_patterns}:
+            return normalized_value
         return self._extract_part_query(normalized_value)
+
+    def ambiguous_part_alias(self, text: str) -> str | None:
+        normalized = normalize_pre_search_text(text)
+        matches = [alias for alias in self._ambiguous_part_aliases
+                   if re.search(rf'\b{re.escape(alias)}\b', normalized)]
+        if not matches:
+            return None
+        best = max(matches, key=lambda value: (len(value.split()), len(value)))
+        exact = self._extract_exact_part_query_match(normalized)
+        if exact and (exact.token_count, exact.char_count) > (len(best.split()), len(best)):
+            return None
+        return best
+
+    def needs_component_confirmation(self, part_query: str | None) -> bool:
+        protected = {canonical for _, canonical in self._COMPOSITE_PART_PATTERNS}
+        known = {part for part, _ in self._part_patterns}
+        return bool(part_query and (part_query in protected or part_query.startswith('conjunto ')) and part_query not in known)
 
     def extract_items(self, message_text: str) -> list[SearchCriteria]:
         """Extract independent part requests without crossing vehicle evidence.
@@ -181,28 +230,13 @@ class DictionaryPreSearchExtractor:
         spans preserve the catalog vocabulary while the text between spans
         remains local to the corresponding item.
         """
-        matches: list[tuple[int, int, _AliasCandidate]] = []
-        for candidate in self._part_alias_candidates:
-            for match in re.finditer(rf"\b{re.escape(candidate.alias)}\b", normalized):
-                matches.append((match.start(), match.end(), candidate))
-        if len(matches) < 2:
-            return []
-
-        matches.sort(key=lambda item: (item[0], -(item[1] - item[0])))
-        anchors: list[tuple[int, int, _AliasCandidate]] = []
-        for match in matches:
-            if anchors and match[0] < anchors[-1][1]:
-                continue
-            anchors.append(match)
+        anchors = self._part_spans(normalized)
         if len(anchors) < 2:
             return []
 
         prefix = self._extract_from(normalized[: anchors[0][0]], raw_text=normalized[: anchors[0][0]])
         suffix = self._extract_from(normalized[anchors[-1][1] :], raw_text=normalized[anchors[-1][1] :])
-        shared_vehicle = self._shared_vehicle_outside_part_spans(
-            prefix=prefix,
-            suffix=suffix,
-        )
+        shared_vehicle = self._shared_vehicle_outside_part_spans(prefix=prefix, suffix=suffix)
         items: list[SearchCriteria] = []
         seen: set[tuple[object, ...]] = set()
         for index, (start, _end, candidate) in enumerate(anchors):
@@ -214,25 +248,38 @@ class DictionaryPreSearchExtractor:
             quantity = self._extract_quantity_before_part(normalized, start)
             if quantity is not None:
                 values["quantity"] = quantity
-            # A local model or manufacturer starts a distinct vehicle
-            # application. Never complete its missing year/engine from a
-            # trailing common vehicle phrase (for example, Gol 98 ... Siena
-            # 2008). Only an item with no local vehicle identity inherits it.
-            can_share_vehicle = (
-                shared_vehicle is not None
-                and values.get("vehicle_model") in (None, "")
-                and values.get("vehicle_brand") in (None, "")
-            )
-            if can_share_vehicle:
-                for field_name in ("vehicle_brand", "vehicle_model", "vehicle_year", "engine"):
-                    if values.get(field_name) in (None, "", []):
-                        values[field_name] = getattr(shared_vehicle, field_name)
+            # Only an item without its own application inherits a shared one.
+            if shared_vehicle is not None and not values.get("vehicle_model") and not values.get("vehicle_brand"):
+                for field in ("vehicle_brand", "vehicle_model", "vehicle_year", "engine"):
+                    if values.get(field) in (None, "", []):
+                        values[field] = getattr(shared_vehicle, field)
             item = SearchCriteria.model_validate(values)
             key = self._item_identity_key(item)
             if key not in seen:
                 seen.add(key)
                 items.append(item)
         return items
+
+    def _part_spans(self, normalized: str) -> list[tuple[int, int, _AliasCandidate]]:
+        """Protect a component from aliases contained inside its name."""
+        matches: list[tuple[int, int, _AliasCandidate]] = []
+        for pattern, canonical in self._COMPOSITE_PART_PATTERNS:
+            for match in re.finditer(pattern, normalized):
+                alias = match.group()
+                matches.append((match.start(), match.end(), _AliasCandidate(
+                    canonical=canonical, alias=alias,
+                    token_count=len(alias.split()), char_count=len(alias),
+                )))
+        for candidate in self._part_alias_candidates:
+            for match in re.finditer(rf"\b{re.escape(candidate.alias)}\b", normalized):
+                matches.append((match.start(), match.end(), candidate))
+        matches.sort(key=lambda item: (item[0], -(item[1] - item[0])))
+        anchors: list[tuple[int, int, _AliasCandidate]] = []
+        for match in matches:
+            if anchors and match[0] < anchors[-1][1]:
+                continue
+            anchors.append(match)
+        return anchors
 
     @staticmethod
     def _shared_vehicle_outside_part_spans(
@@ -304,19 +351,29 @@ class DictionaryPreSearchExtractor:
         normalized_canonical = normalize_pre_search_text(canonical_part_query)
         if not normalized_text or not normalized_canonical:
             return False
+        for pattern, canonical in self._COMPOSITE_PART_PATTERNS:
+            if re.search(pattern, normalized_text) and canonical == normalized_canonical:
+                return canonical in {part for part, _ in self._part_patterns}
         match = self._extract_exact_part_query_match(normalized_text)
         return bool(match and match.canonical == normalized_canonical)
 
     def _extract_from(self, normalized_text: str, *, raw_text: str) -> SearchCriteria:
-        vehicle_brand = self._extract_vehicle_brand(normalized_text)
-        vehicle_model = self._extract_vehicle_model(normalized_text)
-        vehicle_year = self._extract_year(normalized_text)
+        # An explicit application after a product description owns its vehicle
+        # fields. Model/year tokens in the title remain product context.
+        vehicle_text = normalized_text
+        for marker in re.finditer(r"\b(?:para|pro|pra)\s+(?:(?:o|a)\s+)?", normalized_text):
+            suffix = normalized_text[marker.end():]
+            if self._extract_vehicle_model(suffix):
+                vehicle_text = suffix
+        vehicle_brand = self._extract_vehicle_brand(vehicle_text)
+        vehicle_model = self._extract_vehicle_model(vehicle_text, prefer_first=vehicle_text != normalized_text)
+        vehicle_year = self._extract_year(vehicle_text)
         if vehicle_year is None and vehicle_model:
             # In catalog requests a two-digit year immediately follows a known
             # model ("Gol 98") frequently enough to be useful. Restrict it to
             # 1980--1999 so a quantity, valve count or displacement is never
             # promoted to an application year.
-            short_year = re.search(r"\b(8\d|9\d)\b", normalized_text)
+            short_year = re.search(r"\b(8\d|9\d)\b", vehicle_text)
             if short_year:
                 vehicle_year = 1900 + int(short_year.group(1))
         exact_part_match = self._extract_exact_part_query_match(normalized_text)
@@ -343,16 +400,21 @@ class DictionaryPreSearchExtractor:
             vehicle_brand=vehicle_brand,
             vehicle_model=vehicle_model,
             vehicle_year=vehicle_year,
-            engine=self._extract_engine(normalized_text),
+            engine=self._extract_engine(vehicle_text),
             side=self._extract_side(normalized_text),
             position=self._extract_position(normalized_text),
             axle=self._extract_axle(normalized_text),
-            variant=self._extract_catalog_variant(normalized_text, vehicle_model) or self._extract_variant(normalized_text),
+            variant=self._extract_catalog_variant(vehicle_text, vehicle_model) or self._extract_variant(vehicle_text),
+            fuel=self._extract_fuel(vehicle_text) if vehicle_model else None,
+            transmission=self._extract_transmission(vehicle_text),
+            abs=self._extract_abs(normalized_text),
             quantity=quantity,
         )
 
     @staticmethod
     def _merge(*, primary: SearchCriteria, fallback: SearchCriteria) -> SearchCriteria:
+        same_vehicle = not primary.vehicle_model or not fallback.vehicle_model or primary.vehicle_model == fallback.vehicle_model
+        same_component = not primary.part_query or not fallback.part_query or primary.part_query == fallback.part_query
         return SearchCriteria(
             part_query=primary.part_query or fallback.part_query,
             part_code=primary.part_code or fallback.part_code,
@@ -370,6 +432,9 @@ class DictionaryPreSearchExtractor:
             position=primary.position or fallback.position,
             axle=primary.axle or fallback.axle,
             variant=primary.variant or fallback.variant,
+            fuel=primary.fuel or (fallback.fuel if same_vehicle else None),
+            transmission=primary.transmission or (fallback.transmission if same_vehicle else None),
+            abs=primary.abs if primary.abs is not None else (fallback.abs if same_component else None),
             quantity=primary.quantity or fallback.quantity,
         )
 
@@ -387,10 +452,12 @@ class DictionaryPreSearchExtractor:
         for pattern, canonical in self._COMPOSITE_PART_PATTERNS:
             if re.search(pattern, text):
                 return canonical
+        if self.ambiguous_part_alias(text):
+            return None
         # Preserve the requested component before resolving a contained family.
         # An unknown kit/support must not silently become the radiator itself.
         component = re.search(
-            r"\b(tampas?|kits?|mangueiras?|suportes?|reparos?)\s+"
+            r"\b(tampas?|kits?|mangueiras?|suportes?|reparos?|conjuntos?)\s+"
             r"(?:(?:de|do|da|dos|das)\s+)?([^,;]+)", text
         )
         if component:
@@ -498,18 +565,19 @@ class DictionaryPreSearchExtractor:
                 return None
         return best_score
 
-    def _extract_vehicle_model(self, text: str) -> str | None:
-        best_match: tuple[int, int, int] | None = None
+    def _extract_vehicle_model(self, text: str, *, prefer_first: bool = False) -> str | None:
+        best_match: tuple[int, ...] | None = None
         best_model: str | None = None
         for model, aliases in self._model_aliases.items():
             for alias in aliases:
                 candidate = str(alias or "").strip()
                 if not candidate:
                     continue
-                if not re.search(rf"\b{re.escape(candidate)}\b", text):
+                match = re.search(rf"\b{re.escape(candidate)}\b", text)
+                if match is None:
                     continue
 
-                score = self._model_alias_score(candidate)
+                score = ((-match.start(),) if prefer_first else ()) + self._model_alias_score(candidate)
                 if best_match is None or score > best_match:
                     best_match = score
                     best_model = model
@@ -549,6 +617,9 @@ class DictionaryPreSearchExtractor:
 
     @staticmethod
     def _extract_engine(text: str) -> str | None:
+        explicit = re.search(r"\bmotor\s+([1-9][0-9]?\.[0-9])\b", text)
+        if explicit:
+            return explicit.group(1)
         match = re.search(r"\b([1-6]\.[0-9])\b", text)
         if not match:
             return None
@@ -556,6 +627,7 @@ class DictionaryPreSearchExtractor:
 
     @staticmethod
     def _extract_side(text: str) -> str | None:
+        text = re.sub(r'\bnao\s+(?:e\s+)?(?:esq|dir|esquerd[oa]|direit[oa])\b','',text)
         has_left = bool(re.search(r"\b(?:le|esq|esquerd[oa])\b", text))
         has_right = bool(re.search(r"\b(?:ld|dir|direit[oa])\b", text))
         if has_left and has_right:
@@ -572,7 +644,7 @@ class DictionaryPreSearchExtractor:
         if re.search(r"\b(eixo\s+diant|eixo\s+dianteir[oa]|eixo\s+tras|eixo\s+traseir[oa])\b", text):
             return None
         affirmative_text = re.sub(
-            r"\bnao\s+(?:e\s+)?(?:dianteir[oa]|traseir[oa]|front|rear)\b",
+            r"\bnao\s+(?:e\s+)?(?:diant|tras|dianteir[oa]|traseir[oa]|front|rear)\b",
             "",
             text,
         )
@@ -588,22 +660,36 @@ class DictionaryPreSearchExtractor:
 
     @staticmethod
     def _extract_variant(text: str) -> str | None:
-        oil_viscosity = re.search(r"\b(\d{1,2})\s*w\s*(\d{2})\b", text)
+        oil_viscosity = re.search(r"\b(\d{1,2})\s*w\s*-?\s*(\d{2})\b", text)
         if oil_viscosity:
             return f"{oil_viscosity.group(1)}W{oil_viscosity.group(2)}"
 
-        variants = (
-            (r"\babs\b", "ABS"),
-            (r"\bdualogic\b", "Dualogic"),
-            (r"\bautomatic[oa]\b", "automatico"),
-            (r"\bmanual\b", "manual"),
-            (r"\bgasolina\b", "gasolina"),
-            (r"\bdiesel\b", "diesel"),
-            (r"\bflex\b", "flex"),
-        )
-        for pattern, value in variants:
-            if re.search(pattern, text):
+        return None
+
+    @staticmethod
+    def _extract_fuel(text: str) -> str | None:
+        for value in ('flex', 'diesel', 'gasolina', 'etanol'):
+            if re.search(rf'\b{value}\b', text):
                 return value
+        return None
+
+    @staticmethod
+    def _extract_transmission(text: str) -> str | None:
+        # Manual may describe the pump/tool, not the vehicle transmission.
+        if re.search(r'\bdualogic\b', text):
+            return 'dualogic'
+        if re.search(r'\b(?:cambio|transmissao)\s+(?:automatic[oa]|at)\b', text):
+            return 'automatico'
+        if re.search(r'\b(?:cambio|transmissao)\s+(?:manual|mt)\b', text):
+            return 'manual'
+        return None
+
+    @staticmethod
+    def _extract_abs(text: str) -> bool | None:
+        if re.search(r'\b(?:sem|s\s*/|nao tem|nao possui)\s*abs\b', text):
+            return False
+        if re.search(r'\b(?:com|c\s*/)\s*abs\b', text):
+            return True
         return None
 
     def _extract_catalog_variant(self, text: str, model: str | None) -> str | None:

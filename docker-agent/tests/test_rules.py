@@ -189,13 +189,15 @@ def test_dictionary_extractor_extracts_part_model_and_year() -> None:
     assert result.vehicle_year == 2008
 
 
-def test_dictionary_extractor_extracts_oil_viscosity_as_variant() -> None:
+@pytest.mark.parametrize("viscosity", ["5w40", "5W-40", "5 W 40", "5 w - 40"])
+def test_dictionary_extractor_extracts_oil_viscosity_as_variant(viscosity) -> None:
     result = DictionaryPreSearchExtractor(catalog=_catalog_fixture()).extract(
-        "Quero oleo 20w50"
+        f"Quero oleo {viscosity}"
     )
 
     assert result.part_query == "lubrificantes"
-    assert result.variant == "20W50"
+    assert result.variant == "5W40"
+    assert result.part_code is None
 
 
 @pytest.mark.parametrize(
@@ -603,7 +605,8 @@ def test_dictionary_extractor_keeps_spontaneous_variant_information() -> None:
         "com ABS"
     )
 
-    assert result.variant == "ABS"
+    assert result.variant is None
+    assert result.abs is True
 
 
 def test_dictionary_extractor_prefers_text_model_over_numeric_year_like_model() -> None:
@@ -1896,15 +1899,17 @@ def test_deterministic_ask_requests_oil_specification_without_vehicle_data() -> 
     assert result.next_question.prompt == "Qual a especificacao do oleo (por exemplo, 20W50)?"
 
 
-def test_deterministic_bypass_searches_oil_when_specification_is_present() -> None:
+@pytest.mark.parametrize("viscosity", ["20w50", "5w40", "5W-40", "5 W 40"])
+def test_deterministic_bypass_searches_oil_when_specification_is_present(viscosity) -> None:
     validator = _validator()
 
-    result = validator.try_validate_deterministically("quero oleo 20w50")
+    result = validator.try_validate_deterministically(f"quero oleo {viscosity}")
 
     assert result is not None
     assert result.decision == "search"
     assert result.criteria.part_query == "lubrificantes"
-    assert result.criteria.variant == "20W50"
+    assert result.criteria.variant == ("20W50" if viscosity == "20w50" else "5W40")
+    assert result.criteria.part_code is None
     assert result.criteria.vehicle_model is None
     assert result.missing_fields == []
 

@@ -18,6 +18,9 @@ class SearchCriteria(BaseModel):
     position: Literal["front", "rear"] | None = None
     axle: Literal["front", "rear"] | None = None
     variant: str | None = None
+    fuel: Literal['gasolina', 'etanol', 'diesel', 'flex'] | None = None
+    transmission: Literal['manual', 'automatico', 'dualogic'] | None = None
+    abs: bool | None = None
     quantity: int | None = Field(default=None, ge=1, le=999)
 
 

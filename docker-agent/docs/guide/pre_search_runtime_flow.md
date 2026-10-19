@@ -27,6 +27,38 @@ O documento cobre o comportamento atual e mostra, de forma explicitamente marcad
 
 O `README.md` raiz do projeto contem a versao resumida do fluxo.
 
+## Identidade E Follow-Up Governados Pelo Backend
+
+O catalogo aplica decisoes explicitas para aliases concorrentes. Uma forma
+generica como `batente`, `bucha`, `pino` ou `auxiliar` pede componente/funcao;
+qualificadores curados como `batente suspensao` selecionam a identidade propria.
+Uma colisao nova tambem interrompe a pesquisa. Conceitos unificados, como
+trizeta/trizetas, compartilham somente scopes aprovados.
+
+O extractor protege componentes compostos: polia de bomba nao vira bomba,
+rolamento de amortecedor nao vira amortecedor e tapa-po sem mapeamento nao
+libera cilindro de roda. A aplicacao explicitamente indicada apos `para`
+prevalece sobre modelos/anos do titulo. Itens distintos mantem suas aplicacoes;
+direcoes contraditorias da mesma peca interrompem o fluxo para confirmacao.
+Negacoes que o contrato nao representa tambem pedem esclarecimento.
+
+Em resposta curta a `pending_slot=variant|engine`, usar o modelo/ano e o item
+ativo do estado. `4X4` em uma versao e `460` em um motor nao corrigem o modelo.
+Opcoes textuais sao resolvidas no catalogo contextual; valores adicionais ou
+versoes desconhecidas exigem prova pela ferramenta de busca na mesma aplicacao.
+O valor integral comprovado permanece no estado, sem ser reextraido do historico
+como outra versao. Novo pedido completo ou correcao explicita prevalecem.
+
+A prova e executada em worker, limitada pela concorrencia ERP, timeout e cache
+da requisicao. Consulta somente a existencia da opcao veicular na mesma
+aplicacao, independentemente de haver a peca correta; nao apresenta produtos.
+Identidade e direcoes da peca continuam obrigatorias na busca final. Sem prova, perguntar;
+com fonte indisponivel, encaminhar apos o fallback configurado. A pesquisa de
+produtos continua passando por todos os gates e pelo contrato SQL existente.
+Detalhes nas decisoes [47](../DECISIONS.md#47-preservar-identidade-e-governar-follow-up-pelo-contexto)
+e [48](../DECISIONS.md#48-curadoria-de-familias-e-refinamentos-tipados), que separa
+a prova da opcao veicular da disponibilidade de produtos.
+
 ## Responsabilidades Dos Servicos
 
 ### `docker-comm`
@@ -77,7 +109,7 @@ conv:{conversation_id}:state
 
 ## Fluxo Ponta A Ponta
 
-No diagrama abaixo, os blocos com a indicacao `planejado` pertencem a Prioridade 3 e ainda nao representam comportamento implementado.
+No diagrama abaixo, os blocos com a indicacao `planejado` sao propostas e ainda nao representam comportamento implementado. Consulte o [TODO.md](../TODO.md) para distinguir trabalho ativo de hipoteses adiadas; o bloco de GPU/fine-tuning foi reavaliado em 19/10/2026.
 
 ```mermaid
 flowchart TD
@@ -377,7 +409,13 @@ O `docker-agent` monta e devolve esse objeto. O `docker-comm` apenas valida o co
 
 2. Extracao deterministica
    O catalogo carregado do Postgres tenta reconhecer:
-   `part_query`, `part_code`, `preferred_product_brand`, `vehicle_brand`, `vehicle_model`, `vehicle_year`, `engine`, `side`, `position`, `axle`, `variant` e `quantity`.
+   `part_query`, `part_code`, `preferred_product_brand`, `vehicle_brand`, `vehicle_model`, `vehicle_year`, `engine`, `side`, `position`, `axle`, `variant`, `fuel`, `transmission`, `abs` e `quantity`.
+
+   `fuel`, `transmission` e `abs` sao opcionais e separados de versao.
+   `sem ABS` produz `abs=false`; ausencia de atributo nao equivale a falso.
+   `bomba manual` descreve a peca, sem preencher cambio ou versao. Valores
+   tipados precisam de evidencia do cliente e sobrevivem a LLM/historico/Redis;
+   novo veiculo ou componente nao herda esses filtros de outro pedido.
 
    `preferred_product_brand` representa uma preferencia comercial da peca, como NGK, Nakata ou Cofap. Ela nunca substitui `vehicle_brand` e nao elimina produtos equivalentes de outras marcas.
 

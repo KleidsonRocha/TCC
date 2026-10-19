@@ -3781,6 +3781,396 @@
       "validation_question": "A familia, aplicacao, posicao e cobertura de codigos da resposta correspondem ao ERP?"
     },
     {
+      "id": "audit_identity_polia",
+      "category": "audited_component_identity",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "audit_identity_polia_t1",
+          "message": "POLIA 6PK BOMBA DA AGUA VW GOL/PARATI/SAVEIRO/SANTANA 97/ para SAVEIRO 2005 motor 2.0",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "criteria_contains": {
+              "part_query": "polia bomba de agua",
+              "vehicle_model": "SAVEIRO",
+              "vehicle_year": 2005
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "audit_identity_rolamento",
+      "category": "audited_component_identity",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "audit_identity_rolamento_t1",
+          "message": "ROLAMENTO AMORTECEDOR FIAT PALIO/SIENA/STRADA/TEMPRA para PALIO 2009 motor 1.0 dianteiro",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "criteria_contains": {
+              "part_query": "rolamento de suspensao",
+              "vehicle_model": "PALIO",
+              "vehicle_year": 2009
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "audit_identity_clio",
+      "category": "audited_component_identity",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "audit_identity_clio_t1",
+          "message": "KIT AMORTECEDOR RENAULT CLIO 98/ TWINGO 2000/ DIANTEIRO para CLIO 2004 motor 1.6 dianteiro",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "criteria_contains": {
+              "part_query": "kit amortecedor",
+              "vehicle_model": "CLIO",
+              "vehicle_year": 2004
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "audit_identity_tapa_po",
+      "category": "audited_component_identity",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "audit_identity_tapa_po_t1",
+          "message": "TAPA-PO CILINDRO RODA VW GOL/GOLF/SAVEIRO para IBIZA 1999 motor 1.6",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "criteria_contains": {
+              "part_query": "tapa po cilindro de roda",
+              "vehicle_model": "IBIZA",
+              "vehicle_year": 1999
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "audit_identity_conflict",
+      "category": "audited_direction_conflict",
+      "tier": "smoke",
+      "turns": [
+        {
+          "id": "audit_identity_conflict_t1",
+          "message": "kit amortecedor traseiro para TEMPRA 1998 motor 2.0 dianteiro",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "question_key": "intent_resolution",
+            "used_tools_excludes": [
+              "search_parts",
+              "pre_search_validator"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "audit_follow_up_s10",
+      "category": "audited_contextual_option",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "audit_follow_up_s10_t1",
+          "message": "semi eixo para S10 2017 motor 2.5 esquerdo dianteiro eixo dianteiro",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "question_key": "variant",
+            "used_tools_excludes": [
+              "search_parts"
+            ]
+          }
+        },
+        {
+          "id": "audit_follow_up_s10_t2",
+          "message": "LTZ 2.5 FLEX 4X4 CD AT",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "criteria_contains": {
+              "vehicle_model": "S10",
+              "variant": "LTZ 2.5 FLEX 4X4 CD AT"
+            },
+            "question_key_excludes": [
+              "variant"
+            ],
+            "used_tools_contains": [
+              "search_parts"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "audit_follow_up_palio",
+      "category": "audited_contextual_option",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "audit_follow_up_palio_t1",
+          "message": "bujao para PALIO 2010 motor 1.0",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "question_key": "variant",
+            "used_tools_excludes": [
+              "search_parts"
+            ]
+          }
+        },
+        {
+          "id": "audit_follow_up_palio_t2",
+          "message": "ELX RST III",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "criteria_contains": {
+              "vehicle_model": "PALIO",
+              "variant": "ELX RST III"
+            },
+            "question_key_excludes": [
+              "variant"
+            ],
+            "used_tools_contains": [
+              "search_parts"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "audit_follow_up_truck",
+      "category": "audited_textual_engine",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "audit_follow_up_truck_t1",
+          "message": "caixa de bateria para FH 460 2016",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "question_key": "engine"
+          }
+        },
+        {
+          "id": "audit_follow_up_truck_t2",
+          "message": "12.8 L 24V SOHC L6 D 13 C 460",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "criteria_contains": {
+              "vehicle_model": "FH 460",
+              "engine": "12.8 L 24V SOHC L6 D 13 C 460"
+            },
+            "question_key_excludes": [
+              "engine"
+            ],
+            "used_tools_contains": [
+              "search_parts"
+            ],
+            "reply_excludes": [
+              "PRESILHA",
+              "R-3408"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "curation_trizeta",
+      "category": "curated_identity_refinements",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "curation_trizeta_t1",
+          "message": "trizeta para GOL 2010 motor 1.0",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "criteria_contains": {
+              "part_query": "trizetas"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "curation_ventilador",
+      "category": "curated_identity_refinements",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "curation_ventilador_t1",
+          "message": "eletro ventilador para GOL 2010 motor 1.0",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "criteria_contains": {
+              "part_query": "eletroventilador"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "curation_kit",
+      "category": "curated_identity_refinements",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "curation_kit_t1",
+          "message": "kit amortecedor para CLIO 2004 motor 1.6 dianteiro",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "criteria_contains": {
+              "part_query": "kit amortecedor",
+              "vehicle_model": "CLIO",
+              "vehicle_year": 2004
+            },
+            "used_tools_contains": [
+              "search_parts"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "curation_without_abs",
+      "category": "curated_identity_refinements",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "curation_without_abs_t1",
+          "message": "semi eixo sem ABS para GOL 2003 motor 1.0 direito",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "criteria_contains": {
+              "part_query": "semi eixo",
+              "abs": false,
+              "variant": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "curation_with_abs",
+      "category": "curated_identity_refinements",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "curation_with_abs_t1",
+          "message": "semi eixo com ABS para GOL 2003 motor 1.0 direito",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "criteria_contains": {
+              "abs": true,
+              "variant": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "curation_manual_pump",
+      "category": "curated_identity_refinements",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "curation_manual_pump_t1",
+          "message": "bomba manual para A3 2016 motor 1.4",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "criteria_contains": {
+              "part_query": "bomba manual",
+              "transmission": null,
+              "variant": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "curation_typed",
+      "category": "curated_identity_refinements",
+      "tier": "regression",
+      "turns": [
+        {
+          "id": "curation_typed_t1",
+          "message": "radiador para GOL 2010 motor 1.0 flex cambio manual",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "criteria_contains": {
+              "fuel": "flex",
+              "transmission": "manual",
+              "variant": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "curation_ambiguous",
+      "category": "curated_identity_refinements",
+      "tier": "smoke",
+      "turns": [
+        {
+          "id": "curation_ambiguous_t1",
+          "message": "batente para GOL 2010",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "question_key": "part_query",
+            "used_tools_excludes": [
+              "search_parts",
+              "pre_search_validator"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "curation_repair",
+      "category": "curated_identity_refinements",
+      "tier": "smoke",
+      "turns": [
+        {
+          "id": "curation_repair_t1",
+          "message": "kit reparo amortecedor para GOL 2010",
+          "schema_version": "1.0",
+          "expect": {
+            "status": 200,
+            "question_key": "part_query",
+            "used_tools_excludes": [
+              "search_parts",
+              "pre_search_validator"
+            ]
+          }
+        }
+      ]
+    },
+    {
       "id": "invalid_001",
       "category": "contract_validation",
       "tier": "regression",

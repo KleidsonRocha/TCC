@@ -7,23 +7,42 @@ Os arquivos deste diretorio servem a etapas diferentes do ciclo de validacao do 
 ### Pre-search e parametros do LLM
 
 - [`pre_search_eval_dataset_mvp.json`](pre_search_eval_dataset_mvp.json) — conjunto curto de 20 pedidos para avaliar a extracao e as perguntas do pre-search.
-- [`pre_search_num_predict_golden_set.json`](pre_search_num_predict_golden_set.json) — conjunto de 25 casos usado no benchmark do parametro `num_predict` e na avaliacao golden do pre-search.
+- [`pre_search_num_predict_golden_set.json`](pre_search_num_predict_golden_set.json) — conjunto usado no benchmark do parametro `num_predict` e na avaliacao golden do pre-search, incluindo busca de oleo por viscosidade.
 
 Os dois arquivos usam registros de entrada/expectativa semelhantes, mas tem papeis de avaliacao diferentes e consumidores proprios. Devem permanecer separados enquanto o relatorio e o benchmark os selecionarem independentemente.
 
 ### Busca SQL do ERP
 
-- [`erp_search_golden_set.json`](erp_search_golden_set.json) — 45 casos e seis grupos de fixtures para identidade da peca, aplicacao do veiculo, filtros e ranking da busca SQL. E consumido pelo avaliador ERP e pelas regressoes PostgreSQL.
+- [`erp_search_golden_set.json`](erp_search_golden_set.json) — 52 casos para identidade da peca, aplicacao do veiculo, viscosidade de lubrificantes, filtros e ranking da busca SQL. E consumido pelo avaliador ERP e pelas regressoes PostgreSQL.
 - [`erp_manual_type_validation_v1.json`](erp_manual_type_validation_v1.json) — caderno progressivo de oito validacoes manuais, com conversa, consulta ERP, aplicacoes conferidas e divergencias. Esta em andamento e nao e um golden set executavel.
 
 O golden set ERP testa regras e resultados controlados; a validacao manual registra evidencias comerciais reais e itens ainda pendentes. Manter separados evita transformar observacoes parciais em expectativas aprovadas.
 
 ### Endpoint de conversa `respond`
 
-- [`battery_structural_respond_v2.json`](battery_structural_respond_v2.json) — 151 cenarios multi-turno com niveis cumulativos `smoke`, `regression` e `extended`, usados em testes estruturais e de integracao.
+- [`battery_structural_respond_v2.json`](battery_structural_respond_v2.json) — 168 cenarios/206 turnos com niveis cumulativos `smoke`, `regression` e `extended`, usados em testes estruturais e de integracao.
 - [`battery_real_omnichannel_250.json`](battery_real_omnichannel_250.json) — 250 cenarios derivados de conversas reais omnichannel. Expectativas comerciais ou semanticas ficam sujeitas a revisao humana; os cenarios nao aprovados nao devem ser tratados como rotulos golden.
 
 As duas baterias compartilham a ideia de cenario multi-turno, mas diferem na origem e no nivel de aprovacao. A bateria real nao deve ser incorporada automaticamente a estrutural: isso mudaria a confiabilidade dos resultados de CI.
+
+Em 19/10/2026 foram adicionados oito cenarios `audit_identity_*` e
+`audit_follow_up_*`: componente/aplicacao em titulos, contradicao direcional,
+S10 com `LTZ 2.5 FLEX 4X4 CD AT`, Palio com `ELX RST III` e FH 460 com motor
+textual completo. As expectativas verificam criterios, estado e gates;
+nao atestam comercialmente os produtos. O gerador e
+`scripts/eval/build_real_respond_battery_dataset.py`; a regressao independente
+de LLM fica em `tests/test_request_identity_follow_up.py`, incluindo negacao,
+correcao, multi-item, opcao inexistente e fonte indisponivel. Os datasets e
+resultados congelados do experimento LoRA nao foram alterados.
+
+O lote seguinte acrescentou nove casos `curation_*`: escopos de trizeta e
+eletroventilador, kit do Clio, aliases ambiguos, reparo e atributos separados
+de ABS/combustivel/cambio. Tapa-po agora possui identidade curada em `12/19`;
+o caso continua exigindo esse componente, com motor perguntado quando ausente,
+sem esperar que o cadastro contenha um produto para todo veiculo informado.
+`tests/test_family_curation_refinements.py` complementa a bateria com controles
+SQL de mesma aplicacao, composicao, evidencias negativas e abreviacoes. Nenhum
+desses controles promove automaticamente a referencia comercial a gabarito.
 
 ### Ranking real anotado por humanos
 

@@ -1,0 +1,44 @@
+alias_normalized,family_key,reason
+tampa,,Distinguish cap from gas spring
+antichama,,Distinguish separator from hose
+batente,,Require physical component context
+batentes,,Require physical component context
+batente suspensao,batentes suspensao,Explicit suspension component
+batentes suspensao,batentes suspensao,Explicit suspension component
+bomba agua,bomba de agua,Pump alone is distinct from timing kit
+bucha,,Body and suspension bushings need context
+buchas,,Body and suspension bushings need context
+auxiliar,,Cylinder and repair are different components
+junta diferencial,junta de diferencial,Explicit differential seal identity
+juntas diferencial,junta de diferencial,Plural of same component
+pino,,Fuel brake and axle pins need context
+pinos,,Fuel brake and axle pins need context
+reparo cilindro mestre,reparo cilindro mestre,Explicit master cylinder repair
+retentor diferencial,retentor de diferencial,Explicit differential oil seal
+retentores diferencial,retentor de diferencial,Plural of same component
+rolamento diferencial,rolamento diferencial,Explicit differential bearing
+rolamentos diferencial,rolamento diferencial,Plural of same component
+trizeta,trizetas,Singular of same tripod joint
+trizetas,trizetas,Same tripod joint across curated scopes
+batente amortecedor,batentes suspensao,Suspension component rather than body stop
+batentes eixo,batentes suspensao,Explicit suspension axle context
+batente carroceria,batente carroceria,Body stop separated from suspension
+batentes carroceria,batente carroceria,Body stop separated from suspension
+batentes acessorio,,Accessory is not a physical identity
+btentes,,Typo remains physically ambiguous
+bucha acessorio,,Accessory is not a physical identity
+buchas acessorio,,Accessory is not a physical identity
+pino eixo,pino de eixo,Explicit axle pin
+pinos eixo,pino de eixo,Explicit axle pin
+pino suspensao,pino de eixo,Explicit suspension pin
+pinos suspensao,pino de eixo,Explicit suspension pin
+pino combustivel,pino de combustivel,Explicit fuel component
+pinos combustivel,pino de combustivel,Explicit fuel component
+pino injecao,pino de combustivel,Explicit injection component
+pinos injecao,pino de combustivel,Explicit injection component
+pino freio,pino de freio,Explicit brake pin
+pinos freio,pino de freio,Explicit brake pin
+pino freios,pino de freio,Explicit brake pin
+pinos freios,pino de freio,Explicit brake pin
+pino autopeca,,Generic classification is not a physical identity
+pinos autopeca,,Generic classification is not a physical identity

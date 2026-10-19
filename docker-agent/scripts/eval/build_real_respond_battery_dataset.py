@@ -434,11 +434,77 @@ def multi_item_follow_up_scenarios() -> list[dict[str, Any]]:
     ]
 
 
+def audited_identity_follow_up_scenarios() -> list[dict[str, Any]]:
+    """Structural regressions from the 19/10 audit, not commercial labels."""
+    rows = []
+    for case_id, message, part, model, year in [
+        ("polia", "POLIA 6PK BOMBA DA AGUA VW GOL/PARATI/SAVEIRO/SANTANA 97/ para SAVEIRO 2005 motor 2.0", "polia bomba de agua", "SAVEIRO", 2005),
+        ("rolamento", "ROLAMENTO AMORTECEDOR FIAT PALIO/SIENA/STRADA/TEMPRA para PALIO 2009 motor 1.0 dianteiro", "rolamento de suspensao", "PALIO", 2009),
+        ("clio", "KIT AMORTECEDOR RENAULT CLIO 98/ TWINGO 2000/ DIANTEIRO para CLIO 2004 motor 1.6 dianteiro", "kit amortecedor", "CLIO", 2004),
+        ("tapa_po", "TAPA-PO CILINDRO RODA VW GOL/GOLF/SAVEIRO para IBIZA 1999 motor 1.6", "tapa po cilindro de roda", "IBIZA", 1999),
+    ]:
+        name = "audit_identity_" + case_id
+        expect = {"status": 200, "criteria_contains": {
+            "part_query": part, "vehicle_model": model, "vehicle_year": year,
+        }}
+        rows.append(scenario(name, "audited_component_identity", "regression", [turn(name+"_t1", message, expect)]))
+    rows.append(scenario("audit_identity_conflict", "audited_direction_conflict", "smoke", [
+        turn("audit_identity_conflict_t1", "kit amortecedor traseiro para TEMPRA 1998 motor 2.0 dianteiro", {
+            "status": 200, "question_key": "intent_resolution",
+            "used_tools_excludes": ["search_parts", "pre_search_validator"],
+        }),
+    ]))
+    for name, first, answer, model, variant in [
+        ("s10", "semi eixo para S10 2017 motor 2.5 esquerdo dianteiro eixo dianteiro", "LTZ 2.5 FLEX 4X4 CD AT", "S10", "LTZ 2.5 FLEX 4X4 CD AT"),
+        ("palio", "bujao para PALIO 2010 motor 1.0", "ELX RST III", "PALIO", "ELX RST III"),
+    ]:
+        case_id = "audit_follow_up_" + name
+        rows.append(scenario(case_id, "audited_contextual_option", "regression", [
+            turn(case_id+"_t1", first, {"status":200,"question_key":"variant","used_tools_excludes":["search_parts"]}),
+            turn(case_id+"_t2", answer, {"status":200,"criteria_contains":{"vehicle_model":model,"variant":variant},
+                "question_key_excludes":["variant"],"used_tools_contains":["search_parts"]}),
+        ]))
+    rows.append(scenario("audit_follow_up_truck", "audited_textual_engine", "regression", [
+        turn("audit_follow_up_truck_t1", "caixa de bateria para FH 460 2016", {"status":200,"question_key":"engine"}),
+        turn("audit_follow_up_truck_t2", "12.8 L 24V SOHC L6 D 13 C 460", {
+            "status":200,"criteria_contains":{"vehicle_model":"FH 460","engine":"12.8 L 24V SOHC L6 D 13 C 460"},
+            "question_key_excludes":["engine"],"used_tools_contains":["search_parts"],
+            "reply_excludes":["PRESILHA", "R-3408"],
+        }),
+    ]))
+    return rows
+
+
 def validation_scenarios() -> list[dict[str, Any]]:
     specs = [("", "1.0"), (" ", "1.0"), ("\t", "1.0"), ("Oi", "0.9"), ("radiador", "99.0")]
     return [scenario(f"invalid_{index:03d}", "contract_validation", "regression",
                     [turn(f"invalid_{index:03d}_t1", message, {"status": 400}, version)])
             for index, (message, version) in enumerate(specs, 1)]
+
+
+def family_refinement_scenarios() -> list[dict[str, Any]]:
+    rows=[]
+    for key,message,criteria in [
+        ('trizeta','trizeta para GOL 2010 motor 1.0',{'part_query':'trizetas'}),
+        ('ventilador','eletro ventilador para GOL 2010 motor 1.0',{'part_query':'eletroventilador'}),
+        ('kit','kit amortecedor para CLIO 2004 motor 1.6 dianteiro',{'part_query':'kit amortecedor','vehicle_model':'CLIO','vehicle_year':2004}),
+        ('without_abs','semi eixo sem ABS para GOL 2003 motor 1.0 direito',{'part_query':'semi eixo','abs':False,'variant':None}),
+        ('with_abs','semi eixo com ABS para GOL 2003 motor 1.0 direito',{'abs':True,'variant':None}),
+        ('manual_pump','bomba manual para A3 2016 motor 1.4',{'part_query':'bomba manual','transmission':None,'variant':None}),
+        ('typed','radiador para GOL 2010 motor 1.0 flex cambio manual',{'fuel':'flex','transmission':'manual','variant':None}),
+    ]:
+        case_id='curation_'+key
+        expect={'status':200,'criteria_contains':criteria}
+        if key=='kit':
+            expect['used_tools_contains']=['search_parts']
+        rows.append(scenario(case_id,'curated_identity_refinements','regression',[
+            turn(case_id+'_t1',message,expect)]))
+    for key,message in [('ambiguous','batente para GOL 2010'),('repair','kit reparo amortecedor para GOL 2010')]:
+        case_id='curation_'+key
+        rows.append(scenario(case_id,'curated_identity_refinements','smoke',[
+            turn(case_id+'_t1',message,{'status':200,'question_key':'part_query',
+                'used_tools_excludes':['search_parts','pre_search_validator']})]))
+    return rows
 
 
 def follow_up_unknown_scenarios() -> list[dict[str, Any]]:
@@ -606,6 +672,8 @@ def build_document() -> dict[str, Any]:
                  multi_item_follow_up_scenarios() +
                  follow_up_unknown_scenarios() + lexical_product_brand_scenarios() +
                  real_conversation_regression_scenarios() +
+                 audited_identity_follow_up_scenarios() +
+                 family_refinement_scenarios() +
                  validation_scenarios())
     return {
         "schema_version": "2.0", "name": "real_respond_battery_v2",

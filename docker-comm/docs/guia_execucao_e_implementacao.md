@@ -135,6 +135,14 @@ Foi implementada arquitetura em camadas:
 
 ## 5.3 Controle de conversa por origem
 
+O estado conserva os campos opcionais `fuel`, `transmission` e `abs` dos
+criterios, alem de `active_item_index` e `item_results` enviados pelo agente.
+ABS falso precisa sobreviver ao JSON e ao Redis; nao equivale a campo ausente.
+O indice identifica qual item recebe um follow-up. Esses dados usam as mesmas
+chaves e TTL existentes, sem nova persistencia nem mudanca do envelope HTTP.
+Cliente antigo pode omitir os campos; atualizar agente e gateway juntos para
+evitar que uma versao antiga do gateway descarte os campos novos.
+
 Para evitar colisao de IDs entre plataformas, o comm separa contexto por origem.
 
 - Entrada publica:

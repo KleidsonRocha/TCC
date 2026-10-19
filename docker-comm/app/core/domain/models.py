@@ -15,6 +15,9 @@ class SearchCriteriaState(BaseModel):
     position: Literal["front", "rear"] | None = None
     axle: Literal["front", "rear"] | None = None
     variant: str | None = None
+    fuel: Literal['gasolina', 'etanol', 'diesel', 'flex'] | None = None
+    transmission: Literal['manual', 'automatico', 'dualogic'] | None = None
+    abs: bool | None = None
     quantity: int | None = Field(default=None, ge=1, le=999)
 
 
@@ -46,6 +49,8 @@ class ConversationState(BaseModel):
     # Optional for backward compatibility; populated when a request contains
     # more than one independent part.
     items: list[SearchCriteriaState] | None = None
+    active_item_index: int | None = Field(default=None, ge=0)
+    item_results: list[dict[str, Any]] | None = Field(default=None, max_length=10)
     pending_slot: str | None = None
     pending_question: str | None = None
     last_decision: str | None = None

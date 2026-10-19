@@ -2,6 +2,7 @@ __pycache__/
 .pytest_cache/
 .venv/
 .tmp/
+fine_tuning_gpu/
 mutants/
 db/init/fallback/*.csv
 db/init/fallback/v2/*.csv.gz

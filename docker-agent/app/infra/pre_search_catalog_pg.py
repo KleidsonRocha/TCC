@@ -4,6 +4,7 @@ import re
 
 from app.config import Settings
 from app.core.domain.pre_search_catalog import PreSearchCatalog
+from app.infra.pre_search_family_curation import curate_catalog
 
 try:
     import psycopg
@@ -66,6 +67,7 @@ class PostgresPreSearchCatalogProvider:
                 criteria_weights, min_score_to_search = self._load_search_scoring(cur)
                 part_code_patterns = self._load_part_code_patterns(cur)
                 known_group_terms = self._load_known_group_terms(cur)
+                concepts, alias_decisions = self._load_family_curation(cur)
 
         self._assert_not_empty(part_patterns, "pre_search_part_alias/pre_search_part_type")
         self._assert_not_empty(brand_aliases, "pre_search_brand_alias/pre_search_brand")
@@ -94,7 +96,7 @@ class PostgresPreSearchCatalogProvider:
                 "known_group_terms_count": len(known_group_terms),
             },
         )
-        return PreSearchCatalog(
+        catalog = PreSearchCatalog(
             part_patterns=part_patterns,
             part_family_ids=part_family_ids,
             brand_aliases=brand_aliases,
@@ -116,6 +118,21 @@ class PostgresPreSearchCatalogProvider:
             part_code_patterns=part_code_patterns,
             known_group_terms=known_group_terms,
         )
+        return curate_catalog(catalog, concepts, alias_decisions)
+
+    @staticmethod
+    def _load_family_curation(cur) -> tuple[list[dict], list[dict]]:
+        cur.execute("SELECT to_regclass('public.pre_search_family_concept')")
+        if cur.fetchone()[0] is None:
+            return [], []
+        columns = ('family_key', 'source_families', 'aliases', 'title_pattern',
+                   'generic_ambiguous_parts', 'needs_side', 'needs_position',
+                   'needs_axle', 'needs_engine', 'needs_variant')
+        cur.execute('SELECT ' + ','.join(columns) + ' FROM pre_search_family_concept WHERE is_active ORDER BY family_key')
+        concepts = [dict(zip(columns, row)) for row in cur.fetchall()]
+        cur.execute('SELECT alias_normalized,family_key FROM pre_search_alias_decision WHERE is_active ORDER BY alias_normalized')
+        decisions = [dict(zip(('alias_normalized', 'family_key'), row)) for row in cur.fetchall()]
+        return concepts, decisions
 
     @staticmethod
     def _load_variant_aliases(cur) -> dict[str, list[tuple[str, str]]]:
@@ -152,15 +169,6 @@ class PostgresPreSearchCatalogProvider:
                 FROM pre_search_part_type pt
                 JOIN pre_search_part_group pg ON pg.id = pt.part_group_id
                 WHERE pt.is_active AND pg.is_active
-                    AND pg.source_group_code IS NOT NULL
-                    AND pt.source_subgroup_code IS NOT NULL
-                UNION
-                SELECT pa.alias_normalized AS family_key,
-                    pg.source_group_code, pt.source_subgroup_code
-                FROM pre_search_part_alias pa
-                JOIN pre_search_part_type pt ON pt.id = pa.part_type_id
-                JOIN pre_search_part_group pg ON pg.id = pt.part_group_id
-                WHERE pa.is_active AND pt.is_active AND pg.is_active
                     AND pg.source_group_code IS NOT NULL
                     AND pt.source_subgroup_code IS NOT NULL
                 {scope_union}

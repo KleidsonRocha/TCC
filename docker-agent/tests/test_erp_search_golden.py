@@ -17,7 +17,8 @@ def test_erp_golden_has_valid_cases_and_audit_counterexamples():
         SearchCriteria(**case["criteria"])
         assert case["message"]
         assert case["fixture"] in GOLDEN["fixtures"]
-    assert GOLDEN["cases"][0]["expected_ids"] == ["AUD-REAL"]
+    audit_case = next(case for case in GOLDEN["cases"] if case["id"] == "audit_only_real")
+    assert audit_case["expected_ids"] == ["AUD-REAL"]
     assert {item["code"] for item in GOLDEN["fixtures"]["audit"]["candidates"]} == {
         "AUD-REAL", "AUD-GOLF", "AUD-CROSS", "AUD-CAP"
     }

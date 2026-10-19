@@ -79,11 +79,20 @@ docker compose exec -T --user postgres presearch-db sh -c \
   -f /docker-entrypoint-initdb.d/pre_search_init.sql'
 ```
 
-Para aplicar somente os aliases versionados de peca e versao em volume
+Para aplicar aliases versionados de peca/versao e curadoria de familias em volume
 existente, use `python -m scripts.catalog.apply_catalog_alias_updates` para
 validar com rollback e depois repita com `--apply`. O script usa o schema do
 SQL consolidado, atualiza em transacao e preserva catalogo restante, snapshot,
 fila, datasets e estados. Reinicie o agente para reler o catalogo.
+
+Os CSVs `pre_search_family_concept.csv`, `pre_search_alias_decision.csv` e
+`pre_search_family_scope.csv` sao a origem da curadoria. Alimentam
+`pre_search_family_concept`, `pre_search_alias_decision` e
+`pre_search_part_family_scope`, tanto no bootstrap quanto no atualizador.
+Conceitos/aliases nao alteram as views do ERP. Um alias compartilhado nao
+herda classificacoes de outra familia; somente scopes explicitos as ampliam.
+Regras vazias no CSV preservam a regra existente; valores booleanos alteram
+somente a familia indicada. Nao executar o bootstrap inteiro para este lote.
 
 Antes de ampliar o seed, gere a fila de revisao sem atribuir marcas por
 heuristica:

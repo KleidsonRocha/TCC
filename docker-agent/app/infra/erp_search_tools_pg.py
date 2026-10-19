@@ -12,7 +12,7 @@ from app.core.domain.pre_search import SearchCriteria
 from app.core.domain.pre_search_catalog import PreSearchCatalog
 from app.core.ports.tools import ToolsPort
 from app.infra.postgres_conninfo import build_catalog_conninfo, build_erp_conninfo
-from app.infra.erp_search_query import build_search_sql
+from app.infra.erp_search_query import build_search_sql, build_follow_up_option_sql
 from app.infra.pre_search_text import normalize_pre_search_text
 
 try:
@@ -80,6 +80,14 @@ class FallbackErpSearchTools(ToolsPort):
             self._capture_diagnostics(self._fallback)
             return items
 
+    def resolve_follow_up_value(
+        self, *, criteria: SearchCriteria, field: str, value: str,
+    ) -> str | None:
+        try:
+            return self._primary.resolve_follow_up_value(criteria=criteria, field=field, value=value)
+        except SearchPartsServiceUnavailableError:
+            return self._fallback.resolve_follow_up_value(criteria=criteria, field=field, value=value)
+
     def _capture_diagnostics(self, tools: ToolsPort) -> None:
         getter = getattr(tools, "get_last_search_diagnostics", None)
         if not callable(getter):
@@ -113,10 +121,41 @@ class PostgresErpSearchTools(ToolsPort):
         self._backend_name = backend_name
         self._family_ids = catalog.part_family_ids if catalog else None
         self._needs_title_identity = catalog.needs_title_identity if catalog else set()
+        self._family_title_patterns = catalog.family_title_patterns if catalog else {}
         self._last_search_diagnostics: ContextVar[dict[str, Any] | None] = ContextVar(
             f"{backend_name}_search_diagnostics",
             default=None,
         )
+
+    def resolve_follow_up_value(
+        self, *, criteria: SearchCriteria, field: str, value: str,
+    ) -> str | None:
+        """Read-only existence proof, with no directional relaxation or LLM.
+
+        This internal probe proves a vehicle option in one application row;
+        product identity/availability remain gates of the separate search.
+        """
+        if field not in {"engine", "variant"} or not value or len(value) > 200:
+            return None
+        if not criteria.part_query or not criteria.vehicle_model or not criteria.vehicle_year:
+            return None
+        if psycopg is None or dict_row is None:
+            raise SearchPartsServiceUnavailableError("Driver ERP indisponivel.")
+        candidate = criteria.model_copy(update={field: value, "part_code": None})
+        sql, params = build_follow_up_option_sql(candidate)
+        try:
+            with psycopg.connect(
+                self._conninfo or build_erp_conninfo(self._settings),
+                row_factory=dict_row, client_encoding="UTF8",
+                options=(f"-c statement_timeout={max(self._settings.erp_search_timeout_ms, 1)} "
+                         "-c default_transaction_read_only=on"),
+            ) as conn:
+                with conn.cursor() as cur:
+                    cur.execute(sql, params)
+                    found = any(row.get('option_exists') is True for row in cur.fetchall())
+        except Exception as exc:
+            raise SearchPartsServiceUnavailableError("Consulta de opcao contextual indisponivel.") from exc
+        return value if found else None
 
     def search_parts(
         self,
@@ -147,6 +186,7 @@ class PostgresErpSearchTools(ToolsPort):
             limit=self._result_limit,
             family_ids=family_ids,
             require_family_title_identity=canonical_part in self._needs_title_identity,
+            family_title_pattern=self._family_title_patterns.get(canonical_part),
         )
 
         try:
@@ -182,6 +222,7 @@ class PostgresErpSearchTools(ToolsPort):
                             limit=self._result_limit,
                             family_ids=family_ids,
                             require_family_title_identity=canonical_part in self._needs_title_identity,
+                            family_title_pattern=self._family_title_patterns.get(canonical_part),
                         )
                         cur.execute(sql, params)
                         rows = cur.fetchall()

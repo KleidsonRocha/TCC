@@ -9,6 +9,103 @@ Os numeros abaixo pertencem as versoes e ambientes indicados. HTTP 200,
 assertions estruturais e acerto comercial sao medidas diferentes. Resultados
 historicos nao comprovam a qualidade da versao atual em producao.
 
+## Correcao De Identidade E Follow-Up De 19/10/2026
+
+No lote seguinte, curadoria de aliases/scopes e refinamentos tipados foram
+implantados no Docker local, com backup e sem recriar volumes. Os 21 aliases
+conflitantes receberam decisoes explicitas; kits/reparos/conjuntos nao viram
+pecas avulsas. Auditoria dos 86 handoffs retirou exigencia direcional padrao
+somente de quatro familias. ABS negativo, combustivel, cambio e versao passaram
+a ter significado separado, preservado entre agente e gateway/Redis.
+
+A inspecao do reteste detectou uma presilha classificada como caixa de bateria
+no ERP. A busca passou a exigir a identidade completa da caixa; a prova do motor
+FH 460 foi separada da existencia da peca, evitando perguntar novamente um
+motor ja comprovado. Suite final: 593 testes do agente e 33 do gateway aprovados.
+Estado e evidencias em [PROGRESS.md](PROGRESS.md#curadoria-e-refinamentos-no-docker-local-em-19102026).
+Nao representa deploy na VPS, aceite externo Omni/Convert ou ganho nas 371 conversas.
+
+A auditoria do modelo base revelou que nomes internos de componentes e
+modelos/anos em titulos podiam substituir o pedido; respostas de versao eram
+lidas como outro modelo, e o motor textual do FH 460 voltava a ser solicitado.
+Corrigidos o extractor e a reconciliacao pelo campo pendente, com prova
+contextual somente leitura no mesmo contrato ERP. Contradicoes interrompem a
+busca; componentes sem identidade curada pedem esclarecimento. A LLM continua
+residual e os filtros de aplicacao permanecem obrigatorios.
+
+O teste no snapshot tambem identificou que o catalogo abreviava o motor para
+`D 13 C 460`; o valor completo com `12.8` passou a exigir prova e ser preservado.
+Regressoes em testes unitarios/API e oito cenarios na bateria estrutural.
+Suite final com PostgreSQL habilitado: 546 aprovados, nenhum ignorado.
+Controles no snapshot: oito turnos HTTP e tres sondas de extracao aprovados.
+Corrigida ainda a integridade de seis casos antigos do golden sem `message`
+e a assertion que dependia da ordem do arquivo, mantendo criterios e gabaritos.
+
+Este lote foi concluido localmente; nao representa deploy nem nova medida de
+cobertura comercial dos 371 casos. Evidencias em
+[PROGRESS.md](PROGRESS.md#identidade-e-follow-up-concluidos-localmente-em-19102026),
+motivo em [decisao 47](DECISIONS.md#47-preservar-identidade-e-governar-follow-up-pelo-contexto)
+e implantacao/curadoria pendentes em [TODO.md](TODO.md).
+
+## Experimento LoRA Em GPU De 19/10/2026
+
+- Executado fine-tuning de `Qwen/Qwen2.5-7B-Instruct` com LoRA em BF16,
+  sem quantizacao 4-bit (`load_in_4bit=false`); esta execucao nao foi QLoRA.
+  GPU RTX PRO 6000 Blackwell Server Edition com 96 GB de VRAM. Dataset:
+  128 exemplos de treino, 19 de validacao e 16 de teste retido. Duas epocas,
+  32 passos, cerca de 172,6 s e `eval_loss=0,37199`. O teste retido nao foi
+  o conjunto dos 27 golden desta comparacao.
+- Comparacao entre o backbone Hugging Face original, com adapter desabilitado,
+  e o mesmo backbone com adapter. Ambos em BF16, greedy e limite de 220
+  tokens; nao foi comparacao direta com o artefato quantizado do Ollama ativo.
+  Backend/avaliadores locais, GPU por tunel privado, mesmo codigo e snapshot
+  congelados (52.798 produtos/1.779.443 aplicacoes).
+- Executados 371 casos por categoria/subcategoria e 27 golden por modelo:
+  796 registros e 1.169 turnos ponta a ponta, sem erros operacionais.
+  O golden tambem avaliou o validador isoladamente. Nas categorias, a LLM
+  participou de 71/371 conversas e houve 80 chamadas por modelo; o restante
+  do atendimento foi predominantemente deterministico.
+
+| Medida | Original | Adapter LoRA |
+| --- | ---: | ---: |
+| Golden isolado aprovado | 27/27 | 24/27 |
+| Golden sem coincidencia exata de mensagem com treino | 21/21 | 18/21 |
+| JSON bruto incompleto por limite de 220 tokens, nas categorias | 23/80 | 44/80 |
+| Tempo medio por turno, nas categorias | 2,900 s | 3,435 s |
+| Tempo medio por turno que chamou LLM | 13,489 s | 17,346 s |
+| Conversas com itens coerentes com o cadastro | 133/371 | 131/371 |
+| Suspeitas de item incorreto | 4 | 3 |
+| Conversas com divergencia de filtros veiculares conhecidos | 16 | 13 |
+
+- As tres regressoes isoladas foram oleo 5W40, viscosidade com hifen e
+  multi-item radiador/bandeja. No fluxo completo, esses casos tiveram as
+  mesmas respostas e buscas nos dois modelos pelo caminho deterministico.
+  Os pequenos ganhos pontuais nao sustentaram promocao do adapter.
+- Limites: seis mensagens golden coincidem exatamente com o treino; ausencia
+  de coincidencia nos outros 21 nao exclui parafrases ou estruturas comuns.
+  O avaliador nao reprova genericamente slots extras. Uma conversa por
+  entrada nao cobre todo o estoque/aplicacoes, e coerencia com cadastro
+  exige revisao comercial. Tempos descrevem uma rodada com tunel; os cortes
+  foram observados sob o limite de 220 tokens.
+- A tentativa inicial foi interrompida por incompatibilidade do LMFE 0.11.3
+  com schema booleano. Apos correcao semanticamente equivalente, todas as
+  rodadas oficiais foram reiniciadas. A tentativa inicial permanece
+  identificada e excluida das metricas finais.
+- Artefatos reunidos em
+  [`fine_tuning_gpu/experimento_qwen_2026-10-19`](../fine_tuning_gpu/experimento_qwen_2026-10-19/LEIA-ME.md):
+  pesos base, adapter, checkpoints/otimizador, dataset, manifestos, codigo,
+  snapshots, logs e comparacoes completas. Inventario SHA-256 de 1.213
+  arquivos/17,5 GB verificado localmente; hashes de modelo e treino conferidos
+  contra a VPS. Leitura em
+  [comparison.html](../fine_tuning_gpu/experimento_qwen_2026-10-19/comparacao/comparison.html)
+  e [comparison.md](../fine_tuning_gpu/experimento_qwen_2026-10-19/comparacao/comparison.md).
+- Conclusao: nesta configuracao, o fine-tuning nao trouxe melhoria geral.
+  O experimento esta concluido; o modelo ativo foi preservado. Importacao
+  do adapter no Ollama, auditorias adicionais e nova adaptacao ficam adiadas,
+  sem serem declaradas implementadas. Por orientacao do usuario, a prioridade
+  volta a avaliacao comercial e as correcoes deterministicas; retomada
+  condicionada a lacuna residual comprovada e avaliacao independente.
+
 ## Marco E Abril: Baseline E Curadoria
 
 ### 22/09/2026 - Reranking Local E Atualizacao Da Stack

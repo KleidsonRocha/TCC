@@ -1,5 +1,168 @@
 # Progresso Do Projeto
 
+## Curadoria E Refinamentos No Docker Local Em 19/10/2026
+
+- [x] Curar identidades, aliases, composicao e requisitos por familia.
+  - Revisados os 21 aliases conflitantes: 43 decisoes e 19 conceitos versionados;
+    15 formas vagas pedem esclarecimento. Scopes curados para eletroventilador,
+    trizeta e kits, com identidade completa e bloqueio de acessorios preservado.
+    Auditoria somente leitura dos 86 handoffs por lado/eixo; removida exigencia
+    padrao apenas de quatro familias, mantendo filtros explicitamente pedidos.
+    Sete criterios historicos afetados nao representam sete casos recuperados.
+- [x] Separar versao, combustivel, transmissao e ABS; normalizar abreviacoes
+  e negacoes sem confundir lado, posicao e eixo. Combustivel nao pode vir de
+  outro motor da mesma lista. Estado Redis conserva ABS falso e item ativo.
+  Ranking sem novos pesos; LLM nao pode inventar refinamentos.
+- [x] Construir e implantar agente/gateway no Docker local, sem recriar volumes.
+  - PostgreSQL, Redis e Ollama preservados. Backup de catalogo, rootfs anterior
+    e imagens de rollback salvos antes da aplicacao transacional.
+    VPS e Omni/Convert externo ficam pendentes, conforme escopo autorizado.
+- Suite final: **593 testes do agente e 33 do gateway aprovados, nenhum
+  ignorado**, incluindo controles SQL e Redis. Uma advertencia de depreciacao
+  Starlette/AnyIO no agente. Bateria versionada: 168 cenarios/206 turnos;
+  experimento LoRA e resultados historicos preservados.
+- O primeiro reteste HTTP passou nas assertions estruturais, mas a inspecao
+  encontrou uma presilha classificada como caixa de bateria no FH 460.
+  Adicionado padrao de identidade e regressao negativa. A prova de motor/versao
+  agora consulta a opcao veicular independentemente da disponibilidade da peca;
+  a busca final continua exigindo identidade e aplicacao completas.
+- Reteste final no ERP ativo/Ollama local: **17 cenarios e 20 turnos por
+  caminho (agente e gateway), 40 turnos aprovados**, com health/ready HTTP 200
+  e estado/historico recuperados do Redis. Clio retornou SK-813; S10 preservou
+  a versao integral e retornou KJH0309. FH 460 preservou o motor integral e
+  retornou `no_match`, sem apresentar a presilha R-3408. Os titulos adversariais
+  de polia/rolamento ainda usaram LLM e levaram aproximadamente 56-120 segundos
+  neste Ollama em CPU; o reteste nao comprova melhoria de latencia.
+- Evidencias, backups, XMLs e conversas em
+  [family_refinements_20261019](../.tmp/eval/family_refinements_20261019).
+  [Reteste final](../.tmp/eval/family_refinements_20261019/live_http_retest.json),
+  [reteste inicial preservado](../.tmp/eval/family_refinements_20261019/live_http_retest_initial.json)
+  e [manifesto](../.tmp/eval/family_refinements_20261019/deployment_manifest.json).
+  Decisao em [DECISIONS.md](DECISIONS.md#48-curadoria-de-familias-e-refinamentos-tipados).
+  A bateria revisada dos 371 casos e a validacao comercial continuam pendentes.
+
+## Identidade E Follow-Up Concluidos Localmente Em 19/10/2026
+
+- [x] Preservar componente e aplicacao explicitamente solicitados antes de liberar busca.
+  - Composicoes polia/bomba, tapa-po/cilindro e rolamento/amortecedor mantidas
+    como uma identidade; aplicacao apos `para` prevalece sobre modelos/anos
+    do titulo. Regressoes Clio, Palio, S10, correcao, negacao e multiplos itens.
+    Direcoes contraditorias pedem confirmacao antes de LLM/busca; componente
+    composto sem mapeamento pede esclarecimento, sem virar a peca interna.
+- [x] Governar respostas de follow-up e impedir perda de dados ja informados.
+  - `pending_slot` governa versao/motor textual; `4X4` e `460` na resposta nao
+    substituem o modelo. Catalogo contextual ou prova na mesma aplicacao
+    aceitam `ELX RST III`, `LTZ 2.5 FLEX 4X4 CD AT` e o motor completo
+    `12.8 L 24V SOHC L6 D 13 C 460`. Estado/historico e item ativo preservados;
+    resposta desconhecida pergunta, fonte indisponivel encaminha.
+- Verificacao final: **546 testes aprovados, nenhum ignorado**, incluindo
+  os 104 controles SQL, com XML em
+  [pytest.xml](../.tmp/eval/request_identity_follow_up_20261019/pytest.xml).
+  Build Linux concluido. O snapshot recusou corretamente criacao de tabelas;
+  os controles SQL usaram tabelas temporarias/rollback no PostgreSQL local.
+  Uma advertencia de depreciacao do Starlette/AnyIO permanece.
+- No snapshot congelado, cinco cenarios HTTP/oito turnos passaram sem LLM,
+  incluindo os tres follow-ups reais; tres sondas adicionais confirmaram a
+  extracao dos titulos polia/rolamento/Clio. Requisicoes, respostas, criterios,
+  itens, diagnosticos e tempos em
+  [results.json](../.tmp/eval/request_identity_follow_up_20261019/results.json).
+  Sao controles estruturais; o item de referencia da caixa de bateria, por
+  exemplo, ainda exige curadoria comercial de identidade.
+- Bateria versionada ampliada de 151 para 159 cenarios/197 turnos, com oito
+  casos novos; expectativas estruturais nao promovidas a rotulos comerciais
+  ou treino. Decisao em [DECISIONS.md](DECISIONS.md#47-preservar-identidade-e-governar-follow-up-pelo-contexto).
+  Implantacao/canal, scopes de kits/aliases e reexecucao revisada dos 371
+  permanecem no [TODO.md](TODO.md). O experimento original esta preservado.
+
+## Auditoria Tecnica Dos 371 Casos Do Modelo Base Em 19/10/2026
+
+- Cruzados os 371 registros do original BF16 com o snapshot e o ERP real em
+  transacao `repeatable read`, somente leitura. O ERP atual e o snapshot da
+  comparacao registram 52.798 itens/1.779.443 aplicacoes; a contagem de
+  1.776.907 pertence ao manifesto de bootstrap de 14/09/2026. Na amostra de
+  623 codigos/53.874 aplicacoes, os campos atuais coincidem com o snapshot.
+- Preparadas fichas de todos os casos e identificadas causas de extracao,
+  contexto/follow-up, aliases/scopes, requisitos e referencias questionaveis.
+  Foram 351 consultas de diagnostico por codigo em 39 buscas de 38 casos
+  suspeitos no banco isolado, nove sondas de extracao sem IA e cinco consultas
+  dirigidas adicionais. Algumas retiram restricoes apenas para explicar o
+  bloqueio; nao representam correcao aprovada nem ganho de cobertura medido.
+- A extracao congelada reproduziu troca de polia por bomba, rolamento por
+  amortecedor, modelo 4X4 em resposta de versao e falha em motor 12.8/textual.
+  Dos 61 nao concluidos, 60 nao executaram busca e 33 repetiram pergunta;
+  os 105 handoffs por desconhecimento nao chamaram LLM, sendo 86 por lado/eixo.
+  Ha 21 aliases com mais de uma familia canonica. A revisao comercial segue
+  pendente; os 34 suspeitos nao foram convertidos em falsos negativos confirmados.
+- Relatorio e plano em
+  [analysis.md](../.tmp/eval/base_categories_review_20261019/analysis.md),
+  fichas filtraveis em
+  [review.html](../.tmp/eval/base_categories_review_20261019/review.html) e
+  registros completos em
+  [cases_review.json](../.tmp/eval/base_categories_review_20261019/cases_review.json).
+  Lotes de correcao no [TODO.md](TODO.md). Esta etapa produziu auditoria e
+  planejamento; nenhuma correcao de runtime ou escrita no ERP foi aplicada.
+
+## Experimento LoRA Concluido E Nova Adaptacao Adiada Em 19/10/2026
+
+- Treinamento LoRA em BF16 e comparacao original/adapter executados, com
+  artefatos preservados localmente. A execucao nao usou QLoRA 4-bit.
+  Resultados e limites consolidados em
+  [HISTORICO.md](HISTORICO.md#experimento-lora-em-gpu-de-19102026).
+- O adapter nao apresentou ganho global na configuracao avaliada; o modelo
+  ativo foi mantido. Nova adaptacao, publicacao/validacao do adapter no
+  Ollama e infraestrutura de GPU com fallback foram adiadas por orientacao
+  do usuario. Auditoria de mascara/truncamento, benchmark independente e
+  paridade de contratos continuam requisitos para eventual retomada.
+- A ordem vigente passa a priorizar avaliacao comercial e correcoes
+  deterministicas em [TODO.md](TODO.md). A decisao de 19/10/2026 substitui
+  indicacoes anteriores deste documento de que preparar fine-tuning seria
+  o proximo bloco. O detalhamento da preservacao consta ao final desta pagina.
+
+## Auditoria Conversacional Por Categoria Retomada Em 19/10/2026
+
+- Implementado `scripts/eval/evaluate_category_search.py`: uma conversa por
+  categoria/subcategoria, com historico/estado e respostas incrementais baseadas
+  em referencia real. Usa o fluxo interno do checkout em processo isolado,
+  fonte ERP somente leitura e captura para treinamento desabilitada.
+- Preparados 371 casos: 361 do catalogo ativo (23 categorias/338 subcategorias)
+  e dez complementares (grupo ERP 24 e nove subgrupos ausentes do catalogo).
+  A consulta inicial encontrou 335 produtos nessas nove entradas.
+- Checkpoint revisado de 350 conversas: 130 com itens estruturalmente coerentes,
+  36 suspeitas de falso negativo, quatro suspeitas de item inadequado, 104
+  encaminhamentos por dado desconhecido, 33 entradas sem itens na fonte,
+  42 sem produtos apresentados apesar do cadastro e uma falha operacional.
+  Trinta confirmacoes de item unico no texto foram recuperadas e conferidas
+  na fonte. Tres falhas anteriores de busca passaram na repeticao.
+- A bateria ainda estava em execucao neste registro. O consolidator com
+  `--watch` salva uma versao parcial revisada e a substitui automaticamente
+  pelo resultado completo quando todos os casos terminarem. Os processos
+  precisam permanecer ativos com Docker ligado. Estado e contagem definitivos
+  ficam em `.tmp/eval/category_audit_20261019/report.json`; HTML filtravel,
+  perguntas e observacoes ficam no mesmo diretorio.
+- Doze testes do avaliador/consolidator aprovados, incluindo confirmacao textual,
+  preservacao de dialogos, filtros divergentes e substituicao parcial/completa.
+  Nao houve implantacao nem teste de transporte pelo gateway/WhatsApp.
+- Uma conversa por entrada nao mede recuperacao de todo o estoque. Coerencia
+  de cadastro nao certifica encaixe; kits/acessorios e classificacoes divergentes
+  precisam de revisao humana. Referencias foram congeladas, mas o ERP permaneceu
+  vivo entre as retomadas; esta bateria nao e um benchmark de carga controlado.
+
+## Busca Geral Por Viscosidade De Oleo Corrigida Localmente Em 14/10/2026
+
+- `variant` no formato de viscosidade e familia `lubrificantes` passa a
+  filtrar nome/titulo do produto, sem exigir essa versao na aplicacao veicular.
+  Payload, schema, views e dataset de treino permanecem com o mesmo contrato.
+- `5W40`, `5W-40` e `5 W 40` sao aceitos; limites de palavra separam graus
+  diferentes e familia continua obrigatoria. Demais filtros e codigos exatos
+  sao preservados. Golden SQL inclui sete novos casos e contraexemplos.
+- Validacao em container com os arquivos locais: 239 testes aprovados e
+  104/104 verificacoes SQL no contrato e no COPY/snapshot. Consulta somente de
+  leitura ao catalogo local retornou sete itens para `quero o oleo 5w40`,
+  incluindo `TEX-3117`; busca por codigo, com e sem viscosidade, retornou
+  somente esse item. Relatorio em `.tmp/eval/oil_viscosity_golden.json`.
+- Rebuild do agente em execucao e implantacao/reteste no Omni/Convert da VPS
+  continuam pendentes. Os testes nao alteraram o modelo ativo nem os dados ERP.
+
 ## Fallback De Lado E Posicao Implementado Localmente Em 02/10/2026
 
 - Consulta com `side` ou `position` que retorna zero produtos repete uma vez
@@ -344,3 +507,25 @@ altera a classificacao de prontidao comercial.
   `dianteiras`/`traseiras`.
 - Seis testes focados passaram em container, incluindo a geracao reproduzivel
   do dataset estrutural, sem executar a bateria longa.
+
+## Preservacao Local Do Experimento Em GPU Em 19/10/2026
+
+- O experimento foi consolidado em
+  `fine_tuning_gpu/experimento_qwen_2026-10-19/`, com indice, pesos completos
+  do Qwen/Qwen2.5-7B-Instruct na revisao
+  `a09a35458c702b33eeacc393d103063234e8bc28`, adapter final, checkpoints,
+  dataset, codigo congelado, snapshots, logs e backup da comparacao.
+- Os quatro shards base e os 43 arquivos da execucao de treino foram
+  conferidos por SHA-256 contra os arquivos da VPS. A comparacao preservada
+  foi conferida com 796 registros de casos e 1.169 turnos ponta a ponta,
+  sem avisos operacionais. As avaliacoes anteriores de categoria ficam
+  separadas em `historico_categorias/`.
+- Os caminhos anteriores dentro de `fine_tuning_gpu` foram reorganizados;
+  `caminhos_originais.json` registra a correspondencia. Manifestos e logs
+  historicos mantem os caminhos originais. O inventario local e a verificacao
+  ficam em `integridade.json` e `verificacao_pacote.json`.
+- O pacote permite carregar base e adapter sem arquivos da VPS antiga;
+  bibliotecas, drivers e recursos de memoria devem estar disponiveis no
+  ambiente escolhido. O carregador offline teve sintaxe e ajuda conferidas,
+  sem executar inferencia completa local. O modelo ativo permanece o mesmo;
+  a organizacao nao desligou a instancia do provedor.

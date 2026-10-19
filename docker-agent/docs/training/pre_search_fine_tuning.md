@@ -1,5 +1,22 @@
 # Fine-tuning do pre-search
 
+## Experimento preservado de 19/10/2026
+
+Os pesos base, o adapter final, os checkpoints, o dataset e a comparacao de
+371 casos e 27 golden por modelo estao reunidos em
+[`fine_tuning_gpu/experimento_qwen_2026-10-19`](../../fine_tuning_gpu/experimento_qwen_2026-10-19/LEIA-ME.md).
+O indice dessa pasta descreve os arquivos, as limitacoes e o procedimento de
+verificacao local. Os caminhos antigos dentro de `fine_tuning_gpu` foram
+reorganizados; os manifestos historicos foram preservados sem reescrita.
+Nao houve promocao do adapter ao runtime.
+
+Estado atual: o experimento LoRA em BF16 foi executado sem ganho global na
+configuracao avaliada. Nao foi QLoRA 4-bit. Novas rodadas e a publicacao do
+adapter no Ollama ficam como hipoteses adiadas; criterios e pre-condicoes
+estao em [TODO.md](../TODO.md). Resultados e limites estao em
+[HISTORICO.md](../HISTORICO.md#experimento-lora-em-gpu-de-19102026).
+Os procedimentos abaixo permanecem como referencia para eventual retomada.
+
 ## Objetivo
 
 O fine-tuning aqui serve para adaptar a LLM ao dominio de autopecas, com foco em:

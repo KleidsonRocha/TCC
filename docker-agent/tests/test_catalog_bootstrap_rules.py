@@ -157,6 +157,8 @@ def test_cruzeta_singular_maps_to_cardan_cross_joint_family() -> None:
 
 def test_curated_erp_scopes_cover_observed_misclassified_candidates() -> None:
     sql = Path("db/init/pre_search_init.sql").read_text(encoding="utf-8")
-    assert "('batentes', 2, 6, 'seed_csv')" in sql
-    assert "('atuador de embreagem', 10, 5, 'seed_csv')" in sql
-    assert "('eletroventilador', 9, 27, 'seed_csv')" in sql
+    assert 'pre_search_family_scope.csv' in sql
+    with Path('db/init/csv/pre_search_family_scope.csv').open(encoding='utf-8') as source:
+        scopes={(row['family_key'],int(row['source_group_code']),int(row['source_subgroup_code'])) for row in csv.DictReader(source)}
+    assert {('batentes',2,6),('atuador de embreagem',10,5),('eletroventilador',9,27),
+            ('trizetas',13,11),('trizetas',10,21),('kit amortecedor',4,4)} <= scopes
