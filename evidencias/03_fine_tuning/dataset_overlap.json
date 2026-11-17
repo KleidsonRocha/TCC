@@ -1,0 +1,20 @@
+{
+  "categories": {
+    "train": [],
+    "validation": [],
+    "test": []
+  },
+  "golden": {
+    "train": [
+      "ask_no_part",
+      "ask_correia_side",
+      "ask_radiador_engine",
+      "search_radiador_engine",
+      "search_context_engine",
+      "search_radiator_cap_identity"
+    ],
+    "validation": [],
+    "test": []
+  },
+  "interpretation": "Exact normalized initial-message overlap only; absence does not exclude paraphrase or shared templates. Do not treat overlapping cases as held-out generalization."
+}

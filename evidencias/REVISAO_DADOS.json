@@ -1,0 +1,48 @@
+{
+  "date": "2026-11-17",
+  "scope": "Only selected publication files and text members of its three archives; not a full Git history audit",
+  "credential_pattern_matches": 0,
+  "nonempty_credential_or_contact_fields": 0,
+  "email_occurrences": 0,
+  "notes": [
+    "No .env files, model weights or customer-conversation backups selected.",
+    "One IPv4-like match is the Linux kernel release string 6.6.87.2, not an endpoint.",
+    "Automotive catalog descriptions, product codes and laboratory case IDs retained for audit."
+  ],
+  "catalog_files": {
+    "candidates.csv.gz": {
+      "columns": [
+        "id_item",
+        "cd_item",
+        "nm_item",
+        "candidate_title",
+        "cd_grupo",
+        "cd_subgrupo",
+        "part_family",
+        "cd_original",
+        "cd_fabricante",
+        "search_text"
+      ],
+      "rows": 52798,
+      "email_occurrences": 0
+    },
+    "applications.csv.gz": {
+      "columns": [
+        "application_id",
+        "id_item",
+        "vehicle_brand",
+        "vehicle_model",
+        "year_start",
+        "year_end",
+        "year_open_end",
+        "engines",
+        "variants",
+        "injections",
+        "transmissions",
+        "application_text"
+      ],
+      "rows": 1779443,
+      "email_occurrences": 0
+    }
+  }
+}

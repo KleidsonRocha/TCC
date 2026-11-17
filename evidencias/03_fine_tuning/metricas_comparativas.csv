@@ -1,0 +1,32 @@
+﻿escopo;metrica;unidade;original;ajustado
+categorias;Conversas avaliadas;casos;371;371
+categorias;Turnos;turnos;557;558
+categorias;Chamadas LLM;chamadas;80;80
+categorias;Tokens gerados;tokens;10898;15229
+categorias;JSON bruto completo;chamadas;57;36
+categorias;Saídas cortadas;chamadas;23;44
+categorias;Fallback LLM no backend;turnos;18;36
+categorias;Buscas;buscas;173;170
+categorias;Conversas com LLM;conversas;71;71
+categorias;Erros técnicos;turnos;0;0
+categorias;Turno completo mean_s;segundos;2.900313354820499;3.434708603908586
+categorias;Turno completo median_s;segundos;0.9551758740008154;0.9208227965000333
+categorias;Turno completo p95_s;segundos;15.00260342599995;19.401926358999845
+categorias;Turno com LLM mean_s;segundos;13.489330549450074;17.345804653887456
+categorias;Turno com LLM median_s;segundos;14.057886592999694;17.498130576499534
+categorias;Turno com LLM p95_s;segundos;19.997627715000817;22.70946921599989
+categorias;Busca mean_s;segundos;0.0802669077514589;0.08083617128234918
+categorias;Busca median_s;segundos;0.03748278199964261;0.03692365949973464
+categorias;Busca p95_s;segundos;0.23474883400012914;0.2279549999993833
+triagem_categorias;handoff_por_dado_desconhecido;conversas;105;106
+triagem_categorias;sem_itens_na_subcategoria_fonte;conversas;34;34
+triagem_categorias;suspeita_falso_negativo;conversas;34;34
+triagem_categorias;nao_concluiu_busca_com_itens_na_fonte;conversas;61;63
+triagem_categorias;itens_coerentes_com_cadastro;conversas;133;131
+triagem_categorias;suspeita_item_incorreto;conversas;4;3
+golden_isolado;total;casos;27;27
+golden_isolado;passed;casos;27;24
+golden_isolado;case_pass_pct;porcentagem;100.0;88.89
+golden_sem_coincidencia_exata;total;casos;21;21
+golden_sem_coincidencia_exata;passed;casos;21;18
+golden_sem_coincidencia_exata;case_pass_pct;porcentagem;100.0;85.71

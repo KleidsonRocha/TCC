@@ -1,0 +1,244 @@
+{
+  "notice": "Revisão exploratória assistida por IA: três perspectivas do mesmo modelo/contexto, sem independência e sem revisão humana. O script aplica julgamentos semânticos explícitos e verificações cadastrais; não executa três modelos nem o chatbot.",
+  "configuration_names": {
+    "D": "Arquitetura determinística; handoff conservador no ponto residual",
+    "H": "Mesma arquitetura com Qwen2.5:7b residual e validações existentes"
+  },
+  "fine_tuned_comparison": false,
+  "counts": [
+    {
+      "persona": "IA_BALCAO_V3",
+      "scope": "all_371",
+      "arm": "D",
+      "n": 371,
+      "adequate": 103,
+      "partly": 127,
+      "inadequate": 141,
+      "unknown": 0,
+      "strict_adequate_percent": 27.76
+    },
+    {
+      "persona": "IA_BALCAO_V3",
+      "scope": "all_371",
+      "arm": "H",
+      "n": 371,
+      "adequate": 106,
+      "partly": 115,
+      "inadequate": 150,
+      "unknown": 0,
+      "strict_adequate_percent": 28.57
+    },
+    {
+      "persona": "IA_BALCAO_V3",
+      "scope": "priority_60",
+      "arm": "D",
+      "n": 60,
+      "adequate": 9,
+      "partly": 42,
+      "inadequate": 9,
+      "unknown": 0,
+      "strict_adequate_percent": 15.0
+    },
+    {
+      "persona": "IA_BALCAO_V3",
+      "scope": "priority_60",
+      "arm": "H",
+      "n": 60,
+      "adequate": 12,
+      "partly": 30,
+      "inadequate": 18,
+      "unknown": 0,
+      "strict_adequate_percent": 20.0
+    },
+    {
+      "persona": "IA_BALCAO_V3",
+      "scope": "additional_311",
+      "arm": "D",
+      "n": 311,
+      "adequate": 94,
+      "partly": 85,
+      "inadequate": 132,
+      "unknown": 0,
+      "strict_adequate_percent": 30.23
+    },
+    {
+      "persona": "IA_BALCAO_V3",
+      "scope": "additional_311",
+      "arm": "H",
+      "n": 311,
+      "adequate": 94,
+      "partly": 85,
+      "inadequate": 132,
+      "unknown": 0,
+      "strict_adequate_percent": 30.23
+    },
+    {
+      "persona": "IA_APLICACAO_V3",
+      "scope": "all_371",
+      "arm": "D",
+      "n": 371,
+      "adequate": 122,
+      "partly": 135,
+      "inadequate": 29,
+      "unknown": 85,
+      "strict_adequate_percent": 32.88
+    },
+    {
+      "persona": "IA_APLICACAO_V3",
+      "scope": "all_371",
+      "arm": "H",
+      "n": 371,
+      "adequate": 119,
+      "partly": 131,
+      "inadequate": 34,
+      "unknown": 87,
+      "strict_adequate_percent": 32.08
+    },
+    {
+      "persona": "IA_APLICACAO_V3",
+      "scope": "priority_60",
+      "arm": "D",
+      "n": 60,
+      "adequate": 28,
+      "partly": 29,
+      "inadequate": 3,
+      "unknown": 0,
+      "strict_adequate_percent": 46.67
+    },
+    {
+      "persona": "IA_APLICACAO_V3",
+      "scope": "priority_60",
+      "arm": "H",
+      "n": 60,
+      "adequate": 25,
+      "partly": 25,
+      "inadequate": 8,
+      "unknown": 2,
+      "strict_adequate_percent": 41.67
+    },
+    {
+      "persona": "IA_APLICACAO_V3",
+      "scope": "additional_311",
+      "arm": "D",
+      "n": 311,
+      "adequate": 94,
+      "partly": 106,
+      "inadequate": 26,
+      "unknown": 85,
+      "strict_adequate_percent": 30.23
+    },
+    {
+      "persona": "IA_APLICACAO_V3",
+      "scope": "additional_311",
+      "arm": "H",
+      "n": 311,
+      "adequate": 94,
+      "partly": 106,
+      "inadequate": 26,
+      "unknown": 85,
+      "strict_adequate_percent": 30.23
+    },
+    {
+      "persona": "IA_AUDITORIA_V3",
+      "scope": "all_371",
+      "arm": "D",
+      "n": 371,
+      "adequate": 103,
+      "partly": 125,
+      "inadequate": 143,
+      "unknown": 0,
+      "strict_adequate_percent": 27.76
+    },
+    {
+      "persona": "IA_AUDITORIA_V3",
+      "scope": "all_371",
+      "arm": "H",
+      "n": 371,
+      "adequate": 106,
+      "partly": 113,
+      "inadequate": 152,
+      "unknown": 0,
+      "strict_adequate_percent": 28.57
+    },
+    {
+      "persona": "IA_AUDITORIA_V3",
+      "scope": "priority_60",
+      "arm": "D",
+      "n": 60,
+      "adequate": 9,
+      "partly": 41,
+      "inadequate": 10,
+      "unknown": 0,
+      "strict_adequate_percent": 15.0
+    },
+    {
+      "persona": "IA_AUDITORIA_V3",
+      "scope": "priority_60",
+      "arm": "H",
+      "n": 60,
+      "adequate": 12,
+      "partly": 29,
+      "inadequate": 19,
+      "unknown": 0,
+      "strict_adequate_percent": 20.0
+    },
+    {
+      "persona": "IA_AUDITORIA_V3",
+      "scope": "additional_311",
+      "arm": "D",
+      "n": 311,
+      "adequate": 94,
+      "partly": 84,
+      "inadequate": 133,
+      "unknown": 0,
+      "strict_adequate_percent": 30.23
+    },
+    {
+      "persona": "IA_AUDITORIA_V3",
+      "scope": "additional_311",
+      "arm": "H",
+      "n": 311,
+      "adequate": 94,
+      "partly": 84,
+      "inadequate": 133,
+      "unknown": 0,
+      "strict_adequate_percent": 30.23
+    }
+  ],
+  "unique_initial_requests": 347,
+  "scope": "371 duplas da primeira repetição; 3 perspectivas por saída = 2226 julgamentos. Outras repetições verificadas tecnicamente, não contadas como novos clientes.",
+  "synthesis_counts": {
+    "D": {
+      "inadequate": 29,
+      "partly": 154,
+      "unknown": 85,
+      "adequate": 103
+    },
+    "H": {
+      "inadequate": 34,
+      "partly": 144,
+      "unknown": 87,
+      "adequate": 106
+    }
+  },
+  "paired_preferences": {
+    "IA_BALCAO_V3": {
+      "empate": 359,
+      "D": 9,
+      "H": 3
+    },
+    "IA_APLICACAO_V3": {
+      "empate": 273,
+      "indeterminado": 87,
+      "D": 8,
+      "H": 3
+    },
+    "IA_AUDITORIA_V3": {
+      "empate": 359,
+      "D": 9,
+      "H": 3
+    }
+  },
+  "do_not_pool_partial_with_adequate": true,
+  "not_human_accuracy": true
+}

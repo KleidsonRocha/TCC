@@ -1,0 +1,259 @@
+{
+  "audited_at": "2026-10-27T17:17:28.086870+00:00",
+  "received_zip_sha256": "ff890a78664b7e4dd1ed3802ed35cf936ce31fd11c3fb1d6a0d1f7f31e6d9eca",
+  "received_archive_crc_verified": true,
+  "received_internal_hashes_verified": 39,
+  "original_delivery_files_verified": 3716,
+  "configuration_key_matches_original": true,
+  "source_snapshot_matches_original": true,
+  "classification_tables_recomputed": [
+    {
+      "persona": "IA_APLICACAO_V3",
+      "scope": "all_371",
+      "arm": "D",
+      "n": 371,
+      "partly": 135,
+      "adequate": 122,
+      "inadequate": 29,
+      "unknown": 85
+    },
+    {
+      "persona": "IA_APLICACAO_V3",
+      "scope": "all_371",
+      "arm": "H",
+      "n": 371,
+      "partly": 131,
+      "adequate": 119,
+      "inadequate": 34,
+      "unknown": 87
+    },
+    {
+      "persona": "IA_APLICACAO_V3",
+      "scope": "priority_60",
+      "arm": "D",
+      "n": 60,
+      "adequate": 28,
+      "partly": 29,
+      "inadequate": 3
+    },
+    {
+      "persona": "IA_APLICACAO_V3",
+      "scope": "priority_60",
+      "arm": "H",
+      "n": 60,
+      "adequate": 25,
+      "inadequate": 8,
+      "partly": 25,
+      "unknown": 2
+    },
+    {
+      "persona": "IA_APLICACAO_V3",
+      "scope": "additional_311",
+      "arm": "D",
+      "n": 311,
+      "partly": 106,
+      "adequate": 94,
+      "inadequate": 26,
+      "unknown": 85
+    },
+    {
+      "persona": "IA_APLICACAO_V3",
+      "scope": "additional_311",
+      "arm": "H",
+      "n": 311,
+      "partly": 106,
+      "adequate": 94,
+      "inadequate": 26,
+      "unknown": 85
+    },
+    {
+      "persona": "IA_AUDITORIA_V3",
+      "scope": "all_371",
+      "arm": "D",
+      "n": 371,
+      "partly": 125,
+      "adequate": 103,
+      "inadequate": 143
+    },
+    {
+      "persona": "IA_AUDITORIA_V3",
+      "scope": "all_371",
+      "arm": "H",
+      "n": 371,
+      "partly": 113,
+      "adequate": 106,
+      "inadequate": 152
+    },
+    {
+      "persona": "IA_AUDITORIA_V3",
+      "scope": "priority_60",
+      "arm": "D",
+      "n": 60,
+      "partly": 41,
+      "adequate": 9,
+      "inadequate": 10
+    },
+    {
+      "persona": "IA_AUDITORIA_V3",
+      "scope": "priority_60",
+      "arm": "H",
+      "n": 60,
+      "partly": 29,
+      "inadequate": 19,
+      "adequate": 12
+    },
+    {
+      "persona": "IA_AUDITORIA_V3",
+      "scope": "additional_311",
+      "arm": "D",
+      "n": 311,
+      "partly": 84,
+      "adequate": 94,
+      "inadequate": 133
+    },
+    {
+      "persona": "IA_AUDITORIA_V3",
+      "scope": "additional_311",
+      "arm": "H",
+      "n": 311,
+      "partly": 84,
+      "adequate": 94,
+      "inadequate": 133
+    },
+    {
+      "persona": "IA_BALCAO_V3",
+      "scope": "all_371",
+      "arm": "D",
+      "n": 371,
+      "partly": 127,
+      "adequate": 103,
+      "inadequate": 141
+    },
+    {
+      "persona": "IA_BALCAO_V3",
+      "scope": "all_371",
+      "arm": "H",
+      "n": 371,
+      "partly": 115,
+      "adequate": 106,
+      "inadequate": 150
+    },
+    {
+      "persona": "IA_BALCAO_V3",
+      "scope": "priority_60",
+      "arm": "D",
+      "n": 60,
+      "partly": 42,
+      "adequate": 9,
+      "inadequate": 9
+    },
+    {
+      "persona": "IA_BALCAO_V3",
+      "scope": "priority_60",
+      "arm": "H",
+      "n": 60,
+      "partly": 30,
+      "inadequate": 18,
+      "adequate": 12
+    },
+    {
+      "persona": "IA_BALCAO_V3",
+      "scope": "additional_311",
+      "arm": "D",
+      "n": 311,
+      "partly": 85,
+      "adequate": 94,
+      "inadequate": 132
+    },
+    {
+      "persona": "IA_BALCAO_V3",
+      "scope": "additional_311",
+      "arm": "H",
+      "n": 311,
+      "partly": 85,
+      "adequate": 94,
+      "inadequate": 132
+    }
+  ],
+  "technical_groups_compared": 18,
+  "original_case_records": 3408,
+  "received_perspectives": [
+    {
+      "id": "IA_APLICACAO_V3",
+      "experience_text": "PERSONA FICTÍCIA POR IA — Márcia — aplicação. Identidade/composição e evidência de aplicação; encaminhamento seguro quando faltam dados.",
+      "declared_simulation": true,
+      "methodology": {
+        "notice": "Revisão exploratória assistida por IA: três perspectivas do mesmo modelo/contexto, sem independência e sem revisão humana. O script aplica julgamentos semânticos explícitos e verificações cadastrais; não executa três modelos nem o chatbot.",
+        "snapshot": "2026-10-19",
+        "ground_truth_hash": "7979fc69613c41b684381c26502cc5f624eafcb181eebdb1ff34e2736e9d483a",
+        "independent": false,
+        "human_review": false,
+        "prior_output_exposure": true,
+        "configuration_key_used_for_aggregation": true
+      }
+    },
+    {
+      "id": "IA_AUDITORIA_V3",
+      "experience_text": "PERSONA FICTÍCIA POR IA — Renato — auditoria. Rastreabilidade, fidelidade dos critérios e falhas comprovadas de busca e integração.",
+      "declared_simulation": true,
+      "methodology": {
+        "notice": "Revisão exploratória assistida por IA: três perspectivas do mesmo modelo/contexto, sem independência e sem revisão humana. O script aplica julgamentos semânticos explícitos e verificações cadastrais; não executa três modelos nem o chatbot.",
+        "snapshot": "2026-10-19",
+        "ground_truth_hash": "7979fc69613c41b684381c26502cc5f624eafcb181eebdb1ff34e2736e9d483a",
+        "independent": false,
+        "human_review": false,
+        "prior_output_exposure": true,
+        "configuration_key_used_for_aggregation": true
+      }
+    },
+    {
+      "id": "IA_BALCAO_V3",
+      "experience_text": "PERSONA FICTÍCIA POR IA — Carlos — balcão. Compreensão, perguntas úteis, continuidade e confirmação da necessidade.",
+      "declared_simulation": true,
+      "methodology": {
+        "notice": "Revisão exploratória assistida por IA: três perspectivas do mesmo modelo/contexto, sem independência e sem revisão humana. O script aplica julgamentos semânticos explícitos e verificações cadastrais; não executa três modelos nem o chatbot.",
+        "snapshot": "2026-10-19",
+        "ground_truth_hash": "7979fc69613c41b684381c26502cc5f624eafcb181eebdb1ff34e2736e9d483a",
+        "independent": false,
+        "human_review": false,
+        "prior_output_exposure": true,
+        "configuration_key_used_for_aggregation": true
+      }
+    }
+  ],
+  "received_judgment_records": 2226,
+  "additional_product_case_ids": 7,
+  "additional_product_unique_initial_requests": 6,
+  "new_synthetic_scenarios": 10,
+  "new_scenarios_executed_by_this_audit": false,
+  "frozen_delivered_files_verified": 198,
+  "missing_optional_bytecode_cache": [
+    "gateway_frozen/ui/__pycache__/streamlit_app.cpython-314.pyc"
+  ],
+  "archive_provenance": {
+    "prior_output_exposure": true,
+    "independent_reviewers": false,
+    "human_reviewer_count": 0,
+    "prospective_registration": false
+  },
+  "author_additional_information": {
+    "reported_human_professionals": 2,
+    "profiles": [
+      {
+        "area": "vendas de autopecas",
+        "experience_years": 10,
+        "cases_reviewed": 371
+      },
+      {
+        "area": "aplicacao de pecas",
+        "experience_years": 7,
+        "cases_reviewed": 371
+      }
+    ],
+    "source": "Author confirmed both professionals and full 371-case coverage in this conversation",
+    "mutual_independence_or_blinding_documented": false,
+    "individual_scores_linked_to_exported_classifications": false,
+    "interpretation": "Record the complementary professional review. Do not equate three computational perspectives with three independent people or claim an undocumented blind protocol."
+  },
+  "scope": "Integrity, counts and traceability audit. Does not independently adjudicate mechanical compatibility or execute supplied scripts."
+}

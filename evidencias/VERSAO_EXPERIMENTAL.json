@@ -1,0 +1,1105 @@
+{
+  "git_commit": "52e4d7460009d9635445c8ca69c604488b5dacef",
+  "compared_files": 178,
+  "source_and_tests_match": true,
+  "known_difference": "Only docker-agent/docs/TODO.md differs; no runtime or test source divergence. EOLs normalized only for Git comparison. LFS objects compared by SHA-256.",
+  "files": [
+    {
+      "path": "docker-agent/AGENTS.md",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "84fd03cfc904ff9b535ebdbdbc2df9e0a44df65ab4385a7d7b13fd2ac0f45f16"
+    },
+    {
+      "path": "docker-agent/app/__init__.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "path": "docker-agent/app/api/__init__.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "path": "docker-agent/app/api/deps.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "270675ddef4f8726a8cdede01e9e8685441a293cfa22ebe06b7d17168ca60c70"
+    },
+    {
+      "path": "docker-agent/app/api/readiness.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "8d1960b69eee429d4adc1856dfeb3cba5cdcfec6625852278b2459e93260ab67"
+    },
+    {
+      "path": "docker-agent/app/api/routes/__init__.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "path": "docker-agent/app/api/routes/health.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "44bbdb4ce8509b9d32e696bab77f50d729eaf4e6f41bbcdad6cbc063f89757d6"
+    },
+    {
+      "path": "docker-agent/app/api/routes/respond.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "aa764e5f2a4a7c944ef022639e8800729c7d85df8ec7c8553d0156e48c6081d0"
+    },
+    {
+      "path": "docker-agent/app/api/routes/review.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "b6c21ae62a05dc5d7f3c3629e9f6d483c14c75bbdd8fe529cbb83b9dec985463"
+    },
+    {
+      "path": "docker-agent/app/api/schemas/__init__.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "path": "docker-agent/app/api/schemas/contract_v1.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "448aaedcfd8af17f620c3d1ab6eb41dcf22aea92562c62c6a9043c4f8dc282ec"
+    },
+    {
+      "path": "docker-agent/app/api/schemas/review.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "2b691d80366dcd0f0304d0e88667e6998ef87d9e21ae2dc36ebeb0a580b97697"
+    },
+    {
+      "path": "docker-agent/app/config.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "142dacc7d32d1c2c1a7ba56ba47ae122addc324e628e423d5577070991b246b8"
+    },
+    {
+      "path": "docker-agent/app/core/__init__.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "path": "docker-agent/app/core/domain/__init__.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "path": "docker-agent/app/core/domain/errors.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "3dcc3179ba8f59aefb9423f7cb883a4ca7f2ecac2147360cd2e35dba88c1d981"
+    },
+    {
+      "path": "docker-agent/app/core/domain/models.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "5da537ea210fedcd3f51d4278a45db25f476fbdcece03e0255f49f3eeab4c7ba"
+    },
+    {
+      "path": "docker-agent/app/core/domain/part_code.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "be96b0bc0fe6e1eef8f68cd291c85954fce8e436523cb9eb398f9e4d95186480"
+    },
+    {
+      "path": "docker-agent/app/core/domain/pre_search.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "18ec5411084a004bf1239a184b938e0d62294093b5c63057d1eaac484e36b784"
+    },
+    {
+      "path": "docker-agent/app/core/domain/pre_search_catalog.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "6ff34b056aec4e58afbff7725122a144715ca62f90ac0b856002b662d25cf0dd"
+    },
+    {
+      "path": "docker-agent/app/core/domain/result_disambiguation.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "ce9816ae8db1be4897cef0ffc5bdad8ece56612f9c46a13575d4871f88aceb1f"
+    },
+    {
+      "path": "docker-agent/app/core/domain/review_errors.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "8142fb5409e8e81b49c8b148997dc300b4277862c74d1d4916636a0b6bf8ff04"
+    },
+    {
+      "path": "docker-agent/app/core/domain/rules.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "47e639d7134a54886aad1c5d898ac7e7b78d4551042d0affa49d035572ee2382"
+    },
+    {
+      "path": "docker-agent/app/core/ports/__init__.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "path": "docker-agent/app/core/ports/pre_search_review_recorder.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "7dfa626f867b6e7e55f6a6e61543abb076bf63beda8b346d6bfe7fb89ea902ce"
+    },
+    {
+      "path": "docker-agent/app/core/ports/pre_search_review_repository.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "606706934a80890fc3d3918e9e4564669bd3fde7010605d045ce04047544a055"
+    },
+    {
+      "path": "docker-agent/app/core/ports/pre_search_validator.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "c84363a940ec56660a67b3853b30abc9eb98c76da8cab3ce1268eb94cccd1d29"
+    },
+    {
+      "path": "docker-agent/app/core/ports/tools.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "2c83bb85f80060695a4e9b30fe34593b1721360cc5c6718c6a038f6fe9bd8831"
+    },
+    {
+      "path": "docker-agent/app/core/usecases/__init__.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "path": "docker-agent/app/core/usecases/process_agent_request.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "702141df9c993c3ccd3ec8697d63d297cb77f0932ef1088e50753e9c593ae5f3"
+    },
+    {
+      "path": "docker-agent/app/infra/__init__.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "path": "docker-agent/app/infra/erp_search_query.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "606d67dbe6fa3d7810a24264a775429af9608016497fc3bcce5ae5a1ed849ce2"
+    },
+    {
+      "path": "docker-agent/app/infra/erp_search_tools_pg.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "d500d25ae219b41cd080dee346a752ce1b497cbc6ba481ee2786843df5be3e42"
+    },
+    {
+      "path": "docker-agent/app/infra/logger.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "f7a7c66d3fd76ff3371845975c71f2f61bbe30e0977c0c085b0cafae5ad2eeac"
+    },
+    {
+      "path": "docker-agent/app/infra/postgres_conninfo.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "1d9eb6da2744142c9c46a362eee3a2251f5a99f3be3e164e1ddd6496258167d9"
+    },
+    {
+      "path": "docker-agent/app/infra/pre_search_benchmark.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "2b02ab59c6f76eb6809df7afd169ade53ac5a5bd662362ea52cfeb81c2084614"
+    },
+    {
+      "path": "docker-agent/app/infra/pre_search_catalog_pg.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "89749dcd415637b51a8843fcf209714210459d9b0f0a51ccdb87ddf73b384595"
+    },
+    {
+      "path": "docker-agent/app/infra/pre_search_dictionary_extractor.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "2186870db65a48ef16045f22cd3fb6eef3405054dd4cdef8c0605e02dcc0392f"
+    },
+    {
+      "path": "docker-agent/app/infra/pre_search_family_curation.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "0d5946fad02d412d30314e5eadce6f4bdf69396a736060db882d1391b6fa67c7"
+    },
+    {
+      "path": "docker-agent/app/infra/pre_search_fine_tuning_format.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "68cdca7c2c78520a8667671b5774ee1e93eb5c9592bc4ff2cf5af51213a0b9fb"
+    },
+    {
+      "path": "docker-agent/app/infra/pre_search_model_cycle.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "7a3f0e09206dcd1369dd4c0b4fa96334e2e98166de041f160d0cbcb18e7ab55d"
+    },
+    {
+      "path": "docker-agent/app/infra/pre_search_part_code.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "13dd68804569efaaca456ced408a8ebbc6ce603ec5d450c46ebac53a32e79f19"
+    },
+    {
+      "path": "docker-agent/app/infra/pre_search_review_admin_pg.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "3698d762f314763d48be49feb8c13bb1ff27d370a45ac0a2ebaa82fd875e0047"
+    },
+    {
+      "path": "docker-agent/app/infra/pre_search_review_queue_pg.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "38749e87c18676233b94c4dcc32003c6f3f54624f25374b0b32cdf9be4644083"
+    },
+    {
+      "path": "docker-agent/app/infra/pre_search_text.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "896e076dd56e3881745d2047a7a9ee324405f1c66bc6fcb48fc3f55ab52f1572"
+    },
+    {
+      "path": "docker-agent/app/infra/pre_search_validator_llm.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "ff2827c42642bd039e2eed147eef2f5b7140a64e817629ecd9a3e901b4520210"
+    },
+    {
+      "path": "docker-agent/app/main.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "99c13cfc513adc768f52e4990d7b738a4c2303ca0f1c1fdb1e000f3b94dd57bc"
+    },
+    {
+      "path": "docker-agent/db/init/csv/engine_option.csv",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "163820d985dd02d1ee08231ed6587de096aee7382674ce12ffba6a07b4a4617e"
+    },
+    {
+      "path": "docker-agent/db/init/csv/grupo.csv",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "b4ab26fb222b6a08a847307bd5c443841f89055234e98c9a2a5f02a8ddc219bf"
+    },
+    {
+      "path": "docker-agent/db/init/csv/pre_search_alias_decision.csv",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "cd100e3f0a6e30399dd62c727bfd8b298254912e18f8ef6270b6f7cedf3079c2"
+    },
+    {
+      "path": "docker-agent/db/init/csv/pre_search_family_concept.csv",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "d0481b980c506c3596540170ded3c3319af3346d1fbd548f9c9c4f23b0a2e38a"
+    },
+    {
+      "path": "docker-agent/db/init/csv/pre_search_family_scope.csv",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "3b86f76f7224f4a582d19c861ef245f010e5c2e7d74861af860db7e3a35eb490"
+    },
+    {
+      "path": "docker-agent/db/init/csv/pre_search_part_alias.csv",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "6793438fca015d44cebcdc0b65330eecb56e066e50c31e6cfd103c132299f7a9"
+    },
+    {
+      "path": "docker-agent/db/init/csv/pre_search_part_rule.csv",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "f6a90992a50970cca00a2499a2b8cfe3b6ab43bf4f91151f9d3847f9a376b79a"
+    },
+    {
+      "path": "docker-agent/db/init/csv/pre_search_variant_alias.csv",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "4c30d7548159c932f0263163e9fe9b9ef496394854e47d277aaceae3ea68bb2a"
+    },
+    {
+      "path": "docker-agent/db/init/csv/subgrupo.csv",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "6a31d5e3809b0b483080fe6c8eef4ac9307b9e86d521c5c1a9c4a5552eef1d00"
+    },
+    {
+      "path": "docker-agent/db/init/csv/vehicle_brand.csv",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "48921bee52234df14e9a0d04fde2d0433e21ff32ba09da6de511e1e55872ac33"
+    },
+    {
+      "path": "docker-agent/db/init/csv/vehicle_model.csv",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "614e50aaea1f29461777b13495085401eda30f7ea2ba404787e0c4ab762be3bc"
+    },
+    {
+      "path": "docker-agent/db/init/csv/vehicle_model_brand.csv",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "ecd6af6f6d54d20f8abee2ccd4b9f8466bd09d775625c3c4aba439102727c71f"
+    },
+    {
+      "path": "docker-agent/db/init/fallback/v2/applications.csv.gz",
+      "matches_commit": true,
+      "lfs": true,
+      "frozen_sha256": "64309b58612c452344a6b79fce02a81540aaee4b9fbf35a3c4ff33f39838478c"
+    },
+    {
+      "path": "docker-agent/db/init/fallback/v2/candidates.csv.gz",
+      "matches_commit": true,
+      "lfs": true,
+      "frozen_sha256": "df5c334b6636d204b6e18df52d1700a919d7d2b4a0a0d21b91930a5a0570b254"
+    },
+    {
+      "path": "docker-agent/db/init/fallback/v2/manifest.json",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "7a565e23bece721909114753bb7f9e917cd831dba2833ff12af0f491f6d9e1de"
+    },
+    {
+      "path": "docker-agent/db/init/fallback/v2/manifest.sha256",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "78cb6e1cd19595a705b25e9d0c17351c022d000dec9687447e8e15405dffb545"
+    },
+    {
+      "path": "docker-agent/db/init/pre_search_init.sql",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "e7c675e672c35f8098c92e9849dd195b9f4c02c48a6be217267adcbb32995d00"
+    },
+    {
+      "path": "docker-agent/Dockerfile",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "f4bb87c7e724e78c5738708b6675584f17db11637759940ebfcf1341c167d8b1"
+    },
+    {
+      "path": "docker-agent/docs/assets/datasets/battery_real_omnichannel_250.json",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "9f0fa5eee45fc6eb39e0065a5856c2b6e4a7c9b50633eb9dee70bc50b2b1a539"
+    },
+    {
+      "path": "docker-agent/docs/assets/datasets/battery_structural_respond_v2.json",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "7e7c3453bbc9de5a1e6a3c668516614cb6bf74816d661bed4b840f25bba020d4"
+    },
+    {
+      "path": "docker-agent/docs/assets/datasets/erp_manual_type_validation_v1.json",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "2a4eb8bbfb16cd88f0dfae8d85a33deb9a3640a83899b46c3ff7430d37adcbcc"
+    },
+    {
+      "path": "docker-agent/docs/assets/datasets/erp_search_golden_set.json",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "dd0f63be27705a225a6353afb80357f2f34f0094dd9c37fdd9d2192ad8938522"
+    },
+    {
+      "path": "docker-agent/docs/assets/datasets/pre_search_eval_dataset_mvp.json",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "34e5436fc05b6ca3e42cd26073f939560eb95095e12c15f03d7de4807ea3e8e1"
+    },
+    {
+      "path": "docker-agent/docs/assets/datasets/pre_search_num_predict_golden_set.json",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "65763d809f06b853683fd74112f296937dd5bc3943a0fd3079f969bbb0de3e93"
+    },
+    {
+      "path": "docker-agent/docs/assets/datasets/README.md",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "5fbccb2a30bec1cc3944d83b13a27849ec835c6969eea6e0eb8f9190bd852c90"
+    },
+    {
+      "path": "docker-agent/docs/assets/datasets/real_respond_battery_human_validation.md",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "2b43cd5d84712123f4fa41e88d5291daf7a062448361fb65dbf8643ff2efbbc6"
+    },
+    {
+      "path": "docker-agent/docs/assets/datasets/real_respond_ranking_annotations_v1.json",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "138bc33b90609798645cd2b5de59f3a946788b894a85f708db8374c0a2328cd3"
+    },
+    {
+      "path": "docker-agent/docs/DECISIONS.md",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "8a4a11aa7b34be9105b74343a8efa34a69bcfb795375ab7a52b3d89b85b197fd"
+    },
+    {
+      "path": "docker-agent/docs/guide/erp_search_integration.md",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "da347d12b20416b7a743805b1df875ed397f747149fb15d2f88a80babb8cc761"
+    },
+    {
+      "path": "docker-agent/docs/guide/operational_commands.md",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "0ea1ae2816136ae8362e0a738caf5bd9f4c45f9a0fe4b81c8cedd05cc2732d2c"
+    },
+    {
+      "path": "docker-agent/docs/guide/pre_search_runtime_flow.md",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "805cc68bea7b7bf8f0a20b6f5eebcb946423e737d40eac09085b7840c50c07f7"
+    },
+    {
+      "path": "docker-agent/docs/guide/runtime_and_bootstrap.md",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "991200e2e1bce2c5a49e38f1b5b82e6c8c60a62228d1907f7f23bd6a2fc992b4"
+    },
+    {
+      "path": "docker-agent/docs/HISTORICO.md",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "ddc800285709591362120e59ee2c9e12c4b3566dfc87cace043f139329088979"
+    },
+    {
+      "path": "docker-agent/docs/PROGRESS.md",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "2077fbd755dca93dbd39b62a6f10aa5e8d7a73a5ee0afd76353acd9d0cddd12b"
+    },
+    {
+      "path": "docker-agent/docs/README.md",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "c810d94142bc01127ad7d0a07986f6827a06189eff370a85d14e69b6115cff23"
+    },
+    {
+      "path": "docker-agent/docs/TODO.md",
+      "matches_commit": false,
+      "lfs": false,
+      "frozen_sha256": "7ce41eb2e1f4e3611eca4390d51b564a183ef19bd613eec58dff3e3a4804d3ef"
+    },
+    {
+      "path": "docker-agent/docs/training/pre_search_fine_tuning.md",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "2320523a3f56d932a77fa09fbda533d676209d2ceb3f290f58eb08fa8598b2fa"
+    },
+    {
+      "path": "docker-agent/requirements.txt",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "d223db9c073af21617029ad4db132701eb4403ed128fb0e840aa0b1518225a09"
+    },
+    {
+      "path": "docker-agent/scripts/__init__.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "path": "docker-agent/scripts/catalog/apply_catalog_alias_updates.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "0546b573d16bfa5b1ff9eea4b75175f02640527d6d8557fe3fbaad00a81798e5"
+    },
+    {
+      "path": "docker-agent/scripts/catalog/generate_model_brand_review.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "3b8e8aa9489de8c271fb0f5f60cf9383c58cd7c8f15364f8076fcb70a13cb50f"
+    },
+    {
+      "path": "docker-agent/scripts/catalog/import_model_brand_review.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "17b62c1d806a05edd6743e0ae2881ddc2857ecdfb53a209840d8b5c8764d95ba"
+    },
+    {
+      "path": "docker-agent/scripts/erp/export_search_snapshot.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "c483776da8a69cd437054c47e9aa9b75f5beba45c87e3f190be9e7f937cf4936"
+    },
+    {
+      "path": "docker-agent/scripts/erp/install_search_snapshot.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "4b2f8eabd9416bda82c06fbb435be68efde946d9fb17a20457ef0e47352ab120"
+    },
+    {
+      "path": "docker-agent/scripts/eval/__init__.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "path": "docker-agent/scripts/eval/benchmark_llm_num_predict.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "51b626ab97125684ed0869d7a03804435f0fa85fa14eb633ef04abf64924a57b"
+    },
+    {
+      "path": "docker-agent/scripts/eval/benchmark_pre_search_latency.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "5f9fe098ecdf174a46c2279857a1edb2fb992944b314fcbc5f3182a6abf8e669"
+    },
+    {
+      "path": "docker-agent/scripts/eval/build_part_family_coverage_dataset.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "a81f20bcc80e83ee6b7845f819e26080455680cfafc30f1a1aafbcadf39a2c3b"
+    },
+    {
+      "path": "docker-agent/scripts/eval/build_real_ranking_annotation_template.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "f95f363d7ca0d2609faf56ac62d4d451a1e00ab0b257b262902477f5603603e6"
+    },
+    {
+      "path": "docker-agent/scripts/eval/build_real_respond_battery_dataset.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "c8a702c537ddda2f2dbb46f48b55c0d597740f17f5dfb8de3eb654a1020a5c08"
+    },
+    {
+      "path": "docker-agent/scripts/eval/consolidate_category_search.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "370f9abf3e473bd241610be7a039c8d95117525ebb7b445b6234bca35f7dcfef"
+    },
+    {
+      "path": "docker-agent/scripts/eval/evaluate_category_search.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "75165d34442f4396d06092aea9416a3f56090323501790a66f4ce27f58148647"
+    },
+    {
+      "path": "docker-agent/scripts/eval/evaluate_erp_search.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "0a8e18297aaaf27f5133d905770f2822b884b628993c95395b501f804291de6e"
+    },
+    {
+      "path": "docker-agent/scripts/eval/evaluate_part_family_coverage.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "917b71ac1910a398f71164090241a4674d34aa6e0b6a82584c4eea3f8c3fe6c7"
+    },
+    {
+      "path": "docker-agent/scripts/eval/evaluate_pre_search.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "1c78fc8bf68b1b805088a6bc6f37c9e0422032549a18f7903cbf27c2aee3ffc2"
+    },
+    {
+      "path": "docker-agent/scripts/eval/evaluate_real_ranking.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "fff65e27bb69bd28e5626052bf9bb03269dfb1b3b4d59901efee2bbf5610fde1"
+    },
+    {
+      "path": "docker-agent/scripts/eval/generate_eval_report.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "0547d3c39b72494fe3c14e4782a2434e6c92e8adcac800b594ba4cba73b4a870"
+    },
+    {
+      "path": "docker-agent/scripts/eval/run_real_respond_battery.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "b68bfa3b6023638b2939617c55140144cfe23caa97199a78710e841b2b006f22"
+    },
+    {
+      "path": "docker-agent/scripts/README.md",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "b94a49a85a70289d0a8d501bab3f7268e4bd95ad1e37d55d465e8fedb2e5fdca"
+    },
+    {
+      "path": "docker-agent/scripts/testing/__init__.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "c8c56cacbcb5c0fcb4f13034e3ae4c665452afa460ec586e411a864d20b526d4"
+    },
+    {
+      "path": "docker-agent/scripts/testing/run_mutation_tests.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "5ddcd9a38978d36e801f1b95275ad9b987f4fa96a00efc3050202c6cb636d5ac"
+    },
+    {
+      "path": "docker-agent/scripts/testing/run_quality_checks.ps1",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "1a7248f9560a5ef78c77999eceacdb203cef4d1133400c0c80c594f18ca7bfcb"
+    },
+    {
+      "path": "docker-agent/scripts/training/__init__.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "path": "docker-agent/scripts/training/export_pre_search_fine_tuning_dataset.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "e9c4264c450ff266db1559cbdc41db0808a760e1b61083f5ecc9fe9140ee6326"
+    },
+    {
+      "path": "docker-agent/scripts/training/package_pre_search_ollama_model.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "2c94f40e9f6570e2ec83c31854b4f4d4a8169bad94165ab7d9fd08394a022425"
+    },
+    {
+      "path": "docker-agent/scripts/training/rebalance_pre_search_fine_tuning_dataset.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "28e98a3f1dfb4158c4ad68cf1f474c5ee98a89be91e01b16a9a62d2df45f788e"
+    },
+    {
+      "path": "docker-agent/scripts/training/review_pre_search_queue.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "d8fbee73b11ce3915389ef74bbe6f383d8987bb0d65770eb16b554a6c188e925"
+    },
+    {
+      "path": "docker-agent/scripts/training/run_pre_search_fine_tuning_cycle.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "5f56fa28fd20a821bd4b34fb3ba74496d01b0c0e88b07d323a96ee7b223701b6"
+    },
+    {
+      "path": "docker-agent/setup.cfg",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "6dd15846d277667b23f7cd6a90f205d85dfa33ca8ce456d1fe78d7837eb0b570"
+    },
+    {
+      "path": "docker-agent/tests/test_build_part_family_coverage_dataset.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "c63c40d5b39ca7baba514def87f3fe2f8dad85b2189e90106c88735106531732"
+    },
+    {
+      "path": "docker-agent/tests/test_catalog_bootstrap_rules.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "7ca289b47c01327b45399536b6031332aceda25056355541cb97cf1690da2d24"
+    },
+    {
+      "path": "docker-agent/tests/test_category_search_eval.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "985b89965ff78b2f1052f8effb6dadfecf9c2163b4252f11996161f40988dbc1"
+    },
+    {
+      "path": "docker-agent/tests/test_erp_search_golden.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "d2636b87c138b1bad0b7bbcb5e2e859535e62b6fa0d94f8db189079e20b5f73d"
+    },
+    {
+      "path": "docker-agent/tests/test_erp_search_tools_pg.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "84e3d08990de304e728029f29c283f77b58075b96650e8d548c065e1493a5f50"
+    },
+    {
+      "path": "docker-agent/tests/test_eval_assets.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "92598dee3e6d1dea33b60300ea07d458311c290b8c318a7ed458bf3070272b8b"
+    },
+    {
+      "path": "docker-agent/tests/test_export_pre_search_fine_tuning_dataset.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "e717a21972bec440024a9bd7e9e23ea94b1a4db5dc09b393e900dd92ff137f0a"
+    },
+    {
+      "path": "docker-agent/tests/test_family_curation_refinements.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "8204fffc47a9ac40f91a47c9077b92e4f46bddea8fd2c72b60d831e3756cbc28"
+    },
+    {
+      "path": "docker-agent/tests/test_generate_model_brand_review.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "9ec1b092c0801f05cb89c9eee7a2edb9a2d11317343d499b076f231cb55c7362"
+    },
+    {
+      "path": "docker-agent/tests/test_import_model_brand_review.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "fc1a2aff48931071021dac8a9550b7cc3ed403495085128716c72216448c24d3"
+    },
+    {
+      "path": "docker-agent/tests/test_package_pre_search_ollama_model.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "d728929aaa90f0267dd2b12ff33db0a5e8d371f8db34f4cee648554acb9b1914"
+    },
+    {
+      "path": "docker-agent/tests/test_postgres_conninfo.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "f15a7aec238c81b53ad244cef12b877b8d81d0ca33462060d626c84a3f3e439c"
+    },
+    {
+      "path": "docker-agent/tests/test_pre_search_fine_tuning_format.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "ba8f20c583a96c59776b77062bfacb005da9a64b76d6793f9dcee632b39006c6"
+    },
+    {
+      "path": "docker-agent/tests/test_pre_search_model_cycle.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "70e0c24af42cf8a713d78f3f0b83fad2b8b594e26f37005a8c52a8a7dd4c51fc"
+    },
+    {
+      "path": "docker-agent/tests/test_pre_search_review_admin_pg.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "48f2d4b54dc98ebf17849cb5cd54c8c1f576072f479dc0b007b8a3b645ed3e2d"
+    },
+    {
+      "path": "docker-agent/tests/test_pre_search_text.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "82c0bbba77fb6886bc257e2ec5643aaeccf2331980c7bc31561cee1626bfa7ac"
+    },
+    {
+      "path": "docker-agent/tests/test_process_agent_request_review_capture.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "c5e4047b446d15310aaf6a65b6871dc30a23b4d9166d15f00759969f73c40cb4"
+    },
+    {
+      "path": "docker-agent/tests/test_real_respond_battery.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "0f50ee9e5780f57c84e349ddf40a57bdbc4c0348224a39932d4c31eee0ffaf18"
+    },
+    {
+      "path": "docker-agent/tests/test_request_identity_follow_up.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "2100e6043ee40d1f0810e6bf9fee607e326e8920de8cb997f96a765eccbd5065"
+    },
+    {
+      "path": "docker-agent/tests/test_respond.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "ff4d5a06845cab2d4ac381d01e844f9b087d4396100c92365a19b650a16b8d65"
+    },
+    {
+      "path": "docker-agent/tests/test_result_disambiguation.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "8f2848437fefecad33b75b1b6548f98b44c24b3b7c38ee3022bd50d9810d4f00"
+    },
+    {
+      "path": "docker-agent/tests/test_review_api.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "37d6cba20c48c2cab3c7a611374686250e08db66d09ef1ce39bd735320bf0fc2"
+    },
+    {
+      "path": "docker-agent/tests/test_review_pre_search_queue.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "396e14b8f9110700d5e8691b0432636bb10b0e4dad5e7b3c5ce0e3bbe85c8937"
+    },
+    {
+      "path": "docker-agent/tests/test_rules.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "a7b1527a995caa159b50cbefdb032e951dec0484ccc4674adf0135c49b2f6362"
+    },
+    {
+      "path": "docker-agent/tests/test_run_mutation_tests.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "64dae78a2e86723160d734c3565f16950a1005284b222ad23f218061c9184c4a"
+    },
+    {
+      "path": "docker-agent/tests/test_run_pre_search_fine_tuning_cycle.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "c51cca0392acb7376b38aa07dc9c771ef414952bfdd712eb56ba67cedf3722a6"
+    },
+    {
+      "path": "docker-comm/app/__init__.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "6b7a733b80d667f15cd4e79f848ececd2dc3347cea1b69e3170efb0e8175bff7"
+    },
+    {
+      "path": "docker-comm/app/api/__init__.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "1b0ad4ba206637ff912a2bb906e0f66753061a77234a7f41489341b185641117"
+    },
+    {
+      "path": "docker-comm/app/api/deps.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "1c4d11496e92a9c6c9036b81a5bb2e5cd37d4b8ac489656b556b4dee6e5183ae"
+    },
+    {
+      "path": "docker-comm/app/api/routes/__init__.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "912f2144f6ecd00e2bf0816406eaa2178dae538cdaf77a172cbc3c04a390ae75"
+    },
+    {
+      "path": "docker-comm/app/api/routes/health.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "93e2703f1e303e1c128e53f427cc5905128eafaf30e4f49920496081840f4587"
+    },
+    {
+      "path": "docker-comm/app/api/routes/test_send.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "8a11b46576419d8f0b4ba222e41c6a241e262e47729f75d820bba8a1dde847ca"
+    },
+    {
+      "path": "docker-comm/app/api/schemas.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "8c329359217361b9abcf1b041a60d380c09867d495c52cdd4927000d6dd84ac3"
+    },
+    {
+      "path": "docker-comm/app/config.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "2cba8aed14bf403d4a59bca2d3bd7f03c3b559d9da16fcaa0ae73fee9aaa550d"
+    },
+    {
+      "path": "docker-comm/app/core/__init__.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "3c5ca630dfbaf0acfa26b06c0e316d051585fdd11497d83c988fede348e358aa"
+    },
+    {
+      "path": "docker-comm/app/core/domain/__init__.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "f9a6169986227c3819ed56f9ab142b446b7a903082ce91067d4ab74a46fe1d35"
+    },
+    {
+      "path": "docker-comm/app/core/domain/errors.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "b40b3b79066ea96d70fde1b20585172a1d87ba6696f7e28f161260683e8316e9"
+    },
+    {
+      "path": "docker-comm/app/core/domain/models.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "a51698a46a8fb5924e5f600df1070edc381d16f1a47414f5bf82b749e6976af0"
+    },
+    {
+      "path": "docker-comm/app/core/domain/response_stage.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "5425f0266bde933963fa9a0c34e0b6f1bdfd3e3e690b8a3fc6bc5d1c512d745f"
+    },
+    {
+      "path": "docker-comm/app/core/domain/rules.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "8d175e11184a80f05cf8dd609ce20af30f5c0e824b37c15bb5d0fd74fa220703"
+    },
+    {
+      "path": "docker-comm/app/core/ports/__init__.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "24cb1f079b8f30be5d4c580d687518688a9e9e643a31f4ab0b3669156bdc8038"
+    },
+    {
+      "path": "docker-comm/app/core/ports/agent_client.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "e4676bf9b4feb3ee070ef5340e6cc48a225c06c25bcfd1151a027d71491b2872"
+    },
+    {
+      "path": "docker-comm/app/core/ports/audit_repo.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "1358c1091320435e7a5f40d3bed11b8b0d264febb49098f375ab37da674dee68"
+    },
+    {
+      "path": "docker-comm/app/core/ports/session_store.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "b594b59c99affa1defc94b528acf03a9d07b315964f9851081d84c991e9fb90e"
+    },
+    {
+      "path": "docker-comm/app/core/usecases/__init__.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "dc880efa440178cb6d63773932d6f2c49a8335edefa7d0e225b11968a9af330f"
+    },
+    {
+      "path": "docker-comm/app/core/usecases/process_inbound_message.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "a6742fbbb4fca0679d11d2f304d0a5de62297b4ae11a58c39421d455d1e107ad"
+    },
+    {
+      "path": "docker-comm/app/infra/__init__.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "67e03f5ba72ec5613a2b4b75c065dba766e620908a88a91a6571f8e49f91bb5e"
+    },
+    {
+      "path": "docker-comm/app/infra/agent_client_http.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "bd05762d28110e35dc74d3dcf44de43f24f8e161fa1db92ee3df292f13f700bb"
+    },
+    {
+      "path": "docker-comm/app/infra/logger.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "03dfa29313043ac2bb0f13f5ba43eba74367eb8738d4ece6bd79bbb06ec2ece2"
+    },
+    {
+      "path": "docker-comm/app/infra/session_store_redis.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "8110b1ae72ea9a53c1f08eb567314b4668c8b2bd5aa7e8d89be03dc21a334d49"
+    },
+    {
+      "path": "docker-comm/app/infra/turn_store_redis.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "0e2327b46a4893d905e3e5496b2d690c3c0ec11319aac176c7b43f820d301f15"
+    },
+    {
+      "path": "docker-comm/app/main.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "02453ac4e1cf09a45d1baf335c74715806ff52e4391c657ab0b90ddba453a1d1"
+    },
+    {
+      "path": "docker-comm/Dockerfile",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "fb4a49069f8a11685bd274a193fe3874e87280c7a7699f4c74b4b656307e9854"
+    },
+    {
+      "path": "docker-comm/requirements.txt",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "c2381f9bf92eae61aaf7ae874f65883d4cd34420efbf28b4939e6e799476dc3d"
+    },
+    {
+      "path": "docker-comm/tests/test_process_inbound_message.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "86578be9e2a32366b34b556917ba695bac3ad94314d6b0521f3347c7443feb55"
+    },
+    {
+      "path": "docker-comm/tests/test_rules.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "4f44a7b58704b2bbb60f1bcc23e005a62160c9b4a8078f915e1abc4c7a6cbac8"
+    },
+    {
+      "path": "docker-comm/tests/test_session_store_redis.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "9ca70a50dc30c34ddcb974172b392bf1ed72e213faa27995b1140348297caf82"
+    },
+    {
+      "path": "docker-comm/tests/test_streamlit_review_helpers.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "0c2b37ef691d8042c82bca418e119626249f0abbfb1ce33a76f45924f0cb64af"
+    },
+    {
+      "path": "docker-comm/tests/test_streamlit_send.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "635507503d887d6c46525e1fb962d8d9c3e4d189c785461877d9554446753bdc"
+    },
+    {
+      "path": "docker-comm/tests/test_test_send_endpoint.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "fece60127120ac93204e07b6729861d53d7edeba8face3ffc2b963834ef77135"
+    },
+    {
+      "path": "docker-comm/tests/test_turn_store_redis.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "6b01db75aa5c037b2483a00cf475362f53adcfa6dfe7f958a848fd335c5482fe"
+    },
+    {
+      "path": "docker-comm/ui/streamlit_app.py",
+      "matches_commit": true,
+      "lfs": false,
+      "frozen_sha256": "e013381c1063d936b2a5714165a5c40618c8800485a97184d67befdd368c37ab"
+    }
+  ],
+  "omitted_large_files": [
+    {
+      "path": "frozen/db/init/fallback/v2/applications.csv.gz",
+      "sha256": "64309b58612c452344a6b79fce02a81540aaee4b9fbf35a3c4ff33f39838478c",
+      "bytes": 40063076
+    },
+    {
+      "path": "frozen/db/init/fallback/v2/candidates.csv.gz",
+      "sha256": "df5c334b6636d204b6e18df52d1700a919d7d2b4a0a0d21b91930a5a0570b254",
+      "bytes": 2796982
+    },
+    {
+      "path": "inputs/catalog.dump",
+      "sha256": "486418a218628baabd061b840b94cf3ce0264db784828b423c90c15c2db58597",
+      "bytes": 74328209
+    },
+    {
+      "path": "inputs/source_snapshot/applications.csv.gz",
+      "sha256": "61d36c7be048374fbfea617ff4abd17d1f839ef2dec8328b96f812f30d207915",
+      "bytes": 42998936
+    },
+    {
+      "path": "inputs/source_snapshot/candidates.csv.gz",
+      "sha256": "4aee536be473b759c15f01581a8ddc8be82c7cb972d5d6a2feea139d4cdf4a67",
+      "bytes": 2797096
+    }
+  ],
+  "experimental_source_snapshot": "catalogo_20261019 contains the exact 19 October source; it differs from the 14 September runtime contingency snapshot in Git LFS. Frozen source matches the commit; the evaluated database source is separately recorded.",
+  "catalog_dump": "Original 74 MB catalog dump is local only. Recalculation does not need it; full inference reconstruction also requires the recorded catalog state and environment. See README."
+}

@@ -1,0 +1,15 @@
+{
+  "contract_version": 2,
+  "encoding": "UTF8",
+  "exported_at": "2026-10-19T11:42:21.676955+00:00",
+  "files": {
+    "candidates.csv.gz": {
+      "rows": 52798,
+      "sha256": "4aee536be473b759c15f01581a8ddc8be82c7cb972d5d6a2feea139d4cdf4a67"
+    },
+    "applications.csv.gz": {
+      "rows": 1779443,
+      "sha256": "61d36c7be048374fbfea617ff4abd17d1f839ef2dec8328b96f812f30d207915"
+    }
+  }
+}

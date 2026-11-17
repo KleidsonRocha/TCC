@@ -1,0 +1,415 @@
+{
+  "generated_at": "2026-10-19T13:35:28.710321+00:00",
+  "status": "complete",
+  "models": {
+    "qwen-base-bf16": {
+      "categories": {
+        "completed": 371,
+        "turns": 557,
+        "turn_errors": 0,
+        "turn_latency": {
+          "count": 557,
+          "mean_s": 2.900313354820499,
+          "median_s": 0.9551758740008154,
+          "p95_s": 15.00260342599995,
+          "sum_s": 1615.4745386350178
+        },
+        "turn_latency_with_llm": {
+          "count": 80,
+          "mean_s": 13.489330549450074,
+          "median_s": 14.057886592999694,
+          "p95_s": 19.997627715000817,
+          "sum_s": 1079.146443956006
+        },
+        "turn_latency_without_llm": {
+          "count": 477,
+          "mean_s": 1.1243775569790606,
+          "median_s": 0.8307012349996512,
+          "p95_s": 2.106714798000212,
+          "sum_s": 536.3280946790119
+        },
+        "llm_calls": 80,
+        "llm_errors": 0,
+        "llm_roundtrip_latency": {
+          "count": 80,
+          "mean_s": 10.935726048437482,
+          "median_s": 11.443257380499745,
+          "p95_s": 17.484407344999454,
+          "sum_s": 874.8580838749986
+        },
+        "llm_generation_latency": {
+          "count": 80,
+          "mean_s": 5.754803571075,
+          "median_s": 3.084953207,
+          "p95_s": 16.53079319,
+          "sum_s": 460.384285686
+        },
+        "generated_tokens": 10898,
+        "valid_raw_json_outputs": 57,
+        "invalid_or_incomplete_raw_json_outputs": 23,
+        "outputs_at_token_limit": 23,
+        "complete_json_at_token_limit": 0,
+        "truncated_llm_outputs": 23,
+        "backend_llm_fallback_turns": 18,
+        "searches": 173,
+        "search_errors": 0,
+        "search_latency": {
+          "count": 173,
+          "mean_s": 0.0802669077514589,
+          "median_s": 0.03748278199964261,
+          "p95_s": 0.23474883400012914,
+          "sum_s": 13.886175041002389
+        },
+        "returned_item_occurrences": 454,
+        "verdicts": {
+          "handoff_por_dado_desconhecido": 105,
+          "sem_itens_na_subcategoria_fonte": 34,
+          "suspeita_falso_negativo": 34,
+          "nao_concluiu_busca_com_itens_na_fonte": 61,
+          "itens_coerentes_com_cadastro": 133,
+          "suspeita_item_incorreto": 4
+        },
+        "stop_reasons": {
+          "encaminhamento_humano": 167,
+          "pergunta_sem_resposta_comprovada": 32,
+          "pergunta_repetida": 34,
+          "itens_apresentados": 137,
+          "desambiguacao_sem_opcao_comprovada_pela_referencia": 1
+        },
+        "conversations_with_llm": 71,
+        "conversations_with_known_vehicle_fact_filter_mismatches": 16
+      },
+      "golden": {
+        "completed": 27,
+        "turns": 27,
+        "turn_errors": 0,
+        "turn_latency": {
+          "count": 27,
+          "mean_s": 1.7185020115187029,
+          "median_s": 0.9204140269994241,
+          "p95_s": 1.7800554700006614,
+          "sum_s": 46.39955431100498
+        },
+        "turn_latency_with_llm": {
+          "count": 2,
+          "mean_s": 9.624766489499962,
+          "median_s": 9.624766489499962,
+          "p95_s": 4.379184976998658,
+          "sum_s": 19.249532978999923
+        },
+        "turn_latency_without_llm": {
+          "count": 25,
+          "mean_s": 1.0860008532802021,
+          "median_s": 0.9139508290008962,
+          "p95_s": 1.7070687180003006,
+          "sum_s": 27.150021332005053
+        },
+        "llm_calls": 2,
+        "llm_errors": 0,
+        "llm_roundtrip_latency": {
+          "count": 2,
+          "mean_s": 7.222437944500598,
+          "median_s": 7.222437944500598,
+          "p95_s": 2.1791114730003756,
+          "sum_s": 14.444875889001196
+        },
+        "llm_generation_latency": {
+          "count": 2,
+          "mean_s": 6.759530308,
+          "median_s": 6.759530308,
+          "p95_s": 1.721312234,
+          "sum_s": 13.519060616
+        },
+        "generated_tokens": 154,
+        "valid_raw_json_outputs": 2,
+        "invalid_or_incomplete_raw_json_outputs": 0,
+        "outputs_at_token_limit": 0,
+        "complete_json_at_token_limit": 0,
+        "truncated_llm_outputs": 0,
+        "backend_llm_fallback_turns": 0,
+        "searches": 20,
+        "search_errors": 0,
+        "search_latency": {
+          "count": 20,
+          "mean_s": 0.08717619695016765,
+          "median_s": 0.0770762915008163,
+          "p95_s": 0.1848704040003213,
+          "sum_s": 1.743523939003353
+        },
+        "returned_item_occurrences": 122,
+        "all": {
+          "total": 27,
+          "passed": 27,
+          "decision_correct": 27,
+          "errors": 0,
+          "case_pass_pct": 100.0,
+          "decision_accuracy_pct": 100.0,
+          "expected_criteria_accuracy_pct": 100.0,
+          "expected_missing_fields_recall_pct": 100.0,
+          "next_question_key_accuracy_pct": 100.0
+        },
+        "without_exact_train_validation_overlap": {
+          "total": 21,
+          "passed": 21,
+          "decision_correct": 21,
+          "errors": 0,
+          "case_pass_pct": 100.0,
+          "decision_accuracy_pct": 100.0,
+          "expected_criteria_accuracy_pct": 100.0,
+          "expected_missing_fields_recall_pct": 100.0,
+          "next_question_key_accuracy_pct": 100.0
+        },
+        "validator_latency": {
+          "count": 27,
+          "mean_s": 7.177969918259367,
+          "median_s": 4.564298883000447,
+          "p95_s": 13.626371849000861,
+          "sum_s": 193.80518779300291
+        },
+        "validator_only_llm_calls": 25,
+        "validator_only_truncated_outputs": 0,
+        "validator_only_invalid_raw_json_outputs": 0
+      }
+    },
+    "qwen-ft-bf16": {
+      "categories": {
+        "completed": 371,
+        "turns": 558,
+        "turn_errors": 0,
+        "turn_latency": {
+          "count": 558,
+          "mean_s": 3.434708603908586,
+          "median_s": 0.9208227965000333,
+          "p95_s": 19.401926358999845,
+          "sum_s": 1916.567400980991
+        },
+        "turn_latency_with_llm": {
+          "count": 80,
+          "mean_s": 17.345804653887456,
+          "median_s": 17.498130576499534,
+          "p95_s": 22.70946921599989,
+          "sum_s": 1387.6643723109964
+        },
+        "turn_latency_without_llm": {
+          "count": 478,
+          "mean_s": 1.106491691778231,
+          "median_s": 0.8100876550001885,
+          "p95_s": 2.1205520469993644,
+          "sum_s": 528.9030286699945
+        },
+        "llm_calls": 80,
+        "llm_errors": 0,
+        "llm_roundtrip_latency": {
+          "count": 80,
+          "mean_s": 14.947429598662529,
+          "median_s": 14.979566774999967,
+          "p95_s": 20.254466325000067,
+          "sum_s": 1195.7943678930023
+        },
+        "llm_generation_latency": {
+          "count": 80,
+          "mean_s": 9.291671291775,
+          "median_s": 9.2075014395,
+          "p95_s": 19.556186839,
+          "sum_s": 743.333703342
+        },
+        "generated_tokens": 15229,
+        "valid_raw_json_outputs": 36,
+        "invalid_or_incomplete_raw_json_outputs": 44,
+        "outputs_at_token_limit": 45,
+        "complete_json_at_token_limit": 1,
+        "truncated_llm_outputs": 44,
+        "backend_llm_fallback_turns": 36,
+        "searches": 170,
+        "search_errors": 0,
+        "search_latency": {
+          "count": 170,
+          "mean_s": 0.08083617128234918,
+          "median_s": 0.03692365949973464,
+          "p95_s": 0.2279549999993833,
+          "sum_s": 13.742149117999361
+        },
+        "returned_item_occurrences": 440,
+        "verdicts": {
+          "handoff_por_dado_desconhecido": 106,
+          "sem_itens_na_subcategoria_fonte": 34,
+          "suspeita_falso_negativo": 34,
+          "nao_concluiu_busca_com_itens_na_fonte": 63,
+          "itens_coerentes_com_cadastro": 131,
+          "suspeita_item_incorreto": 3
+        },
+        "stop_reasons": {
+          "encaminhamento_humano": 171,
+          "pergunta_sem_resposta_comprovada": 32,
+          "pergunta_repetida": 33,
+          "itens_apresentados": 134,
+          "desambiguacao_sem_opcao_comprovada_pela_referencia": 1
+        },
+        "conversations_with_llm": 71,
+        "conversations_with_known_vehicle_fact_filter_mismatches": 13
+      },
+      "golden": {
+        "completed": 27,
+        "turns": 27,
+        "turn_errors": 0,
+        "turn_latency": {
+          "count": 27,
+          "mean_s": 2.432754243963077,
+          "median_s": 0.9728237290000834,
+          "p95_s": 1.9535038670001086,
+          "sum_s": 65.68436458700307
+        },
+        "turn_latency_with_llm": {
+          "count": 2,
+          "mean_s": 18.399570157999733,
+          "median_s": 18.399570157999733,
+          "p95_s": 16.039993914999286,
+          "sum_s": 36.799140315999466
+        },
+        "turn_latency_without_llm": {
+          "count": 25,
+          "mean_s": 1.1554089708401443,
+          "median_s": 0.956462289999763,
+          "p95_s": 1.889426760000788,
+          "sum_s": 28.885224271003608
+        },
+        "llm_calls": 2,
+        "llm_errors": 0,
+        "llm_roundtrip_latency": {
+          "count": 2,
+          "mean_s": 16.29759743700015,
+          "median_s": 16.29759743700015,
+          "p95_s": 13.987697761000163,
+          "sum_s": 32.5951948740003
+        },
+        "llm_generation_latency": {
+          "count": 2,
+          "mean_s": 11.388344336,
+          "median_s": 11.388344336,
+          "p95_s": 9.254189155,
+          "sum_s": 22.776688672
+        },
+        "generated_tokens": 320,
+        "valid_raw_json_outputs": 2,
+        "invalid_or_incomplete_raw_json_outputs": 0,
+        "outputs_at_token_limit": 0,
+        "complete_json_at_token_limit": 0,
+        "truncated_llm_outputs": 0,
+        "backend_llm_fallback_turns": 0,
+        "searches": 20,
+        "search_errors": 0,
+        "search_latency": {
+          "count": 20,
+          "mean_s": 0.08917976529996849,
+          "median_s": 0.0785837965004248,
+          "p95_s": 0.18059285200070008,
+          "sum_s": 1.7835953059993699
+        },
+        "returned_item_occurrences": 118,
+        "all": {
+          "total": 27,
+          "passed": 24,
+          "decision_correct": 24,
+          "errors": 0,
+          "case_pass_pct": 88.89,
+          "decision_accuracy_pct": 88.89,
+          "expected_criteria_accuracy_pct": 98.88,
+          "expected_missing_fields_recall_pct": 100.0,
+          "next_question_key_accuracy_pct": 88.89
+        },
+        "without_exact_train_validation_overlap": {
+          "total": 21,
+          "passed": 18,
+          "decision_correct": 18,
+          "errors": 0,
+          "case_pass_pct": 85.71,
+          "decision_accuracy_pct": 85.71,
+          "expected_criteria_accuracy_pct": 98.59,
+          "expected_missing_fields_recall_pct": 100.0,
+          "next_question_key_accuracy_pct": 85.71
+        },
+        "validator_latency": {
+          "count": 27,
+          "mean_s": 15.246102111851643,
+          "median_s": 15.560852586999317,
+          "p95_s": 21.565908905999095,
+          "sum_s": 411.64475701999436
+        },
+        "validator_only_llm_calls": 25,
+        "validator_only_truncated_outputs": 5,
+        "validator_only_invalid_raw_json_outputs": 5
+      }
+    }
+  },
+  "dataset_overlap": {
+    "categories": {
+      "train": [],
+      "validation": [],
+      "test": []
+    },
+    "golden": {
+      "train": [
+        "ask_no_part",
+        "ask_correia_side",
+        "ask_radiador_engine",
+        "search_radiador_engine",
+        "search_context_engine",
+        "search_radiator_cap_identity"
+      ],
+      "validation": [],
+      "test": []
+    },
+    "interpretation": "Exact normalized initial-message overlap only; absence does not exclude paraphrase or shared templates. Do not treat overlapping cases as held-out generalization."
+  },
+  "limitations": [
+    "Os dois modelos usam Transformers em BF16, com a mesma geração greedy e restrição de JSON Schema. O artefato quantizado histórico do Ollama não foi reexecutado.",
+    "Snapshot do ERP e código do backend congelados; as referências preservam as entradas dos 371 casos originais.",
+    "Os julgamentos por categoria são triagem de coerência com o cadastro, exigem revisão humana e não certificam encaixe físico nem recuperação de todo o estoque.",
+    "O golden usa a pontuação existente dos campos esperados na validação isolada de pre-search; seis mensagens coincidem exatamente com o treino e são reportadas separadamente. A execução do fluxo completo é evidência distinta.",
+    "Ausência de coincidência exata não exclui paráfrases ou modelos de conversa compartilhados com o treino.",
+    "Uma rodada por modelo; tempos incluem SSH e backend, excluem a inspeção independente da fonte e não constituem benchmark de carga.",
+    "O transporte pelo gateway, Redis e WhatsApp não foi exercitado."
+  ],
+  "category_transitions": {
+    "handoff_por_dado_desconhecido -> handoff_por_dado_desconhecido": 105,
+    "sem_itens_na_subcategoria_fonte -> sem_itens_na_subcategoria_fonte": 34,
+    "suspeita_falso_negativo -> suspeita_falso_negativo": 32,
+    "nao_concluiu_busca_com_itens_na_fonte -> nao_concluiu_busca_com_itens_na_fonte": 60,
+    "itens_coerentes_com_cadastro -> itens_coerentes_com_cadastro": 131,
+    "suspeita_item_incorreto -> nao_concluiu_busca_com_itens_na_fonte": 1,
+    "itens_coerentes_com_cadastro -> suspeita_falso_negativo": 2,
+    "suspeita_falso_negativo -> nao_concluiu_busca_com_itens_na_fonte": 2,
+    "suspeita_item_incorreto -> suspeita_item_incorreto": 3,
+    "nao_concluiu_busca_com_itens_na_fonte -> handoff_por_dado_desconhecido": 1
+  },
+  "paired_case_counts": {
+    "categories": 371,
+    "golden": 27
+  },
+  "paired_differences": {
+    "categories": {
+      "verdict_changed": 6,
+      "assistant_messages_changed": 19,
+      "search_results_changed": 6,
+      "search_criteria_changed": 6,
+      "golden_validator_output_changed": 0
+    },
+    "golden": {
+      "verdict_changed": 3,
+      "assistant_messages_changed": 1,
+      "search_results_changed": 1,
+      "search_criteria_changed": 2,
+      "golden_validator_output_changed": 25
+    }
+  },
+  "golden_isolated_regressions": [
+    "search_oil_viscosity_5w40",
+    "search_oil_viscosity_hyphen",
+    "search_multi_item_gate_radiador_bandeja"
+  ],
+  "golden_isolated_regressions_with_identical_deterministic_end_to_end_replies": [
+    "search_oil_viscosity_5w40",
+    "search_oil_viscosity_hyphen",
+    "search_multi_item_gate_radiador_bandeja"
+  ]
+}

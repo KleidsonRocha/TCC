@@ -29,6 +29,12 @@ jobs:
         run: |
           set -euo pipefail
 
+          if [[ -z "${FORGEJO_TOKEN}" ]]; then
+            echo "Configure o secret FORGEJO_TOKEN antes de publicar no Forge."
+            exit 1
+          fi
+          git lfs version
+
           mkdir mirror.git
           cd mirror.git
 
@@ -43,6 +49,11 @@ jobs:
 
           git remote add forgejo \
             "https://${FORGEJO_USUARIO}:${FORGEJO_TOKEN}@${FORGEJO_HOST}/${FORGEJO_REPOSITORIO}"
+
+          # Branches/tags alone copy LFS pointers, not the catalog CSV objects.
+          # Transfer objects first; a failure must not advertise a complete mirror.
+          git lfs fetch --all github
+          git lfs push --all forgejo
 
           git push forgejo --prune \
             "+refs/heads/*:refs/heads/*"

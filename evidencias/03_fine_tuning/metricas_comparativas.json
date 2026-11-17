@@ -1,0 +1,222 @@
+{
+  "metrics": [
+    {
+      "escopo": "categorias",
+      "metrica": "Conversas avaliadas",
+      "unidade": "casos",
+      "original": 371,
+      "ajustado": 371
+    },
+    {
+      "escopo": "categorias",
+      "metrica": "Turnos",
+      "unidade": "turnos",
+      "original": 557,
+      "ajustado": 558
+    },
+    {
+      "escopo": "categorias",
+      "metrica": "Chamadas LLM",
+      "unidade": "chamadas",
+      "original": 80,
+      "ajustado": 80
+    },
+    {
+      "escopo": "categorias",
+      "metrica": "Tokens gerados",
+      "unidade": "tokens",
+      "original": 10898,
+      "ajustado": 15229
+    },
+    {
+      "escopo": "categorias",
+      "metrica": "JSON bruto completo",
+      "unidade": "chamadas",
+      "original": 57,
+      "ajustado": 36
+    },
+    {
+      "escopo": "categorias",
+      "metrica": "Saídas cortadas",
+      "unidade": "chamadas",
+      "original": 23,
+      "ajustado": 44
+    },
+    {
+      "escopo": "categorias",
+      "metrica": "Fallback LLM no backend",
+      "unidade": "turnos",
+      "original": 18,
+      "ajustado": 36
+    },
+    {
+      "escopo": "categorias",
+      "metrica": "Buscas",
+      "unidade": "buscas",
+      "original": 173,
+      "ajustado": 170
+    },
+    {
+      "escopo": "categorias",
+      "metrica": "Conversas com LLM",
+      "unidade": "conversas",
+      "original": 71,
+      "ajustado": 71
+    },
+    {
+      "escopo": "categorias",
+      "metrica": "Erros técnicos",
+      "unidade": "turnos",
+      "original": 0,
+      "ajustado": 0
+    },
+    {
+      "escopo": "categorias",
+      "metrica": "Turno completo mean_s",
+      "unidade": "segundos",
+      "original": 2.900313354820499,
+      "ajustado": 3.434708603908586
+    },
+    {
+      "escopo": "categorias",
+      "metrica": "Turno completo median_s",
+      "unidade": "segundos",
+      "original": 0.9551758740008154,
+      "ajustado": 0.9208227965000333
+    },
+    {
+      "escopo": "categorias",
+      "metrica": "Turno completo p95_s",
+      "unidade": "segundos",
+      "original": 15.00260342599995,
+      "ajustado": 19.401926358999845
+    },
+    {
+      "escopo": "categorias",
+      "metrica": "Turno com LLM mean_s",
+      "unidade": "segundos",
+      "original": 13.489330549450074,
+      "ajustado": 17.345804653887456
+    },
+    {
+      "escopo": "categorias",
+      "metrica": "Turno com LLM median_s",
+      "unidade": "segundos",
+      "original": 14.057886592999694,
+      "ajustado": 17.498130576499534
+    },
+    {
+      "escopo": "categorias",
+      "metrica": "Turno com LLM p95_s",
+      "unidade": "segundos",
+      "original": 19.997627715000817,
+      "ajustado": 22.70946921599989
+    },
+    {
+      "escopo": "categorias",
+      "metrica": "Busca mean_s",
+      "unidade": "segundos",
+      "original": 0.0802669077514589,
+      "ajustado": 0.08083617128234918
+    },
+    {
+      "escopo": "categorias",
+      "metrica": "Busca median_s",
+      "unidade": "segundos",
+      "original": 0.03748278199964261,
+      "ajustado": 0.03692365949973464
+    },
+    {
+      "escopo": "categorias",
+      "metrica": "Busca p95_s",
+      "unidade": "segundos",
+      "original": 0.23474883400012914,
+      "ajustado": 0.2279549999993833
+    },
+    {
+      "escopo": "triagem_categorias",
+      "metrica": "handoff_por_dado_desconhecido",
+      "unidade": "conversas",
+      "original": 105,
+      "ajustado": 106
+    },
+    {
+      "escopo": "triagem_categorias",
+      "metrica": "sem_itens_na_subcategoria_fonte",
+      "unidade": "conversas",
+      "original": 34,
+      "ajustado": 34
+    },
+    {
+      "escopo": "triagem_categorias",
+      "metrica": "suspeita_falso_negativo",
+      "unidade": "conversas",
+      "original": 34,
+      "ajustado": 34
+    },
+    {
+      "escopo": "triagem_categorias",
+      "metrica": "nao_concluiu_busca_com_itens_na_fonte",
+      "unidade": "conversas",
+      "original": 61,
+      "ajustado": 63
+    },
+    {
+      "escopo": "triagem_categorias",
+      "metrica": "itens_coerentes_com_cadastro",
+      "unidade": "conversas",
+      "original": 133,
+      "ajustado": 131
+    },
+    {
+      "escopo": "triagem_categorias",
+      "metrica": "suspeita_item_incorreto",
+      "unidade": "conversas",
+      "original": 4,
+      "ajustado": 3
+    },
+    {
+      "escopo": "golden_isolado",
+      "metrica": "total",
+      "unidade": "casos",
+      "original": 27,
+      "ajustado": 27
+    },
+    {
+      "escopo": "golden_isolado",
+      "metrica": "passed",
+      "unidade": "casos",
+      "original": 27,
+      "ajustado": 24
+    },
+    {
+      "escopo": "golden_isolado",
+      "metrica": "case_pass_pct",
+      "unidade": "porcentagem",
+      "original": 100.0,
+      "ajustado": 88.89
+    },
+    {
+      "escopo": "golden_sem_coincidencia_exata",
+      "metrica": "total",
+      "unidade": "casos",
+      "original": 21,
+      "ajustado": 21
+    },
+    {
+      "escopo": "golden_sem_coincidencia_exata",
+      "metrica": "passed",
+      "unidade": "casos",
+      "original": 21,
+      "ajustado": 18
+    },
+    {
+      "escopo": "golden_sem_coincidencia_exata",
+      "metrica": "case_pass_pct",
+      "unidade": "porcentagem",
+      "original": 100.0,
+      "ajustado": 85.71
+    }
+  ],
+  "source": "evidencias/comparacao/comparison_summary.json"
+}

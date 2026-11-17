@@ -1,0 +1,25 @@
+{
+  "protocol_revision": 2,
+  "requested_category_cases_per_model": 371,
+  "requested_golden_cases_per_model": 27,
+  "total_end_to_end_case_records": 796,
+  "additional_golden_validator_checks": 54,
+  "timezone_for_display": "America/Sao_Paulo",
+  "timestamp_format": "UTC ISO 8601",
+  "models": {
+    "qwen-base-bf16": "Qwen/Qwen2.5-7B-Instruct with adapter disabled",
+    "qwen-ft-bf16": "Same base model with final trained adapter"
+  },
+  "official_max_new_tokens": 220,
+  "diagnostic_max_new_tokens": 512,
+  "temperature": 0.0,
+  "case_concurrency": 1,
+  "runtime_capture_disabled": true,
+  "public_gpu_port": false,
+  "excluded_attempt_directory": "instrumentation_attempt_v1",
+  "exclusion_reason": "Boolean JSON Schema parser incompatibility; fixed before restarting all official runs",
+  "dataset_hashes": {
+    "cases_371.json": "318d131e9b37381a511490df8784a4f3aa16951d66c62c06c6bd55f8758c9d4d",
+    "golden_27.json": "65763d809f06b853683fd74112f296937dd5bc3943a0fd3079f969bbb0de3e93"
+  }
+}

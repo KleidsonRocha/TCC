@@ -1,0 +1,34 @@
+{
+  "verified_on": "2026-11-17",
+  "method": "Recalculation from archived records; no inference or live ERP requests. New temporary output directory, original source files unchanged.",
+  "experimental_commit": "52e4d7460009d9635445c8ca69c604488b5dacef",
+  "table_5": {
+    "cases": 50,
+    "baseline_llm_calls": 31,
+    "candidate_llm_calls": 12,
+    "baseline_latency": {
+      "total_wall_ms": 1157543.66,
+      "avg_wall_ms": 23150.87,
+      "p50_wall_ms": 31410.35,
+      "p95_wall_ms": 42939.14,
+      "max_wall_ms": 69820.06,
+      "avg_pre_search_ms": 22933.72
+    },
+    "candidate_latency": {
+      "total_wall_ms": 541818.29,
+      "avg_wall_ms": 10836.37,
+      "p50_wall_ms": 741.96,
+      "p95_wall_ms": 43902.6,
+      "max_wall_ms": 69686.01,
+      "avg_pre_search_ms": 10668.41
+    }
+  },
+  "table_6_report_matches_original": true,
+  "tables_8_9_all_summary_fields_match_except_generated_timestamp": true,
+  "table_10_all_summary_fields_match_except_generated_timestamp": true,
+  "table_11_archived_labels_recount_matches": true,
+  "table_11_original_semantic_rules_all_counts_match": true,
+  "official_case_records": 3408,
+  "table_7": "Not recalculated: complete original Elasticsearch outputs not located. Qualitative historical comparison only.",
+  "remote_publication_verified": false
+}

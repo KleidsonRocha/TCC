@@ -1,0 +1,28 @@
+﻿id;coincidencia_exata_treino;original_aprovado;ajustado_aprovado;mensagem
+ask_bandejas_side;False;True;True;bandejas ecosport 2008
+ask_conflicting_honda_gol;False;True;True;pastilha Honda Gol 2010 traseira
+ask_correia_side;True;True;True;correia de comando gol 2010
+ask_coxins_position;False;True;True;quero um coxim para ecosport 2008
+ask_no_part;True;True;True;preciso de uma peca
+ask_part_only_vehicle_model;False;True;True;bandejas
+ask_radiador_engine;True;True;True;radiador gol 2010
+ask_unresolved_negative_part;False;True;True;nao quero radiador
+search_active_multi_item_follow_up_side;False;True;True;esquerda
+search_bandejas_side;False;True;True;bandejas ecosport 2008 lado esquerdo
+search_bico_side;False;True;True;bico injetor gol 2010 lado direito
+search_bico_without_side;False;True;True;bico injetor gol 2010
+search_context_engine;True;True;True;1.6
+search_context_side;False;True;True;lado esquerdo
+search_correia_side;False;True;True;correia de comando gol 2010 lado esquerdo
+search_coxins_position;False;True;True;quero um coxim dianteiro para ecosport 2008
+search_filter_after_negated_replacement;False;True;True;nao quero radiador, quero filtro de oleo Gol 2010 1.0
+search_golf_exact_identity;False;True;True;radiador Golf 2010 1.6
+search_multi_item_gate_radiador_bandeja;False;True;False;radiador Gol 2010 1.0 e bandeja Corsa 2011
+search_oil_viscosity_5w40;False;True;False;quero o oleo 5w40
+search_oil_viscosity_hyphen;False;True;False;quero oleo 5W-40
+search_part_code;False;True;True;AB-1234
+search_pastilhas_corsa_2011_position;False;True;True;PASTILHA FREIO CORSA 2011 DIANTEIRA
+search_pastilhas_rear_with_negated_front;False;True;True;pastilha traseira do Gol 2010, nao dianteira
+search_radiador_engine;True;True;True;radiador gol 2010 1.6
+search_radiator_cap_identity;True;True;True;tampa do radiador Gol 2010 1.0
+search_result_disambiguation_vehicle_correction;False;True;True;corrigindo, o carro e um Corsa 2011 1.4

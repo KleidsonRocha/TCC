@@ -1,0 +1,422 @@
+{
+  "AV-002": [
+    "search",
+    "Kit de mancal da caixa de direção, lado direito",
+    "Para iniciar busca: nenhum. Antes do fornecimento, conferir caixa/sistema e geração do Uno.",
+    "valid",
+    "KT-10138 possui aplicações UNO 2010 1.0. Pesquisar não equivale a autorizar montagem; conferir sistema de direção."
+  ],
+  "AV-012": [
+    "search",
+    "Kit de mancal da caixa de direção, lado direito",
+    "Para iniciar busca: nenhum. Antes do fornecimento, conferir caixa/sistema e geração do Uno.",
+    "valid",
+    "KT-10138 possui aplicações UNO 2010 1.0. Pesquisar não equivale a autorizar montagem; conferir sistema de direção."
+  ],
+  "AV-007": [
+    "ask",
+    "Bronzina de biela; jogo/quantidade a confirmar",
+    "Código do motor, 8V/16V e medida efetiva do colo após medição (STD ou sobremedida).",
+    "unknown",
+    "TKBBVW10/STD: título restringe 16V, mas o recorte inclui 8V. Não assumir STD nem resolver divergência apenas pelo vínculo cadastral."
+  ],
+  "AV-013": [
+    "ask",
+    "Bronzina de mancal",
+    "Identificar motor e medida de retífica; confirmar conjunto e dimensões.",
+    "unknown",
+    "TKBCGM16/STD descreve Celta 1.4, embora as aplicações listem Stilo 1.8. Pode haver compartilhamento, mas exige catálogo técnico/dimensões; STD não foi solicitado."
+  ],
+  "AV-023": [
+    "ask",
+    "Dobradiça direita; local ainda desconhecido",
+    "É a dobradiça do capô, de qual porta ou de outra tampa?",
+    "unknown",
+    "KT-30305 é kit do capô. Pedido só diz dobradiças; aplicação A-10 1989 4.1 não prova identidade do componente. Não confirmar falso negativo."
+  ],
+  "AV-025": [
+    "ask",
+    "Batente; distinguir suspensão de coxim do motor",
+    "Você procura o batente do amortecedor ou o apoio/coxim do motor? Foto ou localização pode esclarecer.",
+    "unknown",
+    "LT70206 é coxim do motor. A categoria BATENTES não torna esse coxim a resposta correta para batente de suspensão. Segunda pergunta deve trazer alternativas concretas."
+  ],
+  "AV-028": [
+    "search",
+    "Sapata de freio traseira com lona montada, uma composição",
+    "Nenhum para busca inicial; conferir sistema e dimensões para fornecimento.",
+    "valid",
+    "CB/49-CPA tem aplicação AGILE 2010 1.4. “Com lona” integra a sapata; não constitui segundo pedido. A saída B registra 2009, em vez do ano 2010 do veículo; o intervalo do título foi confundido com o ano solicitado."
+  ],
+  "AV-034": [
+    "search",
+    "Anel de vedação do trocador de calor, avulso",
+    "Nenhum para busca; confirmar presença/configuração do trocador no veículo.",
+    "valid",
+    "BAS-1140023 tem aplicação PAMPA 1996 1.6 AP; o atendimento pode buscar o anel sem confundir com o trocador completo."
+  ],
+  "AV-303": [
+    "search",
+    "Anel de vedação do trocador de calor, avulso",
+    "Nenhum para busca; confirmar presença/configuração do trocador no veículo.",
+    "valid",
+    "BAS-1140023 tem aplicação PAMPA 1996 1.6 AP; o atendimento pode buscar o anel sem confundir com o trocador completo."
+  ],
+  "AV-035": [
+    "ask",
+    "Camisa de cilindro",
+    "Código exato do motor, medidas do bloco e da camisa e procedimento de retífica indicado.",
+    "unknown",
+    "TKCCD25E/STD tem vínculo FRONTIER 2014 2.5 YD25ETI; isso não confirma medida ou solução de reparação. Não recomendar camisa pela cilindrada somente."
+  ],
+  "AV-099": [
+    "ask",
+    "Camisa de cilindro",
+    "Código exato do motor, medidas do bloco e da camisa e procedimento de retífica indicado.",
+    "unknown",
+    "TKCCD25E/STD tem vínculo FRONTIER 2014 2.5 YD25ETI; isso não confirma medida ou solução de reparação. Não recomendar camisa pela cilindrada somente."
+  ],
+  "AV-053": [
+    "ask",
+    "Material denominado apenas papel; finalidade desconhecida",
+    "Papel para juntas, abrasivo, limpeza ou outro uso? Se junta: material e espessura.",
+    "no_reference",
+    "Não há produto de referência. Primeiro esclarecer finalidade, pois nem todo papel vendido em autopeças exige veículo."
+  ],
+  "AV-054": [
+    "ask",
+    "Kit denominado calota; identidade funcional incerta",
+    "Qual conjunto recebe essa calota? Enviar foto/código; confirmar significado de direito/traseiro.",
+    "unknown",
+    "KT-20478 tem vínculo ESCORT 1996 1.6, porém o nome genérico não demonstra que seja calota de roda. Não inferir identidade pela categoria DIVERSOS."
+  ],
+  "AV-063": [
+    "ask",
+    "Jogo de chaves, tipo e medidas desconhecidos",
+    "Chaves combinadas, soquetes, Allen ou ferramenta específica? Quais medidas/encaixe?",
+    "invalid_component",
+    "VKN-400A é esticador/cortador de abraçadeiras homocinéticas, não jogo de chaves. Ano do caminhão não resolve a escolha da ferramenta."
+  ],
+  "AV-065": [
+    "ask",
+    "Válvula de escape avulsa",
+    "Código do motor/cabeçote e medidas da válvula; confirmar 8V e condição do reparo.",
+    "unknown",
+    "TKVESGM10 cita Classic 03–06, mas tem aplicações CORSA 1996 1.0. Tratar como divergência a conferir, não incompatibilidade comprovada pelo título."
+  ],
+  "AV-066": [
+    "ask",
+    "Arruelas; conjunto de destino não informado",
+    "Arruelas de qual conjunto? Se diferencial: modelo do conjunto e medidas/espessuras.",
+    "unknown",
+    "KT-30414 é kit do diferencial. Pedido genérico de arruelas não demonstra que o cliente quer esse kit, mesmo com CARAVAN 1990 2.5 no cadastro."
+  ],
+  "AV-068": [
+    "handoff",
+    "Condensador de distribuidor, não condensador de ar-condicionado",
+    "Confirmar sistema de ignição efetivamente instalado e código/foto do distribuidor; verificar eventual adaptação.",
+    "unknown",
+    "22.665 é condensador de distribuidor Wapsa; vínculo DAKOTA 2001 5.2 requer conferência técnica. Não aceitar “8 cilindros todos” como prova universal."
+  ],
+  "AV-069": [
+    "search",
+    "Reparo do braço oscilante do eixo traseiro 47 mm, para um lado",
+    "Nenhum para pesquisa inicial: diâmetro, veículo e eixo foram informados. Conferir dimensão instalada e quantidade para fornecer.",
+    "valid",
+    "O campo nm_item confirma reparo de 47 mm para um lado. Não dividir em reparo genérico e braço completo. Não exigir lado se o mesmo reparo cadastral atende a intervenção de um lado."
+  ],
+  "AV-073": [
+    "search",
+    "Cabo de engate de marchas 1053 mm",
+    "Nenhum para busca; conferir engate versus seleção e terminais antes de fornecer.",
+    "valid",
+    "CBV144.525 possui aplicação UNO WAY 2006–2008 1.0 FIRE, mesma versão informada na conversa. Há sustentação cadastral para falso negativo na saída que efetivamente pesquisou."
+  ],
+  "AV-079": [
+    "search",
+    "Kit pré-filtro da bomba, sistema Delphi",
+    "Nenhum para iniciar busca com sistema Delphi solicitado; confirmar sistema instalado para venda.",
+    "valid",
+    "KT-90117 tem aplicações GOL 1996 1.6. Não confundir kit de pré-filtro com bomba completa ou filtro de linha."
+  ],
+  "AV-277": [
+    "search",
+    "Kit pré-filtro da bomba, sistema Delphi",
+    "Nenhum para iniciar busca com sistema Delphi solicitado; confirmar sistema instalado para venda.",
+    "valid",
+    "KT-90117 tem aplicações GOL 1996 1.6. Não confundir kit de pré-filtro com bomba completa ou filtro de linha."
+  ],
+  "AV-081": [
+    "ask",
+    "Kit cúpula da alavanca, corpo baixo",
+    "Conferir geração e mecanismo da alavanca e significado de corpo baixo/ré para trás; título /98 diverge do veículo 2014.",
+    "unknown",
+    "KT-10403: nm_item especifica ré para trás, não eixo traseiro. O título /98 e o vínculo PALIO 2014 divergem; requer conferir o conjunto instalado. Não inferir que a peça se instala na traseira do carro."
+  ],
+  "AV-371": [
+    "ask",
+    "Kit cúpula da alavanca, corpo baixo",
+    "Conferir geração e mecanismo da alavanca e significado de corpo baixo/ré para trás; título /98 diverge do veículo 2014.",
+    "unknown",
+    "KT-10403: nm_item especifica ré para trás, não eixo traseiro. O título /98 e o vínculo PALIO 2014 divergem; requer conferir o conjunto instalado. Não inferir que a peça se instala na traseira do carro."
+  ],
+  "AV-084": [
+    "handoff",
+    "Platinado de distribuidor para motor 261",
+    "Confirmar combustível, motor instalado e distribuidor; obter código/foto, verificando adaptação.",
+    "unknown",
+    "PLTC-243: nm_item especifica distribuidor Delco de 6 cilindros; o título cita motor 261, enquanto as aplicações exibem VERANEIO 4.0 S4/Maxion. Encaminhar para identificar motor/ignição; não transformar esse cadastro conflitante em gabarito aprovado."
+  ],
+  "AV-155": [
+    "handoff",
+    "Platinado de distribuidor para motor 261",
+    "Confirmar combustível, motor instalado e distribuidor; obter código/foto, verificando adaptação.",
+    "unknown",
+    "PLTC-243: nm_item especifica distribuidor Delco de 6 cilindros; o título cita motor 261, enquanto as aplicações exibem VERANEIO 4.0 S4/Maxion. Encaminhar para identificar motor/ignição; não transformar esse cadastro conflitante em gabarito aprovado."
+  ],
+  "AV-085": [
+    "search",
+    "Regulador automático do freio traseiro direito",
+    "Nenhum para busca; conferir sistema de freio e montagem.",
+    "valid",
+    "4-FT-44D tem aplicação PALIO 2009 1.0. Regulador não é sapata, cilindro ou kit inteiro de freio."
+  ],
+  "AV-217": [
+    "search",
+    "Regulador automático do freio traseiro direito",
+    "Nenhum para busca; conferir sistema de freio e montagem.",
+    "valid",
+    "4-FT-44D tem aplicação PALIO 2009 1.0. Regulador não é sapata, cilindro ou kit inteiro de freio."
+  ],
+  "AV-093": [
+    "search",
+    "Rolamento do apoio superior do amortecedor dianteiro, avulso",
+    "Nenhum para busca inicial; versão pode refinar, mas falta demonstrar que é indispensável.",
+    "valid",
+    "7130071100 possui aplicações PALIO 2009 1.0. Não é rolamento de roda nem amortecedor completo."
+  ],
+  "AV-203": [
+    "search",
+    "Rolamento do apoio superior do amortecedor dianteiro, avulso",
+    "Nenhum para busca inicial; versão pode refinar, mas falta demonstrar que é indispensável.",
+    "valid",
+    "7130071100 possui aplicações PALIO 2009 1.0. Não é rolamento de roda nem amortecedor completo."
+  ],
+  "AV-108": [
+    "search",
+    "Kit de trava do câmbio, não alarme/trava elétrica",
+    "Nenhum para busca; confirmar conteúdo e conjunto de câmbio.",
+    "valid",
+    "KT-50072 tem aplicação TOPIC 1997–1999 2.7. A saída que pesquisou e voltou vazia tem candidato cadastral para auditoria de falso negativo."
+  ],
+  "AV-124": [
+    "ask",
+    "Batente da suspensão dianteira, avulso ou aceitação de kit a esclarecer",
+    "Só batente ou kit com coifa/coxim? Confirmar geração e conteúdo aceito.",
+    "unknown",
+    "KT-41329 não discrimina batente. A busca ampla encontrou kits que explicitam batente, mas isso não comprova fornecimento avulso nem autoriza trocar o pedido por kit. Não classificar o vazio como falso negativo de batente avulso."
+  ],
+  "AV-131": [
+    "ask",
+    "Anéis; primeiro identificar se são anéis de pistão",
+    "São anéis do pistão? Se sim: motor exato, diâmetro/medida de retífica e espessuras das canaletas.",
+    "unknown",
+    "TKASFI14A/STD tem aplicação 500 CULT 2017 FIRE EVO. O pedido genérico não confirma anéis de pistão, versão do motor ou medida STD."
+  ],
+  "AV-149": [
+    "search",
+    "Semieixo direito completo para câmbio manual",
+    "Nenhum para buscar com 1.0 16V/manual descritos; conferir ABS, estrias e comprimento antes da entrega.",
+    "valid",
+    "YM612006 tem aplicação SANDERO EXPRESSION 2008–2012 1.0 D4D, versão informada nas duas conversas. O vazio exige investigar filtro/recuperação; não é prova de ausência."
+  ],
+  "AV-152": [
+    "ask",
+    "Cabo de engate/seleção do câmbio",
+    "Confirmar ano/modelo e terminais/código do cabo; título 2014/ diverge do veículo 2013.",
+    "unknown",
+    "YM245841 possui aplicação MONTANA LS COMBO 2013–2014 1.4, embora o título diga 2014/. Conferir divergência antes de afirmar compatibilidade."
+  ],
+  "AV-162": [
+    "ask",
+    "Giclê de ar Brosol medida 60",
+    "Confirmar modelo do carburador, rosca e posição do giclê, ou código/amostra.",
+    "unknown",
+    "K-1812/60 tem aplicação genérica com variante CARBURADOR 460. Marca do veículo não substitui identificação do carburador; “Brosol 60” pode não bastar."
+  ],
+  "AV-174": [
+    "search",
+    "Interruptor do desembaçador traseiro de dois terminais",
+    "Nenhum para busca; conferir conector/fixação. “Traseiro” é função, não eixo.",
+    "valid",
+    "IM-11170 tem aplicação GOL 1984 1.6. Não transformar vidro traseiro em filtro genérico de posição de suspensão."
+  ],
+  "AV-176": [
+    "search",
+    "Kit de parafusos da lataria do motor",
+    "Nenhum para busca; confirmar conteúdo e quantidade do kit.",
+    "valid",
+    "KT-41293 possui aplicação FUSCA 1993–1996 1.6. Kit não equivale a parafuso avulso genérico."
+  ],
+  "AV-181": [
+    "ask",
+    "Trava de conjunto ainda desconhecido",
+    "Trava de porta, câmbio, anel elástico ou outra? Peça foto/local de instalação.",
+    "no_reference",
+    "Não há referência. Identidade funcional deve vir antes de uma sequência automática de dados do veículo."
+  ],
+  "AV-184": [
+    "search",
+    "Régua medidora de correias, ferramenta",
+    "Nenhum para busca inicial; confirmar tipos/perfis de correia atendidos pela régua.",
+    "valid",
+    "93860-DAYCO é régua medidora com aplicação universal. Pedir “família” transfere classificação interna ao cliente sem ajudá-lo."
+  ],
+  "AV-194": [
+    "ask",
+    "Tulipa/garfo esquerdo de 26 dentes; composição avulsa ou com trizeta a confirmar",
+    "Confirmar geração, câmbio, estrias e se deseja tulipa avulsa ou conjunto com trizeta.",
+    "unknown",
+    "AL-1204 e NJH09-204D citam até 2008, mas vinculam FOCUS 2009. AL-1259 inclui trizeta. Não tratar os três como equivalentes sem conferir período/composição."
+  ],
+  "AV-218": [
+    "search",
+    "Kit do amortecedor dianteiro; não amortecedor completo",
+    "Nenhum para buscar kit; conferir conteúdo do SK-813 antes da entrega.",
+    "valid",
+    "SK-813 tem aplicações CLIO 2004 1.6. Resultado adequado como candidato cadastral; conteúdo, estoque e montagem continuam sujeitos a conferência."
+  ],
+  "AV-240": [
+    "ask",
+    "Reparo do bico injetor, não bico completo",
+    "Motor turbo ou aspirado, código do injetor e conteúdo do reparo.",
+    "unknown",
+    "COR-300647 só exibe variante TURBO para ONIX 2020. Sem turbo informado não se confirma referência; desmembrar reparo/bico é erro de composição."
+  ],
+  "AV-242": [
+    "ask",
+    "Pistão; quantidade e composição a confirmar",
+    "Código do motor, combustível, diâmetro após retífica, medida e se inclui pino/anéis.",
+    "unknown",
+    "TKPVW16D/1.00 tem vínculo SAVEIRO 2003 1.6 AP, porém medida 1.00 não foi solicitada/medida. Não presumir sobremedida."
+  ],
+  "AV-246": [
+    "ask",
+    "Mangueira para diesel e mangueira pneumática de freio; duas aplicações distintas",
+    "Separar circuitos; pedir diâmetro, pressão, material/especificação, conexões e comprimento de cada mangueira.",
+    "no_reference",
+    "Não há referência. Não sugerir a mesma mangueira para combustível e freio a ar; atendimento especializado é prudente."
+  ],
+  "AV-250": [
+    "ask",
+    "Haste de conjunto não identificado",
+    "Haste de qual sistema/local? Modelo GALAXY 2003 já foi informado; pedir foto/código da peça.",
+    "invalid_component",
+    "426115BZ é catraca de freio, não haste identificada no pedido. Repetir modelo não resolve a identidade."
+  ],
+  "AV-261": [
+    "search",
+    "Flange/baquelite da bomba de combustível do motor AP",
+    "Nenhum para busca; confirmar bomba e geometria instalada.",
+    "valid",
+    "COR-65354 tem aplicação SANTANA 1993 1.8 AP. Eixo dianteiro/traseiro não é critério pertinente à flange da bomba."
+  ],
+  "AV-262": [
+    "ask",
+    "Guia de válvula",
+    "Código do cabeçote/motor e medidas interna/externa/comprimento; conferir reparação.",
+    "unknown",
+    "TKGGM10 cita Celta 1.4 e possui vínculos IPANEMA 1997 1.8. Não concluir incompatibilidade pelo título nem compatibilidade somente pelo vínculo."
+  ],
+  "AV-269": [
+    "ask",
+    "Válvula de admissão",
+    "Código de motor/cabeçote e medidas da válvula, comparadas com catálogo técnico.",
+    "unknown",
+    "TKVADGM10 cita Classic 03–06 e vínculo CLASSIC 2008 1.0 VHC. Divergência temporal exige checagem de equivalência."
+  ],
+  "AV-274": [
+    "ask",
+    "Travessa do motor",
+    "Modelo/ano e identificação da travessa; foto ou código pode substituir dado desconhecido.",
+    "no_reference",
+    "Perguntar modelo é pertinente. Se desconhecido, encaminhar é seguro; informar alternativas de identificação melhoraria a continuidade."
+  ],
+  "AV-279": [
+    "search",
+    "Limpa-vidros em embalagem de 500 ml",
+    "Nenhum dado de veículo; confirmar apresentação spray se houver alternativas.",
+    "valid",
+    "TB-750.340 é limpa-vidros 500 ml de aplicação genérica. 500 é volume; não é modelo Fiat 500 nem quantidade de 500 unidades."
+  ],
+  "AV-284": [
+    "ask",
+    "Item de segurança ainda não identificado",
+    "Extintor, triângulo, sinalização ou outro? Depois pedir especificação do item escolhido.",
+    "unknown",
+    "EX-248 é extintor ABC longo. A palavra segurança não identifica esse produto; DIVERSOS não é modelo de veículo."
+  ],
+  "AV-295": [
+    "ask",
+    "Correia do acionamento do ar-condicionado",
+    "Modelo/ano/motor e configuração dos acessórios, ou código/perfil e comprimento da correia antiga.",
+    "no_reference",
+    "Modelo é uma primeira pergunta pertinente. Sem identificação, encaminhamento humano é seguro; código da correia pode permitir alternativa."
+  ],
+  "AV-296": [
+    "search",
+    "Lona de freio traseira; não sapata com lona montada",
+    "Nenhum para busca inicial; confirmar dimensões, medida do tambor e forma de fixação antes de fornecer.",
+    "valid",
+    "CB/41 possui aplicação MONZA 1995 1.8 SL EFI (99000892623036). CB/40 também tem vínculo cadastral, mas título divergente; confirmar dimensões e sistema antes de tratá-lo como equivalente."
+  ],
+  "AV-298": [
+    "search",
+    "Varão posterior do trambulador de 1579 mm, uma peça",
+    "Nenhum para buscar com dados dados; conferir comprimento e articulações antes de fornecer.",
+    "valid",
+    "COR-400229 possui aplicação KOMBI FURGÃO 1980–1981 1.3. Repetir modelo/ano/motor já informados e dividir haste/trambulador prejudica o pedido."
+  ],
+  "AV-306": [
+    "ask",
+    "Kit estabilizador; lado conflitante",
+    "Você quer o lado direito do título ou o esquerdo informado ao final?",
+    "unknown",
+    "KT-10288 é direito. Não escolher lado silenciosamente; compatibilidade fica indeterminada até resolver a contradição."
+  ],
+  "AV-312": [
+    "search",
+    "Polia 6PK da bomba d’água, seis canaletas",
+    "Nenhum para busca com configuração informada; conferir geometria/offset e motor instalado.",
+    "valid",
+    "COR-78654 tem aplicação SAVEIRO 2.0 MI 2000–2005. Pergunta de versão exemplificando 1.0/1.6 repete motorização já dada, em vez de orientar sobre a configuração."
+  ],
+  "AV-328": [
+    "ask",
+    "Componente não identificado: diversos é categoria",
+    "Qual peça ou função você precisa? Foto ou descrição do local.",
+    "no_reference",
+    "DIVERSOS não define peça. Pedir modelo antes de saber o item tem utilidade limitada."
+  ],
+  "AV-337": [
+    "ask",
+    "Kit de vedação do motor; conteúdo a definir",
+    "Qual vazamento/conjunto deseja reparar e quais juntas/retentores devem integrar o kit? Confirmar motor.",
+    "unknown",
+    "KT-30534 tem vínculo CORSA 2006 1.0, mas o recorte não detalha conteúdo do kit; não prometer vedação completa do motor."
+  ],
+  "AV-339": [
+    "ask",
+    "Vedante; produto e função desconhecidos",
+    "Selante líquido ou retentor/junta? Local, fluido, temperatura e especificação exigida.",
+    "unknown",
+    "5020076 é silicone para câmbio automático. Vedantes é mais amplo; não presumir esse silicone nem exigir modelo sem saber a função."
+  ],
+  "AV-359": [
+    "search",
+    "Retentor da caixa/redutor 60×90×10 mm",
+    "Nenhum para busca dimensional; conferir perfil do lábio, material, fluido e rotação para equivalência.",
+    "valid",
+    "A-5346 possui aplicação AD 14 1998 motor D11 8.3. Eixo dianteiro/traseiro não identifica o retentor de redutor solicitado."
+  ]
+}

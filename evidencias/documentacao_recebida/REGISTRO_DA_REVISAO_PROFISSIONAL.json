@@ -1,0 +1,26 @@
+{
+  "recorded_at": "2026-10-27T17:21:30.285430+00:00",
+  "source": "Informações complementares declaradas pelo autor nesta conversa em 27/10/2026",
+  "material": "Bateria comparativa D/H de 371 casos disponibilizada no pacote",
+  "professionals": [
+    {
+      "id": "PROF_VENDAS",
+      "area": "Vendas de autopeças",
+      "experience_years": 10,
+      "cases_reviewed_declared": 371
+    },
+    {
+      "id": "PROF_APLICACAO",
+      "area": "Aplicação de peças",
+      "experience_years": 7,
+      "cases_reviewed_declared": 371
+    }
+  ],
+  "full_case_review_confirmed_by_author": true,
+  "exact_review_date": null,
+  "blinding_documented": false,
+  "independence_between_professionals_documented": false,
+  "individual_scores_linked_to_the_three_exported_rubrics": false,
+  "interpretation": "A conferência integral por dois profissionais foi informada pelo autor. Não inferir três pessoas a partir das três rubricas, nem avaliação cega, concordância estatística ou adjudicação não documentadas.",
+  "archive_metadata_note": "O ZIP original declara personas e zero revisores humanos. Foi preservado sem alteração e complementado por este registro do autor; não se apagaram os metadados originais."
+}
