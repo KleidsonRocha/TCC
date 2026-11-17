@@ -123,7 +123,41 @@ selecionado, não constitui auditoria integral de todo o histórico do Git.
 
 O espelhamento para o Forge depende do push e da Action. Confirme o commit novo,
 a presença deste diretório e a execução do conferidor em um clone do Forge.
-Para executar o runtime do commit, confirme também que `git lfs pull` baixa os
-CSVs de contingência reais, e não somente os ponteiros de texto. A conferência
-das rubricas usa os arquivos Git comuns do catálogo experimental. O sucesso local desta
-preparação não comprova publicação remota.
+O endpoint LFS do Forge retornou HTTP 413 ao receber objetos grandes, incluindo
+um objeto histórico de 1,34 GB e o CSV operacional de aproximadamente 40 MB.
+A Action publica branches, tags e arquivos Git comuns, com aviso explícito de
+que os objetos LFS não foram copiados. Ela não certifica um espelho LFS completo.
+A conferência das rubricas usa os arquivos Git comuns do catálogo experimental;
+ela não depende do endpoint LFS. O sucesso local desta preparação não comprova
+publicação remota.
+
+## Clonar o Forge sem baixar LFS
+
+Se o Git LFS estiver instalado, evite o download automático dos objetos ausentes
+ao clonar o Forge. No PowerShell:
+
+```powershell
+$env:GIT_LFS_SKIP_SMUDGE = '1'
+try {
+    git clone https://www.forge.uricer.edu.br/mlucas/tcc-105087-kleidson.git TCC-banca
+} finally {
+    Remove-Item Env:GIT_LFS_SKIP_SMUDGE
+}
+cd TCC-banca
+python -X utf8 evidencias/reproducao/conferir_resultados.py
+```
+
+Em Bash:
+
+```bash
+GIT_LFS_SKIP_SMUDGE=1 git clone https://www.forge.uricer.edu.br/mlucas/tcc-105087-kleidson.git TCC-banca
+cd TCC-banca
+python3 -X utf8 evidencias/reproducao/conferir_resultados.py
+```
+
+O código e as evidências estarão disponíveis; os arquivos de contingência em
+`docker-agent/db/init/fallback/v2/*.csv.gz` poderão permanecer como ponteiros
+LFS. Para executar o runtime com esse snapshot operacional, baixe os objetos
+do GitHub e confira seu manifesto, ou solicite ao administrador do Forge a
+adequação do limite de upload antes de sincronizar os objetos. Esse passo não
+é necessário para os comandos de conferência das tabelas, inclusive `--rubricas`.

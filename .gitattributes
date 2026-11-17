@@ -1,3 +1,7 @@
 docker-agent/db/init/fallback/v2/*.csv.gz filter=lfs diff=lfs merge=lfs -text
 docker-agent/db/init/fallback/v2/manifest.json text eol=lf
 docker-agent/db/init/fallback/v2/manifest.sha256 text eol=lf
+
+# Research evidence is sealed by byte-level SHA-256 manifests.
+# Preserve original newlines and compressed data on every platform.
+evidencias/** -text whitespace=cr-at-eol

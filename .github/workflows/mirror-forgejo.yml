@@ -24,8 +24,13 @@ jobs:
       GITHUB_TOKEN: ${{ github.token }}
 
     steps:
-      - name: Copiar branches e tags para o Forgejo
+      - name: Copiar codigo e evidencias para o Forgejo (sem objetos LFS)
         shell: bash
+        env:
+          # The Forge LFS endpoint rejects large uploads (HTTP 413).
+          # Evidence files are ordinary Git blobs; do not let the LFS hook
+          # block their publication or upload the full historical LFS store.
+          GIT_LFS_SKIP_PUSH: "1"
         run: |
           set -euo pipefail
 
@@ -33,7 +38,6 @@ jobs:
             echo "Configure o secret FORGEJO_TOKEN antes de publicar no Forge."
             exit 1
           fi
-          git lfs version
 
           mkdir mirror.git
           cd mirror.git
@@ -50,13 +54,17 @@ jobs:
           git remote add forgejo \
             "https://${FORGEJO_USUARIO}:${FORGEJO_TOKEN}@${FORGEJO_HOST}/${FORGEJO_REPOSITORIO}"
 
-          # Branches/tags alone copy LFS pointers, not the catalog CSV objects.
-          # Transfer objects first; a failure must not advertise a complete mirror.
-          git lfs fetch --all github
-          git lfs push --all forgejo
-
           git push forgejo --prune \
             "+refs/heads/*:refs/heads/*"
 
           git push forgejo --prune \
             "+refs/tags/*:refs/tags/*"
+
+          echo "::warning::Codigo e evidencias publicados. Objetos LFS nao foram sincronizados: o endpoint do Forge recusou uploads grandes (HTTP 413). Consulte o README para clonar sem baixar LFS e conferir os resultados."
+          {
+            echo "### Espelhamento de codigo e evidencias"
+            echo "Branches e tags foram enviados ao Forge, incluindo os arquivos Git comuns de evidencias/."
+            echo ""
+            echo "**Limite:** objetos Git LFS nao foram copiados. Esta execucao nao certifica um espelho LFS completo."
+            echo "O catalogo experimental em evidencias/catalogo_20261019/ usa Git comum e permite recalcular as tabelas sem LFS."
+          } >> "$GITHUB_STEP_SUMMARY"

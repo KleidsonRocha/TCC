@@ -71,8 +71,12 @@ reexecutar inferência e buscas.
 identifica a fonte usada na avaliação; o snapshot operacional não foi substituído.
 
 O [workflow de espelhamento](.github/workflows/mirror-forgejo.yml) transfere
-branches, tags e objetos LFS. A publicação só está confirmada após commit/push,
-sucesso da Action e conferência destes arquivos e hashes no Forge URICER.
+branches e tags, incluindo as evidências como arquivos Git comuns. O endpoint
+LFS do Forge recusou uploads com HTTP 413; por isso, objetos LFS não são
+sincronizados pela Action. Ela registra essa limitação no aviso e no resumo.
+A publicação só está confirmada após commit/push, sucesso da Action e
+conferência destes arquivos e hashes no Forge URICER. Consulte as
+[instruções para clonar o Forge sem baixar LFS](evidencias/README.md#clonar-o-forge-sem-baixar-lfs).
 
 ## Requisitos
 
