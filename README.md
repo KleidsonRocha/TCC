@@ -72,7 +72,10 @@ identifica a fonte usada na avaliação; o snapshot operacional não foi substit
 
 O [workflow de espelhamento](.github/workflows/mirror-forgejo.yml) transfere
 branches e tags, incluindo as evidências como arquivos Git comuns. O endpoint
-LFS do Forge recusou uploads com HTTP 413; por isso, objetos LFS não são
+Git por HTTP recusou o pacote; o espelhamento usa SSH em
+`ssh.git.uricer.edu.br:64022`, com o secret `FORGEJO_SSH_PRIVATE_KEY` e a
+[chave pública do servidor fixada](.github/forge_known_hosts). O endpoint
+LFS do Forge também recusou uploads com HTTP 413; por isso, objetos LFS não são
 sincronizados pela Action. Ela registra essa limitação no aviso e no resumo.
 A publicação só está confirmada após commit/push, sucesso da Action e
 conferência destes arquivos e hashes no Forge URICER. Consulte as

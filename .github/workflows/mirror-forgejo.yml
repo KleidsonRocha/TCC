@@ -17,27 +17,31 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      FORGEJO_HOST: www.forge.uricer.edu.br
-      FORGEJO_USUARIO: 105087
-      FORGEJO_REPOSITORIO: mlucas/tcc-105087-kleidson.git
-      FORGEJO_TOKEN: ${{ secrets.FORGEJO_TOKEN }}
+      FORGEJO_SSH_URL: ssh://git@ssh.git.uricer.edu.br:64022/mlucas/tcc-105087-kleidson.git
       GITHUB_TOKEN: ${{ github.token }}
 
     steps:
-      - name: Copiar codigo e evidencias para o Forgejo (sem objetos LFS)
+      - name: Copiar codigo e evidencias ao Forgejo por SSH (sem objetos LFS)
         shell: bash
         env:
-          # The Forge LFS endpoint rejects large uploads (HTTP 413).
-          # Evidence files are ordinary Git blobs; do not let the LFS hook
-          # block their publication or upload the full historical LFS store.
+          FORGEJO_SSH_PRIVATE_KEY: ${{ secrets.FORGEJO_SSH_PRIVATE_KEY }}
+          # SSH bypasses the HTTP Git upload limit. LFS stays separate because
+          # its HTTP endpoint also rejected uploads; evidence uses ordinary Git.
           GIT_LFS_SKIP_PUSH: "1"
         run: |
           set -euo pipefail
 
-          if [[ -z "${FORGEJO_TOKEN}" ]]; then
-            echo "Configure o secret FORGEJO_TOKEN antes de publicar no Forge."
+          if [[ -z "${FORGEJO_SSH_PRIVATE_KEY}" ]]; then
+            echo "Configure o secret FORGEJO_SSH_PRIVATE_KEY antes de publicar no Forge."
             exit 1
           fi
+
+          key_file="$(mktemp "${RUNNER_TEMP}/forge-key.XXXXXX")"
+          known_hosts_file="$(mktemp "${RUNNER_TEMP}/forge-hosts.XXXXXX")"
+          trap 'rm -f "$key_file" "$known_hosts_file"' EXIT
+          chmod 600 "$key_file" "$known_hosts_file"
+          printf '%s\n' "$FORGEJO_SSH_PRIVATE_KEY" | tr -d '\r' > "$key_file"
+          unset FORGEJO_SSH_PRIVATE_KEY
 
           mkdir mirror.git
           cd mirror.git
@@ -51,8 +55,14 @@ jobs:
             "+refs/heads/*:refs/heads/*" \
             "+refs/tags/*:refs/tags/*"
 
+          git show main:.github/forge_known_hosts > "$known_hosts_file"
+          test -s "$known_hosts_file"
+          export GIT_SSH_COMMAND="ssh -i \"$key_file\" -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=\"$known_hosts_file\" -o ConnectTimeout=20"
+
           git remote add forgejo \
-            "https://${FORGEJO_USUARIO}:${FORGEJO_TOKEN}@${FORGEJO_HOST}/${FORGEJO_REPOSITORIO}"
+            "$FORGEJO_SSH_URL"
+
+          git ls-remote forgejo refs/heads/main
 
           git push forgejo --prune \
             "+refs/heads/*:refs/heads/*"
@@ -63,7 +73,7 @@ jobs:
           echo "::warning::Codigo e evidencias publicados. Objetos LFS nao foram sincronizados: o endpoint do Forge recusou uploads grandes (HTTP 413). Consulte o README para clonar sem baixar LFS e conferir os resultados."
           {
             echo "### Espelhamento de codigo e evidencias"
-            echo "Branches e tags foram enviados ao Forge, incluindo os arquivos Git comuns de evidencias/."
+            echo "Branches e tags foram enviados ao Forge por SSH na porta 64022, incluindo os arquivos Git comuns de evidencias/."
             echo ""
             echo "**Limite:** objetos Git LFS nao foram copiados. Esta execucao nao certifica um espelho LFS completo."
             echo "O catalogo experimental em evidencias/catalogo_20261019/ usa Git comum e permite recalcular as tabelas sem LFS."

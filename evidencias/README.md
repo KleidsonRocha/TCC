@@ -123,6 +123,13 @@ selecionado, não constitui auditoria integral de todo o histórico do Git.
 
 O espelhamento para o Forge depende do push e da Action. Confirme o commit novo,
 a presença deste diretório e a execução do conferidor em um clone do Forge.
+O envio Git normal também foi recusado por HTTP 413; a Action passou a usar
+`ssh://git@ssh.git.uricer.edu.br:64022/mlucas/tcc-105087-kleidson.git`, com uma
+chave de autenticação exclusiva no secret `FORGEJO_SSH_PRIVATE_KEY`. A chave
+privada não faz parte do repositório. A chave pública do servidor é fixada em
+`.github/forge_known_hosts`, com verificação estrita. Em 17/11, a consulta SSH
+autenticada confirmou a branch remota ainda em `52e4d74`; isso valida a conexão,
+não o envio das novas evidências, que depende da próxima execução da Action.
 O endpoint LFS do Forge retornou HTTP 413 ao receber objetos grandes, incluindo
 um objeto histórico de 1,34 GB e o CSV operacional de aproximadamente 40 MB.
 A Action publica branches, tags e arquivos Git comuns, com aviso explícito de
